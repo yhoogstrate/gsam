@@ -2,9 +2,11 @@
 
 setwd("/home/youri/projects/gsam")
 
-d <- read.delim("output/tables/v3.txt",stringsAsFactors = F)
+d <- read.delim("output/tables/v3.new.txt",stringsAsFactors = F)
 e <- d[!is.na(d$resection.1.wt) & !is.na(d$resection.2.wt),]
 
+
+png("output/figures/expression_v3_over_time.png", width=480*3,height=480*3, res=72*3)
 
 off <- 0.05
 plot(c(1.0 - off,2.0 + off), c(0,100),type="n", ylab="%vIII",xlab="resection",main=paste0("vIII over resection/time in ",nrow(e)," matching samples"))
@@ -21,7 +23,7 @@ for(i in 1:nrow(e)) {
   text(2,p2, e[i,1],cex=0.65,pos=4,col="darkgray")
 }
 
-
+dev.off()
 
 
 
