@@ -3,3 +3,7 @@
 /bin
 /output
 /ignore
+/tmp
+*.odt
+~*
+.~*
