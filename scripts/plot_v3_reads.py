@@ -1,5 +1,12 @@
 #!/usr/bin/env python
 
+"""
+Analyses the file "output/tables/v3_dedup.txt" that was generated with:
+
+./scripts/estimate_v3.sh
+
+"""
+
 idx = {}
 
 import os
