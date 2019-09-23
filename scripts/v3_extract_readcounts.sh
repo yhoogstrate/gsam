@@ -102,5 +102,5 @@ egfr-v3-determiner \
     data/RNA/alignments/Pfrench_JAJ2_2720_Plate1_F3_S28_001_hg19.sambamba-dedup.bam \
     data/RNA/alignments/Pfrench_JAK1_2721_Plate1_A3_S23_001_hg19.sambamba-dedup.bam \
     data/RNA/alignments/Pfrench_JAK2_2722_Plate1_H4_S38_001_hg19.sambamba-dedup.bam \
-    > output/tables/v3_dedup.txt
+    > output/tables/v3_extract_readcounts.txt
 
