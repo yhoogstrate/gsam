@@ -1,10 +1,7 @@
 #!/usr/bin/env python
 
 """
-Analyses the file "output/tables/v3_dedup.txt" that was generated with:
-
-./scripts/estimate_v3.sh
-
+Rotate "output/tables/v3_extract_readcounts.txt" into "output/tables/v3_extract_readcounts_rotated.txt"
 """
 
 idx = {}
@@ -12,10 +9,10 @@ idx = {}
 import os
 from tqdm import tqdm
 
-with open("output/tables/v3.txt", "w") as fh_out:
+with open("output/tables/v3_extract_readcounts_rotated.txt", "w") as fh_out:
     fh_out.write("sid\t\tresection-1-wt\tresection-1-v3\t\tresection-2-wt\tresection-2-v3\n")
 
-    with open("output/tables/v3_dedup.txt") as fh:
+    with open("output/tables/v3_extract_readcounts.txt") as fh:
         for line in tqdm(fh):
             line = line.strip()
             if len(line) > 0:

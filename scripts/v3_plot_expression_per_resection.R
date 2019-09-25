@@ -2,11 +2,11 @@
 
 setwd("/home/youri/projects/gsam")
 
-d <- read.delim("output/tables/v3.new.txt",stringsAsFactors = F)
+d <- read.delim("output/tables/v3_extract_readcounts_rotated.txt",stringsAsFactors = F)
 e <- d[!is.na(d$resection.1.wt) & !is.na(d$resection.2.wt),]
 
 
-png("output/figures/expression_v3_over_time.png", width=480*3,height=480*3, res=72*3)
+png("output/figures/v3_plot_expression_per_resection.png", width=480*3,height=480*3, res=72*3)
 
 off <- 0.05
 plot(c(1.0 - off,2.0 + off), c(0,100),type="n", ylab="%vIII",xlab="resection",main=paste0("vIII over resection/time in ",nrow(e)," matching samples"))
