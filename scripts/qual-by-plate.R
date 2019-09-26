@@ -64,8 +64,12 @@ dev.off()
 
 # ---- correlation low complexity & GC RMSE ----
 
-plot(d$percentage.low.complexity.reads , d$RMSE, pch=19, cex=1, log="xy")
+png("output/figures/low_complexity_x_gc_error.png", width=2*480, height = 2 * 480 , res =72  * 2)
+
+plot(d$percentage.low.complexity.reads , d$RMSE, pch=19, cex=1, log="xy", xlab="Percentage low complexity reads", ylab="RMSE (error/deviation) from 25% ACUG distribution", main = "Correlation low complexity & GC")
 text(d$percentage.low.complexity.reads , d$RMSE, d$sample.id, pch=19, pos=2, cex=0.8, col="darkgray")
+
+dev.off()
 
 
 
@@ -100,7 +104,7 @@ dev.off()
 
 # ---- low complexity x plate layout
 
-png("output/figures/percentage_low complexity_reads_by_plate_layout.png",width=1200,height=800, res=72*1.4)
+png("output/figures/percentage_low_complexity_reads_by_plate_layout.png",width=1200,height=800, res=72*1.4)
 
 plot(c(1-0.5,12+0.5), c(1-0.5,8+0.5), type="n",
      main=paste0("Percentage Low Complexity reads by plate layout (red=",
