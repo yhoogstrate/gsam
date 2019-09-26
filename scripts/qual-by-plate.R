@@ -21,7 +21,7 @@ d <- read.delim("output/tables/duplicate_reads_sambamba_stats.txt",header=T,sep=
 
 # low complexity reads
 e <- read.delim("output/tables/low_complexity_reads.txt",header=T,sep="\t",stringsAsFactors = F)
-e$percentage.low.complexity.reads <- gsub("%","",e$percentage.low.complexity.reads,fixed=T)
+e$percentage.low.complexity.reads <- as.numeric(gsub("%","",e$percentage.low.complexity.reads,fixed=T))
 d <- merge(d, e,by.x="sample.id", by.y = "sample")
 dim(d)
 rm(e)
@@ -45,18 +45,31 @@ d <- merge(d, e,by.x="sample.id", by.y = "sample")
 dim(d)
 rm(e)
 
+# gc 
+e <- read.delim("output/tables/gc_content_rmse.txt")
+d <- merge(d, e,by.x="sample.id", by.y = "sample.id")
+rm(e)
+
+d$percentage.exon.counts <- d$Assigned/ d$read.count * 100
 
 # ---- plot: ----
 
 png("output/figures/qc_stats_1st_96.png",width=1200,height=800)
 
-plot(d$percentage.duplicate.reads , d$Assigned/ d$read.count * 100, pch=19, cex=1, xlab="Percentage duplicate reads" , ylab = "Percentage reads mapped to exons")
-text(d$percentage.duplicate.reads , d$Assigned/ d$read.count * 100, d$sample,pos=2, cex=1.2)
+plot(d$percentage.duplicate.reads , d$percentage.exon.counts, pch=19, cex=1, xlab="Percentage duplicate reads" , ylab = "Percentage reads mapped to exons")
+text(d$percentage.duplicate.reads , d$percentage.exon.counts, d$sample,pos=2, cex=1.2)
 
 dev.off()
 
 
-# ---- plot ----
+# ---- correlation low complexity & GC RMSE ----
+
+plot(d$percentage.low.complexity.reads , d$RMSE, pch=19, cex=1, log="xy")
+text(d$percentage.low.complexity.reads , d$RMSE, d$sample.id, pch=19, pos=2, cex=0.8, col="darkgray")
+
+
+
+# ---- plot duplicate reads x plate indeling ----
 
 png("output/figures/percentage_duplicates_by_plate_layout.png",width=1200,height=800, res=72*1.4)
 
@@ -85,28 +98,62 @@ abline(v=(1:(12+1)) - 0.5)
 
 dev.off()
 
+# ---- low complexity x plate layout
 
+png("output/figures/percentage_low complexity_reads_by_plate_layout.png",width=1200,height=800, res=72*1.4)
 
+plot(c(1-0.5,12+0.5), c(1-0.5,8+0.5), type="n",
+     main=paste0("Percentage Low Complexity reads by plate layout (red=",
+                  max(d$percentage.low.complexity.reads),
+                 "%, black=",
+                 min(d$percentage.low.complexity.reads),"%)"),
+     xlab="Plate layout: 1:12",ylab="Plate layout: A:H")
 
-
-# ---- ----
-
-png("output/figures/percentage_exon_counts_by_plate_layout.png",width=1200,height=800)
-plot(c(1-0.5,12+0.5), c(1-0.5,8+0.5), type="n",main=paste0("Low percentage exon counted reads (red=",min(e$Assigned),"%, black=",max(e$Assigned),"%)"),xlab="Plate layout: 1:12",ylab="Plate layout: A:H")
 for(x in 1:12) {
   for(y in 1:8) {
-    sid <- d[d$A.H == y & d$X1.12 == x,]$seqID
+    sid <- p[p$A.H == y & p$X1.12 == x,]$seqID
     
-    qual = e[e$Sample == sid,]
-    col_discarded <- 1 - ( (qual$Assigned - min(e$Assigned)) / max(e$Assigned - min(e$Assigned)))
-    rect(x - 0.5, y - 0.5, x + 0.5, y + 0.5, col = rgb( col_discarded ,0.0,0.0) )
+    qual = d[d$sample.id == sid,]
     
-    text(x, y, sid,cex=1.4,col="white")
+    # log transfor to make gradient better
+    col_dup <- (log(qual$percentage.low.complexity.reads) - log(min(d$percentage.low.complexity.reads))) / (log(max(d$percentage.low.complexity.reads)) - log(min(d$percentage.low.complexity.reads)))
+    rect(x - 0.5, y - 0.5, x + 0.5, y + 0.5, col = rgb( col_dup ,0.0,0.0) )
+    
+    text(x, y, sid,cex=1,col="white")
   }
 }
 
 abline(h=(1:(12+1)) - 0.5)
 abline(v=(1:(12+1)) - 0.5)
+
+
+dev.off()
+
+
+# ---- plot plate layout x volumes ----
+
+png("output/figures/percentage_exon_counts_by_plate_layout.png",width=1200,height=800,res=72*1.4)
+
+
+plot(c(1-0.5,12+0.5), c(1-0.5,8+0.5), type="n",
+     main=paste0("Low percentage exon counted reads (red=",round(min(d$percentage.exon.counts),2),
+                 "%, black=",round(max(d$percentage.exon.counts),2),"%)"),
+     xlab="Plate layout: 1:12",ylab="Plate layout: A:H")
+for(x in 1:12) {
+  for(y in 1:8) {
+    sid <- p[p$A.H == y & p$X1.12 == x,]$seqID
+    qual <- d[d$sample.id == sid,]
+    
+    col_discarded <- 1 - ( (qual$percentage.exon.counts - min(d$percentage.exon.counts)) / max(d$percentage.exon.counts - min(d$percentage.exon.counts)))
+    rect(x - 0.5, y - 0.5, x + 0.5, y + 0.5, col = rgb( col_discarded ,0.0,0.0) )
+    
+    text(x, y, sid,cex=1,col="white")
+  }
+}
+
+abline(h=(1:(12+1)) - 0.5)
+abline(v=(1:(12+1)) - 0.5)
+
 
 dev.off()
 
