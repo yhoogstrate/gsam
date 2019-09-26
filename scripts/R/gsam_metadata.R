@@ -40,5 +40,12 @@ colnames(tmp)[2:ncol(tmp)] <- paste0("gc.control.",colnames(tmp)[2:ncol(tmp)])
 gsam.metadata <- merge(gsam.metadata, tmp, by.x="sample.id", by.y = "sample.id")
 rm(tmp)
 
-# egfr-v3 qPCR
+# egfr-v3 (RNA-seq)
+tmp <- read.delim("output/tables/v3_extract_readcounts.txt")
+tmp$sample <- gsub("^[^_]+_([^_]+)_.+$","\\1",tmp$sample)
+tmp$v3.percentage <- tmp$vIII.reads.v3 / (tmp$vIII.reads.v3 + tmp$wt.reads.v3) * 100.0
+tmp[(tmp$vIII.reads.v3 + tmp$wt.reads.v3) <= 6,]$v3.percentage <- NA
+colnames(tmp)[2:ncol(tmp)] <- paste0("v3.rnaseq.",colnames(tmp)[2:ncol(tmp)])
+gsam.metadata <- merge(gsam.metadata, tmp, by.x="sample.id", by.y = "sample")
+rm(tmp)
 

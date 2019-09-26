@@ -8,19 +8,12 @@ library(DESeq2)
 # ---- load data ----
 source("scripts/R/ligands.R")
 source("scripts/R/gsam_metadata.R")
+source("scripts/R/expression_matrix.R")
 
-d <- read.delim("output/tables/featureCounts_gsam_1st96.exon-level.txt",stringsAsFactors = F,comment="#")
+# ---- analysis ----
 
-colnames(d) <- gsub("X.data.users.youri.mnt.neurogen.ro.gsam.RNA.alignments.","",colnames(d),fixed=T)
-colnames(d) <- gsub(".sambamba.dedup.bam","",colnames(d),fixed=T)
 
-rownames(d) <- d$Geneid
-d$Geneid <- NULL
-d$Chr <- NULL
-d$Start <- NULL
-d$End <- NULL
-d$Strand <- NULL
-d$Length <- NULL
+d <- expression_matrix
 
 #plot(sort(log(colSums(d))))
 #abline(h=log(2000000))
