@@ -49,3 +49,12 @@ colnames(tmp)[2:ncol(tmp)] <- paste0("v3.rnaseq.",colnames(tmp)[2:ncol(tmp)])
 gsam.metadata <- merge(gsam.metadata, tmp, by.x="sample.id", by.y = "sample")
 rm(tmp)
 
+# add gender and age
+tmp <- read.delim("data/DNA/sample codes sanger gsam.txt",stringsAsFactors=FALSE)
+tmp <- tmp[,match(c("donor_ID", "donor_sex", "donor_age_at_diagnosis"), colnames(tmp))]
+tmp[tmp$donor_sex == "",]$donor_sex <- NA
+gsam.metadata <- merge(gsam.metadata , tmp , by.x="sample.id" , by.y = "donor_ID" , all.y = F, no.dups=T) # apparently there are dupes
+rm(tmp)
+
+
+
