@@ -16,41 +16,8 @@ p[,4] <- gsub("H",8,p[,4])
 
 
 # ---- load stats ----
-# duplicate reads
-d <- read.delim("output/tables/duplicate_reads_sambamba_stats.txt",header=T,sep="\t",stringsAsFactors = F)
-
-# low complexity reads
-e <- read.delim("output/tables/low_complexity_reads.txt",header=T,sep="\t",stringsAsFactors = F)
-e$percentage.low.complexity.reads <- as.numeric(gsub("%","",e$percentage.low.complexity.reads,fixed=T))
-d <- merge(d, e,by.x="sample.id", by.y = "sample")
-dim(d)
-rm(e)
-
-# mapping stats
-e <- read.delim("output/tables/star_percentage_mapped.txt",header=T,sep="\t",stringsAsFactors = F)
-e$percentage.uniquely.mapped <- gsub("%","",e$percentage.uniquely.mapped,fixed=T)
-e$percentage.multimap <- gsub("%","",e$percentage.multimap,fixed=T)
-d <- merge(d, e,by.x="sample.id", by.y = "sample")
-dim(d)
-rm(e)
-
-# featureCounts stats
-e <- read.delim("output/tables/featureCounts_gsam_1st96.exon-level.txt.summary",header=T,sep="\t",stringsAsFactors = F,row.names=1)
-colnames(e) <- gsub("^[^_]+_([^_]+)_.+$","\\1",colnames(e))
-e <- t(e) # transpose
-e <- data.frame(e)
-e$read.count <- as.numeric(rowSums(e))
-e$sample <-  rownames(e)
-d <- merge(d, e,by.x="sample.id", by.y = "sample")
-dim(d)
-rm(e)
-
-# gc 
-e <- read.delim("output/tables/gc_content_rmse.txt")
-d <- merge(d, e,by.x="sample.id", by.y = "sample.id")
-rm(e)
-
-d$percentage.exon.counts <- d$Assigned/ d$read.count * 100
+source("scripts/R/gsam_metadata.R")
+d <- gsam.metadata
 
 # ---- plot: ----
 
