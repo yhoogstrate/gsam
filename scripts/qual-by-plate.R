@@ -50,37 +50,46 @@ rm(e)
 
 png("output/figures/qc_stats_1st_96.png",width=1200,height=800)
 
-plot(d$percentage.duplicate.reads , d$Assigned/ d$read.count, pch=19, cex=1)
-text(d$percentage.duplicate.reads , d$Assigned/ d$read.count, d$sample,pos=2, cex=1.2)
+plot(d$percentage.duplicate.reads , d$Assigned/ d$read.count * 100, pch=19, cex=1, xlab="Percentage duplicate reads" , ylab = "Percentage reads mapped to exons")
+text(d$percentage.duplicate.reads , d$Assigned/ d$read.count * 100, d$sample,pos=2, cex=1.2)
 
 dev.off()
 
 
 # ---- plot ----
 
-png("output/figures/percentage_duplicates_by_plate_layout.png",width=1200,height=800)
-plot(c(1-0.5,12+0.5), c(1-0.5,8+0.5), type="n",main=paste0("Duplicates by plate layout (red=",max(e$percentage.duplicate.reads),"%, black=",min(e$percentage.duplicate.reads),"%)"),xlab="Plate layout: 1:12",ylab="Plate layout: A:H")
+png("output/figures/percentage_duplicates_by_plate_layout.png",width=1200,height=800, res=72*1.4)
+
+plot(c(1-0.5,12+0.5), c(1-0.5,8+0.5), type="n",
+     main=paste0("Percentage Duplicates by plate layout (red=",
+                  max(d$percentage.duplicate.reads),
+                 "%, black=",
+                 min(d$percentage.duplicate.reads),"%)"),
+     xlab="Plate layout: 1:12",ylab="Plate layout: A:H")
+
 for(x in 1:12) {
   for(y in 1:8) {
-    sid <- d[d$A.H == y & d$X1.12 == x,]$seqID
+    sid <- p[p$A.H == y & p$X1.12 == x,]$seqID
     
-    qual = e[e$Sample == sid,]
-    col_dup <- (qual$percentage.duplicate.reads - min(e$percentage.duplicate.reads)) / (max(e$percentage.duplicate.reads) - min(e$percentage.duplicate.reads))
+    qual = d[d$sample.id == sid,]
+    col_dup <- (qual$percentage.duplicate.reads - min(d$percentage.duplicate.reads)) / (max(d$percentage.duplicate.reads) - min(d$percentage.duplicate.reads))
     rect(x - 0.5, y - 0.5, x + 0.5, y + 0.5, col = rgb( col_dup ,0.0,0.0) )
     
-    text(x, y, sid,cex=1.4,col="white")
+    text(x, y, sid,cex=1,col="white")
   }
 }
 
 abline(h=(1:(12+1)) - 0.5)
 abline(v=(1:(12+1)) - 0.5)
+
+
 dev.off()
 
 
 
 
 
-
+# ---- ----
 
 png("output/figures/percentage_exon_counts_by_plate_layout.png",width=1200,height=800)
 plot(c(1-0.5,12+0.5), c(1-0.5,8+0.5), type="n",main=paste0("Low percentage exon counted reads (red=",min(e$Assigned),"%, black=",max(e$Assigned),"%)"),xlab="Plate layout: 1:12",ylab="Plate layout: A:H")
