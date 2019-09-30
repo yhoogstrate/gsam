@@ -68,7 +68,6 @@ ggsave("output/figures/unspervised_expression_analysis_vst_pca_x_resection.png",
 
 
 # ---- PCA 3 & 4  x  gender ----
-
 stopifnot(
   sum(colnames(e) == gsam.metadata[match(colnames(e) , gsam.metadata$sample.id),]$sample.id)
   ==
@@ -130,8 +129,8 @@ select <- order(variances, decreasing = TRUE)[seq_len(min(ntop, length(variances
 high_variance_genes <- e.vst[select,]
 
 pc <- prcomp(t(high_variance_genes))
-pc1 <- 3
-pc2 <- 4
+pc1 <- 1
+pc2 <- 2
 plot(pc$x[,c(pc1,pc2)],  cex=0.7,pch=19,
      main=paste0("G-SAM RNA PCA (pc",pc1," & pc",pc2,")"),col=as.numeric(cond)+1)
 
