@@ -53,6 +53,33 @@ rm(tmp)
 tmp <- read.delim("data/DNA/sample codes sanger gsam.txt",stringsAsFactors=FALSE)
 tmp <- tmp[,match(c("donor_ID", "donor_sex", "donor_age_at_diagnosis"), colnames(tmp))]
 tmp[tmp$donor_sex == "",]$donor_sex <- NA
+tmp$donor_age_at_diagnosis <- as.integer(round(tmp$donor_age_at_diagnosis ))
+tmp <- tmp[order(tmp$donor_ID),]
+
+# 'clever' overwrite inconsistent duplicates with EXACT same entry, and collapse later with 'distinct' function
+for(sid in unique(tmp$donor_ID)) {
+    #print(sid)
+    tmp.sid <- tmp[tmp$donor_ID == sid,]
+
+    tmp.sid.g <- tmp[tmp$donor_ID == sid & !is.na(tmp$donor_sex),]
+    if( nrow(tmp.sid.g) == 0 ){
+        tmp[tmp$donor_ID == sid,]$donor_sex = NA
+    }
+    else {
+        tmp[tmp$donor_ID == sid,]$donor_sex = tmp.sid.g$donor_sex[1]
+    }
+    
+    tmp.sid.g <- tmp[tmp$donor_ID == sid & !is.na(tmp$donor_age_at_diagnosis),]
+    if( nrow(tmp.sid.g) == 0 ){
+        tmp[tmp$donor_ID == sid,]$donor_age_at_diagnosis = NA
+    }
+    else {
+        tmp[tmp$donor_ID == sid,]$donor_age_at_diagnosis = mean(tmp.sid.g$donor_age_at_diagnosis)
+    }
+}
+
+tmp <- distinct(tmp)
+
 gsam.metadata <- merge(gsam.metadata , tmp , by.x="sample.id" , by.y = "donor_ID" , all.y = F, no.dups=T) # apparently there are dupes
 rm(tmp)
 

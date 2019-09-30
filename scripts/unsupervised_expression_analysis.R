@@ -29,17 +29,12 @@ colnames(e) == gsam.metadata[match(colnames(e) , gsam.metadata$sample.id),]$samp
 #cond <- as.factor(colnames(e) %in% cdk4_high)
 
 
-# v3
-#cond <- as.character(gsam.metadata$v3.rnaseq.v3.percentage > 1.0)
-#cond[is.na(cond)] <- "NA"
-#cond <- as.factor(cond)
-
 # exon read count
 #cond <- as.character((gsam.metadata[match(colnames(e) , gsam.metadata$sample.id),]$featurecounts.Assigned < 2000000))
 #cond <- as.factor(gsub("TRUE", "low.Q", gsub("FALSE", "high.Q", cond, fixed=T), fixed=T))
 
 # resection
-cond <- factor(gsam.metadata[match(colnames(e) , gsam.metadata$sample.id),]$resection)
+cond <- factor(paste0("resection",gsam.metadata[match(colnames(e) , gsam.metadata$sample.id),]$resection))
 
 # gender
 cond <- as.character((gsam.metadata[match(colnames(e) , gsam.metadata$sample.id),]$donor_sex))
@@ -47,20 +42,107 @@ cond[is.na(cond)] <- "NA"
 cond <- as.factor(cond)
 
 
-cond <- as.factor(gsub("FALSE","DNA.wt", gsub("TRUE","DNA.IDH1",as.character(colnames(e) %in% is_idh))))
+#cond <- as.factor(gsub("FALSE","DNA.wt", gsub("TRUE","DNA.IDH1",as.character(colnames(e) %in% is_idh))))
+
+# ---- PCA 1 & 2  x  resection ----
+
+# MAKE SURE ALL IDs MATCH OR QUIT - otherwise metadata was swapped
+stopifnot(
+  sum(colnames(e) == gsam.metadata[match(colnames(e) , gsam.metadata$sample.id),]$sample.id)
+  ==
+    ncol(e) )
+
+# resection
+cond <- factor(paste0("resection",gsam.metadata[match(colnames(e) , gsam.metadata$sample.id),]$resection))
+colnames(e) == gsam.metadata[match(colnames(e) , gsam.metadata$sample.id),]$sample.id
+
+dds <- DESeqDataSetFromMatrix(e, DataFrame(cond), ~cond)
+e.vst <- assay(vst(dds))
+p <- plotPCA(vst(dds), intgroup=c("cond"),ntop=500)
+p <- p + geom_text(aes_string(x = "PC1", y = "PC2", label = "name"), color = "black", nudge_x = 3, nudge_y = 2, size=2.75 )
+
+rm(dds, e.vst, p, cond)
+
+
+ggsave("output/figures/unspervised_expression_analysis_vst_pca_x_resection.png",width=7,height=7,scale=1.5)
+
+
+# ---- PCA 3 & 4  x  gender ----
+
+stopifnot(
+  sum(colnames(e) == gsam.metadata[match(colnames(e) , gsam.metadata$sample.id),]$sample.id)
+  ==
+    ncol(e) )
+
+cond <- as.character((gsam.metadata[match(colnames(e) , gsam.metadata$sample.id),]$donor_sex))
+cond[is.na(cond)] <- "NA"
+cond <- as.factor(cond)
+
+
+png("output/figures/unspervised_expression_analysis_vst_pca_x_gender.png",width=480*2,height=480*2,res=72*2)
 
 dds <- DESeqDataSetFromMatrix(e, DataFrame(cond), ~cond)
 e.vst <- assay(vst(dds))
 
-#pc <- plotPCA(vst(dds), intgroup=c("cond"))
-p <- plotPCA(vst(dds), intgroup=c("cond"))
-p <- p + geom_text(aes_string(x = "PC1", y = "PC2", label = "name"), color = "black")
-print(p)
+ntop <- 500
+variances <- rowVars(e.vst)
+select <- order(variances, decreasing = TRUE)[seq_len(min(ntop, length(variances)))]
+high_variance_genes <- e.vst[select,]
+
+pc <- prcomp(t(high_variance_genes))
+pc1 <- 3
+pc2 <- 4
+plot(pc$x[,c(pc1,pc2)],  cex=0.7,pch=19,
+     main=paste0("G-SAM RNA PCA (pc",pc1," & pc",pc2,")"),col=as.numeric(cond)+1)
+
+legend("bottomleft", unique(as.character(cond)),col=unique(as.numeric(cond) + 1),pch=19)
+
+# draw labels of outliers
+select <- select <- pc$x[,3] < 4 & cond == "Female"
+text( pc$x[select,3] , pc$x[select,4] , rownames(pc$x)[select], cex=0.7, pos=4)
+
+rm(cond, dds, e.vst, ntop, variances, select, high_variance_genes, pc, pc1, pc2)
+
+
+dev.off()
+
+
+# ---- PCA 1 & 2  x  vIII ----
+cond <- paste0("vIII.",gsub("FALSE","neg",gsub("TRUE","pos",as.character(gsam.metadata$v3.rnaseq.v3.percentage > 1.0),fixed=T),fixed=T))
+cond[is.na(cond) | cond == "vIII.NA"] <- "NA"
+cond <- as.factor(cond)
+
+dds <- DESeqDataSetFromMatrix(e, DataFrame(cond), ~cond)
+e.vst <- assay(vst(dds))
+
+
+stopifnot(
+  sum(colnames(e) == gsam.metadata[match(colnames(e) , gsam.metadata$sample.id),]$sample.id)
+  ==
+    ncol(e) )
+
+
+png("output/figures/unspervised_expression_analysis_vst_pca_x_vIII.png",width=480*2,height=480*2,res=72*2)
+
+ntop <- 500
+variances <- rowVars(e.vst)
+select <- order(variances, decreasing = TRUE)[seq_len(min(ntop, length(variances)))]
+high_variance_genes <- e.vst[select,]
+
+pc <- prcomp(t(high_variance_genes))
+pc1 <- 3
+pc2 <- 4
+plot(pc$x[,c(pc1,pc2)],  cex=0.7,pch=19,
+     main=paste0("G-SAM RNA PCA (pc",pc1," & pc",pc2,")"),col=as.numeric(cond)+1)
+
+legend("bottomleft", unique(as.character(cond)),col=unique(as.numeric(cond) + 1),pch=19)
+
+
+dev.off()
 
 
 
-
-# do DE
+# ---- do DE ----
 
 outliers = rownames(p$data)[ p$data[,1] > 12.5 ] 
 cond <- as.factor(colnames(e) %in% outliers)
