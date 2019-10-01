@@ -14,6 +14,15 @@ dna_idh <- dna_idh[is_idh1 | is_idh2 ,]
 rm(is_idh1, is_idh2)
 
 is_idh <- as.character(dna_idh$Sample)
-match(is_idh  , tmp$PD_ID)
 
+
+tmp <- read.delim("data/DNA/sample codes sanger gsam.txt",stringsAsFactors=FALSE)
+tmp <- tmp[,match(c("donor_ID", "PD_ID"), colnames(tmp))]
+
+
+match(is_idh  , tmp$PD_ID)
 is_idh <- tmp[match(is_idh  , tmp$PD_ID),]$donor_ID
+
+rm(tmp, dna_idh)
+
+
