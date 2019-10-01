@@ -81,7 +81,7 @@ for(sid in unique(tmp$donor_ID)) {
 tmp <- distinct(tmp)
 
 gsam.metadata <- merge(gsam.metadata , tmp , by.x="sample.id" , by.y = "donor_ID" , all.y = F, no.dups=T) # apparently there are dupes
-rm(tmp)
+rm(tmp, sid)
 
 
 

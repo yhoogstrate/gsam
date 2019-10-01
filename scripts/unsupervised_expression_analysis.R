@@ -13,6 +13,7 @@ source("scripts/R/expression_matrix.R")
 gene_matrix$Chr <- gsub("^([^;]+);.+$","\\1",gene_matrix$Chr)
 gene_matrix$Start <- gsub("^([^;]+);.+$","\\1",gene_matrix$Start)
 source("scripts/R/ensembl_to_geneid.R")
+source("scripts/R/chrom_sizes.R")
 
 source("scripts/R/dna_idh.R")
 
@@ -173,13 +174,37 @@ text( pc$x[select,pc1] , pc$x[select,pc2] , rownames(pc$x)[select], cex=0.7, pos
 
 
 legend("bottomleft", unique(as.character(cond)),col=unique(as.numeric(cond) + 1),pch=19)
+rm(pc, pc1, pc2)
+
 
 
 dev.off()
 
 
 
-# ---- do DE ----
+# ---- MDS ----
+ntop <- 5000
+variances <- rowVars(e.vst)
+select <- order(variances, decreasing = TRUE)[seq_len(min(ntop, length(variances)))]
+high_variance_genes <- e.vst[select,]
+
+#pc <- prcomp(t(high_variance_genes))
+sampleDists <- dist(t(high_variance_genes))
+sampleDistMatrix <- as.matrix(sampleDists)
+pheatmap(sampleDistMatrix,
+        clustering_distance_rows=sampleDists,
+        clustering_distance_cols=sampleDists)
+
+
+# ---- do DE - rechtse wolk----
+
+ntop <- 500
+variances <- rowVars(e.vst)
+select <- order(variances, decreasing = TRUE)[seq_len(min(ntop, length(variances)))]
+high_variance_genes <- e.vst[select,]
+
+pc <- prcomp(t(high_variance_genes))
+#sampleDists <- dist(t(high_variance_genes))
 
 outliers <- rownames(pc$x)[ pc$x[,1] > 14 ] 
 cond <- as.factor(colnames(e) %in% outliers)
@@ -202,17 +227,43 @@ dim(res)
 
 res <- res[order(res$padj),]
 res$gid <- ens_ids[match(gsub("\\..+","",rownames(res)), gsub("\\..+","",ens_ids$ens.id)),]$gene.id
+res <- res[order(res$padj),]
+o <- match(rownames(res) , gene_matrix$Geneid)
+res$chr <- gene_matrix[o,]$Chr
+res$start <- as.numeric(gene_matrix[o,]$Start)
+
 sig <- res[res$padj < 0.01,]
 
-o <- match(rownames(sig) , gene_matrix$Geneid)
-sig$chr <- gene_matrix[o,]$Chr
-sig$start <- gene_matrix[o,]$Start
+
+cdkn2ab_r <- res[res$chr == "chr9" & res$start > 21600000 & res$start < 22300000,]
+
+
+
 
 write.table(sig, "/tmp/sig-right-area.txt")
 
 
-chr19 <- sig[sig$chr == "chr10",]
-plot(as.integer(gsub("M","",chr19$start)), chr19$log2FoldChange, pch=19,cex=0.6)
+
+png("output/figures/unsupervised_expression_analysis__de_right_pca_cloud.png", width=480*3.5 , height=480*2 , res=72*2)
+
+#plot(c(chrs_hg19_s["chr6"] + 10000000, chrs_hg19_s["chr6"] + 40000000 ), c(min(sig$log2FoldChange), max(sig$log2FoldChange)), pch=19, cex=0.2 , main="DE Rechter wolk PCA",type="n")
+plot(c(chrs_hg19_s["chr1"] + 10000000, chrs_hg19_e["chr22"] ), c(min(sig$log2FoldChange), max(sig$log2FoldChange)), pch=19, cex=0.2 , main="DE Rechter wolk PCA",type="n",xlab="Chromosomal location",xaxt="n",ylab="LogFC DE Genes (padj<0.01)")
+points(chrs_hg19_s[sig$chr] + as.numeric(sig$start) , sig$log2FoldChange, pch=19, cex=0.2)
+abline(v=chrs_hg19_s)
+
+#chr19 <- sig[sig$chr == "chr10",]
+#plot(as.integer(gsub("M","",chr19$start)), chr19$log2FoldChange, pch=19,cex=0.6)
+
+for(chr in names(chrs_hg19)) {
+  text( (chrs_hg19_s[chr] + chrs_hg19_e[chr]) / 2 , -6 , chr, srt=90,cex=0.7)
+}
+
+#abline(v=chrs_hg19_s["chr6"] + 30000000, col="red", lwd=2)
+#abline(v=chrs_hg19_s["chr6"] + 34000000, col="red", lwd=2)
+
+dev.off()
+
+
 
 
 
@@ -240,21 +291,38 @@ res <- res[order(res$padj),]
 dim(res)
 
 res <- res[order(res$padj),]
+o <- match(rownames(res) , gene_matrix$Geneid)
+res$chr <- gene_matrix[o,]$Chr
+res$start <- as.numeric(gene_matrix[o,]$Start)
+
 sig <- res[res$padj < 0.01,]
 
-o <- match(rownames(sig) , gene_matrix$Geneid)
-sig$chr <- gene_matrix[o,]$Chr
-sig$start <- gene_matrix[o,]$Start
 
-
-chr19 <- sig[sig$chr == "chr9",]
-plot(as.integer(gsub("M","",chr19$start)), chr19$log2FoldChange, pch=19,cex=0.6)
+cdkn2ab_tl <- res[res$chr == "chr9" & res$start > 21600000 & res$start < 22300000,]
 
 
 
-#o <- match(rownames(sig) , gene_matrix$Geneid)
-#sig$chr <- gene_matrix[o,]$Chr
-#sig$start <- paste0(round(as.numeric(gene_matrix[o,]$Start) / 1000000), 'M')
+png("output/figures/unsupervised_expression_analysis__de_topleft_idh_corner.png", width=480*3.5 , height=480*2 , res=72*2)
+
+plot(c(chrs_hg19_s["chr1"] + 10000000, chrs_hg19_e["chr22"] ), c(min(sig$log2FoldChange), max(sig$log2FoldChange)), pch=19, cex=0.2 , main="DE top-left corner w/IDH samples in PCA",type="n",xlab="Chromosomal location",xaxt="n",ylab="LogFC DE Genes (padj<0.01)")
+
+points(chrs_hg19_s[sig$chr] + as.numeric(sig$start) , sig$log2FoldChange, pch=19, cex=0.2)
+abline(v=chrs_hg19_s)
+
+#chr19 <- sig[sig$chr == "chr10",]
+#plot(as.integer(gsub("M","",chr19$start)), chr19$log2FoldChange, pch=19,cex=0.6)
+
+for(chr in names(chrs_hg19)) {
+  text( (chrs_hg19_s[chr] + chrs_hg19_e[chr]) / 2 , -5.25 , chr, srt=90,cex=0.7)
+}
+
+#abline(v=chrs_hg19_s["chr6"] + 30000000, col="red", lwd=2)
+#abline(v=chrs_hg19_s["chr6"] + 34000000, col="red", lwd=2)
+
+dev.off()
+
+
+
 
 write.table(sig, "/tmp/sig-upper-corner-cluster.txt")
 
