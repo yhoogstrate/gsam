@@ -1,11 +1,9 @@
 /data
 .venv
 /bin
-/output
 /ignore
 /tmp
 *.odt
 ~*
 .~*
 /figures
-/misc
