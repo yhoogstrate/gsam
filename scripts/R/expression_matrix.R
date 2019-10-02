@@ -1,6 +1,6 @@
 #!/usr/bin/env R
 
-expression_matrix <- read.delim("output/tables/featureCounts_gsam_1st96.exon-level.txt",stringsAsFactors = F,comment="#")
+expression_matrix <- read.delim("data/RNA/output/tables/featureCounts_gsam_1st96.exon-level.txt",stringsAsFactors = F,comment="#")
 colnames(expression_matrix) <- gsub("^[^_]+_([^_]+)_.+$","\\1",colnames(expression_matrix),fixed=F)
 
 gene_matrix <- expression_matrix[,1:6]
