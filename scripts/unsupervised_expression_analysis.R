@@ -36,12 +36,12 @@ colnames(e) == gsam.metadata[match(colnames(e) , gsam.metadata$sample.id),]$samp
 #cond <- as.factor(gsub("TRUE", "low.Q", gsub("FALSE", "high.Q", cond, fixed=T), fixed=T))
 
 # resection
-cond <- factor(paste0("resection",gsam.metadata[match(colnames(e) , gsam.metadata$sample.id),]$resection))
+#cond <- factor(paste0("resection",gsam.metadata[match(colnames(e) , gsam.metadata$sample.id),]$resection))
 
 # gender
-cond <- as.character((gsam.metadata[match(colnames(e) , gsam.metadata$sample.id),]$donor_sex))
-cond[is.na(cond)] <- "NA"
-cond <- as.factor(cond)
+#cond <- as.character((gsam.metadata[match(colnames(e) , gsam.metadata$sample.id),]$donor_sex))
+#cond[is.na(cond)] <- "NA"
+#cond <- as.factor(cond)
 
 
 
@@ -270,11 +270,26 @@ dev.off()
 
 # ---- de group having some IDH1 mutants ----
 
+# create VST transformed data
+cond <- as.factor(round(runif(ncol(e))) + 1)
+dds <- DESeqDataSetFromMatrix(e, DataFrame(cond), ~cond)
+e.vst <- assay(vst(dds))
+rm(cond, dds)
+
+# do PCA on VST transformed data
+ntop <- 500
+variances <- rowVars(e.vst)
+select <- order(variances, decreasing = TRUE)[seq_len(min(ntop, length(variances)))]
+high_variance_genes <- e.vst[select,]
+pc <- prcomp(t(high_variance_genes))
+
+# create subgroups based on that PCA
 outliers2 = rownames(pc$x)[ pc$x[,1] < 0 & pc$x[,2] > 12.5] 
 cond <- as.factor(colnames(e) %in% outliers2)
 
-
+# do DE analyses based on the subgroups
 dds <- DESeqDataSetFromMatrix(e, DataFrame(cond), ~cond)
+
 
 # Keep only on average 3 reads per sample
 print(dim(dds))
@@ -327,6 +342,59 @@ dev.off()
 write.table(sig, "/tmp/sig-upper-corner-cluster.txt")
 
 
+# fgsea
+getLeadingSymbols <- function(x){
+  z <- lapply(x$leadingEdge, function(y){ paste(unique(na.omit(clusterProfiler::bitr(y, fromType = 'ENSEMBL', toType = 'SYMBOL', OrgDb = org.Hs.eg.db::org.Hs.eg.db)$SYMBOL)), collapse = ', ')})
+  return(unlist(z))
+}
 
+
+
+ens <- gsub("\\..+$","",rownames(res))
+library(biomaRt)
+human = useMart("ensembl", dataset = "hsapiens_gene_ensembl")
+genes <- getBM(
+  attributes=c("hgnc_symbol","entrezgene_id","ensembl_gene_id","chromosome_name","start_position","end_position"),
+  mart = mart)
+entrez <- genes[ match(ens, genes$ensembl_gene_id) ,]$entrezgene_id
+stopifnot(length(entrez) == length(ens))
+
+res$entrez <- entrez
+gseaDat <- res[!is.na(res$entrez),]
+gseaDat <- gseaDat[!duplicated(gseaDat$entrez),] # conversion leads to two duplicated ENTREZ ids, remove them
+
+pws <- reactomePathways(as.character(gseaDat$entrez))
+pws <- fgsea::gmtPathways('misc/h.all.v6.2.entrez.gmt')
+pws <- fgsea::gmtPathways('misc/msigdb.v6.2.entrez.gmt')
+#names(pws) <- gsub("HALLMARK_","",names(pws),fixed=T)
+
+
+gseaDat <- gseaDat [order(gseaDat$stat) , ]
+ranks <- gseaDat$stat
+#gseaDat <- gseaDat [order(gseaDat$log2FoldChange) , ]
+#ranks <- gseaDat$log2FoldChange
+
+names(ranks) <- gseaDat$entrez
+
+fgseaRes <- fgsea(pws, ranks, minSize=15, maxSize = 500, nperm=10000)# higher number of permutations for more stable results
+
+fgseaRes <- fgseaRes[order(fgseaRes$pval),]
+
+
+fgseaResa <- fgsea(pws, ranks, minSize=15, maxSize = 500, nperm=10000)# higher number of permutations for more stable results
+fgseaResb <- fgsea(pws, ranks, minSize=15, maxSize = 500, nperm=10000)# higher number of permutations for more stable results
+ 
+plot(fgseaResa$pval , fgseaResb$pval, pch=19,cex=0.1)
+
+
+
+#plotEnrichment(pws, ranks, gseaParam = 1, ticksSize = 0.2)
+plotEnrichment(pws$`Neuronal System`, ranks, gseaParam = 1, ticksSize = 0.2)
+
+plotEnrichment(pws$`SHEDDEN_LUNG_CANCER_POOR_SURVIVAL_A6`, ranks, gseaParam = 1, ticksSize = 0.2)
+
+#pdf("gsea.msigdb.hallmark.pdf")
+plotGseaTable(pws, ranks, fgseaRes, gseaParam = 1, colwidths = c(5, 3, 0.8, 1.2, 1.2), render = TRUE)
+#dev.off()
 
 

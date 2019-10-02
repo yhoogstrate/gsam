@@ -37,18 +37,37 @@ rm(dds, keep, cond)
 
 sel <- match( gsub("\\..+$","",tt1) , gsub("\\..+$","",rownames(e))) 
 f <- e[sel,]
-
-# @todo: ADD vIII
+rownames(f) <- ens_ids[match( gsub("\\..+$","",rownames(f)), gsub("\\..+", "" ,ens_ids$ens.id) ),]$gene.id
 
 f_normalised <- t(t(f) * sample_size_factors)
 
+# @todo: ADD vIII ~ does not need to be normalized as it is relative to wt EGFR
+order <- match(vIII$sample , colnames(f_normalised))
+#colnames(f_normalised) == vIII[order,]$sample # matches
+#vIII[order,]$vIII.percentage
+
+
+f_normalised <- t(t(f) * sample_size_factors)
+f_normalised <- f_normalised + 0.0001
+
+
+v3 <- vIII[order,]$vIII.percentage
+v3[is.na(v3)] <- 0.0
+v3 <- v3 + 0.0001 
+g <- rbind(f_normalised , vIII.percentage = v3)
 
 # ----- find those samples that have 2 resections -----
 two_resections_rna <- gsam.metadata[ duplicated(gsam.metadata$pid),]$pid
 #two_resections_rna <- gsam.metadata[  gsam.metadata$pid %in% two_resections_rna ,]$sample.id
 
 
+# ---- make new table with the fold changes between res1 and res2 ----
+g <- g[,gsub("[0-9]+$","",colnames(g)) %in% two_resections_rna]
+g1 <- g[,gsub("^[A-Z]+","",colnames(g)) == "1"]
+g2 <- g[,gsub("^[A-Z]+","",colnames(g)) == "2"]
+
+d <- log2(g2/g1)
 
 
-
+corrplot(cor(t(d),method="spearman"))
 
