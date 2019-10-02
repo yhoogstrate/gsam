@@ -15,6 +15,9 @@ knitr::opts_chunk$set("root.dir", wd)
 ```{r}
 library(DESeq2)
 library(ggplot2)
+library(pheatmap)
+library(fgsea)
+
 ```
 
 # load: functions
@@ -226,6 +229,8 @@ pheatmap(sampleDistMatrix,
 
 De wolk aan de rechterkant
 
+## DGE / DESeq2 part
+
 ```{r}
 ntop <- 500
 variances <- rowVars(e.vst)
@@ -265,11 +270,13 @@ res$chr <- gene_matrix[o,]$Chr
 res$start <- as.numeric(gene_matrix[o,]$Start)
 rownames(res) <- gsub("\\..+$","",rownames(res)) 
 
-
+# subtract significant ones (not for GSEA, which requires all of them)
 sig <- res[res$padj < 0.01,]
 
 
-cdkn2ab_r <- res[res$chr == "chr9" & res$start > 21600000 & res$start < 22300000,]
+# take a look at some specific genes/regions
+#cdkn2ab_r <- res[res$chr == "chr9" & res$start > 21600000 & res$start < 22300000,]
+#mgmt
 
 
 
@@ -298,44 +305,45 @@ for(chr in names(chrs_hg19)) {
 dev.off()
 ```
 
+
+## GSEA / fgsea part
+
 ```{r}
-genes <- get_ensembl_hsapiens_gene_ids()
-res$entrez <- genes[ match(ens, genes$ensembl_gene_id) ,]$entrezgene_id
-stopifnot(length(res$entrez) == length(ens))
+res$entrez <- ensembl_genes[ match(gsub("\\..+$","",rownames(res)), ensembl_genes$ensembl_gene_id) ,]$entrezgene_id
+stopifnot(length(res$entrez) == nrow(res))
 
 dim(res)
+#[1] 26729    10
+
 gseaDat <- res[!is.na(res$entrez),]
 dim(gseaDat)
+#[1] 16366    10
+
 gseaDat <- gseaDat[!duplicated(gseaDat$entrez),] # conversion leads to two duplicated ENTREZ ids, remove them
 dim(gseaDat)
+#[1] 16346    10
+
 
 pws <- reactomePathways(as.character(gseaDat$entrez))
-pws <- fgsea::gmtPathways('misc/h.all.v6.2.entrez.gmt')
-pws <- fgsea::gmtPathways('misc/msigdb.v6.2.entrez.gmt')
+#pws <- fgsea::gmtPathways('misc/h.all.v6.2.entrez.gmt')
+#pws <- fgsea::gmtPathways('misc/msigdb.v6.2.entrez.gmt')
 
 
-gseaDat <- gseaDat [order(gseaDat$stat) , ]
-ranks <- gseaDat$stat
 #gseaDat <- gseaDat [order(gseaDat$log2FoldChange) , ]
 #ranks <- gseaDat$log2FoldChange
-
+gseaDat <- gseaDat [order(gseaDat$stat) , ]
+ranks <- gseaDat$stat
 names(ranks) <- gseaDat$entrez
 
+# do GSEA and reorder table
 fgseaRes <- fgsea(pws, ranks, minSize=15, maxSize = 500, nperm=10000)# higher number of permutations for more stable results
-
 fgseaRes <- fgseaRes[order(fgseaRes$pval),]
 
 
-fgseaResa <- fgsea(pws, ranks, minSize=15, maxSize = 500, nperm=10000)# higher number of permutations for more stable results
-fgseaResb <- fgsea(pws, ranks, minSize=15, maxSize = 500, nperm=10000)# higher number of permutations for more stable results
- 
-plot(fgseaResa$pval , fgseaResb$pval, pch=19,cex=0.1)
+# High scoring gene set:
+plotEnrichment(pws$`REACTOME_ADAPTIVE_IMMUNE_SYSTEM`, ranks, gseaParam = 1, ticksSize = 0.2)
 
-
-
-#plotEnrichment(pws, ranks, gseaParam = 1, ticksSize = 0.2)
-plotEnrichment(pws$`Neuronal System`, ranks, gseaParam = 1, ticksSize = 0.2)
-
+# Gene set scoring high in other comparison
 plotEnrichment(pws$`SHEDDEN_LUNG_CANCER_POOR_SURVIVAL_A6`, ranks, gseaParam = 1, ticksSize = 0.2)
 
 #pdf("gsea.msigdb.hallmark.pdf")
