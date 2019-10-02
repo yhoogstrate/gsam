@@ -111,7 +111,7 @@ dev.off()
 ```
 
 
-# PCA 1 & 2  x  vIII
+## PCA: pc1 & pc2  x  vIII
 
 Ook belangrijk is de status van vIII
 
@@ -152,7 +152,11 @@ dev.off()
 
 
 
-# ---- PCA 1 & 2  x  IDH(1+2) ----
+## PCA: pc1 & pc2  x  IDH(1+2)
+
+IDH1 gevonden met DNA-seq
+
+```{r}
 png("output/figures/unspervised_expression_analysis_vst_pca_x_IDH_1_2.png",width=480*2,height=480*2,res=72*2)
 
 cond <- as.factor(gsub("FALSE","DNA.wt", gsub("TRUE","DNA.IDH",as.character(colnames(e) %in% is_idh))))
@@ -189,14 +193,25 @@ rm(pc, pc1, pc2)
 
 
 dev.off()
+```
 
 
+## MDS
 
-# ---- MDS ----
+Bij het kiezen van 5.000 genen lijkt de MDS het meest overeen te komen met PCA qua clusters?
+
+```{r}
 ntop <- 5000
+
+cond <- as.factor(round(runif(ncol(e))) + 1)# unsupervised, so random labels are ok
+dds <- DESeqDataSetFromMatrix(e, DataFrame(cond), ~cond) 
+e.vst <- assay(vst(dds))
+rm(dds, cond)
+
 variances <- rowVars(e.vst)
 select <- order(variances, decreasing = TRUE)[seq_len(min(ntop, length(variances)))]
 high_variance_genes <- e.vst[select,]
+rm(e.vst, select, variances)
 
 #pc <- prcomp(t(high_variance_genes))
 sampleDists <- dist(t(high_variance_genes))
@@ -204,10 +219,14 @@ sampleDistMatrix <- as.matrix(sampleDists)
 pheatmap(sampleDistMatrix,
         clustering_distance_rows=sampleDists,
         clustering_distance_cols=sampleDists)
+```
 
 
-# ---- do DE - rechtse wolk----
+# DGE: rechtse wolk
 
+De wolk aan de rechterkant
+
+```{r}
 ntop <- 500
 variances <- rowVars(e.vst)
 select <- order(variances, decreasing = TRUE)[seq_len(min(ntop, length(variances)))]
@@ -272,13 +291,56 @@ for(chr in names(chrs_hg19)) {
 #abline(v=chrs_hg19_s["chr6"] + 34000000, col="red", lwd=2)
 
 dev.off()
+```
+
+```{r}
+genes <- get_ensembl_hsapiens_gene_ids()
+res$entrez <- genes[ match(ens, genes$ensembl_gene_id) ,]$entrezgene_id
+stopifnot(length(res$entrez) == length(ens))
+
+dim(res)
+gseaDat <- res[!is.na(res$entrez),]
+dim(gseaDat)
+gseaDat <- gseaDat[!duplicated(gseaDat$entrez),] # conversion leads to two duplicated ENTREZ ids, remove them
+dim(gseaDat)
+
+pws <- reactomePathways(as.character(gseaDat$entrez))
+pws <- fgsea::gmtPathways('misc/h.all.v6.2.entrez.gmt')
+pws <- fgsea::gmtPathways('misc/msigdb.v6.2.entrez.gmt')
+
+
+gseaDat <- gseaDat [order(gseaDat$stat) , ]
+ranks <- gseaDat$stat
+#gseaDat <- gseaDat [order(gseaDat$log2FoldChange) , ]
+#ranks <- gseaDat$log2FoldChange
+
+names(ranks) <- gseaDat$entrez
+
+fgseaRes <- fgsea(pws, ranks, minSize=15, maxSize = 500, nperm=10000)# higher number of permutations for more stable results
+
+fgseaRes <- fgseaRes[order(fgseaRes$pval),]
+
+
+fgseaResa <- fgsea(pws, ranks, minSize=15, maxSize = 500, nperm=10000)# higher number of permutations for more stable results
+fgseaResb <- fgsea(pws, ranks, minSize=15, maxSize = 500, nperm=10000)# higher number of permutations for more stable results
+ 
+plot(fgseaResa$pval , fgseaResb$pval, pch=19,cex=0.1)
 
 
 
+#plotEnrichment(pws, ranks, gseaParam = 1, ticksSize = 0.2)
+plotEnrichment(pws$`Neuronal System`, ranks, gseaParam = 1, ticksSize = 0.2)
+
+plotEnrichment(pws$`SHEDDEN_LUNG_CANCER_POOR_SURVIVAL_A6`, ranks, gseaParam = 1, ticksSize = 0.2)
+
+#pdf("gsea.msigdb.hallmark.pdf")
+plotGseaTable(pws, ranks, fgseaRes, gseaParam = 1, colwidths = c(5, 3, 0.8, 1.2, 1.2), render = TRUE)
+#dev.off()
+```
 
 
-
-# ---- de group having some IDH1 mutants ----
+# DGE: top left corner containing IDH mutants
+```{r}
 e <- expression_matrix
 
 # create VST transformed data
@@ -352,10 +414,11 @@ dev.off()
 
 
 write.table(sig, "/tmp/sig-upper-corner-cluster.txt")
+```
 
 
 
-
+```{r}
 genes <- get_ensembl_hsapiens_gene_ids()
 res$entrez <- genes[ match(ens, genes$ensembl_gene_id) ,]$entrezgene_id
 stopifnot(length(res$entrez) == length(ens))
@@ -398,5 +461,4 @@ plotEnrichment(pws$`SHEDDEN_LUNG_CANCER_POOR_SURVIVAL_A6`, ranks, gseaParam = 1,
 #pdf("gsea.msigdb.hallmark.pdf")
 plotGseaTable(pws, ranks, fgseaRes, gseaParam = 1, colwidths = c(5, 3, 0.8, 1.2, 1.2), render = TRUE)
 #dev.off()
-
 ```
