@@ -1,13 +1,14 @@
 #!/usr/bin/env R
 
-setwd("/home/youri/projects/gsam")
+#setwd("/home/youri/projects/gsam")
+setwd("/home/yhoogstrate/projects/gsam")
 
 # ---- libs ----
 library(DESeq2)
 library(ggplot2)
 
 # ---- load data ----
-source("scripts/R/ligands.R")
+source("scripts/R/ligands.R")# @ todo gsub suffixes in ensembl ids
 source("scripts/R/gsam_metadata.R")
 source("scripts/R/expression_matrix.R")
 gene_matrix$Chr <- gsub("^([^;]+);.+$","\\1",gene_matrix$Chr)
