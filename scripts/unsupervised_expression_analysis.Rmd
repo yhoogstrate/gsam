@@ -240,6 +240,7 @@ cond <- as.factor(colnames(e) %in% outliers)
 
 
 dds <- DESeqDataSetFromMatrix(e, DataFrame(cond), ~cond)
+e.vst <- assay(vst(dds))
 
 # Keep only on average 3 reads per sample
 print(dim(dds))
@@ -257,9 +258,13 @@ dim(res)
 res <- res[order(res$padj),]
 res$gid <- ens_ids[match(gsub("\\..+","",rownames(res)), gsub("\\..+","",ens_ids$ens.id)),]$gene.id
 res <- res[order(res$padj),]
+
+# Add things like chr/pos , HGNC gene symbol & Entrez gene id
 o <- match(rownames(res) , gene_matrix$Geneid)
 res$chr <- gene_matrix[o,]$Chr
 res$start <- as.numeric(gene_matrix[o,]$Start)
+rownames(res) <- gsub("\\..+$","",rownames(res)) 
+
 
 sig <- res[res$padj < 0.01,]
 
@@ -269,7 +274,7 @@ cdkn2ab_r <- res[res$chr == "chr9" & res$start > 21600000 & res$start < 22300000
 
 
 
-write.table(sig, "/tmp/sig-right-area.txt")
+##write.table(sig, "/tmp/sig-right-area.txt")
 
 
 
