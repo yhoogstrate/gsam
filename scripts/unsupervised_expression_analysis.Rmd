@@ -1,97 +1,81 @@
 # Set wd
 
 ```{r}
-#setwd("/home/youri/projects/gsam")
-setwd("/home/yhoogstrate/projects/gsam")
+wd <- "/home/youri/projects/gsam"
+wd <- "/home/yhoogstrate/projects/gsam"
+
+require("knitr")
+opts_knit$set(root.dir = wd)
+knitr::opts_chunk$set("root.dir", wd)
+#setwd(wd)
 ```
 
-# load: libs ----
+# load: libs
 
 ```{r}
 library(DESeq2)
 library(ggplot2)
-
-# ---- load: functions ----
-get_ensembl_hsapiens_gene_ids <- function() {
-  library(biomaRt)
-  human = useMart("ensembl", dataset = "hsapiens_gene_ensembl")
-  genes <- getBM(
-    attributes=c("hgnc_symbol","entrezgene_id","ensembl_gene_id","chromosome_name","start_position","end_position"),
-  mart = human)
-
-  return(genes)
-}
 ```
 
-# ---- load: data ----
+# load: functions
+## get_ensembl_hsapiens_gene_ids
+Loads a function that allows to translate ENSEMBL IDs into HUGO symbols (handy for sharing tables) and Entrez IDs (handy for GSEa like analysis)
+```{r}
+ensembl_genes <- get_ensembl_hsapiens_gene_ids()
+```
+
+# load: data
+
+Load the data (expression values; metadata) into data frames
+
 ```{r}
 source("scripts/R/ligands.R")# @ todo gsub suffixes in ensembl ids
 source("scripts/R/gsam_metadata.R")
 source("scripts/R/expression_matrix.R")
 gene_matrix$Chr <- gsub("^([^;]+);.+$","\\1",gene_matrix$Chr)
 gene_matrix$Start <- gsub("^([^;]+);.+$","\\1",gene_matrix$Start)
-source("scripts/R/ensembl_to_geneid.R")
+
+source("scripts/R/ensembl_to_geneid.R") # obsolete? can be replaced with the get_ensembl function
+ensembl_genes <- get_ensembl_hsapiens_gene_ids()
+
 source("scripts/R/chrom_sizes.R")
 
 source("scripts/R/dna_idh.R")
+```
 
-# ---- unsupervised DESeq2 PCA [ all genes, all samples ] ----
+```{r }
+a <- 123
+b <- 23
+```
+
+# unsupervised DESeq2 PCA / MDS / clustering / t-SNE
+
+## PCA: pc1 & pc2  x  resection
+```{r}
 e <- expression_matrix
+# make sure order metadata aligns with expression data (!)
+stopifnot(sum(colnames(e) == gsam.metadata[match(colnames(e) , gsam.metadata$sample.id),]$sample.id) == ncol(e))
 
-colnames(e) == gsam.metadata[match(colnames(e) , gsam.metadata$sample.id),]$sample.id
-
-# EGFR
-#egfr_high <- colnames(e.vst) [ e.vst[match("ENSG00000146648" ,gsub("\\..+$","",rownames(e.vst))),] > 12.5 ]
-#cond <- as.factor(gsub("FALSE","EGFR.low",gsub("TRUE","EGFR.high",as.character(colnames(e) %in% egfr_high),fixed=T),fixed=T))
-
-# cdk4
-#cdk4_high <- colnames(e.vst) [ e.vst[match("ENSG00000135446" ,gsub("\\..+$","",rownames(e.vst))),] > 8.64 ]
-#cond <- as.factor(colnames(e) %in% cdk4_high)
-
-
-# exon read count
-#cond <- as.character((gsam.metadata[match(colnames(e) , gsam.metadata$sample.id),]$featurecounts.Assigned < 2000000))
-#cond <- as.factor(gsub("TRUE", "low.Q", gsub("FALSE", "high.Q", cond, fixed=T), fixed=T))
-
-# resection
-#cond <- factor(paste0("resection",gsam.metadata[match(colnames(e) , gsam.metadata$sample.id),]$resection))
-
-# gender
-#cond <- as.character((gsam.metadata[match(colnames(e) , gsam.metadata$sample.id),]$donor_sex))
-#cond[is.na(cond)] <- "NA"
-#cond <- as.factor(cond)
-
-
-
-
-# ---- PCA 1 & 2  x  resection ----
-
-# MAKE SURE ALL IDs MATCH OR QUIT - otherwise metadata was swapped
-stopifnot(
-  sum(colnames(e) == gsam.metadata[match(colnames(e) , gsam.metadata$sample.id),]$sample.id)
-  ==
-    ncol(e) )
-
-# resection
+# resection as condition
 cond <- factor(paste0("resection",gsam.metadata[match(colnames(e) , gsam.metadata$sample.id),]$resection))
 colnames(e) == gsam.metadata[match(colnames(e) , gsam.metadata$sample.id),]$sample.id
 
 dds <- DESeqDataSetFromMatrix(e, DataFrame(cond), ~cond)
-e.vst <- assay(vst(dds))
-p <- plotPCA(vst(dds), intgroup=c("cond"),ntop=500)
-p <- p + geom_text(aes_string(x = "PC1", y = "PC2", label = "name"), color = "black", nudge_x = 3, nudge_y = 2, size=2.75 )
-
-rm(dds, e.vst, p, cond)
-
+pc <- plotPCA(vst(dds), intgroup=c("cond"), ntop=500)# expression values transformed into more normal distributed shape
+pc <- pc + geom_text(aes_string(x = "PC1", y = "PC2", label = "name"), color = "black", nudge_x = 3, nudge_y = 2, size=2.75 )
 
 ggsave("output/figures/unspervised_expression_analysis_vst_pca_x_resection.png",width=7,height=7,scale=1.5)
 
+rm(dds, pc, cond,e)
 
-# ---- PCA 3 & 4  x  gender ----
-stopifnot(
-  sum(colnames(e) == gsam.metadata[match(colnames(e) , gsam.metadata$sample.id),]$sample.id)
-  ==
-    ncol(e) )
+```
+
+
+## PCA: pc3 & pc4  x  gender
+```{r}
+e <- expression_matrix
+# make sure order metadata aligns with expression data (!)
+stopifnot(sum(colnames(e) == gsam.metadata[match(colnames(e) , gsam.metadata$sample.id),]$sample.id) == ncol(e))
 
 cond <- as.character((gsam.metadata[match(colnames(e) , gsam.metadata$sample.id),]$donor_sex))
 cond[is.na(cond)] <- "NA"
@@ -120,14 +104,23 @@ legend("bottomleft", unique(as.character(cond)),col=unique(as.numeric(cond) + 1)
 select <- select <- pc$x[,pc1] < 4 & cond == "Female"
 text( pc$x[select,pc1] , pc$x[select,pc1] , rownames(pc$x)[select], cex=0.7, pos=4)
 
-rm(cond, dds, e.vst, ntop, variances, select, high_variance_genes, pc, pc1, pc2)
+rm(cond, dds, e.vst, ntop, variances, select, high_variance_genes, pc, pc1, pc2, e)
 
 
 dev.off()
+```
 
 
-# ---- PCA 1 & 2  x  vIII ----
+# PCA 1 & 2  x  vIII
+
+Ook belangrijk is de status van vIII
+
+```{r}
 png("output/figures/unspervised_expression_analysis_vst_pca_x_vIII.png",width=480*2,height=480*2,res=72*2)
+
+e <- expression_matrix
+# make sure order metadata aligns with expression data (!)
+stopifnot(sum(colnames(e) == gsam.metadata[match(colnames(e) , gsam.metadata$sample.id),]$sample.id) == ncol(e))
 
 
 cond <- paste0("vIII.",gsub("FALSE","neg",gsub("TRUE","pos",as.character(gsam.metadata$v3.rnaseq.v3.percentage > 1.0),fixed=T),fixed=T))
@@ -138,10 +131,6 @@ dds <- DESeqDataSetFromMatrix(e, DataFrame(cond), ~cond)
 e.vst <- assay(vst(dds))
 
 
-stopifnot(
-  sum(colnames(e) == gsam.metadata[match(colnames(e) , gsam.metadata$sample.id),]$sample.id)
-  ==
-    ncol(e) )
 
 
 ntop <- 500
@@ -159,6 +148,9 @@ legend("bottomleft", unique(as.character(cond)),col=unique(as.numeric(cond) + 1)
 
 
 dev.off()
+```
+
+
 
 # ---- PCA 1 & 2  x  IDH(1+2) ----
 png("output/figures/unspervised_expression_analysis_vst_pca_x_IDH_1_2.png",width=480*2,height=480*2,res=72*2)

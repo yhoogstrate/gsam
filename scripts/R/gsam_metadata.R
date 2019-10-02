@@ -60,10 +60,9 @@ tmp <- tmp[order(tmp$donor_ID),]
 
 # 'clever' overwrite inconsistent duplicates with EXACT same entry, and collapse later with 'distinct' function
 for(sid in unique(tmp$donor_ID)) {
-    #print(sid)
     tmp.sid <- tmp[tmp$donor_ID == sid,]
-
     tmp.sid.g <- tmp[tmp$donor_ID == sid & !is.na(tmp$donor_sex),]
+    
     if( nrow(tmp.sid.g) == 0 ){
         tmp[tmp$donor_ID == sid,]$donor_sex = NA
     }
@@ -78,6 +77,8 @@ for(sid in unique(tmp$donor_ID)) {
     else {
         tmp[tmp$donor_ID == sid,]$donor_age_at_diagnosis = mean(tmp.sid.g$donor_age_at_diagnosis)
     }
+    
+    rm(tmp.sid, tmp.sid.g)
 }
 
 tmp <- distinct(tmp)

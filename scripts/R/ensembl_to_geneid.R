@@ -25,3 +25,17 @@
 
 load("tmp/ens_ids.RData")
 
+
+get_ensembl_hsapiens_gene_ids <- function() {
+  library(biomaRt)
+  human = useMart("ensembl", dataset = "hsapiens_gene_ensembl")
+  genes <- getBM(
+    attributes=c("hgnc_symbol","entrezgene_id","ensembl_gene_id","chromosome_name","start_position","end_position"),
+    mart = human)
+  
+  rm(human)
+  
+  return(genes)
+}
+
+
