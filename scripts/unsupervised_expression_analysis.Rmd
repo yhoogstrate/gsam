@@ -1,9 +1,13 @@
-#!/usr/bin/env R
+# Set wd
 
+```{r}
 #setwd("/home/youri/projects/gsam")
 setwd("/home/yhoogstrate/projects/gsam")
+```
 
-# ---- load: libs ----
+# load: libs ----
+
+```{r}
 library(DESeq2)
 library(ggplot2)
 
@@ -17,8 +21,10 @@ get_ensembl_hsapiens_gene_ids <- function() {
 
   return(genes)
 }
+```
 
 # ---- load: data ----
+```{r}
 source("scripts/R/ligands.R")# @ todo gsub suffixes in ensembl ids
 source("scripts/R/gsam_metadata.R")
 source("scripts/R/expression_matrix.R")
@@ -401,4 +407,4 @@ plotEnrichment(pws$`SHEDDEN_LUNG_CANCER_POOR_SURVIVAL_A6`, ranks, gseaParam = 1,
 plotGseaTable(pws, ranks, fgseaRes, gseaParam = 1, colwidths = c(5, 3, 0.8, 1.2, 1.2), render = TRUE)
 #dev.off()
 
-
+```
