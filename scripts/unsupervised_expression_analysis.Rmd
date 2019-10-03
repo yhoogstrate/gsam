@@ -443,7 +443,7 @@ gseaDat <- gseaDat[!duplicated(gseaDat$entrez),] # conversion leads to two dupli
 dim(gseaDat)
 
 pws <- reactomePathways(as.character(gseaDat$entrez))
-pws <- fgsea::gmtPathways('misc/h.all.v6.2.entrez.gmt')
+#pws <- fgsea::gmtPathways('misc/h.all.v6.2.entrez.gmt') # 50 gene sets
 pws <- fgsea::gmtPathways('misc/msigdb.v6.2.entrez.gmt')
 
 
@@ -459,8 +459,8 @@ fgseaRes <- fgsea(pws, ranks, minSize=15, maxSize = 500, nperm=10000)# higher nu
 fgseaRes <- fgseaRes[order(fgseaRes$pval),]
 
 
-fgseaResa <- fgsea(pws, ranks, minSize=15, maxSize = 500, nperm=10000)# higher number of permutations for more stable results
-fgseaResb <- fgsea(pws, ranks, minSize=15, maxSize = 500, nperm=10000)# higher number of permutations for more stable results
+#fgseaResa <- fgsea(pws, ranks, minSize=15, maxSize = 500, nperm=10000)# higher number of permutations for more stable results
+#fgseaResb <- fgsea(pws, ranks, minSize=15, maxSize = 500, nperm=10000)# higher number of permutations for more stable results
  
 plot(fgseaResa$pval , fgseaResb$pval, pch=19,cex=0.1)
 
