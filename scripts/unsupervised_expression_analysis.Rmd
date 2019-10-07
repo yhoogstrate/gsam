@@ -1,13 +1,23 @@
 # Set wd
 
-```{r}
+#  initialization setup
+```{r, include=FALSE}
 wd <- "/home/youri/projects/gsam"
 wd <- "/home/yhoogstrate/projects/gsam"
 
 require("knitr")
-opts_knit$set(root.dir = wd)
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(echo = TRUE)
+
 knitr::opts_chunk$set("root.dir", wd)
+knitr::opts_knit$set("root.dir", wd)
+
+opts_chunk$set(root.dir = wd)
+opts_knit$set(root.dir = wd)
+
+#opts_chunk$set(root.dir = wd)
 #setwd(wd)
+print(getwd())
 ```
 
 # load: libs
@@ -32,6 +42,7 @@ ensembl_genes <- get_ensembl_hsapiens_gene_ids()
 Load the data (expression values; metadata) into data frames
 
 ```{r}
+getwd()
 source("scripts/R/ligands.R")# @ todo gsub suffixes in ensembl ids
 source("scripts/R/gsam_metadata.R")
 source("scripts/R/expression_matrix.R")
