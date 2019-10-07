@@ -364,6 +364,7 @@ plotGseaTable(pws, ranks, fgseaRes, gseaParam = 1, colwidths = c(5, 3, 0.8, 1.2,
 
 
 # DGE: top left corner containing IDH mutants
+## DGE / DESeq2
 ```{r}
 e <- expression_matrix
 
@@ -434,13 +435,11 @@ for(chr in names(chrs_hg19)) {
 
 dev.off()
 
-
-
-
 write.table(sig, "/tmp/sig-upper-corner-cluster.txt")
 ```
 
 
+## GSEA
 
 ```{r}
 genes <- get_ensembl_hsapiens_gene_ids()
@@ -486,3 +485,53 @@ plotEnrichment(pws$`SHEDDEN_LUNG_CANCER_POOR_SURVIVAL_A6`, ranks, gseaParam = 1,
 plotGseaTable(pws, ranks, fgseaRes, gseaParam = 1, colwidths = c(5, 3, 0.8, 1.2, 1.2), render = TRUE)
 #dev.off()
 ```
+
+
+
+
+# Survival analysis on groups
+
+```{r}
+# First make subgroups, append to table, and add to metadata and plot to confirm if it fits
+e <- expression_matrix
+
+# create VST transformed data
+cond <- as.factor(round(runif(ncol(e))) + 1)
+dds <- DESeqDataSetFromMatrix(e, DataFrame(cond), ~cond)
+e.vst <- assay(vst(dds))
+rm(cond, dds)
+
+# do PCA on VST transformed data
+ntop <- 500
+variances <- rowVars(e.vst)
+select <- order(variances, decreasing = TRUE)[seq_len(min(ntop, length(variances)))]
+high_variance_genes <- e.vst[select,]
+pc <- prcomp(t(high_variance_genes))
+
+# create subgroups based on that PCA
+outliers_topleft_idh <- rownames(pc$x)[ pc$x[,1] < 0 & pc$x[,2] > 12.5] 
+outliers_right <- rownames(pc$x)[ pc$x[,1] > 14 ] 
+cond <- rep("main", ncol(e))
+cond[ colnames(e) %in% outliers_topleft_idh ] <- "idh"
+cond[ colnames(e) %in% outliers_right ] <- "right"
+cond <- as.factor(cond)
+
+plot(pc$x[,1], pc$x[,2], col = as.numeric(cond) + 1,pch=19,cex=0.5)
+
+
+survival.data <- data.frame(sid = colnames(e),pid=gsub("[0-9]$","",colnames(e)), group=cond)
+survival.data$studyID <- tmp[match(survival.data$pid , tmp$studyID),]$studyID
+survival.data$survivalDays <- tmp[match(survival.data$pid , tmp$studyID),]$survivalDays
+survival.data$status <- tmp[match(survival.data$pid , tmp$studyID),]$status
+survival.data <- survival.data[!is.na(survival.data$survivalDays),] # exclude 2 NA's
+
+
+s2 <- survfit(Surv(survival.data$survivalDays) ~ survival.data$group, data=survival.data)
+#survplot(s2)
+ggsurvplot(s2, data=survival.data, pval=T)
+
+# geen verschil
+
+```
+
+
