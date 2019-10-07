@@ -218,12 +218,10 @@ dev.off()
 
 
 
+# ---- MDS ----
 
-## MDS
-
-Bij het kiezen van 5.000 genen lijkt de MDS het meest overeen te komen met PCA qua clusters?
+# Bij het kiezen van 5.000 genen lijkt de MDS het meest overeen te komen met PCA qua clusters?
   
-  ```{r}
 ntop <- 5000
 
 cond <- as.factor(round(runif(ncol(e))) + 1)# unsupervised, so random labels are ok
@@ -244,11 +242,9 @@ pheatmap(sampleDistMatrix,
          clustering_distance_cols=sampleDists)
 
 
-# DGE: rechtse wolk
-
-De wolk aan de rechterkant
-
-## DGE / DESeq2 part
+# ---- DGE: rechtse wolk ----
+# De wolk aan de rechterkant
+# DGE / DESeq2 part
 
 
 ntop <- 500
