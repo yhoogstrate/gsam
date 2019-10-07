@@ -88,7 +88,7 @@ rm(tmp)
 
 
 # all metadata, but per patient and not per resection (collapsed)
-tmp <- read.delim("data/administratie/GSAM_combined_clinical_molecular.csv", delim="," , stringsAsFactors=F)
+tmp <- read.delim("data/administratie/GSAM_combined_clinical_molecular.csv", sep="," , stringsAsFactors=F)
 gsam.metadata <- merge(gsam.metadata, tmp, by.x="pid", by.y="studyID", all.x = T, all.y=F, no.dups=F)
 
 
