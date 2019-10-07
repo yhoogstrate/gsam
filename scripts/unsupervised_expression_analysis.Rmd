@@ -56,10 +56,6 @@ source("scripts/R/chrom_sizes.R")
 source("scripts/R/dna_idh.R")
 ```
 
-```{r }
-a <- 123
-b <- 23
-```
 
 # unsupervised DESeq2 PCA / MDS / clustering / t-SNE
 
@@ -87,10 +83,11 @@ rm(dds, pc, cond,e)
 ## PCA: pc3 & pc4  x  gender
 ```{r}
 e <- expression_matrix
+
 # make sure order metadata aligns with expression data (!)
 stopifnot(sum(colnames(e) == gsam.metadata[match(colnames(e) , gsam.metadata$sample.id),]$sample.id) == ncol(e))
 
-cond <- as.character((gsam.metadata[match(colnames(e) , gsam.metadata$sample.id),]$donor_sex))
+cond <- as.character((gsam.metadata[match(colnames(e) , gsam.metadata$sample.id),]$gender))
 cond[is.na(cond)] <- "NA"
 cond <- as.factor(cond)
 
@@ -114,8 +111,8 @@ plot(pc$x[,c(pc1,pc2)],  cex=0.7,pch=19,
 legend("bottomleft", unique(as.character(cond)),col=unique(as.numeric(cond) + 1),pch=19)
 
 # draw labels of outliers
-select <- select <- pc$x[,pc1] < 4 & cond == "Female"
-text( pc$x[select,pc1] , pc$x[select,pc1] , rownames(pc$x)[select], cex=0.7, pos=4)
+select <- pc$x[,pc1] < 4 & cond == "Female"
+text( pc$x[select,pc1] , pc$x[select,pc2] , rownames(pc$x)[select], cex=0.7, pos=4)
 
 rm(cond, dds, e.vst, ntop, variances, select, high_variance_genes, pc, pc1, pc2, e)
 
