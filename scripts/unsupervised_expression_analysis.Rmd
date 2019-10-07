@@ -42,6 +42,7 @@ ensembl_genes <- get_ensembl_hsapiens_gene_ids()
 Load the data (expression values; metadata) into data frames
 
 ```{r}
+getwd()
 source("scripts/R/ligands.R")# @ todo gsub suffixes in ensembl ids
 source("scripts/R/gsam_metadata.R")
 source("scripts/R/expression_matrix.R")
