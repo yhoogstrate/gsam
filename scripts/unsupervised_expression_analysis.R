@@ -181,7 +181,9 @@ dev.off()
 
 
 # ---- PCA: pc1 & pc2  x  gain7/loss10  x idh12 ----
-# IDH1 gevonden met DNA-seq
+"
+IDH1 gevonden met DNA-seq
+"
 
 png("output/figures/unspervised_expression_analysis_vst_pca_x_gain7loss10_x_IDH_1_2.png",width=480*2,height=480*2,res=72*2)
 
@@ -217,11 +219,52 @@ rm(pc, pc1, pc2, pch, cond , cond2, ntop, e, e.vst, dds, high_variance_genes, va
 dev.off()
 
 
+# ---- PCA: pc1 & pc2  x  gain7/loss10  x idh12 ----
+#png("output/figures/unspervised_expression_analysis_vst_pca_x_gain7loss10_x_IDH_1_2.png",width=480*2,height=480*2,res=72*2)
+
+e <- expression_matrix
+
+stopifnot(sum(colnames(e) == gsam.metadata[match(colnames(e) , gsam.metadata$sample.id),]$sample.id) == ncol(e))
+#cond <- as.factor(gsub("[ \\+\\.\\/\\-]{1,}",".",gsam.metadata$primary710,fixed=F)) # chr7gain + chr10 loss
+#cond2 <- as.factor(gsub("FALSE","DNA.wt", gsub("TRUE","DNA.IDH",as.character(colnames(e) %in% is_idh)))) # idh
+cond <- as.factor(paste0("chr10.",gsam.metadata$primary10))
+
+dds <- DESeqDataSetFromMatrix(e, DataFrame(cond), ~cond)
+e.vst <- assay(vst(dds))
+
+ntop <- 500
+variances <- rowVars(e.vst)
+high_variance_genes <- e.vst[order(variances, decreasing = TRUE)[seq_len(min(ntop, length(variances)))],]
+
+pc <- prcomp(t(high_variance_genes))
+pc1 <- 1
+pc2 <- 2
+
+plot( c(min(pc$x[,pc1]), max(pc$x[,pc1])), c(min(pc$x[,pc2]) - 15,max(pc$x[,pc2])), type="n" , main=paste0("G-SAM RNA PCA (pc",pc1," & pc",pc2,")"),xlab=paste0("PCA pc-",pc1),ylab=paste0("PCA pc-",pc2))
+points(pc$x[,c(pc1,pc2)],  cex=0.7,pch=19,col=as.numeric(cond)+2)
+
+
+legend("bottomright", unique(as.character(cond)),
+       col=unique(as.numeric(cond) + 2),pch=19)
+
+
+
+
+
+
+
+rm(pc, pc1, pc2, pch, cond , cond2, ntop, e, e.vst, dds, high_variance_genes, variances)
+
+
+#dev.off()
+
+
 
 # ---- MDS ----
+"
+Bij het kiezen van 5.000 genen lijkt de MDS het meest overeen te komen met PCA qua clusters?
+"
 
-# Bij het kiezen van 5.000 genen lijkt de MDS het meest overeen te komen met PCA qua clusters?
-  
 ntop <- 5000
 
 cond <- as.factor(round(runif(ncol(e))) + 1)# unsupervised, so random labels are ok
@@ -245,7 +288,6 @@ pheatmap(sampleDistMatrix,
 # ---- DGE: rechtse wolk ----
 # De wolk aan de rechterkant
 # DGE / DESeq2 part
-
 
 ntop <- 500
 variances <- rowVars(e.vst)
