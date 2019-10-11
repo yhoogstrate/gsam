@@ -37,12 +37,14 @@ source("scripts/R/expression_matrix.R")
 gene_matrix$Chr <- gsub("^([^;]+);.+$","\\1",gene_matrix$Chr)
 gene_matrix$Start <- gsub("^([^;]+);.+$","\\1",gene_matrix$Start)
 
+source("scripts/R/dna_idh.R")
+
+
 source("scripts/R/ensembl_to_geneid.R") # obsolete? can be replaced with the get_ensembl function
 ensembl_genes <- get_ensembl_hsapiens_gene_ids()
 
 source("scripts/R/chrom_sizes.R")
 
-source("scripts/R/dna_idh.R")
 
 
 # ---- unsupervised DESeq2 PCA / MDS / clustering / t-SNE ----
@@ -144,15 +146,16 @@ dev.off()
 
 png("output/figures/unspervised_expression_analysis_vst_pca_x_IDH_1_2.png",width=480*2,height=480*2,res=72*2)
 
-cond <- as.factor(gsub("FALSE","DNA.wt", gsub("TRUE","DNA.IDH",as.character(colnames(e) %in% is_idh))))
-
-dds <- DESeqDataSetFromMatrix(e, DataFrame(cond), ~cond)
-e.vst <- assay(vst(dds))
-
+e <- expression_matrix
 stopifnot(
   sum(colnames(e) == gsam.metadata[match(colnames(e) , gsam.metadata$sample.id),]$sample.id)
   ==
     ncol(e) )
+cond <- as.factor(gsub("FALSE","DNA.wt", gsub("TRUE","DNA.IDH",as.character(colnames(e) %in% is_idh))))
+
+dds <- DESeqDataSetFromMatrix(e, DataFrame(cond), ~cond)
+e.vst <- assay(vst(dds, blind=TRUE))
+
 
 
 ntop <- 500
