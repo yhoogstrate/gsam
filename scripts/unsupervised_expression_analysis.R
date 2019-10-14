@@ -59,8 +59,29 @@ cond <- factor(paste0("resection",gsam.metadata[match(colnames(e) , gsam.metadat
 colnames(e) == gsam.metadata[match(colnames(e) , gsam.metadata$sample.id),]$sample.id
 
 dds <- DESeqDataSetFromMatrix(e, DataFrame(cond), ~cond)
-pc <- plotPCA(vst(dds), intgroup=c("cond"), ntop=500)# expression values transformed into more normal distributed shape
-pc <- pc + geom_text(aes_string(x = "PC1", y = "PC2", label = "name"), color = "black", nudge_x = 3, nudge_y = 2, size=2.75 )
+e.vst <- assay(vst(dds,blind=T))
+
+# remove effect of gender
+limma::removeBatchEffect()
+
+
+ntop <- 2
+variances <- rowVars(e.vst)
+select <- order(variances, decreasing = TRUE)[seq_len(min(ntop, length(variances)))]
+high_variance_genes <- e.vst[select,]
+
+
+pc <- prcomp(t(high_variance_genes))
+pc1 <- 1
+pc2 <- 2
+plot(pc$x[,c(pc1,pc2)],  cex=0.7,pch=19,
+     main=paste0("G-SAM RNA PCA (pc",pc1," & pc",pc2,")"),col=as.numeric(cond)+1)
+
+
+
+
+#pc <- plotPCA(vst(dds), intgroup=c("cond"), ntop=500)# expression values transformed into more normal distributed shape
+#pc <- pc + geom_text(aes_string(x = "PC1", y = "PC2", label = "name"), color = "black", nudge_x = 3, nudge_y = 2, size=2.75 )
 
 ggsave("output/figures/unspervised_expression_analysis_vst_pca_x_resection.png",width=7,height=7,scale=1.5)
 
@@ -81,16 +102,16 @@ cond <- as.factor(cond)
 png("output/figures/unspervised_expression_analysis_vst_pca_x_gender.png",width=480*2,height=480*2,res=72*2)
 
 dds <- DESeqDataSetFromMatrix(e, DataFrame(cond), ~cond)
-e.vst <- assay(vst(dds))
+e.vst <- assay(vst(dds,blind=T))
 
-ntop <- 500
+ntop <- 10
 variances <- rowVars(e.vst)
 select <- order(variances, decreasing = TRUE)[seq_len(min(ntop, length(variances)))]
 high_variance_genes <- e.vst[select,]
 
 pc <- prcomp(t(high_variance_genes))
-pc1 <- 3
-pc2 <- 4
+pc1 <- 1
+pc2 <- 2
 plot(pc$x[,c(pc1,pc2)],  cex=0.7,pch=19,
      main=paste0("G-SAM RNA PCA (pc",pc1," & pc",pc2,")"),col=as.numeric(cond)+1)
 
@@ -197,7 +218,7 @@ cond <- as.factor(gsub("[ \\+\\.\\/\\-]{1,}",".",gsam.metadata$primary710,fixed=
 cond2 <- as.factor(gsub("FALSE","DNA.wt", gsub("TRUE","DNA.IDH",as.character(colnames(e) %in% is_idh)))) # idh
 
 dds <- DESeqDataSetFromMatrix(e, DataFrame(cond), ~cond)
-e.vst <- assay(vst(dds))
+e.vst <- assay(vst(dds, blind=T))
 
 ntop <- 500
 variances <- rowVars(e.vst)
@@ -222,8 +243,8 @@ rm(pc, pc1, pc2, pch, cond , cond2, ntop, e, e.vst, dds, high_variance_genes, va
 dev.off()
 
 
-# ---- PCA: pc1 & pc2  x  gain7/loss10  x idh12 ----
-#png("output/figures/unspervised_expression_analysis_vst_pca_x_gain7loss10_x_IDH_1_2.png",width=480*2,height=480*2,res=72*2)
+# ---- PCA: pc1 & pc2  x  loss10   ----
+png("output/figures/unspervised_expression_analysis_vst_pca_x_loss10.png",width=480*2,height=480*2,res=72*2)
 
 e <- expression_matrix
 
@@ -259,7 +280,7 @@ legend("bottomright", unique(as.character(cond)),
 rm(pc, pc1, pc2, pch, cond , cond2, ntop, e, e.vst, dds, high_variance_genes, variances)
 
 
-#dev.off()
+dev.off()
 
 
 
