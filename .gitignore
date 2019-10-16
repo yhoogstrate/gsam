@@ -9,3 +9,6 @@
 /figures
 .Rproj.user
 *.pdf
+/*.txt
+/docs
+

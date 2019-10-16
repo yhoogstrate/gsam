@@ -16,7 +16,7 @@ library(DESeq2)
 library(ggplot2)
 library(pheatmap)
 library(fgsea)
-
+library(limma)
 
 
 # ---- load: functions ----
@@ -62,10 +62,21 @@ dds <- DESeqDataSetFromMatrix(e, DataFrame(cond), ~cond)
 e.vst <- assay(vst(dds,blind=T))
 
 # remove effect of gender
-limma::removeBatchEffect()
+e.vst <- removeBatchEffect(e.vst, cond)
 
+plot(e.vst[rownames(e.vst) == "ENSG00000229807.12_5",],
+     col=as.numeric(as.factor(gsam.metadata$gender)) , ylab="ENSG00000229807 / XIST VST nromalised expression" ,
+     xlab="Sample", pch=19,cex=0.7)
+abline(h=8.5,col="gray",lty=2)
+# True gender = > 8.5
 
-ntop <- 2
+plot(e.vst2[rownames(e.vst2) == "ENSG00000229807.12_5",],
+     col=as.numeric(as.factor(gsam.metadata$gender)) , ylab="ENSG00000229807 / XIST VST nromalised expression" ,
+     xlab="Sample", pch=19,cex=0.7)
+#abline(h=8.5,col="gray",lty=2)
+# True gender = > 8.5
+
+ntop <- 1500
 variances <- rowVars(e.vst)
 select <- order(variances, decreasing = TRUE)[seq_len(min(ntop, length(variances)))]
 high_variance_genes <- e.vst[select,]
@@ -77,6 +88,12 @@ pc2 <- 2
 plot(pc$x[,c(pc1,pc2)],  cex=0.7,pch=19,
      main=paste0("G-SAM RNA PCA (pc",pc1," & pc",pc2,")"),col=as.numeric(cond)+1)
 
+
+# leuk, maar laat niet veel anders zien dan PCA
+#library(Rtsne)
+#t <- Rtsne(t(e.vst[select,]),colvec=c('gold'))
+#t <- Rtsne(pc$x)
+#plot(t$Y)
 
 
 
@@ -313,6 +330,16 @@ pheatmap(sampleDistMatrix,
 # De wolk aan de rechterkant
 # DGE / DESeq2 part
 
+e <- expression_matrix
+
+stopifnot(sum(colnames(e) == gsam.metadata[match(colnames(e) , gsam.metadata$sample.id),]$sample.id) == ncol(e))
+cond <- as.factor(gsub("[ \\+\\.\\/\\-]{1,}",".",gsam.metadata$primary710,fixed=F)) # chr7gain + chr10 loss
+cond2 <- as.factor(gsub("FALSE","DNA.wt", gsub("TRUE","DNA.IDH",as.character(colnames(e) %in% is_idh)))) # idh
+
+dds <- DESeqDataSetFromMatrix(e, DataFrame(cond), ~cond)
+e.vst <- assay(vst(dds, blind=T))
+
+
 ntop <- 500
 variances <- rowVars(e.vst)
 select <- order(variances, decreasing = TRUE)[seq_len(min(ntop, length(variances)))]
@@ -344,15 +371,19 @@ dim(res)
 res <- res[order(res$padj),]
 res$gid <- ens_ids[match(gsub("\\..+","",rownames(res)), gsub("\\..+","",ens_ids$ens.id)),]$gene.id
 res <- res[order(res$padj),]
-
 # Add things like chr/pos , HGNC gene symbol & Entrez gene id
 o <- match(rownames(res) , gene_matrix$Geneid)
 res$chr <- gene_matrix[o,]$Chr
 res$start <- as.numeric(gene_matrix[o,]$Start)
 rownames(res) <- gsub("\\..+$","",rownames(res)) 
+#
+write.table(res, "output/tables/de_right_cloud.txt")
+
+
 
 # subtract significant ones (not for GSEA, which requires all of them)
 sig <- res[res$padj < 0.01,]
+
 
 
 # take a look at some specific genes/regions
