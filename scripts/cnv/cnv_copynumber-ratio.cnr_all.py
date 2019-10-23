@@ -48,12 +48,12 @@ for path in sorted(paths):
 							gidx[loc] = [params[0], params[1], params[2], params[3]]
 						
 						if sid not in idx[loc]:
-							idx[loc][sid] = params[4]
+							idx[loc][sid] = {'depth': params[4], 'log2': params[5]}
 
 
 
 
-with open("output/tables/cnv_copynumber-ratio.cnr_all.txt", "w") as fh:
+with open("output/tables/cnv_copynumber-ratio.cnr_log2_all.txt", "w") as fh:
 	out = "chromosome\tstart\tend\tgene"
 	for sid in samples:
 		out += "\t" + sid
@@ -65,10 +65,33 @@ with open("output/tables/cnv_copynumber-ratio.cnr_all.txt", "w") as fh:
 		out = "\t".join(gidx[loc])
 		for sid in samples:
 			if sid in idx[loc]:
-				out += "\t" + idx[loc][sid]
+				out += "\t" + idx[loc][sid]['log2']
 			else:
 				out += "\t" + "NA"
 		out += "\n"
 		
 		fh.write(out)
 			
+
+with open("output/tables/cnv_copynumber-ratio.cnr_depth_all.txt", "w") as fh:
+	out = "chromosome\tstart\tend\tgene"
+	for sid in samples:
+		out += "\t" + sid
+	out += "\n"
+
+	fh.write(out)
+	
+	for loc in tqdm(sorted(locs)):
+		out = "\t".join(gidx[loc])
+		for sid in samples:
+			if sid in idx[loc]:
+				out += "\t" + idx[loc][sid]['depth']
+			else:
+				out += "\t" + "NA"
+		out += "\n"
+		
+		fh.write(out)
+			
+
+
+
