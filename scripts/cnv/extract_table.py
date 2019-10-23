@@ -17,10 +17,10 @@ samples = []
 # 01. find all files
 for path in sorted(paths):
 	for _ in tqdm(sorted([_ for _ in os.listdir(path) if _[-19:] == ".targetcoverage.cnn" ])):
-		if _ not in failed:
-			sid = _.split("__",1)[0]
-			samples.append(sid)
+		sid = _.split("__",1)[0]
+		samples.append(sid)
 
+		if _ not in failed:
 			with open(path + "/" + _ , "r") as fh:
 				for line in fh:
 					line = line.strip()
@@ -51,7 +51,10 @@ with open("output/tables/cnv_tagetcoverage.cnn_all.txt", "w") as fh:
 	for loc in tqdm(locs):
 		out = "\t".join(gidx[loc])
 		for sid in samples:
-			out += "\t" + idx[loc][sid]
+			if sid in idx[loc]:
+				out += "\t" + idx[loc][sid]
+			else:
+				out += "\t" + "NA"
 		out += "\n"
 		
 		fh.write(out)
