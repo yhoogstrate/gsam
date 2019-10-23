@@ -1,32 +1,10 @@
 #!/bin/bash
 
-mkdir -p "processed/AAB1";
-nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AAB1" \
-    --runThreadN 84 \
-    --genomeDir ref/star-hg19 \
-    --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
-    --readFilesIn \
-        data2/fastq-clean/AAB1-1917_NGS19-J295_AHKK5WDSXX_S35_L002_001.clean_yx_R1.fastq.gz,data2/fastq-clean/AAB1-1917_NGS19-J295_BHJTTYDSXX_S29_L001_001.clean_yx_R1.fastq.gz \
-        data2/fastq-clean/AAB1-1917_NGS19-J295_AHKK5WDSXX_S35_L002_001.clean_yx_R2.fastq.gz,data2/fastq-clean/AAB1-1917_NGS19-J295_BHJTTYDSXX_S29_L001_001.clean_yx_R2.fastq.gz \
-    --readFilesCommand zcat \
-    --outSAMtype BAM SortedByCoordinate \
-    --alignSJoverhangMin 10 \
-    --alignSJDBoverhangMin 1 \
-    --alignIntronMin 20 \
-    --alignIntronMax 1000000 \
-    --alignMatesGapMax 1000000 \
-    --chimSegmentMin 12 \
-    --chimJunctionOverhangMin 12 \
-    --chimOutType WithinBAM SeparateSAMold \
-    --outSAMstrandField intronMotif \
-    --outFilterIntronMotifs RemoveNoncanonicalUnannotated \
-    --quantMode TranscriptomeSAM
 
 
 mkdir -p "processed/AAB2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AAB2" \
+    --outFileNamePrefix "processed/AAB2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -53,7 +31,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AAC1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AAC1" \
+    --outFileNamePrefix "processed/AAC1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -77,7 +55,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AAC2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AAC2" \
+    --outFileNamePrefix "processed/AAC2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -104,7 +82,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AAD1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AAD1" \
+    --outFileNamePrefix "processed/AAD1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -128,7 +106,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AAD2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AAD2" \
+    --outFileNamePrefix "processed/AAD2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -155,7 +133,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AAF1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AAF1" \
+    --outFileNamePrefix "processed/AAF1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -179,7 +157,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AAF2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AAF2" \
+    --outFileNamePrefix "processed/AAF2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -206,7 +184,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AAG1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AAG1" \
+    --outFileNamePrefix "processed/AAG1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -230,7 +208,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AAG2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AAG2" \
+    --outFileNamePrefix "processed/AAG2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -257,7 +235,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AAJ1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AAJ1" \
+    --outFileNamePrefix "processed/AAJ1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -281,7 +259,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AAJ2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AAJ2" \
+    --outFileNamePrefix "processed/AAJ2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -308,7 +286,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AAL1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AAL1" \
+    --outFileNamePrefix "processed/AAL1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -332,7 +310,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AAL2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AAL2" \
+    --outFileNamePrefix "processed/AAL2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -359,7 +337,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AAM1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AAM1" \
+    --outFileNamePrefix "processed/AAM1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -383,7 +361,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AAM2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AAM2" \
+    --outFileNamePrefix "processed/AAM2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -410,7 +388,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AAN1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AAN1" \
+    --outFileNamePrefix "processed/AAN1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -434,7 +412,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AAN2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AAN2" \
+    --outFileNamePrefix "processed/AAN2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -461,7 +439,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AAP1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AAP1" \
+    --outFileNamePrefix "processed/AAP1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -485,7 +463,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AAP2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AAP2" \
+    --outFileNamePrefix "processed/AAP2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -512,7 +490,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AAS1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AAS1" \
+    --outFileNamePrefix "processed/AAS1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -536,7 +514,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AAS2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AAS2" \
+    --outFileNamePrefix "processed/AAS2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -563,7 +541,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AAT1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AAT1" \
+    --outFileNamePrefix "processed/AAT1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -587,7 +565,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AAT2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AAT2" \
+    --outFileNamePrefix "processed/AAT2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -614,7 +592,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AAU1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AAU1" \
+    --outFileNamePrefix "processed/AAU1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -638,7 +616,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AAU2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AAU2" \
+    --outFileNamePrefix "processed/AAU2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -665,7 +643,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AAV1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AAV1" \
+    --outFileNamePrefix "processed/AAV1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -689,7 +667,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AAV2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AAV2" \
+    --outFileNamePrefix "processed/AAV2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -716,7 +694,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AAW1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AAW1" \
+    --outFileNamePrefix "processed/AAW1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -740,7 +718,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AAW2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AAW2" \
+    --outFileNamePrefix "processed/AAW2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -767,7 +745,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AAX1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AAX1" \
+    --outFileNamePrefix "processed/AAX1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -791,7 +769,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AAX2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AAX2" \
+    --outFileNamePrefix "processed/AAX2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -818,7 +796,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AAY1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AAY1" \
+    --outFileNamePrefix "processed/AAY1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -842,7 +820,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AAY2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AAY2" \
+    --outFileNamePrefix "processed/AAY2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -869,7 +847,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/ABA1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/ABA1" \
+    --outFileNamePrefix "processed/ABA1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -893,7 +871,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/ABA2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/ABA2" \
+    --outFileNamePrefix "processed/ABA2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -920,7 +898,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/ACA1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/ACA1" \
+    --outFileNamePrefix "processed/ACA1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -944,7 +922,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/ACA2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/ACA2" \
+    --outFileNamePrefix "processed/ACA2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -971,7 +949,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/ADA1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/ADA1" \
+    --outFileNamePrefix "processed/ADA1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -995,7 +973,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/ADA2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/ADA2" \
+    --outFileNamePrefix "processed/ADA2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -1022,7 +1000,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AFA1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AFA1" \
+    --outFileNamePrefix "processed/AFA1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -1046,7 +1024,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AFA2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AFA2" \
+    --outFileNamePrefix "processed/AFA2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -1073,7 +1051,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AHA1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AHA1" \
+    --outFileNamePrefix "processed/AHA1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -1097,7 +1075,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AHA2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AHA2" \
+    --outFileNamePrefix "processed/AHA2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -1124,7 +1102,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AIA1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AIA1" \
+    --outFileNamePrefix "processed/AIA1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -1148,7 +1126,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AIA2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AIA2" \
+    --outFileNamePrefix "processed/AIA2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -1175,7 +1153,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AKA1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AKA1" \
+    --outFileNamePrefix "processed/AKA1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -1199,7 +1177,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AKA2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AKA2" \
+    --outFileNamePrefix "processed/AKA2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -1226,7 +1204,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/ALA1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/ALA1" \
+    --outFileNamePrefix "processed/ALA1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -1250,7 +1228,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/ALA2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/ALA2" \
+    --outFileNamePrefix "processed/ALA2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -1277,7 +1255,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AMA1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AMA1" \
+    --outFileNamePrefix "processed/AMA1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -1301,7 +1279,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AMA2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AMA2" \
+    --outFileNamePrefix "processed/AMA2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -1328,7 +1306,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AOA1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AOA1" \
+    --outFileNamePrefix "processed/AOA1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -1352,7 +1330,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AOA2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AOA2" \
+    --outFileNamePrefix "processed/AOA2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -1379,7 +1357,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AQA1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AQA1" \
+    --outFileNamePrefix "processed/AQA1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -1403,7 +1381,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AQA2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AQA2" \
+    --outFileNamePrefix "processed/AQA2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -1430,7 +1408,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AZA1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AZA1" \
+    --outFileNamePrefix "processed/AZA1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -1454,7 +1432,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AZA2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AZA2" \
+    --outFileNamePrefix "processed/AZA2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -1481,7 +1459,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AZB1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AZB1" \
+    --outFileNamePrefix "processed/AZB1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -1505,7 +1483,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AZB2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AZB2" \
+    --outFileNamePrefix "processed/AZB2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -1532,7 +1510,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AZC1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AZC1" \
+    --outFileNamePrefix "processed/AZC1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -1556,7 +1534,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AZC2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AZC2" \
+    --outFileNamePrefix "processed/AZC2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -1583,7 +1561,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AZD1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AZD1" \
+    --outFileNamePrefix "processed/AZD1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -1607,7 +1585,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AZD2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AZD2" \
+    --outFileNamePrefix "processed/AZD2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -1634,7 +1612,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AZE1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AZE1" \
+    --outFileNamePrefix "processed/AZE1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -1658,7 +1636,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AZE2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AZE2" \
+    --outFileNamePrefix "processed/AZE2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -1685,7 +1663,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AZF1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AZF1" \
+    --outFileNamePrefix "processed/AZF1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -1709,7 +1687,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AZF2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AZF2" \
+    --outFileNamePrefix "processed/AZF2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -1736,7 +1714,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AZG1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AZG1" \
+    --outFileNamePrefix "processed/AZG1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -1760,7 +1738,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AZG2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AZG2" \
+    --outFileNamePrefix "processed/AZG2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -1787,7 +1765,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AZH1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AZH1" \
+    --outFileNamePrefix "processed/AZH1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -1811,7 +1789,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/AZH2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/AZH2" \
+    --outFileNamePrefix "processed/AZH2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -1838,7 +1816,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/BAA1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/BAA1" \
+    --outFileNamePrefix "processed/BAA1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -1862,7 +1840,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/BAA2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/BAA2" \
+    --outFileNamePrefix "processed/BAA2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -1889,7 +1867,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/BAB1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/BAB1" \
+    --outFileNamePrefix "processed/BAB1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -1913,7 +1891,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/BAB2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/BAB2" \
+    --outFileNamePrefix "processed/BAB2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -1940,7 +1918,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/BAC1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/BAC1" \
+    --outFileNamePrefix "processed/BAC1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -1964,7 +1942,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/BAC2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/BAC2" \
+    --outFileNamePrefix "processed/BAC2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -1991,7 +1969,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/BAD1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/BAD1" \
+    --outFileNamePrefix "processed/BAD1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -2015,7 +1993,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/BAD2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/BAD2" \
+    --outFileNamePrefix "processed/BAD2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -2042,7 +2020,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/BAE1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/BAE1" \
+    --outFileNamePrefix "processed/BAE1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -2066,7 +2044,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/BAE2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/BAE2" \
+    --outFileNamePrefix "processed/BAE2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -2093,7 +2071,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/BAH1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/BAH1" \
+    --outFileNamePrefix "processed/BAH1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -2117,7 +2095,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/BAH2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/BAH2" \
+    --outFileNamePrefix "processed/BAH2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -2144,7 +2122,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/BAI1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/BAI1" \
+    --outFileNamePrefix "processed/BAI1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -2168,7 +2146,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/BAI2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/BAI2" \
+    --outFileNamePrefix "processed/BAI2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -2195,7 +2173,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/BAJ1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/BAJ1" \
+    --outFileNamePrefix "processed/BAJ1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -2219,7 +2197,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/BAJ2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/BAJ2" \
+    --outFileNamePrefix "processed/BAJ2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -2246,7 +2224,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/BAK1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/BAK1" \
+    --outFileNamePrefix "processed/BAK1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -2270,7 +2248,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/BAK2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/BAK2" \
+    --outFileNamePrefix "processed/BAK2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -2297,7 +2275,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/BAL1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/BAL1" \
+    --outFileNamePrefix "processed/BAL1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -2321,7 +2299,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/BAL2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/BAL2" \
+    --outFileNamePrefix "processed/BAL2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -2348,7 +2326,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/BAM1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/BAM1" \
+    --outFileNamePrefix "processed/BAM1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -2372,7 +2350,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/BAM2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/BAM2" \
+    --outFileNamePrefix "processed/BAM2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -2399,7 +2377,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/BAN1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/BAN1" \
+    --outFileNamePrefix "processed/BAN1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -2423,7 +2401,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/BAN2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/BAN2" \
+    --outFileNamePrefix "processed/BAN2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -2450,7 +2428,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/BAO1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/BAO1" \
+    --outFileNamePrefix "processed/BAO1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -2474,7 +2452,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/BAO2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/BAO2" \
+    --outFileNamePrefix "processed/BAO2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -2501,7 +2479,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/BAR1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/BAR1" \
+    --outFileNamePrefix "processed/BAR1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -2525,7 +2503,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/BAR2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/BAR2" \
+    --outFileNamePrefix "processed/BAR2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -2552,7 +2530,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/BAS1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/BAS1" \
+    --outFileNamePrefix "processed/BAS1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -2576,7 +2554,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/BAS2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/BAS2" \
+    --outFileNamePrefix "processed/BAS2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -2603,7 +2581,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/BAT1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/BAT1" \
+    --outFileNamePrefix "processed/BAT1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -2627,7 +2605,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/BAT2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/BAT2" \
+    --outFileNamePrefix "processed/BAT2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -2654,7 +2632,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/BAU1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/BAU1" \
+    --outFileNamePrefix "processed/BAU1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -2678,7 +2656,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/BAU2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/BAU2" \
+    --outFileNamePrefix "processed/BAU2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -2705,7 +2683,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/BAW1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/BAW1" \
+    --outFileNamePrefix "processed/BAW1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -2729,7 +2707,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/BAW2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/BAW2" \
+    --outFileNamePrefix "processed/BAW2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -2756,7 +2734,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/BAX1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/BAX1" \
+    --outFileNamePrefix "processed/BAX1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -2780,7 +2758,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/BAX2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/BAX2" \
+    --outFileNamePrefix "processed/BAX2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -2807,7 +2785,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/BAY1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/BAY1" \
+    --outFileNamePrefix "processed/BAY1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -2831,7 +2809,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/BAY2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/BAY2" \
+    --outFileNamePrefix "processed/BAY2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -2858,7 +2836,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CAC1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CAC1" \
+    --outFileNamePrefix "processed/CAC1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -2882,7 +2860,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CAC2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CAC2" \
+    --outFileNamePrefix "processed/CAC2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -2909,7 +2887,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CAD1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CAD1" \
+    --outFileNamePrefix "processed/CAD1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -2933,7 +2911,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CAD2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CAD2" \
+    --outFileNamePrefix "processed/CAD2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -2960,7 +2938,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CAF1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CAF1" \
+    --outFileNamePrefix "processed/CAF1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -2984,7 +2962,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CAF2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CAF2" \
+    --outFileNamePrefix "processed/CAF2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -3011,7 +2989,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CAO1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CAO1" \
+    --outFileNamePrefix "processed/CAO1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -3035,7 +3013,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CAO1-replicate";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CAO1-replicate" \
+    --outFileNamePrefix "processed/CAO1-replicate/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -3059,7 +3037,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CAO2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CAO2" \
+    --outFileNamePrefix "processed/CAO2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -3086,7 +3064,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CAV1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CAV1" \
+    --outFileNamePrefix "processed/CAV1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -3110,7 +3088,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CAV2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CAV2" \
+    --outFileNamePrefix "processed/CAV2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -3137,7 +3115,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CBA1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CBA1" \
+    --outFileNamePrefix "processed/CBA1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -3161,7 +3139,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CBA2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CBA2" \
+    --outFileNamePrefix "processed/CBA2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -3188,7 +3166,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CBE1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CBE1" \
+    --outFileNamePrefix "processed/CBE1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -3212,7 +3190,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CBE2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CBE2" \
+    --outFileNamePrefix "processed/CBE2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -3239,7 +3217,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CBG1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CBG1" \
+    --outFileNamePrefix "processed/CBG1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -3263,7 +3241,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CBG2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CBG2" \
+    --outFileNamePrefix "processed/CBG2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -3290,7 +3268,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CBH1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CBH1" \
+    --outFileNamePrefix "processed/CBH1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -3314,7 +3292,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CBH2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CBH2" \
+    --outFileNamePrefix "processed/CBH2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -3341,7 +3319,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CBI1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CBI1" \
+    --outFileNamePrefix "processed/CBI1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -3365,7 +3343,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CBI2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CBI2" \
+    --outFileNamePrefix "processed/CBI2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -3392,7 +3370,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CBM1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CBM1" \
+    --outFileNamePrefix "processed/CBM1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -3416,7 +3394,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CBM2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CBM2" \
+    --outFileNamePrefix "processed/CBM2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -3443,7 +3421,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CBP1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CBP1" \
+    --outFileNamePrefix "processed/CBP1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -3467,7 +3445,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CBP2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CBP2" \
+    --outFileNamePrefix "processed/CBP2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -3494,7 +3472,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CBQ1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CBQ1" \
+    --outFileNamePrefix "processed/CBQ1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -3518,7 +3496,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CBQ2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CBQ2" \
+    --outFileNamePrefix "processed/CBQ2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -3545,7 +3523,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CBR1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CBR1" \
+    --outFileNamePrefix "processed/CBR1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -3569,7 +3547,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CBR2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CBR2" \
+    --outFileNamePrefix "processed/CBR2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -3596,7 +3574,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CBS1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CBS1" \
+    --outFileNamePrefix "processed/CBS1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -3620,7 +3598,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CBS2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CBS2" \
+    --outFileNamePrefix "processed/CBS2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -3647,7 +3625,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CBT1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CBT1" \
+    --outFileNamePrefix "processed/CBT1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -3671,7 +3649,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CBT2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CBT2" \
+    --outFileNamePrefix "processed/CBT2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -3698,7 +3676,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CBV1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CBV1" \
+    --outFileNamePrefix "processed/CBV1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -3722,7 +3700,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CBV2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CBV2" \
+    --outFileNamePrefix "processed/CBV2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -3749,7 +3727,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CCD1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CCD1" \
+    --outFileNamePrefix "processed/CCD1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -3773,7 +3751,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CCD2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CCD2" \
+    --outFileNamePrefix "processed/CCD2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -3800,7 +3778,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CCW1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CCW1" \
+    --outFileNamePrefix "processed/CCW1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -3824,7 +3802,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CCW2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CCW2" \
+    --outFileNamePrefix "processed/CCW2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -3851,7 +3829,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CCZ1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CCZ1" \
+    --outFileNamePrefix "processed/CCZ1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -3875,7 +3853,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CCZ2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CCZ2" \
+    --outFileNamePrefix "processed/CCZ2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -3902,7 +3880,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CDA1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CDA1" \
+    --outFileNamePrefix "processed/CDA1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -3926,7 +3904,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CDA2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CDA2" \
+    --outFileNamePrefix "processed/CDA2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -3953,7 +3931,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CDD1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CDD1" \
+    --outFileNamePrefix "processed/CDD1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -3977,7 +3955,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CDD2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CDD2" \
+    --outFileNamePrefix "processed/CDD2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -4004,7 +3982,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CDF1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CDF1" \
+    --outFileNamePrefix "processed/CDF1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -4028,7 +4006,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CDF2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CDF2" \
+    --outFileNamePrefix "processed/CDF2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -4055,7 +4033,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CDH1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CDH1" \
+    --outFileNamePrefix "processed/CDH1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -4079,7 +4057,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/CDH2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/CDH2" \
+    --outFileNamePrefix "processed/CDH2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -4106,7 +4084,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/DAB1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/DAB1" \
+    --outFileNamePrefix "processed/DAB1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -4130,7 +4108,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/DAB2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/DAB2" \
+    --outFileNamePrefix "processed/DAB2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -4157,7 +4135,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/DAC1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/DAC1" \
+    --outFileNamePrefix "processed/DAC1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -4181,7 +4159,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/DAC2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/DAC2" \
+    --outFileNamePrefix "processed/DAC2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -4208,7 +4186,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/DAD1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/DAD1" \
+    --outFileNamePrefix "processed/DAD1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -4232,7 +4210,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/DAD2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/DAD2" \
+    --outFileNamePrefix "processed/DAD2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -4259,7 +4237,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EAC1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EAC1" \
+    --outFileNamePrefix "processed/EAC1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -4283,7 +4261,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EAC2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EAC2" \
+    --outFileNamePrefix "processed/EAC2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -4310,7 +4288,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EAD1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EAD1" \
+    --outFileNamePrefix "processed/EAD1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -4334,7 +4312,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EAD2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EAD2" \
+    --outFileNamePrefix "processed/EAD2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -4361,7 +4339,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EAE1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EAE1" \
+    --outFileNamePrefix "processed/EAE1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -4385,7 +4363,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EAE2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EAE2" \
+    --outFileNamePrefix "processed/EAE2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -4412,7 +4390,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EAF1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EAF1" \
+    --outFileNamePrefix "processed/EAF1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -4436,7 +4414,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EAF2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EAF2" \
+    --outFileNamePrefix "processed/EAF2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -4463,7 +4441,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EAG1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EAG1" \
+    --outFileNamePrefix "processed/EAG1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -4487,7 +4465,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EAG2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EAG2" \
+    --outFileNamePrefix "processed/EAG2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -4514,7 +4492,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EAI1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EAI1" \
+    --outFileNamePrefix "processed/EAI1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -4538,7 +4516,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EAI2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EAI2" \
+    --outFileNamePrefix "processed/EAI2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -4565,7 +4543,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EAJ1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EAJ1" \
+    --outFileNamePrefix "processed/EAJ1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -4589,7 +4567,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EAJ2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EAJ2" \
+    --outFileNamePrefix "processed/EAJ2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -4616,7 +4594,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EAK1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EAK1" \
+    --outFileNamePrefix "processed/EAK1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -4640,7 +4618,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EAK2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EAK2" \
+    --outFileNamePrefix "processed/EAK2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -4667,7 +4645,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EAL1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EAL1" \
+    --outFileNamePrefix "processed/EAL1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -4691,7 +4669,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EAL2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EAL2" \
+    --outFileNamePrefix "processed/EAL2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -4718,7 +4696,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EAN1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EAN1" \
+    --outFileNamePrefix "processed/EAN1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -4742,7 +4720,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EAN2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EAN2" \
+    --outFileNamePrefix "processed/EAN2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -4769,7 +4747,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EAO1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EAO1" \
+    --outFileNamePrefix "processed/EAO1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -4793,7 +4771,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EAO2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EAO2" \
+    --outFileNamePrefix "processed/EAO2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -4820,7 +4798,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EAP1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EAP1" \
+    --outFileNamePrefix "processed/EAP1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -4844,7 +4822,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EAP2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EAP2" \
+    --outFileNamePrefix "processed/EAP2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -4871,7 +4849,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EAQ1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EAQ1" \
+    --outFileNamePrefix "processed/EAQ1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -4895,7 +4873,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EAQ2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EAQ2" \
+    --outFileNamePrefix "processed/EAQ2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -4922,7 +4900,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EAT1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EAT1" \
+    --outFileNamePrefix "processed/EAT1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -4946,7 +4924,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EAT2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EAT2" \
+    --outFileNamePrefix "processed/EAT2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -4973,7 +4951,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EAU1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EAU1" \
+    --outFileNamePrefix "processed/EAU1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -4997,7 +4975,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EAU2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EAU2" \
+    --outFileNamePrefix "processed/EAU2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -5024,7 +5002,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EAV1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EAV1" \
+    --outFileNamePrefix "processed/EAV1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -5048,7 +5026,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EAV2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EAV2" \
+    --outFileNamePrefix "processed/EAV2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -5075,7 +5053,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EAW1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EAW1" \
+    --outFileNamePrefix "processed/EAW1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -5099,7 +5077,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EAW2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EAW2" \
+    --outFileNamePrefix "processed/EAW2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -5126,7 +5104,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EAY1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EAY1" \
+    --outFileNamePrefix "processed/EAY1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -5150,7 +5128,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EAY2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EAY2" \
+    --outFileNamePrefix "processed/EAY2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -5177,7 +5155,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EAZ1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EAZ1" \
+    --outFileNamePrefix "processed/EAZ1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -5201,7 +5179,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EAZ2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EAZ2" \
+    --outFileNamePrefix "processed/EAZ2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -5228,7 +5206,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EBB1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EBB1" \
+    --outFileNamePrefix "processed/EBB1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -5252,7 +5230,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EBB2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EBB2" \
+    --outFileNamePrefix "processed/EBB2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -5279,7 +5257,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EBC1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EBC1" \
+    --outFileNamePrefix "processed/EBC1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -5303,7 +5281,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EBC2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EBC2" \
+    --outFileNamePrefix "processed/EBC2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -5330,7 +5308,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EBD1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EBD1" \
+    --outFileNamePrefix "processed/EBD1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -5354,7 +5332,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EBD2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EBD2" \
+    --outFileNamePrefix "processed/EBD2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -5381,7 +5359,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EBF1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EBF1" \
+    --outFileNamePrefix "processed/EBF1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -5405,7 +5383,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EBF2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EBF2" \
+    --outFileNamePrefix "processed/EBF2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -5432,7 +5410,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EBG1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EBG1" \
+    --outFileNamePrefix "processed/EBG1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -5456,7 +5434,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EBG2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EBG2" \
+    --outFileNamePrefix "processed/EBG2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -5483,7 +5461,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EBH1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EBH1" \
+    --outFileNamePrefix "processed/EBH1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -5507,7 +5485,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EBH2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EBH2" \
+    --outFileNamePrefix "processed/EBH2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -5534,7 +5512,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EBK1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EBK1" \
+    --outFileNamePrefix "processed/EBK1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -5558,7 +5536,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EBK2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EBK2" \
+    --outFileNamePrefix "processed/EBK2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -5585,7 +5563,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EBL1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EBL1" \
+    --outFileNamePrefix "processed/EBL1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -5609,7 +5587,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EBL2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EBL2" \
+    --outFileNamePrefix "processed/EBL2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -5636,7 +5614,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EBM1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EBM1" \
+    --outFileNamePrefix "processed/EBM1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -5660,7 +5638,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EBM2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EBM2" \
+    --outFileNamePrefix "processed/EBM2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -5687,7 +5665,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EBN1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EBN1" \
+    --outFileNamePrefix "processed/EBN1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -5711,7 +5689,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EBN2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EBN2" \
+    --outFileNamePrefix "processed/EBN2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -5738,7 +5716,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EBO1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EBO1" \
+    --outFileNamePrefix "processed/EBO1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -5762,7 +5740,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EBO2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EBO2" \
+    --outFileNamePrefix "processed/EBO2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -5789,7 +5767,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EBP1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EBP1" \
+    --outFileNamePrefix "processed/EBP1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -5816,7 +5794,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EBR1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EBR1" \
+    --outFileNamePrefix "processed/EBR1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -5840,7 +5818,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EBR2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EBR2" \
+    --outFileNamePrefix "processed/EBR2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -5867,7 +5845,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EBU1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EBU1" \
+    --outFileNamePrefix "processed/EBU1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -5891,7 +5869,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EBU2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EBU2" \
+    --outFileNamePrefix "processed/EBU2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -5918,7 +5896,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EBV1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EBV1" \
+    --outFileNamePrefix "processed/EBV1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -5942,7 +5920,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EBV2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EBV2" \
+    --outFileNamePrefix "processed/EBV2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -5969,7 +5947,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EBW1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EBW1" \
+    --outFileNamePrefix "processed/EBW1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -5993,7 +5971,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EBW2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EBW2" \
+    --outFileNamePrefix "processed/EBW2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -6020,7 +5998,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EBX1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EBX1" \
+    --outFileNamePrefix "processed/EBX1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -6044,7 +6022,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EBX2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EBX2" \
+    --outFileNamePrefix "processed/EBX2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -6071,7 +6049,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EBY1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EBY1" \
+    --outFileNamePrefix "processed/EBY1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -6095,7 +6073,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/EBY2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/EBY2" \
+    --outFileNamePrefix "processed/EBY2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -6122,7 +6100,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/ECA1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/ECA1" \
+    --outFileNamePrefix "processed/ECA1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -6146,7 +6124,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/ECA2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/ECA2" \
+    --outFileNamePrefix "processed/ECA2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -6173,7 +6151,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/ECB1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/ECB1" \
+    --outFileNamePrefix "processed/ECB1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -6197,7 +6175,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/ECB2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/ECB2" \
+    --outFileNamePrefix "processed/ECB2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -6224,7 +6202,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/ECD1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/ECD1" \
+    --outFileNamePrefix "processed/ECD1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -6248,7 +6226,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/ECD2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/ECD2" \
+    --outFileNamePrefix "processed/ECD2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -6275,7 +6253,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/ECE1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/ECE1" \
+    --outFileNamePrefix "processed/ECE1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -6299,7 +6277,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/ECE2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/ECE2" \
+    --outFileNamePrefix "processed/ECE2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -6326,7 +6304,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/ECF1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/ECF1" \
+    --outFileNamePrefix "processed/ECF1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -6350,7 +6328,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/ECF2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/ECF2" \
+    --outFileNamePrefix "processed/ECF2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -6377,7 +6355,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/ECG1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/ECG1" \
+    --outFileNamePrefix "processed/ECG1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -6401,7 +6379,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/ECG2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/ECG2" \
+    --outFileNamePrefix "processed/ECG2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -6428,7 +6406,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/ECH1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/ECH1" \
+    --outFileNamePrefix "processed/ECH1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -6452,7 +6430,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/ECH2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/ECH2" \
+    --outFileNamePrefix "processed/ECH2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -6479,7 +6457,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/ECI1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/ECI1" \
+    --outFileNamePrefix "processed/ECI1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -6503,7 +6481,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/ECI2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/ECI2" \
+    --outFileNamePrefix "processed/ECI2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -6530,7 +6508,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/ECK1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/ECK1" \
+    --outFileNamePrefix "processed/ECK1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -6554,7 +6532,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/ECK2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/ECK2" \
+    --outFileNamePrefix "processed/ECK2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -6581,7 +6559,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/ECN1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/ECN1" \
+    --outFileNamePrefix "processed/ECN1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -6605,7 +6583,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/ECN2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/ECN2" \
+    --outFileNamePrefix "processed/ECN2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -6632,7 +6610,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/FAB1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/FAB1" \
+    --outFileNamePrefix "processed/FAB1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -6656,7 +6634,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/FAB2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/FAB2" \
+    --outFileNamePrefix "processed/FAB2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -6680,7 +6658,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/FAB2-replicate";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/FAB2-replicate" \
+    --outFileNamePrefix "processed/FAB2-replicate/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -6707,7 +6685,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/FAD1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/FAD1" \
+    --outFileNamePrefix "processed/FAD1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -6731,7 +6709,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/FAD2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/FAD2" \
+    --outFileNamePrefix "processed/FAD2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -6758,7 +6736,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/FAF1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/FAF1" \
+    --outFileNamePrefix "processed/FAF1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -6782,7 +6760,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/FAF2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/FAF2" \
+    --outFileNamePrefix "processed/FAF2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -6809,7 +6787,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/FAG1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/FAG1" \
+    --outFileNamePrefix "processed/FAG1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -6833,7 +6811,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/FAG2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/FAG2" \
+    --outFileNamePrefix "processed/FAG2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -6860,7 +6838,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/FAH2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/FAH2" \
+    --outFileNamePrefix "processed/FAH2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -6887,7 +6865,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/FAI1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/FAI1" \
+    --outFileNamePrefix "processed/FAI1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -6911,7 +6889,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/FAI2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/FAI2" \
+    --outFileNamePrefix "processed/FAI2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -6938,7 +6916,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/FAJ1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/FAJ1" \
+    --outFileNamePrefix "processed/FAJ1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -6962,7 +6940,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/FAJ2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/FAJ2" \
+    --outFileNamePrefix "processed/FAJ2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -6989,7 +6967,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/FAK1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/FAK1" \
+    --outFileNamePrefix "processed/FAK1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -7013,7 +6991,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/FAK2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/FAK2" \
+    --outFileNamePrefix "processed/FAK2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -7040,7 +7018,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/FAL1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/FAL1" \
+    --outFileNamePrefix "processed/FAL1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -7064,7 +7042,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/FAL2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/FAL2" \
+    --outFileNamePrefix "processed/FAL2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -7091,7 +7069,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/FAM1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/FAM1" \
+    --outFileNamePrefix "processed/FAM1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -7115,7 +7093,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/FAM2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/FAM2" \
+    --outFileNamePrefix "processed/FAM2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -7142,7 +7120,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/FAN1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/FAN1" \
+    --outFileNamePrefix "processed/FAN1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -7166,7 +7144,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/FAN2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/FAN2" \
+    --outFileNamePrefix "processed/FAN2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -7193,7 +7171,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/FAP1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/FAP1" \
+    --outFileNamePrefix "processed/FAP1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -7217,7 +7195,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/FAP2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/FAP2" \
+    --outFileNamePrefix "processed/FAP2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -7244,7 +7222,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/FAQ1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/FAQ1" \
+    --outFileNamePrefix "processed/FAQ1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -7268,7 +7246,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/FAQ2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/FAQ2" \
+    --outFileNamePrefix "processed/FAQ2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -7295,7 +7273,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/GAA1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/GAA1" \
+    --outFileNamePrefix "processed/GAA1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -7319,7 +7297,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/GAA2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/GAA2" \
+    --outFileNamePrefix "processed/GAA2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -7346,7 +7324,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/GAE1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/GAE1" \
+    --outFileNamePrefix "processed/GAE1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -7370,7 +7348,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/GAE2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/GAE2" \
+    --outFileNamePrefix "processed/GAE2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -7397,7 +7375,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/GAG1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/GAG1" \
+    --outFileNamePrefix "processed/GAG1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -7421,7 +7399,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/GAG2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/GAG2" \
+    --outFileNamePrefix "processed/GAG2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -7448,7 +7426,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/GAH1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/GAH1" \
+    --outFileNamePrefix "processed/GAH1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -7472,7 +7450,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/GAH2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/GAH2" \
+    --outFileNamePrefix "processed/GAH2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -7499,7 +7477,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/GAI1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/GAI1" \
+    --outFileNamePrefix "processed/GAI1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -7523,7 +7501,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/GAI2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/GAI2" \
+    --outFileNamePrefix "processed/GAI2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -7550,7 +7528,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/GAJ1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/GAJ1" \
+    --outFileNamePrefix "processed/GAJ1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -7574,7 +7552,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/GAJ2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/GAJ2" \
+    --outFileNamePrefix "processed/GAJ2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -7601,7 +7579,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/GAK1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/GAK1" \
+    --outFileNamePrefix "processed/GAK1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -7625,7 +7603,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/GAK2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/GAK2" \
+    --outFileNamePrefix "processed/GAK2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -7652,7 +7630,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/GAL1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/GAL1" \
+    --outFileNamePrefix "processed/GAL1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -7676,7 +7654,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/GAL2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/GAL2" \
+    --outFileNamePrefix "processed/GAL2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -7703,7 +7681,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/GAM1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/GAM1" \
+    --outFileNamePrefix "processed/GAM1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -7727,7 +7705,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/GAM2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/GAM2" \
+    --outFileNamePrefix "processed/GAM2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -7754,7 +7732,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/GAN1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/GAN1" \
+    --outFileNamePrefix "processed/GAN1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -7778,7 +7756,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/GAN2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/GAN2" \
+    --outFileNamePrefix "processed/GAN2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -7805,7 +7783,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/GAO1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/GAO1" \
+    --outFileNamePrefix "processed/GAO1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -7829,7 +7807,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/GAO2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/GAO2" \
+    --outFileNamePrefix "processed/GAO2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -7856,7 +7834,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/GAP1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/GAP1" \
+    --outFileNamePrefix "processed/GAP1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -7880,7 +7858,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/GAP2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/GAP2" \
+    --outFileNamePrefix "processed/GAP2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -7907,7 +7885,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/GAQ1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/GAQ1" \
+    --outFileNamePrefix "processed/GAQ1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -7931,7 +7909,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/GAQ2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/GAQ2" \
+    --outFileNamePrefix "processed/GAQ2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -7958,7 +7936,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/GAR1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/GAR1" \
+    --outFileNamePrefix "processed/GAR1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -7982,7 +7960,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/GAR2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/GAR2" \
+    --outFileNamePrefix "processed/GAR2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -8009,7 +7987,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/GAS1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/GAS1" \
+    --outFileNamePrefix "processed/GAS1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -8033,7 +8011,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/GAS2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/GAS2" \
+    --outFileNamePrefix "processed/GAS2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -8057,7 +8035,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/GAS2-replicate";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/GAS2-replicate" \
+    --outFileNamePrefix "processed/GAS2-replicate/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -8084,7 +8062,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/HAA1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/HAA1" \
+    --outFileNamePrefix "processed/HAA1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -8108,7 +8086,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/HAA2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/HAA2" \
+    --outFileNamePrefix "processed/HAA2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -8135,7 +8113,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/HAB1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/HAB1" \
+    --outFileNamePrefix "processed/HAB1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -8159,7 +8137,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/HAB2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/HAB2" \
+    --outFileNamePrefix "processed/HAB2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -8186,7 +8164,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/HAC1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/HAC1" \
+    --outFileNamePrefix "processed/HAC1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -8210,7 +8188,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/HAC2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/HAC2" \
+    --outFileNamePrefix "processed/HAC2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -8237,7 +8215,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/HAD1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/HAD1" \
+    --outFileNamePrefix "processed/HAD1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -8261,7 +8239,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/HAD2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/HAD2" \
+    --outFileNamePrefix "processed/HAD2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -8288,7 +8266,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/HAE1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/HAE1" \
+    --outFileNamePrefix "processed/HAE1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -8312,7 +8290,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/HAE2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/HAE2" \
+    --outFileNamePrefix "processed/HAE2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -8339,7 +8317,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/HAF1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/HAF1" \
+    --outFileNamePrefix "processed/HAF1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -8363,7 +8341,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/HAF2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/HAF2" \
+    --outFileNamePrefix "processed/HAF2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -8390,7 +8368,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/HAG1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/HAG1" \
+    --outFileNamePrefix "processed/HAG1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -8414,7 +8392,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/HAG2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/HAG2" \
+    --outFileNamePrefix "processed/HAG2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -8441,7 +8419,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/HAH1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/HAH1" \
+    --outFileNamePrefix "processed/HAH1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -8465,7 +8443,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/HAH2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/HAH2" \
+    --outFileNamePrefix "processed/HAH2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -8492,7 +8470,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/HAI1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/HAI1" \
+    --outFileNamePrefix "processed/HAI1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -8516,7 +8494,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/HAI2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/HAI2" \
+    --outFileNamePrefix "processed/HAI2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -8543,7 +8521,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/HAK1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/HAK1" \
+    --outFileNamePrefix "processed/HAK1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -8567,7 +8545,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/HAK2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/HAK2" \
+    --outFileNamePrefix "processed/HAK2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -8594,7 +8572,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/JAB1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/JAB1" \
+    --outFileNamePrefix "processed/JAB1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -8618,7 +8596,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/JAB2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/JAB2" \
+    --outFileNamePrefix "processed/JAB2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -8645,7 +8623,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/JAC1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/JAC1" \
+    --outFileNamePrefix "processed/JAC1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -8669,7 +8647,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/JAC2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/JAC2" \
+    --outFileNamePrefix "processed/JAC2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -8696,7 +8674,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/JAD1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/JAD1" \
+    --outFileNamePrefix "processed/JAD1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -8720,7 +8698,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/JAD2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/JAD2" \
+    --outFileNamePrefix "processed/JAD2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -8747,7 +8725,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/JAE1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/JAE1" \
+    --outFileNamePrefix "processed/JAE1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -8771,7 +8749,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/JAE2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/JAE2" \
+    --outFileNamePrefix "processed/JAE2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -8798,7 +8776,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/JAF1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/JAF1" \
+    --outFileNamePrefix "processed/JAF1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -8822,7 +8800,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/JAF2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/JAF2" \
+    --outFileNamePrefix "processed/JAF2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -8849,7 +8827,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/JAG1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/JAG1" \
+    --outFileNamePrefix "processed/JAG1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -8873,7 +8851,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/JAG2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/JAG2" \
+    --outFileNamePrefix "processed/JAG2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -8900,7 +8878,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/JAH1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/JAH1" \
+    --outFileNamePrefix "processed/JAH1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -8924,7 +8902,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/JAH2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/JAH2" \
+    --outFileNamePrefix "processed/JAH2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -8951,7 +8929,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/JAI1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/JAI1" \
+    --outFileNamePrefix "processed/JAI1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -8975,7 +8953,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/JAI2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/JAI2" \
+    --outFileNamePrefix "processed/JAI2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -9002,7 +8980,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/JAJ1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/JAJ1" \
+    --outFileNamePrefix "processed/JAJ1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -9026,7 +9004,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/JAJ2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/JAJ2" \
+    --outFileNamePrefix "processed/JAJ2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -9053,7 +9031,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/JAK1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/JAK1" \
+    --outFileNamePrefix "processed/JAK1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -9077,7 +9055,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/JAK2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/JAK2" \
+    --outFileNamePrefix "processed/JAK2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -9104,7 +9082,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/JAL1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/JAL1" \
+    --outFileNamePrefix "processed/JAL1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -9128,7 +9106,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/JAL2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/JAL2" \
+    --outFileNamePrefix "processed/JAL2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -9155,7 +9133,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/JAM1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/JAM1" \
+    --outFileNamePrefix "processed/JAM1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -9179,7 +9157,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/JAM2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/JAM2" \
+    --outFileNamePrefix "processed/JAM2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -9206,7 +9184,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/JAN1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/JAN1" \
+    --outFileNamePrefix "processed/JAN1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -9230,7 +9208,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/JAN2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/JAN2" \
+    --outFileNamePrefix "processed/JAN2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -9257,7 +9235,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/KAA1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/KAA1" \
+    --outFileNamePrefix "processed/KAA1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -9281,7 +9259,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/KAA2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/KAA2" \
+    --outFileNamePrefix "processed/KAA2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -9308,7 +9286,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/KAB1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/KAB1" \
+    --outFileNamePrefix "processed/KAB1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -9332,7 +9310,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/KAB2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/KAB2" \
+    --outFileNamePrefix "processed/KAB2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -9359,7 +9337,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/KAC1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/KAC1" \
+    --outFileNamePrefix "processed/KAC1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -9383,7 +9361,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/KAC2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/KAC2" \
+    --outFileNamePrefix "processed/KAC2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -9410,7 +9388,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/KAD1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/KAD1" \
+    --outFileNamePrefix "processed/KAD1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -9434,7 +9412,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/KAD2";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/KAD2" \
+    --outFileNamePrefix "processed/KAD2/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
@@ -9461,7 +9439,7 @@ nice ./bin/STAR/bin/Linux_x86_64/STAR \
 
 mkdir -p "processed/KAE1";
 nice ./bin/STAR/bin/Linux_x86_64/STAR \
-    --outFileNamePrefix "processed/KAE1" \
+    --outFileNamePrefix "processed/KAE1/" \
     --runThreadN 84 \
     --genomeDir ref/star-hg19 \
     --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \

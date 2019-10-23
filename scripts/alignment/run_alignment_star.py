@@ -43,7 +43,7 @@ with open("scripts/alignment/run_alignment_star.sh", "w") as fh:
 			
 			fh.write('mkdir -p "' + outdir + '";\n')
 			fh.write('nice ./bin/STAR/bin/Linux_x86_64/STAR \\\n')
-			fh.write('    --outFileNamePrefix "' + outdir + '" \\\n')
+			fh.write('    --outFileNamePrefix "' + outdir + '/" \\\n')
 			fh.write('    --runThreadN 84 \\\n')
 			fh.write('    --genomeDir ref/star-hg19 \\\n')
 			fh.write('    --sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \\\n')
