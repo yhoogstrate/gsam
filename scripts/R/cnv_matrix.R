@@ -13,5 +13,11 @@ tmp <- ncol(cnv_matrix)
 cnv_matrix <- cnv_matrix[,naPerCol == 0]
 print(paste0("Removal of ",tmp - ncol(cnv_matrix) , " CNV regions due to missing/corrupt and excluded files" ))
 
-rm(tmp)
+rm(tmp, naPerRow, naPerCol)
+
+# make a separate table for the gene information
+cnv_matrix_genes <- cnv_matrix[,1:4]
+cnv_matrix_genes$chr <- paste0('chr',cnv_matrix_genes$chromosome)
+cnv_matrix <- cnv_matrix[,-(1:4)] # exclude gene details
+rownames(cnv_matrix) <- paste0(cnv_matrix_genes$chr,":",cnv_matrix_genes$start, "-", cnv_matrix_genes$end)
 
