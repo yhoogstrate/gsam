@@ -3,7 +3,7 @@
 import os
 from tqdm import tqdm
 
-paths = ['data/DNA/cnvkit/ExtraSequencing_CN_data_29Mar2018', 'data/DNA/cnvkit/first_series']
+path = 'data/DNA/cnvkit/data'
 
 
 """
@@ -27,29 +27,29 @@ locs = []
 samples = []
 
 # 01. find all files
-for path in sorted(paths):
-	for _ in tqdm(sorted([_ for _ in os.listdir(path) if _[-4:] == ".cnr" and _.find(' (1)') == -1])):
-		sid = _.split("__",1)[0]
-		samples.append(sid)
+for _ in tqdm(sorted([_ for _ in os.listdir(path) if _[-4:] == ".cnr" and _.find(' (1)') == -1])):
+	sid = _.split("__",1)[0]
+	samples.append(sid)
 
-		if _ not in failed:
-			with open(path + "/" + _ , "r") as fh:
-				for line in fh:
-					line = line.strip()
-					params = line.split("\t")
-					if params[0] != "chromosome":
+	if _ not in failed:
+		with open(path + "/" + _ , "r") as fh:
+			for line in fh:
+				line = line.strip()
+				params = line.split("\t")
+				if params[0] != "chromosome":
+					#print(_, params)
+					loc = params[0] + ":" + params[1] + "-" + params[2]
+
+					if loc not in idx:
+						locs.append(loc)
+						idx[loc] = {}
 						#print(_, params)
-						loc = params[0] + ":" + params[1] + "-" + params[2]
-
-						if loc not in idx:
-							locs.append(loc)
-							idx[loc] = {}
-							#print(_, params)
-							gidx[loc] = [params[0], params[1], params[2], params[3]]
-						
-						if sid not in idx[loc]:
-							idx[loc][sid] = {'depth': params[4], 'log2': params[5]}
-
+						gidx[loc] = [params[0], params[1], params[2], params[3]]
+					
+					if sid not in idx[loc]:
+						idx[loc][sid] = {'depth': params[4], 'log2': params[5]}
+	else:
+		print("Skipping incomplete file: " + _)
 
 
 
