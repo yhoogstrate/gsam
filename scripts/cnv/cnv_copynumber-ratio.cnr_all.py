@@ -26,14 +26,19 @@ gidx = {}
 locs = []
 samples = []
 
+batches = {}
+
 # 01. find all files
 for _ in tqdm(sorted([_ for _ in os.listdir(path) if _[-4:] == ".cnr" and _.find(' (1)') == -1])):
 	sid = _.split("__",1)[0]
-	samples.append(sid)
 
 	if _ not in failed:
+		samples.append(sid)
 		with open(path + "/" + _ , "r") as fh:
+			i = 0
+			
 			for line in fh:
+				i += 1
 				line = line.strip()
 				params = line.split("\t")
 				if params[0] != "chromosome":
@@ -48,15 +53,34 @@ for _ in tqdm(sorted([_ for _ in os.listdir(path) if _[-4:] == ".cnr" and _.find
 					
 					if sid not in idx[loc]:
 						idx[loc][sid] = {'depth': params[4], 'log2': params[5]}
+
+			batches[sid] = i
 	else:
 		print("Skipping incomplete file: " + _)
 
+
+batches_idx = {}
+keys = sorted(list(set(batches.values())),reverse=True)
+for i in range(len(keys)):
+	batches_idx[keys[i]] = 'b'+str(i+1)
+#print(batches)
+# print(batches_idx)
+
+
+# for sid in samples:
+	# print(sid)
+	# print(batches[sid])
+	# print(batches_idx[batches[sid]])
+	# print("")
+
+# import sys
+# sys.exit(1)
 
 
 with open("output/tables/cnv_copynumber-ratio.cnr_log2_all.txt", "w") as fh:
 	out = "chromosome\tstart\tend\tgene"
 	for sid in samples:
-		out += "\t" + sid
+		out += "\t" + sid + "." + batches_idx[batches[sid]]
 	out += "\n"
 
 	fh.write(out)
@@ -76,7 +100,7 @@ with open("output/tables/cnv_copynumber-ratio.cnr_log2_all.txt", "w") as fh:
 with open("output/tables/cnv_copynumber-ratio.cnr_depth_all.txt", "w") as fh:
 	out = "chromosome\tstart\tend\tgene"
 	for sid in samples:
-		out += "\t" + sid
+		out += "\t" + sid + "." + batches_idx[batches[sid]]
 	out += "\n"
 
 	fh.write(out)
