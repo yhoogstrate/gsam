@@ -233,10 +233,85 @@ rm(cnv_matrix_allosomes, cnv_matrix_genes_allosomes)
 
 
 
-# ---- batch effect ----
 
 
+# ---- batch effect plot ----
 
+"
+Show from how many of the samples the batch is different per resection
+
+batch affected samples:
+
+PD29181a	PD29181c2
+PD29244a2	PD29244c2
+PD30253a	PD30253c
+PD30260a	PD30260c
+PD30263a	PD30263c
+"
+
+cnv_matrix_allosomes <- cnv_matrix#[cnv_matrix_genes$chr %in% c("chrX","chrY"),]
+#cnv_matrix_genes_allosomes <- cnv_matrix_genes[cnv_matrix_genes$chr %in% c("chrX", "chrY"),]
+
+sids <-colnames(cnv_matrix)
+batch1 <- c("PD29174a2","PD29174c2","PD29177a2","PD29177c2","PD29178a2","PD29178c2","PD29179a2","PD29179c","PD29181c2","PD29183a","PD29183c","PD29184a2","PD29184c2","PD29185a","PD29185c2","PD29186a","PD29186c","PD29188a","PD29188c2","PD29189a","PD29189c2","PD29190a","PD29190c2","PD29192a","PD29192c2","PD29193a","PD29193c","PD29194a","PD29194c","PD29195a2","PD29195c2","PD29196a","PD29196c","PD29197a2","PD29197c2","PD29198a2","PD29198c","PD29199a2","PD29199c2","PD29200a2","PD29200c2","PD29201a2","PD29201c2","PD29202a2","PD29202c","PD29203a2","PD29203c2","PD29204a2","PD29204c2","PD29205a2","PD29205c2","PD29206a2","PD29206c2","PD29207a2","PD29207c2","PD29208a2","PD29208c","PD29209a2","PD29209c2","PD29212a2","PD29212c2","PD29214a2","PD29214c2","PD29216a2","PD29216c2","PD29217a2","PD29217c","PD29218a2","PD29218c2","PD29220a2","PD29220c","PD29221c2","PD29221c","PD29222a2","PD29222c","PD29223a2","PD29223c","PD29224a","PD29224c2","PD29225a2","PD29225c","PD29226a","PD29226c","PD29227a2","PD29227c2","PD29228a","PD29228c","PD29229a","PD29229c2","PD29230a2","PD29230c2","PD29232a2","PD29232c","PD29233a","PD29233c2","PD29235a2","PD29235c2","PD29236a2","PD29236c2","PD29239a2","PD29239c2","PD29240a2","PD29240c","PD29241a","PD29241c2","PD29242a","PD29242c2","PD29243a","PD29243c2","PD29244a2","PD29246a","PD29246c2","PD29249a2","PD29249c2","PD29250a2","PD29250c2","PD29255a","PD29255c2","PD29256a2","PD29256c","PD29257a2","PD29257c2","PD29258a","PD29258c2","PD29262a2","PD29262c","PD29263a","PD29263c2","PD29264a2","PD29264c","PD29265a","PD29265c2","PD29266a2","PD29266c2","PD30207a","PD30207c","PD30208a","PD30208c","PD30209a","PD30209c","PD30210a","PD30210c","PD30211a","PD30211c","PD30216a","PD30216c","PD30217a","PD30217c","PD30218a","PD30218c","PD30219a","PD30219c","PD30221a","PD30221c","PD30224a","PD30224c","PD30225a","PD30225c","PD30229a","PD30229c","PD30236a","PD30236c","PD30240a","PD30240c","PD30243a","PD30243c","PD30244a","PD30244c","PD30246a","PD30246c","PD30247a","PD30248a","PD30248c","PD30249a","PD30249c","PD30250a","PD30250c","PD30252a","PD30252c","PD30253c","PD30255a","PD30255c","PD30256a","PD30256c","PD30257a","PD30258a","PD30258c","PD30260c","PD30261a","PD30261c","PD30262a","PD30262c","PD30263c","PD30264a","PD30264c")
+batch <- as.character(sids %in% batch1)
+
+pids <- gsub("^(PD[0-9]+).+","\\1",sids)
+
+for(pid in  unique(sort(pids))) {
+  sel <- pids == pid
+  #print(sum(sel))
+  #print(batch[sel])
+  
+  if ( length(unique(batch[sel])) > 1) {
+    print(sids[sel])
+  }
+}
+
+
+# plot diff PD29181a ~ PD29181c2 to see probes
+
+plot(c(1,nrow(cnv_matrix_allosomes)),c(-10,10),type="n")
+points(cnv_matrix_allosomes[,colnames(cnv_matrix_allosomes) == "PD29181a"] - cnv_matrix_allosomes[,colnames(cnv_matrix_allosomes) == "PD29181c2"], pch=19,cex=0.5)
+
+plot(c(1,nrow(cnv_matrix_allosomes)),c(-10,10),type="n")
+points(cnv_matrix_allosomes[,colnames(cnv_matrix_allosomes) == "PD29244a2"] - cnv_matrix_allosomes[,colnames(cnv_matrix_allosomes) == "PD29244c2"], pch=19,cex=0.5)
+
+plot(c(1,nrow(cnv_matrix_allosomes)),c(-10,10),type="n")
+points(cnv_matrix_allosomes[,colnames(cnv_matrix_allosomes) == "PD30253a"] - cnv_matrix_allosomes[,colnames(cnv_matrix_allosomes) == "PD30253c"], pch=19,cex=0.5)
+
+plot(c(1,nrow(cnv_matrix_allosomes)),c(-10,10),type="n")
+points(cnv_matrix_allosomes[,colnames(cnv_matrix_allosomes) == "PD30260a"] - cnv_matrix_allosomes[,colnames(cnv_matrix_allosomes) == "PD30260c"], pch=19,cex=0.5)
+
+plot(c(1,nrow(cnv_matrix_allosomes)),c(-10,10),type="n")
+points(cnv_matrix_allosomes[,colnames(cnv_matrix_allosomes) == "PD30263a"] - cnv_matrix_allosomes[,colnames(cnv_matrix_allosomes) == "PD30263c"], pch=19,cex=0.5)
+
+
+plot(c(1,nrow(cnv_matrix_allosomes)),c(-10,10),type="n")
+points(cnv_matrix_allosomes[,colnames(cnv_matrix_allosomes) == "PD29174a2"] - cnv_matrix_allosomes[,colnames(cnv_matrix_allosomes) == "PD29174c2"], pch=19,cex=0.5)
+
+
+# ---- ----
+
+# all probe change plot
+
+d <- cnv_matrix[,!colnames(cnv_matrix) %in% c("PD29181a","PD29181c2","PD29244a2","PD29244c2","PD30253a","PD30253c","PD30260a","PD30260c","PD30263a","PD30263c")]
+sid <- gsub("[0-9]$","",colnames(d))
+colnames(d) <- sid
+c <- gsub("^PD[0-9]+","",sid)
+da <- d[, c=="a"]
+dc <- d[, c=="c"]
+
+shared <- intersect( gsub("a","",colnames(da)) , gsub("c","",colnames(dc)) )
+
+da <- da[,match(shared, gsub("a","",colnames(da)))]
+dc <- dc[,match(shared, gsub("c","",colnames(dc)))]
+
+# gsub("a","",colnames(da)) == gsub("c","",colnames(dc))
+stopifnot ( length( gsub("a","",colnames(da)) == gsub("c","",colnames(dc)) ) == 178 )
+
+
+delta <- da - dc
 
 
 
