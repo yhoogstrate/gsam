@@ -51,6 +51,18 @@ high_variance_genes <- f[select,]
 dim(high_variance_genes)
 
 
+
+pc <- prcomp(t(high_variance_genes))
+pc1 <- 1
+pc2 <- 2
+plot(pc$x[,c(pc1,pc2)],  cex=0.45,
+     main=paste0("G-SAM DNA CNV PCA [chrX+chrY] (pc",pc1," & pc",pc2,")"),col=as.integer(cond), pch=(as.numeric(cond2) - 1) * 18  + 1 )
+legend("bottomright", c(unique(as.character(cond)), "batch1", "batch2"),col=c(as.integer(unique(cond)), "darkgray", "darkgray"),pch=c(15,15,15,1,19))
+
+
+
+# ---- MDS ----
+
 dd <- dist(high_variance_genes)
 dd2 <- dist(t(high_variance_genes))
 
@@ -216,6 +228,14 @@ legend("bottomright", c(unique(as.character(cond)), "batch1", "batch2"),col=c(as
 
 
 rm(cnv_matrix_allosomes, cnv_matrix_genes_allosomes)
+
+
+
+
+
+# ---- batch effect ----
+
+
 
 
 
