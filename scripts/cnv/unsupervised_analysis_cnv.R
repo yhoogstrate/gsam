@@ -238,6 +238,37 @@ rm(cnv_matrix_allosomes, cnv_matrix_genes_allosomes)
 # ---- batch effect plot ----
 
 "
+Met name chrY heeft grote verschillen, maar ook chr1,
+chr2, chr11, chr16, chr20, chr21 en chrX laten een
+duidelijk verschil zien in batches.
+"
+
+png("output/figures/cnv/batch-effect_pca_cnvkit_cnr.png",width=2*480,height=2*480,res=2*72)
+
+batch <- as.factor(gsub("^.+\\.","",colnames(cnv_matrix)))
+sids <- gsub("\\.b[0-9]$","",colnames(cnv_matrix))
+cond <- gsam.dna_seq.metadata[match(sids, gsam.dna_seq.metadata$PD_ID ),]$donor_sex
+
+cond <- as.factor(paste0(as.character(cond), ".", gsub("b","batch",as.character(batch),fixed=T)))
+
+tmp <- cnv_matrix[cnv_matrix_genes$chr %in% c("chr22"),]
+pc <- prcomp(t(tmp))
+pc1 <- 1
+pc2 <- 2
+plot(pc$x[,c(pc1,pc2)],  cex=0.50,
+     main=paste0("G-SAM DNA CNV PCA (pc",pc1," & pc",pc2,")"),col=as.integer(cond), pch=19)
+
+#legend("bottomright", 
+#        unique(as.character(cond)),
+#       col=as.integer(unique(cond)),
+#       pch=19)
+
+
+dev.off()
+
+
+
+"
 Show from how many of the samples the batch is different per resection
 
 batch affected samples:
@@ -291,9 +322,7 @@ plot(c(1,nrow(cnv_matrix_allosomes)),c(-10,10),type="n")
 points(cnv_matrix_allosomes[,colnames(cnv_matrix_allosomes) == "PD29174a2"] - cnv_matrix_allosomes[,colnames(cnv_matrix_allosomes) == "PD29174c2"], pch=19,cex=0.5)
 
 
-# ---- ----
-
-# all probe change plot
+# ---- all probe change plot ----
 
 d <- cnv_matrix[,!colnames(cnv_matrix) %in% c("PD29181a","PD29181c2","PD29244a2","PD29244c2","PD30253a","PD30253c","PD30260a","PD30260c","PD30263a","PD30263c")]
 sid <- gsub("[0-9]$","",colnames(d))
