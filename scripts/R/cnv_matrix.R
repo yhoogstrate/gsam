@@ -30,8 +30,18 @@ naPerCol <- apply(cnv_matrix, 2, function(x) sum(is.na(x)))
 tmp <- ncol(cnv_matrix)
 cnv_matrix <- cnv_matrix[,naPerCol == 0]
 print(paste0("Removal of ",tmp - ncol(cnv_matrix) , " CNV regions due to missing/corrupt and excluded files" ))
+stopifnot(sum(is.na(head(cnv_matrix))) == 0) # no NA values may exist
 
 
+# change PD ids (sequencing ids) to study ids
+source("scripts/R/gsam_metadata.R")
+tmp <- match(colnames(cnv_matrix), gsam.cnv.metadata$cnv.table.id) # order
+stopifnot(sum(is.na(tmp)) == 0)
+colnames(cnv_matrix) <- gsam.cnv.metadata[tmp,]$donor_ID
+
+# reorder to match metadata order
+cnv_matrix <- cnv_matrix[,match(gsam.cnv.metadata$donor_ID , colnames(cnv_matrix))]
 
 rm(tmp, naPerRow, naPerCol, sel)
+
 

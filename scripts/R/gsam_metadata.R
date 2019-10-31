@@ -6,7 +6,7 @@ library(dplyr) # for distinct() function
 #gsam.patient.metadata <- read.csv('data/administratie/dbGSAM_PUBLIC_VERSION.csv',stringsAsFactors=F)
 gsam.patient.metadata <- read.csv('data/administratie/GSAM_combined_clinical_molecular.csv',stringsAsFactors=F)
 
-# ---- CNV metadata ----
+# ---- exome-seq CNV metadata ----
 gsam.cnv.metadata <- read.delim('data/output/tables/cnv_copynumber-ratio.cnr_log2_all.txt')
 gsam.cnv.metadata <- gsam.cnv.metadata[,-c(1,2,3,4)] # remove columns with geneid, start, end etc.
 gsam.cnv.metadata <- data.frame(
@@ -23,10 +23,12 @@ tmp <- tmp[,match(c("donor_ID", "pid", "PD_ID", "donor_sex", "donor_age_at_diagn
 gsam.cnv.metadata <- merge(gsam.cnv.metadata,tmp,by.x="sid",by.y="PD_ID")
 rm(tmp)
 
-
 # previous genders are incomplete
 gsam.cnv.metadata <- merge(gsam.cnv.metadata, gsam.patient.metadata, by.x = "pid",by.y = "studyID",all.x=TRUE)
-gsam.cnv.metadata$donor_sex <- NULL
+gsam.cnv.metadata$donor_sex <- NULL # incomplete, the one from patient metadata = complete
+
+
+# --- RNA-seq metadata ----
 
 ## duplicate reads
 gsam.rna.metadata <- read.delim("data/RNA/output/tables/duplicate_reads_sambamba_stats.txt",header=T,sep="\t",stringsAsFactors = F)
