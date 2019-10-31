@@ -132,7 +132,7 @@ gg <- ggplot(tmp, aes(x=x, y=y, label=sid)) +
   ggtitle("Sex plot RNA-seq data [1st 96 samples]")
 
 plot(gg)
-ggsave("output/figures/rna/sex-plot_dna_cnv.pdf")
+ggsave("output/figures/rna/sex-plot_dna_rna.pdf")
 
 
 
