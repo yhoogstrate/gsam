@@ -22,6 +22,23 @@ source("scripts/R/cnv_matrix.R")
 # or have 27287 lines (195/374) = 50%
 
 
+job_gg_theme <- theme(
+  text = element_text(family = 'Helvetica'),
+  axis.text.x = element_text(angle = 45, hjust = 1),
+  legend.position = 'bottom',
+  plot.title = element_text(face = "bold", size = rel(1.2), hjust = 0.5),
+  panel.background = element_rect(fill = 'white', colour = 'white'),
+  axis.title = element_text(face = "bold",size = rel(1)),
+  axis.title.y = element_text(angle=90,vjust =2),
+  axis.title.x = element_text(vjust = -0.2),
+  axis.text = element_text(),
+  axis.line = element_line(colour="black"),
+  panel.grid.major.x = element_blank(),
+  panel.grid.minor.x = element_blank(),
+  panel.grid.major.y = element_line(colour = 'grey20', linetype = 'dotted'),
+  panel.grid.minor.y = element_line(colour = 'grey50', linetype = 'dotted')
+)
+
 
 # ---- Sex Plot Batch-1 ----
 
@@ -45,6 +62,7 @@ tmp <- data.frame(
 
 
 tmp2 <- tmp[tmp$y > -750, ]
+tmp3 <- tmp[tmp$y <= -750, ]
 
 
 gg <- ggplot(tmp, aes(x=x, y=y)) + 
@@ -52,13 +70,15 @@ gg <- ggplot(tmp, aes(x=x, y=y)) +
   geom_encircle(aes(x=x, y=y), 
                 data=tmp2, 
                 color=1, 
-                size=2, 
+                size=1, 
                 expand=0.08) +
   geom_encircle(aes(x=x, y=y), 
-              data=tmp2, 
+              data=tmp3, 
               color=1, 
-              size=2, 
-              expand=0.08) 
+              size=1, 
+              expand=0.08) +
+  job_gg_theme
+
 plot(gg)
 
 
