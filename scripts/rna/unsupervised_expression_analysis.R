@@ -2,12 +2,7 @@
 
 # ---- initialization setup ----
 
-wd <- "/home/youri/projects/gsam"
-wd <- "/home/yhoogstrate/projects/gsam"
-
-setwd(wd)
-
-rm(wd)
+setwd("~/projects/gsam")
 
 
 # ---- load: libs ----

@@ -73,10 +73,11 @@ gg <- ggplot(tmp, aes(x=x, y=y, label=sid)) +
     ) +
   job_gg_theme +
   ylim(NA, 150) + 
-  labs(x = "chrX (sum of cnr values)",y="chrY (sum of cnr values)")
+  labs(x = "chrX (sum of cnr values)",y="chrY (sum of cnr values)") +
+  ggtitle("Sex plot exome-seq CNV data")
 
 plot(gg)
-#ggsave("output/figures/cnv/sex-plot_dna_cnv.pdf")
+ggsave("output/figures/cnv/sex-plot_dna_cnv.pdf")
 
 
 
