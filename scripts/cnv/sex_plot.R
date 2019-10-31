@@ -21,24 +21,7 @@ source("scripts/R/cnv_matrix.R")
 # they either have 27493 lines (all in ExtraSequencing_CN_data_29Mar2018/)
 # or have 27287 lines (195/374) = 50%
 
-
-job_gg_theme <- theme(
-  text = element_text(family = 'Helvetica'),
-  axis.text.x = element_text(angle = 45, hjust = 1),
-  legend.position = 'bottom',
-  plot.title = element_text(face = "bold", size = rel(1.2), hjust = 0.5),
-  panel.background = element_rect(fill = 'white', colour = 'white'),
-  axis.title = element_text(face = "bold",size = rel(1)),
-  axis.title.y = element_text(angle=90,vjust =2),
-  axis.title.x = element_text(vjust = -0.2),
-  axis.text = element_text(),
-  axis.line = element_line(colour="black"),
-  panel.grid.major.x = element_blank(),
-  panel.grid.minor.x = element_blank(),
-  panel.grid.major.y = element_line(colour = 'grey20', linetype = 'dotted'),
-  panel.grid.minor.y = element_line(colour = 'grey50', linetype = 'dotted')
-)
-
+source("scripts/R/job_gg_theme.R")
 
 # ---- Sex Plot Batch-1 ----
 
@@ -86,13 +69,14 @@ gg <- ggplot(tmp, aes(x=x, y=y, label=sid)) +
     segment.size  = 0.2,
     segment.color = "grey50",
     direction     = "x",
-    data = mislabels,
+    data = mislabels
     ) +
   job_gg_theme +
-  ylim(NA, 150)
+  ylim(NA, 150) + 
+  labs(x = "chrX (sum of cnr values)",y="chrY (sum of cnr values)")
 
 plot(gg)
-
+#ggsave("output/figures/cnv/sex-plot_dna_cnv.pdf")
 
 
 
