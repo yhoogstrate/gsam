@@ -51,32 +51,43 @@ rm(cnv_matrix.b1)
 cnv_matrix.b1.X <- colSums(cnv_matrix.b1.X)
 cnv_matrix.b1.Y <- colSums(cnv_matrix.b1.Y)
 
-plot(cnv_matrix.b1.X, cnv_matrix.b1.Y)
+#plot(cnv_matrix.b1.X, cnv_matrix.b1.Y)
 
 tmp <- data.frame(
   x = cnv_matrix.b1.X,
   y = cnv_matrix.b1.Y,
   batch = gsam.cnv.metadata[sel,]$batch ,
-  gender = as.factor(gsam.cnv.metadata[sel,]$gender)
+  gender = as.factor(gsam.cnv.metadata[sel,]$gender) , 
+  sid = paste0(colnames(cnv_matrix)[sel],".",gsam.cnv.metadata[sel,]$batch )
 )
+rownames(tmp ) <- colnames(cnv_matrix[sel])
 
 
-tmp2 <- tmp[tmp$y > -750, ]
-tmp3 <- tmp[tmp$y <= -750, ]
+mislabels <- subset(tmp, 
+              (y > -750) & (gender == "Female")
+                |
+              (y <= -750) & (gender == "Male"))
 
 
-gg <- ggplot(tmp, aes(x=x, y=y)) + 
+gg <- ggplot(tmp, aes(x=x, y=y, label=sid)) + 
   geom_point(aes(col=gender, shape=batch)) +
   geom_encircle(aes(x=x, y=y), 
-                data=tmp2, 
+                data=subset(tmp, y > -750),
                 color=1, 
                 size=1, 
                 expand=0.08) +
   geom_encircle(aes(x=x, y=y), 
-              data=tmp3, 
+              data=subset(tmp, y <= -750),
               color=1, 
               size=1, 
               expand=0.08) +
+  geom_text_repel(
+    nudge_y       = 200 - mislabels$y,
+    segment.size  = 0.2,
+    segment.color = "grey50",
+    direction     = "x",
+    data = mislabels
+    ) +
   job_gg_theme
 
 plot(gg)
