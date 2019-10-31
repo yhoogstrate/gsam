@@ -303,10 +303,10 @@ for(pid in  unique(sort(pids))) {
 # plot diff PD29181a ~ PD29181c2 to see probes
 
 plot(c(1,nrow(cnv_matrix_allosomes)),c(-10,10),type="n")
-points(cnv_matrix_allosomes[,colnames(cnv_matrix_allosomes) == "PD29181a"] - cnv_matrix_allosomes[,colnames(cnv_matrix_allosomes) == "PD29181c2"], pch=19,cex=0.5)
+points(cnv_matrix_allosomes[,colnames(cnv_matrix_allosomes) == "PD29181a.b1"] - cnv_matrix_allosomes[,colnames(cnv_matrix_allosomes) == "PD29181c2.b2"], pch=19,cex=0.5)
 
 plot(c(1,nrow(cnv_matrix_allosomes)),c(-10,10),type="n")
-points(cnv_matrix_allosomes[,colnames(cnv_matrix_allosomes) == "PD29244a2"] - cnv_matrix_allosomes[,colnames(cnv_matrix_allosomes) == "PD29244c2"], pch=19,cex=0.5)
+points(cnv_matrix_allosomes[,colnames(cnv_matrix_allosomes) == "PD29244a2.b2"] - cnv_matrix_allosomes[,colnames(cnv_matrix_allosomes) == "PD29244c2.b1"], pch=19,cex=0.5)
 
 plot(c(1,nrow(cnv_matrix_allosomes)),c(-10,10),type="n")
 points(cnv_matrix_allosomes[,colnames(cnv_matrix_allosomes) == "PD30253a"] - cnv_matrix_allosomes[,colnames(cnv_matrix_allosomes) == "PD30253c"], pch=19,cex=0.5)
@@ -318,14 +318,16 @@ plot(c(1,nrow(cnv_matrix_allosomes)),c(-10,10),type="n")
 points(cnv_matrix_allosomes[,colnames(cnv_matrix_allosomes) == "PD30263a"] - cnv_matrix_allosomes[,colnames(cnv_matrix_allosomes) == "PD30263c"], pch=19,cex=0.5)
 
 
-plot(c(1,nrow(cnv_matrix_allosomes)),c(-10,10),type="n")
-points(cnv_matrix_allosomes[,colnames(cnv_matrix_allosomes) == "PD29174a2"] - cnv_matrix_allosomes[,colnames(cnv_matrix_allosomes) == "PD29174c2"], pch=19,cex=0.5)
+plot(c(1,nrow(cnv_matrix)),c(-10,10),type="n")
+points(cnv_matrix[,colnames(cnv_matrix) == "PD29174a2.b2"] - cnv_matrix[,colnames(cnv_matrix) == "PD29174c2.b2"], pch=19,cex=0.5)
 
 
 # ---- all probe change plot ----
 
-d <- cnv_matrix[,!colnames(cnv_matrix) %in% c("PD29181a","PD29181c2","PD29244a2","PD29244c2","PD30253a","PD30253c","PD30260a","PD30260c","PD30263a","PD30263c")]
-sid <- gsub("[0-9]$","",colnames(d))
+d <- cnv_matrix[,!gsub("\\.b[0-9]$","",colnames(cnv_matrix)) %in% c("PD29181a","PD29181c2","PD29244a2","PD29244c2","PD30253a","PD30253c","PD30260a","PD30260c","PD30263a","PD30263c")]
+sid <- colnames(d)
+sid <- gsub("\\.b[0-9]$","",sid)
+sid <- gsub("[0-9]$","",sid)
 colnames(d) <- sid
 c <- gsub("^PD[0-9]+","",sid)
 da <- d[, c=="a"]
@@ -340,8 +342,104 @@ dc <- dc[,match(shared, gsub("c","",colnames(dc)))]
 stopifnot ( length( gsub("a","",colnames(da)) == gsub("c","",colnames(dc)) ) == 178 )
 
 
-delta <- da - dc
+delta <- dc - da
 
+png("output/figures/cnv/cnv_changes_over_resection.png",width=480*3,height=480*2,res=sqrt(3*2))
+
+plot(
+  c(1, as.numeric(chrs_hg19_e["chr22"]) / 1000000  ),
+  c(-0.5,0.5),
+  ylab = "median in difference between resections",
+  xlab="chomosomal location",
+  type="n")
+
+for(i in 1:nrow(delta)) {
+#for(i in 16000:18000) {
+  region  <- cnv_matrix_genes[i,]
+  if(!region$chr %in% c("chrX","chrY")) {
+    chr_off <- chrs_hg19_s[cnv_matrix_genes[i,]$chr]
+    
+    
+    y <- median(as.numeric(delta[i,]))
+    lines(
+      (c(region$start, region$end) + chr_off)/1000000 ,
+      c(y, y))
+    
+    if(region$chr == "chr3" & y < -0.09) {
+      print(region)
+    }
+  }
+}
+
+abline(v=chrs_hg19_s / 1000000, col="red")
+abline(h=0, col="white")
+
+
+#chr12	58142253	58145511	CDK4
+cdk4 <- c("chr12",	58142253,	58145511,	"CDK4")
+gene <- cdk4
+lines((as.numeric(c(gene[2], gene[3])) + as.numeric(chrs_hg19_s[gene[1]])) / 1000000 ,
+      c(-0.1, -1), col="blue", lwd=0.5)
+text(
+  mean(as.numeric(c(gene[2], gene[3])) + as.numeric(chrs_hg19_s[gene[1]])) / 1000000,
+  -0.5, gene[4], srt=90, pos=4,cex=0.6)
+lines((as.numeric(c(gene[2], gene[3])) + as.numeric(chrs_hg19_s[gene[1]])) / 1000000 ,
+      c(0.25, 1), col="blue", lwd=0.5)
+
+#chr12	69202164	69239411	MDM2
+mdm2 <- c("chr12",	69202164,	69239411,	"           MDM2")
+gene <- mdm2
+lines((as.numeric(c(gene[2], gene[3])) + as.numeric(chrs_hg19_s[gene[1]])) / 1000000 ,
+      c(-0.1, -1), col="blue", lwd=0.5)
+lines((as.numeric(c(gene[2], gene[3])) + as.numeric(chrs_hg19_s[gene[1]])) / 1000000 ,
+      c(0.25, 1), col="blue", lwd=0.5)
+text(
+  mean(as.numeric(c(gene[2], gene[3])) + as.numeric(chrs_hg19_s[gene[1]])) / 1000000,
+  -0.5, gene[4], srt=90, pos=4,cex=0.6)
+
+##chr1	51435984	51439953	CDKN2C
+#cdkn2c <- c('chr1', 51435984, 51439953, 'CDKN2C')
+#gene <- cdkn2c
+#lines((as.numeric(c(gene[2], gene[3])) + as.numeric(chrs_hg19_s[gene[1]])) / 1000000 ,
+#      c(-0.3, -1), col="blue", lwd=0.5)
+
+#chr7 55086914	55273329 EGFR
+egfr <- c('chr7', 55086914,	55273329, 'EGFR')
+gene <- egfr
+lines((as.numeric(c(gene[2], gene[3])) + as.numeric(chrs_hg19_s[gene[1]])) / 1000000 ,
+      c(0.05, 1), col="blue", lwd=0.5)
+lines((as.numeric(c(gene[2], gene[3])) + as.numeric(chrs_hg19_s[gene[1]])) / 1000000 ,
+      c(-0.30, -1), col="blue", lwd=0.5)
+text(
+  mean(as.numeric(c(gene[2], gene[3])) + as.numeric(chrs_hg19_s[gene[1]])) / 1000000,
+  -0.5, gene[4], srt=90, pos=4,cex=0.6)
+
+#chr9	21968144	21994475	CDKN2A
+cdkn2 <- c('chr9', 21968144,	22009392, 'CDKN2A,CDKN2B')
+gene <- cdkn2
+lines((as.numeric(c(gene[2], gene[3])) + as.numeric(chrs_hg19_s[gene[1]])) / 1000000 ,
+      c(-0.3, -1), col="blue", lwd=0.5)
+lines((as.numeric(c(gene[2], gene[3])) + as.numeric(chrs_hg19_s[gene[1]])) / 1000000 ,
+      c(0.10, 1), col="blue", lwd=0.5)
+text(
+  mean(as.numeric(c(gene[2], gene[3])) + as.numeric(chrs_hg19_s[gene[1]])) / 1000000,
+  -0.5, gene[4], srt=90, pos=4,cex=0.6)
+
+
+bg <- c(  "chr3", 114058802, 115983724, "DRD3,ZTBT20,GAP43,LSAMP")
+gene <- bg
+lines((as.numeric(c(gene[2], gene[3])) + as.numeric(chrs_hg19_s[gene[1]])) / 1000000 ,
+      c(-0.25, -1), col="blue", lwd=0.5)
+lines((as.numeric(c(gene[2], gene[3])) + as.numeric(chrs_hg19_s[gene[1]])) / 1000000 ,
+      c(0.2, 1), col="blue", lwd=0.5)
+text(
+  mean(as.numeric(c(gene[2], gene[3])) + as.numeric(chrs_hg19_s[gene[1]])) / 1000000,
+  -0.5, gene[4], srt=90, pos=4,cex=0.6)
+
+
+text((chrs_hg19_s + chrs_hg19_e) / 2000000 , 0.45, names(chrs_hg19_e),srt=90,cex=0.6)
+
+dev.off()
 
 
 
