@@ -86,9 +86,10 @@ gg <- ggplot(tmp, aes(x=x, y=y, label=sid)) +
     segment.size  = 0.2,
     segment.color = "grey50",
     direction     = "x",
-    data = mislabels
+    data = mislabels,
     ) +
-  job_gg_theme
+  job_gg_theme +
+  ylim(NA, 150)
 
 plot(gg)
 
