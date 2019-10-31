@@ -56,13 +56,13 @@ gg <- ggplot(tmp, aes(x=x, y=y, label=sid)) +
   geom_point(aes(col=gender, shape=batch)) +
   geom_encircle(aes(x=x, y=y), 
                 data=subset(tmp, y > -750),
-                color=1, 
-                size=1, 
+                color="grey50", 
+                size=0.75,
                 expand=0.08) +
   geom_encircle(aes(x=x, y=y), 
               data=subset(tmp, y <= -750),
-              color=1, 
-              size=1, 
+              color="grey50", 
+              size=0.75,
               expand=0.08) +
   geom_text_repel(
     nudge_y       = 200 - mislabels$y,
