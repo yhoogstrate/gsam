@@ -89,6 +89,34 @@ tmp <- tmp[order(tmp$delta.percentage, rownames(tmp)),]
 tmp$x <- order(tmp$delta.percentage, rownames(tmp))
 tmp$sid <- rownames(tmp)
 
+
+outliers1 <- subset(tmp, 
+                    delta.percentage > 10)
+outliers2 <- subset(tmp, 
+                    delta.percentage < -11)
+ggplot(tmp, aes(x=x, y=delta.percentage, label=sid)) + 
+  geom_bar(aes(x=x, y=delta.percentage),stat="identity",width=0.7) + 
+  geom_point(aes(col=v3.stat)) +
+  ylim(-100, 100) + 
+  geom_text_repel(
+    nudge_y       = 100 - outliers1$delta.percentage,
+    segment.size  = 0.2,
+    segment.color = "grey50",
+    direction     = "x",
+    size=0.7*5,
+    data = outliers1) + 
+  geom_text_repel(
+    nudge_y       = -100 - outliers2$delta.percentage,
+    segment.size  = 0.2,
+    segment.color = "grey50",
+    direction     = "x",
+    size=0.7*5,
+    data = outliers2)
+ggsave("output/figures/rna/vIII_changes_1.png")
+
+
+
+
 # find LR of EGFR 
 e <- expression_matrix_full
 cond <- factor(paste0("r",gsub("^.+([0-9])$","\\1",colnames(e))))
