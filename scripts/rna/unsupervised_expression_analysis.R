@@ -27,7 +27,7 @@ ensembl_genes <- get_ensembl_hsapiens_gene_ids()
 # Load the data (expression values; metadata) into data frames
 
 source("scripts/R/ligands.R")# @ todo gsub suffixes in ensembl ids
-source("scripts/R/gsam_metadata.R")
+# source("scripts/R/gsam_metadata.R")
 source("scripts/R/expression_matrix.R")
 gene_matrix$Chr <- gsub("^([^;]+);.+$","\\1",gene_matrix$Chr)
 gene_matrix$Start <- gsub("^([^;]+);.+$","\\1",gene_matrix$Start)
@@ -184,7 +184,9 @@ stopifnot(
   sum(colnames(e) == gsam.metadata[match(colnames(e) , gsam.metadata$sample.id),]$sample.id)
   ==
     ncol(e) )
-cond <- as.factor(gsub("FALSE","DNA.wt", gsub("TRUE","DNA.IDH",as.character(colnames(e) %in% is_idh))))
+#cond <- as.factor(gsub("FALSE","DNA.wt", gsub("TRUE","DNA.IDH",as.character(colnames(e) %in% is_idh))))
+cond <- as.factor ( dna_idh[match(colnames(e), dna_idh$donor_ID),]$IDH.mut != "-" )
+
 
 dds <- DESeqDataSetFromMatrix(e, DataFrame(cond), ~cond)
 e.vst <- assay(vst(dds, blind=TRUE))
@@ -660,13 +662,50 @@ variances <- rowVars(e.vst)
 select <- order(variances, decreasing = TRUE)[seq_len(min(ntop, length(variances)))]
 high_variance_genes <- e.vst[select,]
 
+idh = as.factor(gsam.rna.metadata$IDH.mut != "-")
+
 pc <- prcomp(t(high_variance_genes))
+pc1 <- 3
+pc2 <- 4
+plot(pc$x[,c(pc1,pc2)],  cex=0.7,pch=19,
+     main=paste0("G-SAM RNA PCA (pc",pc1," & pc",pc2,")"),col=idh)
+
+
+legend("bottomleft", unique(as.character(cond)),col=unique(as.numeric(cond) + 1),pch=19)
+
+
+
+
+# https://stats.stackexchange.com/questions/2592/how-to-project-a-new-vector-onto-pca-space
+
+#e <- expression_matrix_full
+
+
+
+e2 <- expression_matrix_full #[,match(colnames(e), colnames(expression_matrix_full))]
+cond <- as.character( dna_idh[match(colnames(e2), dna_idh$donor_ID),]$IDH.mut != "-" )
+cond[is.na(cond)] <- "NA"
+cond <- as.factor(cond)
+
+#pcn <- scale(e2, pc$center, pc$scale) %*% pc$rotation
+
+select <- match(rownames(high_variance_genes), rownames(e.vst2))
+high_variance_genes2 <- e.vst2[select,]
+
+pc <- prcomp(t(high_variance_genes2))
 pc1 <- 1
 pc2 <- 2
 plot(pc$x[,c(pc1,pc2)],  cex=0.7,pch=19,
      main=paste0("G-SAM RNA PCA (pc",pc1," & pc",pc2,")"),col=as.numeric(cond)+1)
 
-legend("bottomleft", unique(as.character(cond)),col=unique(as.numeric(cond) + 1),pch=19)
+
+pc1 <- 1
+pc2 <- 2
+plot(pcn[,c(pc1,pc2)],  cex=0.7,pch=19,
+     main=paste0("G-SAM RNA PCA (pc",pc1," & pc",pc2,")"),col=as.numeric(cond)+1)
+
+
+
 
 
 
