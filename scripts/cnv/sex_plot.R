@@ -77,7 +77,11 @@ gg <- ggplot(tmp, aes(x=x, y=y, label=sid)) +
   ggtitle("Sex plot exome-seq CNV data")
 
 plot(gg)
+
+
+
 ggsave("output/figures/cnv/sex-plot_dna_cnv.pdf")
+ggsave("output/figures/cnv/sex-plot_dna_cnv.png")
 
 
 

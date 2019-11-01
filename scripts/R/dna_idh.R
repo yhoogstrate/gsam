@@ -2,8 +2,9 @@
 
 dna_idh <- read.delim("data/DNA/GBM_allSamples_PassVariants_1736_GBM_TERT_05Jan2018_flags_VAFs.txt",stringsAsFactors=F,sep="\t")
 dna_idh_tested <- data.frame(Sample=unique(dna_idh$Sample))
+dna_idh_tested$Sample <- as.character(dna_idh_tested$Sample)
 dna_idh$Normal <- NULL
-dna_idh$Sample <- dna_idh$Sample
+#dna_idh$Sample <- dna_idh$Sample
 dna_idh <- dna_idh[ dna_idh$Gene %in% c("IDH1", "IDH2") ,]
 
 is_idh1 <- dna_idh$Gene == "IDH1" &  gsub("^([A-Z][0-9]+).+$","\\1",dna_idh$Protein) == "R132"
@@ -36,4 +37,11 @@ colnames(dna_idh) <- c("Sample","IDH.mut", "IDH.mut.VAF")
 tmp <- gsam.cnv.metadata[,colnames(gsam.cnv.metadata) %in% c("sid","donor_ID")]
 dna_idh <- merge(dna_idh, tmp, by.x="Sample", by.y = "sid", all.x=TRUE)
 rm(tmp)
+
+
+# show all duplicated entries:
+#dna_idh[dna_idh$donor_ID  %in% dna_idh$donor_ID[!is.na(dna_idh$donor_ID) & duplicated(dna_idh$donor_ID)],]
+# all are idh negative so removal can be done safely
+dna_idh$duplicate <- !is.na(dna_idh$donor_ID) & duplicated(dna_idh$donor_ID)
+
 

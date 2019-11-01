@@ -9,19 +9,10 @@ setwd("~/projects/gsam")
 
 library(DESeq2)
 library(ggplot2)
-library(pheatmap)
-library(fgsea)
 library(limma)
 
 
 # ---- load: functions ----
-"
-get_ensembl_hsapiens_gene_ids
-
-Loads a function that allows to translate ENSEMBL IDs into HUGO symbols (handy for sharing tables) and Entrez IDs (handy for GSEa like analysis)
-"
-ensembl_genes <- get_ensembl_hsapiens_gene_ids()
-
 
 # ---- load: data ----
 # Load the data (expression values; metadata) into data frames
@@ -34,53 +25,34 @@ gene_matrix$Start <- gsub("^([^;]+);.+$","\\1",gene_matrix$Start)
 
 source("scripts/R/dna_idh.R")
 
-
-source("scripts/R/ensembl_to_geneid.R") # obsolete? can be replaced with the get_ensembl function
-ensembl_genes <- get_ensembl_hsapiens_gene_ids()
-
-source("scripts/R/chrom_sizes.R")
-
-
 source("scripts/R/job_gg_theme.R")
 
-# ---- unsupervised DESeq2 PCA / MDS / clustering / t-SNE ----
 
-## PCA: pc1 & pc2  x  resection
-e <- expression_matrix
+
+# ---- sex plot [all samples] ----
+
+
+
+e <- expression_matrix_full
 # make sure order metadata aligns with expression data (!)
-stopifnot(sum(colnames(e) == gsam.rna.metadata[match(colnames(e) , gsam.rna.metadata$sample.id),]$sample.id) == ncol(e))
+#stopifnot(sum(colnames(e) == gsam.rna.metadata[match(colnames(e) , gsam.rna.metadata$sample.id),]$sample.id) == ncol(e))
 
 # resection as condition
-cond <- factor(paste0("resection",gsam.rna.metadata[match(colnames(e) , gsam.rna.metadata$sample.id),]$resection))
-colnames(e) == gsam.rna.metadata[match(colnames(e) , gsam.rna.metadata$sample.id),]$sample.id
+cond <- as.factor(gsub("^.+([0-9])$","resection\\1",colnames(e)))
+#colnames(e) == gsam.rna.metadata[match(colnames(e) , gsam.rna.metadata$sample.id),]$sample.id
 
 dds <- DESeqDataSetFromMatrix(e, DataFrame(cond), ~cond)
 e.vst <- assay(vst(dds,blind=T))
 
-# remove effect of gender
-e.vst <- removeBatchEffect(e.vst, cond)
-
-plot(e.vst[rownames(e.vst) == "ENSG00000229807.12_5",],
-     col=as.numeric(as.factor(gsam.rna.metadata$gender)) , ylab="ENSG00000229807 / XIST VST nromalised expression" ,
-     xlab="Sample", pch=19,cex=0.7)
-abline(h=8.5,col="gray",lty=2)
-# True gender = > 8.5
-
-plot(e.vst2[rownames(e.vst2) == "ENSG00000229807.12_5",],
-     col=as.numeric(as.factor(gsam.rna.metadata$gender)) , ylab="ENSG00000229807 / XIST VST nromalised expression" ,
-     xlab="Sample", pch=19,cex=0.7)
-#abline(h=8.5,col="gray",lty=2)
-# True gender = > 8.5
-
-
 variances <- rowVars(e.vst)
-
-#plot(sort(variances,decreasing=T))
-plot(c(1,1000),c(0,max(variances)),type="n")
-points(sort(variances,decreasing=T))
+names(variances) <- rownames(e.vst)
+variances <- sort(variances,decreasing=T)
 
 ntop <- sum(variances>2)
-select <- order(variances, decreasing = TRUE)[seq_len(min(ntop, length(variances)))]
+select <- variances[variances > 2]
+select <- names(select)
+select <- match(select, rownames(e.vst))
+
 high_variance_genes <- e.vst[select,]
 high_variance_genes <- rownames(high_variance_genes)
 high_variance_genes <- gene_matrix[match(high_variance_genes, gene_matrix$Geneid),c(1,2)]
@@ -102,25 +74,26 @@ tmp <- data.frame(
 
 
 mislabels <- subset(tmp, 
-                    (x < 8.5) & (gender == "Female")
+                    (y >= 12.5) & (gender == "Female")
                     |
-                    (x >= 8.5) & (gender == "Male"))
+                      (y < 12.5) & (gender == "Male"))
 
 
 gg <- ggplot(tmp, aes(x=x, y=y, label=sid)) + 
   geom_point(aes(col=gender)) + 
+  geom_point(aes(col=gender),data=mislabels) + 
   geom_encircle(aes(x=x, y=y), 
-                data=subset(tmp, x < 8.5),
+                data=subset(tmp, y < 12.5),
                 color="grey50", 
                 size=0.75, 
                 expand=0.08) +
   geom_encircle(aes(x=x, y=y), 
-                data=subset(tmp, x >= 8.5),
+                data=subset(tmp, y >= 12.5),
                 color="grey50", 
                 size=0.75, 
                 expand=0.08) +
   geom_text_repel(
-    nudge_y       = 23 - mislabels$y,
+    nudge_y       = 22 - mislabels$y,
     segment.size  = 0.2,
     segment.color = "grey50",
     direction     = "x",
@@ -129,10 +102,15 @@ gg <- ggplot(tmp, aes(x=x, y=y, label=sid)) +
   job_gg_theme +
   ylim(NA, 23) + 
   labs(x = "XIST (vst transformed expression)",y="chrY (sum of normalised expression)") +
-  ggtitle("Sex plot RNA-seq data [1st 96 samples]")
+  ggtitle(paste0("Sex plot RNA-seq data [all ",ncol(e)," samples]"))
 
 plot(gg)
+
+
+
 ggsave("output/figures/rna/sex-plot_dna_rna.pdf")
+ggsave("output/figures/rna/sex-plot_dna_rna.png")
+
 
 
 

@@ -10,7 +10,7 @@ gsam.patient.metadata <- read.csv('data/administratie/GSAM_combined_clinical_mol
 gsam.patient.metadata <- gsam.patient.metadata[order(gsam.patient.metadata$studyID),] # reorder
 
 # ---- exome-seq CNV metadata ----
-gsam.cnv.metadata <- read.delim('data/output/tables/cnv_copynumber-ratio.cnr_log2_all.txt')
+gsam.cnv.metadata <- read.delim('data/output/tables/cnv_copynumber-ratio.cnr_log2_all.txt',stringsAsFactors=F)
 gsam.cnv.metadata <- gsam.cnv.metadata[,-c(1,2,3,4)] # remove columns with geneid, start, end etc.
 gsam.cnv.metadata <- data.frame(
     cnv.table.id = colnames(head(gsam.cnv.metadata)),
@@ -125,6 +125,7 @@ gsam.metadata <- merge(gsam.rna.metadata, tmp, by.x="pid", by.y="studyID", all.x
 
 
 # --- RNA-seq metadata [full] ----
+# STAR alignment statistics + patient / sample identifiers
 gsam.rna.metadata <- read.delim("data/output/tables/gsam_featureCounts_readcounts.txt.summary",stringsAsFactors = F,comment="#",row.names=1)
 colnames(gsam.rna.metadata) <- gsub("^[^\\.]+\\.([^\\.]+)\\..+$","\\1",colnames(gsam.rna.metadata),fixed=F)
 gsam.rna.metadata <- t(gsam.rna.metadata)
@@ -134,6 +135,19 @@ gsam.rna.metadata <- data.frame(gsam.rna.metadata)
 gsam.rna.metadata$sid <- as.character(rownames(gsam.rna.metadata))
 gsam.rna.metadata$pid <- as.factor(gsub("[0-9]$","",rownames(gsam.rna.metadata)))
 gsam.rna.metadata$resection <- as.factor(gsub("^.+([0-9])$","r\\1",rownames(gsam.rna.metadata)))
+
+# @ todo add batch [1/2]
+
+# add IDH
+tmp <- dna_idh[dna_idh$duplicate == FALSE,]
+tmp$Sample <- NULL
+tmp$duplicate <- NULL
+print(dim(gsam.rna.metadata))
+gsam.rna.metadata <- merge(gsam.rna.metadata, tmp, by.x = "sid", by.y = "donor_ID", all.x = TRUE)
+print(dim(gsam.rna.metadata))
+
+
+
 
 
 
