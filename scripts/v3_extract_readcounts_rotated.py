@@ -18,7 +18,7 @@ with open("output/tables/v3_extract_readcounts_rotated.txt", "w") as fh_out:
             if len(line) > 0:
                 line = line.split("\t")
                 if line[0] != "sample":
-                    sid = line[0].split("Pfrench_")[1].split("_")[0]
+                    sid = line[0].split("alignments/")[1].split("/Aligned.s")[0]
                     resection = sid[3]
                     sid = sid[0:3]
 
