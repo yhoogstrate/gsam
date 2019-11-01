@@ -410,12 +410,10 @@ for(chr in names(chrs_hg19)) {
 #abline(v=chrs_hg19_s["chr6"] + 34000000, col="red", lwd=2)
 
 dev.off()
-```
+
 
 
 ## GSEA / fgsea part
-
-```{r}
 res$entrez <- ensembl_genes[ match(gsub("\\..+$","",rownames(res)), ensembl_genes$ensembl_gene_id) ,]$entrezgene_id
 stopifnot(length(res$entrez) == nrow(res))
 
@@ -456,12 +454,11 @@ plotEnrichment(pws$`SHEDDEN_LUNG_CANCER_POOR_SURVIVAL_A6`, ranks, gseaParam = 1,
 #pdf("gsea.msigdb.hallmark.pdf")
 plotGseaTable(pws, ranks, fgseaRes, gseaParam = 1, colwidths = c(5, 3, 0.8, 1.2, 1.2), render = TRUE)
 #dev.off()
-```
+
 
 
 # DGE: top left corner containing IDH mutants
 ## DGE / DESeq2
-```{r}
 e <- expression_matrix
 
 # create VST transformed data
@@ -532,12 +529,10 @@ for(chr in names(chrs_hg19)) {
 dev.off()
 
 write.table(sig, "/tmp/sig-upper-corner-cluster.txt")
-```
 
 
 ## GSEA
 
-```{r}
 genes <- get_ensembl_hsapiens_gene_ids()
 res$entrez <- genes[ match(ens, genes$ensembl_gene_id) ,]$entrezgene_id
 stopifnot(length(res$entrez) == length(ens))
@@ -580,14 +575,12 @@ plotEnrichment(pws$`SHEDDEN_LUNG_CANCER_POOR_SURVIVAL_A6`, ranks, gseaParam = 1,
 #pdf("gsea.msigdb.hallmark.pdf")
 plotGseaTable(pws, ranks, fgseaRes, gseaParam = 1, colwidths = c(5, 3, 0.8, 1.2, 1.2), render = TRUE)
 #dev.off()
-```
 
 
 
 
 # Survival analysis on groups
 
-```{r}
 # First make subgroups, append to table, and add to metadata and plot to confirm if it fits
 e <- expression_matrix
 
@@ -628,6 +621,52 @@ ggsurvplot(s2, data=survival.data, pval=T)
 
 # geen verschil
 
-```
+# ---- |--------------| ----
+
+# read new table
+
+expression_matrix_full <- read.delim("data/output/tables/gsam_featureCounts_readcounts.txt",stringsAsFactors = F,comment="#")
+colnames(expression_matrix_full) <- gsub("^[^\\.]+\\.([^\\.]+)\\..+$","\\1",colnames(expression_matrix_full),fixed=F)
+
+#gene_matrix <- expression_matrix[,1:6]
+
+rownames(expression_matrix_full) <- expression_matrix_full$Geneid
+expression_matrix_full$Geneid <- NULL
+expression_matrix_full$Chr <- NULL
+expression_matrix_full$Start <- NULL
+expression_matrix_full$End <- NULL
+expression_matrix_full$Strand <- NULL
+expression_matrix_full$Length <- NULL
+
+# old and new values correlate very high
+#em <- expression_matrix[,20:30]
+#tmp <- expression_matrix_full[,match(colnames(em) , colnames(expression_matrix_full))]
+#colnames(tmp) <- paste0(colnames(tmp), ".f")
+#tmp <- cbind(em,tmp)
+#c <- cor(tmp,method="spearman")
+#corrplot(c)
+
+
+# resection as condition
+e <- expression_matrix_full
+cond <- factor(paste0("r",gsub("^.+([0-9])$","\\1",colnames(e))))
+
+dds <- DESeqDataSetFromMatrix(e, DataFrame(cond), ~cond)
+e.vst <- assay(vst(dds,blind=T))
+
+
+ntop <- 500
+variances <- rowVars(e.vst)
+select <- order(variances, decreasing = TRUE)[seq_len(min(ntop, length(variances)))]
+high_variance_genes <- e.vst[select,]
+
+pc <- prcomp(t(high_variance_genes))
+pc1 <- 1
+pc2 <- 2
+plot(pc$x[,c(pc1,pc2)],  cex=0.7,pch=19,
+     main=paste0("G-SAM RNA PCA (pc",pc1," & pc",pc2,")"),col=as.numeric(cond)+1)
+
+legend("bottomleft", unique(as.character(cond)),col=unique(as.numeric(cond) + 1),pch=19)
+
 
 

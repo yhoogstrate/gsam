@@ -34,7 +34,7 @@ gsam.cnv.metadata$donor_sex <- NULL # incomplete, the one from patient metadata 
 # --- RNA-seq metadata ----
 
 # duplicate reads
-gsam.rna.metadata <- read.delim("data/RNA/output/tables/duplicate_reads_sambamba_stats.txt",header=T,sep="\t",stringsAsFactors = F)
+gsam.metadata <- read.delim("data/RNA/output/tables/duplicate_reads_sambamba_stats.txt",header=T,sep="\t",stringsAsFactors = F)
 colnames(gsam.rna.metadata)[2:ncol(gsam.rna.metadata)] <- paste0("sambamba.",colnames(gsam.rna.metadata)[2:ncol(gsam.rna.metadata)])
 gsam.rna.metadata$pid <- gsub("^([A-Z]+)[0-9]+$","\\1",gsam.rna.metadata$sample)
 gsam.rna.metadata$resection <- as.factor(gsub("^[A-Z]+([0-9]+)$","\\1",gsam.rna.metadata$sample))
@@ -44,7 +44,7 @@ gsam.rna.metadata$resection <- as.factor(gsub("^[A-Z]+([0-9]+)$","\\1",gsam.rna.
 tmp <- read.delim("data/RNA/output/tables/low_complexity_reads.txt",header=T,sep="\t",stringsAsFactors = F)
 tmp$percentage.low.complexity.reads <- as.numeric(gsub("%","",tmp$percentage.low.complexity.reads,fixed=T))
 colnames(tmp)[2:ncol(tmp)] <- paste0("fastp.",colnames(tmp)[2:ncol(tmp)])
-gsam.rna.metadata <- merge(gsam.rna.metadata, tmp,by.x="sample.id", by.y = "sample")
+gsam.metadata <- merge(gsam.rna.metadata, tmp,by.x="sample.id", by.y = "sample")
 rm(tmp)
 
 # mapping stats STAR
@@ -52,7 +52,7 @@ tmp <- read.delim("data/RNA/output/tables/star_percentage_mapped.txt",header=T,s
 tmp$percentage.uniquely.mapped <- as.numeric(gsub("%","",tmp$percentage.uniquely.mapped,fixed=T))
 tmp$percentage.multimap <- as.numeric(gsub("%","", tmp$percentage.multimap,fixed=T))
 colnames(tmp)[2:ncol(tmp)] <- paste0("star.",colnames(tmp)[2:ncol(tmp)])
-gsam.rna.metadata <- merge(gsam.rna.metadata, tmp,by.x="sample.id", by.y = "sample")
+gsam.metadata <- merge(gsam.rna.metadata, tmp,by.x="sample.id", by.y = "sample")
 rm(tmp)
 
 # featureCounts stats
@@ -65,13 +65,13 @@ tmp$sample <-  rownames(tmp)
 tmp$percentage.exon.counts <- tmp$Assigned/ tmp$read.count * 100
 sel <- colnames(tmp) != "sample"
 colnames(tmp)[sel] <- paste0("featurecounts.",colnames(tmp)[sel])
-gsam.rna.metadata <- merge(gsam.rna.metadata, tmp, by.x="sample.id", by.y = "sample")
+gsam.metadata <- merge(gsam.rna.metadata, tmp, by.x="sample.id", by.y = "sample")
 rm(tmp, sel)
 
 # gc 
 tmp <- read.delim("data/RNA/output/tables/gc_content_rmse.txt")
 colnames(tmp)[2:ncol(tmp)] <- paste0("gc.control.",colnames(tmp)[2:ncol(tmp)])
-gsam.rna.metadata <- merge(gsam.rna.metadata, tmp, by.x="sample.id", by.y = "sample.id")
+gsam.metadata <- merge(gsam.rna.metadata, tmp, by.x="sample.id", by.y = "sample.id")
 rm(tmp)
 
 # egfr-v3 (RNA-seq)
@@ -80,7 +80,7 @@ tmp$sample <- gsub("^[^_]+_([^_]+)_.+$","\\1",tmp$sample)
 tmp$v3.percentage <- tmp$vIII.reads.v3 / (tmp$vIII.reads.v3 + tmp$wt.reads.v3) * 100.0
 tmp[(tmp$vIII.reads.v3 + tmp$wt.reads.v3) <= 6,]$v3.percentage <- NA
 colnames(tmp)[2:ncol(tmp)] <- paste0("v3.rnaseq.",colnames(tmp)[2:ncol(tmp)])
-gsam.rna.metadata <- merge(gsam.rna.metadata, tmp, by.x="sample.id", by.y = "sample")
+gsam.metadata <- merge(gsam.rna.metadata, tmp, by.x="sample.id", by.y = "sample")
 rm(tmp)
 
 # add gender and age
@@ -115,12 +115,27 @@ rm(tmp)
 
 #tmp <- distinct(tmp)
 
-#gsam.rna.metadata <- merge(gsam.rna.metadata , tmp , by.x="sample.id" , by.y = "donor_ID" , all.y = F, no.dups=T) # apparently there are dupes
+#gsam.metadata <- merge(gsam.metadata , tmp , by.x="sample.id" , by.y = "donor_ID" , all.y = F, no.dups=T) # apparently there are dupes
 #rm(tmp, sid)
 
 
 # all metadata, but per patient and not per resection (collapsed)
 tmp <- read.delim("data/administratie/GSAM_combined_clinical_molecular.csv", sep="," , stringsAsFactors=F)
-gsam.rna.metadata <- merge(gsam.rna.metadata, tmp, by.x="pid", by.y="studyID", all.x = T, all.y=F, no.dups=F)
+gsam.metadata <- merge(gsam.rna.metadata, tmp, by.x="pid", by.y="studyID", all.x = T, all.y=F, no.dups=F)
+
+
+# --- RNA-seq metadata [full] ----
+gsam.rna.metadata <- read.delim("data/output/tables/gsam_featureCounts_readcounts.txt.summary",stringsAsFactors = F,comment="#",row.names=1)
+colnames(gsam.rna.metadata) <- gsub("^[^\\.]+\\.([^\\.]+)\\..+$","\\1",colnames(gsam.rna.metadata),fixed=F)
+gsam.rna.metadata <- t(gsam.rna.metadata)
+gsam.rna.metadata <- gsam.rna.metadata[,colSums(gsam.rna.metadata) != 0] # removal of columns with only 0
+colnames(gsam.rna.metadata) <- paste0("STAR.",colnames(gsam.rna.metadata))
+gsam.rna.metadata <- data.frame(gsam.rna.metadata)
+gsam.rna.metadata$sid <- as.character(rownames(gsam.rna.metadata))
+gsam.rna.metadata$pid <- as.factor(gsub("[0-9]$","",rownames(gsam.rna.metadata)))
+gsam.rna.metadata$resection <- as.factor(gsub("^.+([0-9])$","r\\1",rownames(gsam.rna.metadata)))
+
+
+
 
 
