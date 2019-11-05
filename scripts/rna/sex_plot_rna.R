@@ -17,6 +17,7 @@ library(limma)
 # ---- load: data ----
 # Load the data (expression values; metadata) into data frames
 
+
 source("scripts/R/ligands.R")# @ todo gsub suffixes in ensembl ids
 source("scripts/R/gsam_metadata.R")
 source("scripts/R/expression_matrix.R")
@@ -105,6 +106,10 @@ gg <- ggplot(tmp, aes(x=x, y=y, label=sid)) +
   ggtitle(paste0("Sex plot RNA-seq data [all ",ncol(e)," samples]"))
 
 plot(gg)
+
+
+
+
 
 
 
