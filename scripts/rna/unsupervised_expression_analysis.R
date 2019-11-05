@@ -27,7 +27,7 @@ ensembl_genes <- get_ensembl_hsapiens_gene_ids()
 # Load the data (expression values; metadata) into data frames
 
 source("scripts/R/ligands.R")# @ todo gsub suffixes in ensembl ids
-# source("scripts/R/gsam_metadata.R")
+source("scripts/R/gsam_metadata.R")
 source("scripts/R/expression_matrix.R")
 gene_matrix$Chr <- gsub("^([^;]+);.+$","\\1",gene_matrix$Chr)
 gene_matrix$Start <- gsub("^([^;]+);.+$","\\1",gene_matrix$Start)
