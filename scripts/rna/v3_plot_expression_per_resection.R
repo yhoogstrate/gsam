@@ -7,7 +7,10 @@ setwd("~/projects/gsam")
 # ---- load: libs ----
 
 library(ggplot2)
+library(ggrepel)
 library(cowplot)
+
+source("scripts/R/job_gg_theme.R")
 
 # ---- load: functions ----
 
@@ -112,10 +115,35 @@ ggplot(tmp, aes(x=x, y=delta.percentage, label=sid)) +
     direction     = "x",
     size=0.7*5,
     data = outliers2)
+
 ggsave("output/figures/rna/vIII_changes_1.png")
 
+# ----- barplot style ----
+
+tmp.1 <- data.frame(x = tmp$x, res='1', y = tmp$resection.1.v3 / tmp$resection.1.sum * 100, dp=tmp$delta.percentage)
+tmp.2 <- data.frame(x = tmp$x, res='2', y = tmp$resection.2.v3 / tmp$resection.2.sum * 100, dp=tmp$delta.percentage)
+tmp.3 <- rbind(tmp.1, tmp.2)
+tmp.3$g <- as.factor(tmp.3$x)
+
+tmp.3$order2 <- 3
+tmp.3[tmp.3$dp < 0 & tmp.3$res == '1' ,]$order2 <- 1
+tmp.3[tmp.3$dp < 0 & tmp.3$res == '2' ,]$order2 <- 2
+tmp.3[tmp.3$dp > 0 & tmp.3$res == '1' ,]$order2 <- 2
+tmp.3[tmp.3$dp > 0 & tmp.3$res == '2' ,]$order2 <- 1
+
+tmp.3 <- tmp.3[order(tmp.3$x, tmp.3$order2),]
 
 
+
+ggplot(tmp.3, aes(x=x, y=y, group=g)) + 
+  geom_line() + 
+  geom_point(shape=17) + 
+  job_gg_theme
+
+
+
+
+# -----
 
 # find LR of EGFR 
 e <- expression_matrix_full

@@ -141,13 +141,47 @@ ggplot(tmp, aes(x=pc1, y=pc2, col=idh)) +
   labs(fill = "IDH-mutation",
        subtitle="*Only high confidence IDH mutations included") +
   job_gg_theme 
-gsave("output/figures/rna/pca_rna_x_idh.png")
+ggsave("output/figures/rna/pca_rna_x_idh.png")
 
 
-ggplot(tmp, aes(x=pc1, y=pc2, col=atrx)) + geom_point(size=2)
-ggplot(tmp, aes(x=pc1, y=pc2, col=mgmt)) + geom_point(size=2)
+ggplot(tmp, aes(x=pc1, y=pc2, col=atrx)) +
+  geom_point(size=2) +
+  geom_point(size=2, data=subset(tmp, atrx != "Wildtype")) +
+  ggtitle(paste0("PCA GSAM RNA normalised expression (",nrow(tmp)," samples)")) +
+  labs(fill = "ATRX") +
+  job_gg_theme 
+ggsave("output/figures/rna/pca_rna_x_atrx.png")
 
 
+
+ggplot(tmp, aes(x=pc1, y=pc2, col=atrx)) +
+  geom_point(size=2, data=subset(tmp, atrx == "Wildtype")) +
+  geom_point(size=2, data=subset(tmp, atrx != "Wildtype")) +
+  ggtitle(paste0("PCA GSAM RNA normalised expression (",nrow(tmp)," samples)")) +
+  labs(fill = "ATRX") +
+  job_gg_theme 
+ggsave("output/figures/rna/pca_rna_x_atrx.png")
+
+
+#geom_point(size=2, data=subset(tmp, atrx != "Wildtype")) +
+
+ggplot(tmp, aes(x=pc1, y=pc2, col=mgmt)) +
+  geom_point(size=2, data=subset(tmp, is.na(mgmt))) +
+  geom_point(size=2, data=subset(tmp, mgmt != "NA")) +
+  ggtitle(paste0("PCA GSAM RNA normalised expression (",nrow(tmp)," samples)")) +
+  labs(fill = "MGMT") +
+  job_gg_theme 
+ggsave("output/figures/rna/pca_rna_x_mgmt.png")
+
+
+
+ggplot(tmp, aes(x=pc1, y=pc2, col=mgmt)) +
+  geom_point(size=2, data=subset(tmp, is.na(mgmt))) +
+  geom_point(size=2, data=subset(tmp, mgmt != "NA")) +
+  ggtitle(paste0("PCA GSAM RNA normalised expression (",nrow(tmp)," samples)")) +
+  labs(fill = "MGMT") +
+  job_gg_theme 
+ggsave("output/figures/rna/pca_rna_x_mgmt.png")
 
 
 
