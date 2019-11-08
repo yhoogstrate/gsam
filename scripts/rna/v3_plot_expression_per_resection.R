@@ -174,6 +174,14 @@ outliers2 <- subset(tmp,
 plot_grid(
 
     ggplot(tmp, aes(x=x,y=delta.percentage, label=sid) ) + 
+      geom_rect(
+        fill = "gray90",
+        aes(xmin=x - 0.33,
+            xmax=x + 0.33 ,
+            ymin=0,
+            ymax=100),
+        data=subset(tmp, is.na(tmp$qPCR.delta_percentage))
+        ) +
     geom_curve( curvature = 0,
                 arrow = arrow(length = unit(0.01, "npc")),
                 aes(x = x , y = qPCR.percentageEGFRvIII , 
