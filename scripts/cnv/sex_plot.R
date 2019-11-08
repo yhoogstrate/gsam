@@ -7,6 +7,7 @@ setwd("~/projects/gsam")
 
 library(ggplot2)
 library(limma)
+library(ggalt)
 
 
 # ---- load functions ----
