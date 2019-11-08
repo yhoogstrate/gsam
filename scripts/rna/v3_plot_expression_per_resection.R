@@ -177,7 +177,7 @@ ggplot(tmp, aes(x=rna.seq, y=qpcr)) +
   geom_point(aes(col=res))+ labs(title = "GSAM: Correlation vIII percentage RNA-seq ~ qPCR",
      y = "vIII-% qPCR",
      x = "vIII-% RNA-seq") + job_gg_theme
-ggsave("output/figures/rna/GSAM_percentage_EGFRvIII_correlation.png",width=10,height=6.5)
+ggsave("output/figures/rna/GSAM_percentage_EGFRvIII_correlation.png")
 
 # ---  plus sample ids ----
 
