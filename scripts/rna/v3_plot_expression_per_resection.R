@@ -176,22 +176,23 @@ plot_grid(
     ggplot(tmp, aes(x=x,y=delta.percentage, label=sid) ) + 
     geom_curve( curvature = 0,
                 arrow = arrow(length = unit(0.01, "npc")),
-                aes(x = x , y = qPCR.percentageEGFRvIII , xend = x, yend = qPCR.recurrent_percentageEGFRvIII),
-                data = subset(tmp, abs(qPCR.percentageEGFRvIII) > 0.0001),
-    ) +
+                aes(x = x , y = qPCR.percentageEGFRvIII , 
+                    xend = x, yend = qPCR.recurrent_percentageEGFRvIII),
+                data = subset(tmp, tmp$qPCR.percentageEGFRvIII != 0 | tmp$qPCR.recurrent_percentageEGFRvIII != 0)
+                ) +
     ylim(0, 100) +
     geom_point(
       pch = '-',
       size = 4,
-      data = subset(tmp, abs(tmp$qPCR.delta_percentage) > 0.0001),
+      data = subset(tmp, tmp$qPCR.percentageEGFRvIII != 0 | tmp$qPCR.recurrent_percentageEGFRvIII != 0),
       aes(y=qPCR.percentageEGFRvIII)
     ) +
     geom_point(
       #pch = '-',
       size = 1,
-      aes(y=resection.1.p),
+      aes(y=qPCR.percentageEGFRvIII),
       col="red",
-      data = subset(tmp, abs(tmp$delta.percentage) <= 0.0001 & !is.na(tmp$qPCR.delta_percentage))
+      data = subset(tmp, tmp$qPCR.percentageEGFRvIII == 0 & tmp$qPCR.recurrent_percentageEGFRvIII == 0)
     ) + 
     labs(title = "GSAM: Percentage EGFR vIII (qPCR table)",
          y = "Percentage vIII (qPCR)",x=NULL) + 
@@ -207,13 +208,13 @@ plot_grid(
     geom_curve( curvature = 0,
                 arrow = arrow(length = unit(0.01, "npc")),
                 aes(x = x , y = resection.1.p , xend = x, yend = resection.2.p),
-                data = subset(tmp, abs(tmp$delta.percentage) > 0.0001),
-    ) +
+                data = subset(tmp, tmp$resection.1.p != 0 | tmp$resection.2.p != 0 )
+                ) +
     ylim(0, 100) +
     geom_point(
       pch = '-',
       size = 4,
-      data = subset(tmp, abs(tmp$delta.percentage) > 0.0001),
+      data = subset(tmp, tmp$resection.1.p != 0 | tmp$resection.2.p != 0),
       aes(y=resection.1.p)
     ) +
     geom_point(
@@ -221,10 +222,10 @@ plot_grid(
       size = 1,
       aes(y=resection.1.p),
       col="red",
-      data = subset(tmp, abs(tmp$delta.percentage) <= 0.0001)
+      data = subset(tmp, tmp$resection.1.p == 0 & tmp$resection.2.p == 0  )
     ) + 
     labs(y = "Percentage vIII (RNA-seq)",
-         x = "GSAM patient (ordered on difference)") + 
+         x = "GSAM patient (ordered on difference in RNA-seq)") + 
     scale_colour_manual(name = 'Legend', 
                         guide = 'legend',
                         values = c('MA50' = 'red',
