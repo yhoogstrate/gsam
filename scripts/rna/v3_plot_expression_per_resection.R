@@ -29,8 +29,11 @@ tmp$recurrent_type <- NULL
 colnames(tmp) <- paste0("qPCR.",colnames(tmp))
 tmp$qPCR.delta_percentage <- tmp$qPCR.recurrent_percentageEGFRvIII - tmp$qPCR.percentageEGFRvIII
 
-vIII.rot <- merge(x=vIII.rot, y = tmp, by.x="sid" , by.y = "qPCR.recurrent_patientID", all.x = T)
+dim(vIII.rot)
+vIII.rot <- merge(x=vIII.rot, y = tmp, by.x="sid" , by.y = "qPCR.recurrent_patientID",
+                  all.x = T, all.y=T)
 rm(tmp)
+dim(vIII.rot)
 
 
 # Load the data (expression values; metadata) into data frames
@@ -157,10 +160,10 @@ ggsave("output/figures/rna/GSAM_percentage_EGFRvIII_barplot_labels.png")
 
 
 
-tmp <- vIII.rot$resection.1.sum >= 15  & vIII.rot$resection.2.sum >= 15 & !is.na(vIII.rot$resection.1.sum) & !is.na(vIII.rot$resection.2.sum)
+tmp <- (vIII.rot$resection.1.sum >= 15  & vIII.rot$resection.2.sum >= 15 & !is.na(vIII.rot$resection.1.sum) & !is.na(vIII.rot$resection.2.sum)) | !is.na(vIII.rot$qPCR.delta_percentage)
 tmp <- vIII.rot[tmp,]
-tmp <- tmp[order(tmp$delta.percentage, rownames(tmp)),]
-tmp$x <- order(tmp$delta.percentage, rownames(tmp))
+tmp <- tmp[order(tmp$delta.percentage, tmp$qPCR.delta_percentage,  rownames(tmp)),]
+tmp$x <- order(tmp$delta.percentage, tmp$qPCR.delta_percentage, rownames(tmp))
 tmp$sid <- rownames(tmp)
 
 
@@ -175,7 +178,7 @@ plot_grid(
 
     ggplot(tmp, aes(x=x,y=delta.percentage, label=sid) ) + 
       geom_rect(
-        fill = "gray90",
+        fill = rgb(0,0,0,0.1),
         aes(xmin=x - 0.33,
             xmax=x + 0.33 ,
             ymin=0,
@@ -213,6 +216,14 @@ plot_grid(
     job_gg_theme
   ,
   ggplot(tmp, aes(x=x,y=delta.percentage, label=sid) ) + 
+    geom_rect(
+      fill = rgb(0,0,0,0.1),
+      aes(xmin=x - 0.33,
+          xmax=x + 0.33 ,
+          ymin=0,
+          ymax=100),
+      data=subset(tmp, is.na(tmp$delta.percentage))
+    ) +
     geom_curve( curvature = 0,
                 arrow = arrow(length = unit(0.01, "npc")),
                 aes(x = x , y = resection.1.p , xend = x, yend = resection.2.p),
