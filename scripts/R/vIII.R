@@ -27,3 +27,7 @@ vIII.rot[!is.na(vIII.rot$resection.1.pos) & !is.na(vIII.rot$resection.2.pos) & v
 vIII.rot[!is.na(vIII.rot$resection.1.pos) & !is.na(vIII.rot$resection.2.pos) & vIII.rot$resection.1.pos == FALSE & vIII.rot$resection.2.pos == TRUE,]$v3.stat <- "resection2"
 vIII.rot$v3.stat <- as.factor(vIII.rot$v3.stat)
 
+vIII.rot$delta.percentage <- (vIII.rot$resection.2.v3 / vIII.rot$resection.2.sum * 100.0) - (vIII.rot$resection.1.v3 / vIII.rot$resection.1.sum * 100.0)
+vIII.rot$resection.1.p <- vIII.rot$resection.1.v3 / vIII.rot$resection.1.sum * 100
+vIII.rot$resection.2.p <- (vIII.rot$resection.2.v3 / vIII.rot$resection.2.sum) * 100
+
