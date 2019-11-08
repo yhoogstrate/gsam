@@ -103,15 +103,34 @@ dev.off()
 
 
 
+tmp <- (vIII.rot$resection.1.sum >= 15  & vIII.rot$resection.2.sum >= 15 & !is.na(vIII.rot$resection.1.sum) & !is.na(vIII.rot$resection.2.sum)) | !is.na(vIII.rot$qPCR.delta_percentage)
+tmp <- vIII.rot[tmp,]
+tmp <- tmp[order(tmp$delta.percentage, tmp$qPCR.delta_percentage,  rownames(tmp)),]
+tmp$x <- order(tmp$delta.percentage, tmp$qPCR.delta_percentage, rownames(tmp))
+tmp$sid <- rownames(tmp)
+
+
 outliers1 <- subset(tmp, 
                     delta.percentage > 10)
 outliers2 <- subset(tmp, 
                     delta.percentage < -11)
+
+
+
 ggplot(tmp, aes(x=x, y=delta.percentage, label=sid)) + 
-  geom_bar(aes(x=x, y=delta.percentage),stat="identity",width=0.7) + 
+  geom_rect(
+    fill = rgb(0,0,0,0.1),
+    aes(xmin=x - 0.33,
+        xmax=x + 0.33 ,
+        ymin=-100,
+        ymax=100),
+    data=subset(tmp, is.na(tmp$delta.percentage))
+    ) + 
+  geom_bar(
+      data = subset(tmp, !is.na(tmp$delta.percentage)),
+      aes(x=x, y=delta.percentage),stat="identity",width=0.7) + 
   geom_point(aes(col=v3.stat)) +
   ylim(-100, 100) + 
-
   labs(title = "GSAM: Change in percentage EGFR vIII reads (RNA-seq)",
        subtitle=paste0(format(Sys.time(), "[%d-%b-%y]")),
        y = "Change in percentage vIII",
@@ -121,6 +140,7 @@ ggplot(tmp, aes(x=x, y=delta.percentage, label=sid)) +
 ggsave("output/figures/rna/GSAM_percentage_EGFRvIII_barplot.png")
 
 
+# ---  plus sample ids ----
 
 
 outliers1 <- subset(tmp, 
@@ -205,7 +225,7 @@ plot_grid(
       col="red",
       data = subset(tmp, tmp$qPCR.percentageEGFRvIII == 0 & tmp$qPCR.recurrent_percentageEGFRvIII == 0)
     ) + 
-    labs(title = "GSAM: Percentage EGFR vIII (qPCR table)",
+    labs(title = "GSAM: Changes in EGFR vIII percentage per resection",
          y = "Percentage vIII (qPCR)",x=NULL) + 
     scale_colour_manual(name = 'Legend', 
                         guide = 'legend',
@@ -280,7 +300,7 @@ ggsave("output/figures/rna/GSAM_percentage_EGFRvIII_arrowplot.png")
 
 
 
-# -----
+# -----code ----
 
 # find LR of EGFR 
 e <- expression_matrix_full
