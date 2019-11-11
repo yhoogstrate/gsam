@@ -9,6 +9,7 @@ setwd("~/projects/gsam")
 
 library(DESeq2)
 library(ggplot2)
+library(ggalt)
 library(pheatmap)
 library(fgsea)
 library(limma)
@@ -38,7 +39,7 @@ source("scripts/R/dna_idh.R")
 source("scripts/R/chrom_sizes.R")
 
 
-
+source("scripts/R/job_gg_theme.R")
 
 # ---- PCA: pc1 & pc2  x  IDH(1+2) ----
 
@@ -176,14 +177,39 @@ ggsave("output/figures/rna/pca_rna_x_mgmt.png")
 
 
 ggplot(tmp, aes(x=pc1, y=pc2, col=mgmt)) +
-  geom_point(size=2, data=subset(tmp, is.na(mgmt))) +
+  geom_point(size=2, data=subset(tmp, is.na(mgmt)),col="gray90") +
   geom_point(size=2, data=subset(tmp, mgmt != "NA")) +
   ggtitle(paste0("PCA GSAM RNA normalised expression (",nrow(tmp)," samples)")) +
   labs(fill = "MGMT") +
+  geom_encircle(
+                size=0.75,
+                expand=0.04,
+                aes(col=mgmt),
+                data = subset(tmp, !is.na(tmp$mgmt))
+                ) +
+  scale_x_continuous(expand = c(0.08, 0)) +
+  scale_y_continuous(expand = c(0.124, 0)) +
   job_gg_theme 
+
 ggsave("output/figures/rna/pca_rna_x_mgmt.png")
 
 
+
+
+
+ggplot(tmp, aes(x=pc1, y=pc2, col=resection)) +
+  geom_point(size=2) +
+  ggtitle(paste0("PCA GSAM RNA normalised expression (",nrow(tmp)," samples)")) +
+  labs(fill = "MGMT") +
+  geom_encircle(
+    size=0.75,
+    expand=0.04,
+    aes(col=mgmt),
+    data = subset(tmp, !is.na(tmp$mgmt))
+  ) +
+  scale_x_continuous(expand = c(0.08, 0)) +
+  scale_y_continuous(expand = c(0.124, 0)) +
+  job_gg_theme 
 
 
 

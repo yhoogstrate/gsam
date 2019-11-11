@@ -16,25 +16,30 @@ source("scripts/R/job_gg_theme.R")
 
 # ---- load: data ----
 
-tmp <- vIII.rot$resection.1.sum >= 15  & vIII.rot$resection.2.sum >= 15 & !is.na(vIII.rot$resection.1.sum) & !is.na(vIII.rot$resection.2.sum)
-tmp <- vIII.rot[tmp,]
-#tmp$lfc <- log2(  ((tmp$resection.2.v3 / tmp$resection.2.sum) + 0.00001) / ((tmp$resection.1.v3 / tmp$resection.1.sum) + 0.00001)  )
-tmp$delta.percentage <- (tmp$resection.2.v3 / tmp$resection.2.sum * 100.0) - (tmp$resection.1.v3 / tmp$resection.1.sum * 100.0)
-tmp <- tmp[order(tmp$delta.percentage, rownames(tmp)),]
-tmp$x <- order(tmp$delta.percentage, rownames(tmp))
-tmp$sid <- rownames(tmp)
-tmp$resection.1.p <- tmp$resection.1.v3 / tmp$resection.1.sum * 100
-tmp$resection.2.p <- (tmp$resection.2.v3 / tmp$resection.2.sum) * 100
+source("scripts/R/vIII.R")
+vIII.rot$sid <- rownames(vIII.rot)
+
+tmp <- read.csv('data/RNA/Final_qPCR_EGFR_GSAM.csv',stringsAsFactors = F)
+tmp$recurrent_patientSampleID <- NULL # intuitive
+tmp$recurrent_sampleID <- NULL # intuitive
+tmp$patientSampleID <- NULL # intuitive
+tmp$X <- NULL
+tmp$type <- NULL
+tmp$recurrent_type <- NULL
+colnames(tmp) <- paste0("qPCR.",colnames(tmp))
+tmp$qPCR.delta_percentage <- tmp$qPCR.recurrent_percentageEGFRvIII - tmp$qPCR.percentageEGFRvIII
+
+dim(vIII.rot)
+vIII.rot <- merge(x=vIII.rot, y = tmp, by.x="sid" , by.y = "qPCR.recurrent_patientID",
+                  all.x = T, all.y=T)
+rm(tmp)
+dim(vIII.rot)
 
 
 # Load the data (expression values; metadata) into data frames
 
 source("scripts/R/ligands.R")# @ todo gsub suffixes in ensembl ids
 source("scripts/R/gsam_metadata.R")
-
-
-
-source("scripts/R/vIII.R")
 
 source("scripts/R/expression_matrix.R")
 gene_matrix$Chr <- gsub("^([^;]+);.+$","\\1",gene_matrix$Chr)
@@ -98,24 +103,83 @@ dev.off()
 
 
 
-outliers1 <- subset(tmp, 
-                    delta.percentage > 10)
-outliers2 <- subset(tmp, 
-                    delta.percentage < -11)
-ggplot(tmp, aes(x=x, y=delta.percentage, label=sid)) + 
-  geom_bar(aes(x=x, y=delta.percentage),stat="identity",width=0.7) + 
-  geom_point(aes(col=v3.stat)) +
-  ylim(-100, 100) + 
-
-  labs(title = "GSAM: Change in percentage EGFR vIII reads (RNA-seq)",
-       subtitle=paste0(format(Sys.time(), "[%d-%b-%y]")),
-       y = "Change in percentage vIII",
-       x = "GSAM patient (ordered on difference)") + 
-  job_gg_theme
-
-ggsave("output/figures/rna/GSAM_percentage_EGFRvIII_barplot.png")
+tmp <- (vIII.rot$resection.1.sum >= 15  & vIII.rot$resection.2.sum >= 15 & !is.na(vIII.rot$resection.1.sum) & !is.na(vIII.rot$resection.2.sum)) | !is.na(vIII.rot$qPCR.delta_percentage)
+tmp <- vIII.rot[tmp,]
+tmp <- tmp[order(tmp$delta.percentage, tmp$qPCR.delta_percentage,  rownames(tmp)),]
+tmp$x <- order(tmp$delta.percentage, tmp$qPCR.delta_percentage, rownames(tmp))
+tmp$sid <- rownames(tmp)
 
 
+
+
+
+plot_grid(
+  ggplot(tmp, aes(x=x, y=qPCR.delta_percentage, label=sid)) + 
+    geom_rect(
+      fill = rgb(0,0,0,0.1),
+      aes(xmin=x - 0.33,
+          xmax=x + 0.33 ,
+          ymin=-100,
+          ymax=100),
+      data=subset(tmp, is.na(tmp$qPCR.delta_percentage))
+    ) + 
+    geom_bar(
+      data = subset(tmp, !is.na(tmp$qPCR.delta_percentage)),
+      stat="identity",width=0.7) + 
+    geom_point(
+      data = subset(tmp, !is.na(tmp$qPCR.delta_percentage)),
+      aes(col=v3.stat)
+    ) +
+    ylim(-100, 100) + 
+    labs(title = "GSAM: Change in percentage EGFR vIII",
+         y = "Change in vIII-% (qPCR)",
+         x = NULL) + 
+    job_gg_theme
+  ,
+  ggplot(tmp, aes(x=x, y=delta.percentage, label=sid)) + 
+    geom_rect(
+      fill = rgb(0,0,0,0.1),
+      aes(xmin=x - 0.33,
+          xmax=x + 0.33 ,
+          ymin=-100,
+          ymax=100),
+      data=subset(tmp, is.na(tmp$delta.percentage))
+    ) + 
+    geom_bar(
+      data = subset(tmp, !is.na(tmp$delta.percentage)),
+      aes(x=x, y=delta.percentage),stat="identity",width=0.7) + 
+    geom_point(
+      data = subset(tmp, !is.na(tmp$delta.percentage)),
+      aes(col=v3.stat)
+    ) +
+    ylim(-100, 100) + 
+    labs(y = "Change in vIII-% (RNA-seq)",
+         x = "GSAM patient (ordered on difference in RNA-seq)") + 
+    job_gg_theme +
+    theme(legend.position = "none") # anders duplicate
+  ,     align="v", axis="tblr",ncol=1 )
+
+
+
+ggsave("output/figures/rna/GSAM_percentage_EGFRvIII_barplot.png",width=10,height=6.5)
+
+# ---- correlation ----
+
+tmp <- data.frame(rna.seq = c(vIII.rot$resection.1.p , vIII.rot$resection.2.p),
+          qpcr = c(vIII.rot$qPCR.percentageEGFRvIII, vIII.rot$qPCR.recurrent_percentageEGFRvIII),
+          res = as.factor(c(
+            rep('resection 1' , nrow(vIII.rot)),
+            rep('resection 2' , nrow(vIII.rot)))))
+tmp <- subset(tmp, !is.na(tmp$rna.seq) & !is.na(tmp$qpcr) )
+
+
+ggplot(tmp, aes(x=rna.seq, y=qpcr)) + 
+  geom_point(aes(col=res))+ labs(title = "GSAM: Correlation vIII percentage RNA-seq ~ qPCR",
+     y = "vIII-% qPCR",
+     x = "vIII-% RNA-seq") + job_gg_theme
+ggsave("output/figures/rna/GSAM_percentage_EGFRvIII_correlation.png")
+
+# ---  plus sample ids ----
 
 
 outliers1 <- subset(tmp, 
@@ -154,43 +218,100 @@ ggsave("output/figures/rna/GSAM_percentage_EGFRvIII_barplot_labels.png")
 
 
 
+
+tmp <- (vIII.rot$resection.1.sum >= 15  & vIII.rot$resection.2.sum >= 15 & !is.na(vIII.rot$resection.1.sum) & !is.na(vIII.rot$resection.2.sum)) | !is.na(vIII.rot$qPCR.delta_percentage)
+tmp <- vIII.rot[tmp,]
+tmp <- tmp[order(tmp$delta.percentage, tmp$qPCR.delta_percentage,  rownames(tmp)),]
+tmp$x <- order(tmp$delta.percentage, tmp$qPCR.delta_percentage, rownames(tmp))
+tmp$sid <- rownames(tmp)
+
+
 outliers1 <- subset(tmp, 
                     delta.percentage > 10)
 outliers2 <- subset(tmp, 
                     delta.percentage < -11)
 
+ 
 
-ggplot(tmp, aes(x=x,y=delta.percentage, label=sid) ) + 
-  geom_curve( curvature = 0,
-              arrow = arrow(length = unit(0.01, "npc")),
-              aes(x = x , y = resection.1.p , xend = x, yend = resection.2.p),
-              data = subset(tmp, abs(tmp$delta.percentage) > 0.0001),
-  ) +
-  ylim(0, 100) +
-  geom_point(
-    pch = '-',
-    size = 4,
-    data = subset(tmp, abs(tmp$delta.percentage) > 0.0001),
-    aes(y=resection.1.p)
-  ) +
-  geom_point(
-    #pch = '-',
-    size = 1,
-    aes(y=resection.1.p),
-    col="red",
-    data = subset(tmp, abs(tmp$delta.percentage) <= 0.0001)
-  ) + 
-  labs(title = "GSAM: Percentage EGFR vIII reads (RNA-seq)",
-       subtitle=paste0(format(Sys.time(), "[%d-%b-%y]")),
-       y = "Percentage vIII",
-       x = "GSAM patient (ordered on difference)") + 
-  scale_colour_manual(name = 'Legend', 
-                      guide = 'legend',
-                      values = c('MA50' = 'red',
-                                 'MA200' = 'blue'), 
-                      labels = c('SMA(50)',
-                                 'SMA(200)')) +
-  job_gg_theme
+plot_grid(
+
+    ggplot(tmp, aes(x=x,y=delta.percentage, label=sid) ) + 
+      geom_rect(
+        fill = rgb(0,0,0,0.1),
+        aes(xmin=x - 0.33,
+            xmax=x + 0.33 ,
+            ymin=0,
+            ymax=100),
+        data=subset(tmp, is.na(tmp$qPCR.delta_percentage))
+        ) +
+    geom_curve( curvature = 0,
+                arrow = arrow(length = unit(0.01, "npc")),
+                aes(x = x , y = qPCR.percentageEGFRvIII , 
+                    xend = x, yend = qPCR.recurrent_percentageEGFRvIII),
+                data = subset(tmp, tmp$qPCR.percentageEGFRvIII != 0 | tmp$qPCR.recurrent_percentageEGFRvIII != 0)
+                ) +
+    ylim(0, 100) +
+    geom_point(
+      pch = '-',
+      size = 4,
+      data = subset(tmp, tmp$qPCR.percentageEGFRvIII != 0 | tmp$qPCR.recurrent_percentageEGFRvIII != 0),
+      aes(y=qPCR.percentageEGFRvIII)
+    ) +
+    geom_point(
+      #pch = '-',
+      size = 1,
+      aes(y=qPCR.percentageEGFRvIII),
+      col="red",
+      data = subset(tmp, tmp$qPCR.percentageEGFRvIII == 0 & tmp$qPCR.recurrent_percentageEGFRvIII == 0)
+    ) + 
+    labs(title = "GSAM: Changes in EGFR vIII percentage per resection",
+         y = "Percentage vIII (qPCR)",x=NULL) + 
+    scale_colour_manual(name = 'Legend', 
+                        guide = 'legend',
+                        values = c('MA50' = 'red',
+                                   'MA200' = 'blue'), 
+                        labels = c('SMA(50)',
+                                   'SMA(200)')) +
+    job_gg_theme
+  ,
+  ggplot(tmp, aes(x=x,y=delta.percentage, label=sid) ) + 
+    geom_rect(
+      fill = rgb(0,0,0,0.1),
+      aes(xmin=x - 0.33,
+          xmax=x + 0.33 ,
+          ymin=0,
+          ymax=100),
+      data=subset(tmp, is.na(tmp$delta.percentage))
+    ) +
+    geom_curve( curvature = 0,
+                arrow = arrow(length = unit(0.01, "npc")),
+                aes(x = x , y = resection.1.p , xend = x, yend = resection.2.p),
+                data = subset(tmp, tmp$resection.1.p != 0 | tmp$resection.2.p != 0 )
+                ) +
+    ylim(0, 100) +
+    geom_point(
+      pch = '-',
+      size = 4,
+      data = subset(tmp, tmp$resection.1.p != 0 | tmp$resection.2.p != 0),
+      aes(y=resection.1.p)
+    ) +
+    geom_point(
+      #pch = '-',
+      size = 1,
+      aes(y=resection.1.p),
+      col="red",
+      data = subset(tmp, tmp$resection.1.p == 0 & tmp$resection.2.p == 0  )
+    ) + 
+    labs(y = "Percentage vIII (RNA-seq)",
+         x = "GSAM patient (ordered on difference in RNA-seq)") + 
+    scale_colour_manual(name = 'Legend', 
+                        guide = 'legend',
+                        values = c('MA50' = 'red',
+                                   'MA200' = 'blue'), 
+                        labels = c('SMA(50)',
+                                   'SMA(200)')) +
+    job_gg_theme      ,
+  align="hv", axis="tblr",ncol=1 )
 
 ggsave("output/figures/rna/GSAM_percentage_EGFRvIII_arrowplot.png")
 
@@ -218,7 +339,7 @@ ggsave("output/figures/rna/GSAM_percentage_EGFRvIII_arrowplot.png")
 
 
 
-# -----
+# -----code ----
 
 # find LR of EGFR 
 e <- expression_matrix_full
