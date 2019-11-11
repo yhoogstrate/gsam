@@ -191,7 +191,7 @@ ggplot(tmp, aes(x=pc1, y=pc2, col=mgmt)) +
   scale_y_continuous(expand = c(0.124, 0)) +
   job_gg_theme 
 
-ggsave("output/figures/rna/pca_rna_x_mgmt.png")
+ggsave("output/figures/rna/pca_rna_x_mgmt.png",width=7.5,height=6)
 
 
 
