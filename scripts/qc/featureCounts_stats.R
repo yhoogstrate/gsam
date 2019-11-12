@@ -3,31 +3,30 @@
 setwd("/home/youri/projects/gsam")
 
 # ---- libs ----
-library(DESeq2)
+library(ggplot)
+library(tidyr)
+library(scales)
 
 # ---- load data ----
-source("scripts/R/ligands.R")
-source("scripts/R/gsam_metadata.R")
+#source("scripts/R/ligands.R")
+#source("scripts/R/gsam_metadata.R")
 
-d <- read.delim("output/tables/featureCounts_gsam_1st96.exon-level.txt",stringsAsFactors = F,comment="#")
+data.qc <- read.table("data/output/tables/gsam_featureCounts_readcounts.txt.summary",stringsAsFactors = F,comment="#",header=T,row.names = 1)
+colnames(data.qc) <- gsub("processed.(.+).Aligned.sortedByCoord.out.markdup.bam","\\1",colnames(data.qc))
+#data.qc <- data.qc[rowSums(data.qc) > 0,]
 
-colnames(d) <- gsub("X.data.users.youri.mnt.neurogen.ro.gsam.RNA.alignments.","",colnames(d),fixed=T)
-colnames(d) <- gsub(".sambamba.dedup.bam","",colnames(d),fixed=T)
+t <- data.frame(t(data.qc))
+t <- t[order(t$Assigned,decreasing=T, rownames(t)),]
+t <- t[,colSums(t) > 0]
+t$Sample <- as.factor(rownames(t))
+t <- gather(t, type, count, -Sample)
+t$count <- t$count / 1000000
 
-rownames(d) <- d$Geneid
-d$Geneid <- NULL
-d$Chr <- NULL
-d$Start <- NULL
-d$End <- NULL
-d$Strand <- NULL
-d$Length <- NULL
 
-#plot(sort(log(colSums(d))))
-#abline(h=log(2000000))
-# min 2mljn reads to take the low-Q samples out
-d <- d[,colSums(d) > 2000000]
-#plot(sort(log(colSums(d))))
-#abline(h=log(2000000))
+ggplot(t, aes(x = Sample,y = count, fill=type)) +
+  geom_bar(stat = "identity", position = "stack") + 
+  scale_y_continuous(labels = unit_format(unit = "M"))
+
 
 
 png("output/figures/featureCounts_stats.png",width=3*480,height=2*480,res=2*72)

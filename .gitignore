@@ -17,3 +17,6 @@
 /processed
 .directory
 /output/tables/rsem
+/output/tables/quantiseq
+/output/tables/tin.py
+
