@@ -34,7 +34,7 @@ df$chr.len <- NULL
 df <- t(df)
 df <- df / rowSums(df) * 100.0
 df <- t(df)
-
+rownames(df) <- idx$chr.name
 
 # select those that vary enough
 m <- rowMax(df)
@@ -48,7 +48,24 @@ s = m[o] > 0.8
 
 sel <- idx$chr.name[o][s]
 
-idx <- idx[idx$chr.name %in% sel,]
-df <- df[idx$chr.name %in% sel,]
+idx2 <- idx[idx$chr.name %in% sel,]
+df2 <- data.frame(df[idx$chr.name %in% sel,])
+
+df2 <- df2[,order(df2[rownames(df2) == "chrUn_gl000220",],decreasing=T)]
+
+df2$chr <- idx2$chr.name
+
+df2 <- gather(df2, sample, percentage, -chr)
+df2$sample <- factor(as.character(df2$sample), levels=unique(as.character(df2$sample))) # relabel by order
+
+
+ggplot(df2, aes(x = sample ,y = percentage, fill=chr, label=sample)) +
+  coord_flip() + 
+  geom_bar(stat = "identity", position = "stack",colour="black") + 
+  scale_y_continuous(labels = unit_format(unit = "%")) + 
+  theme_bw() + 
+  barplot_theme
+
+ggsave("output/figures/qc/samtools.idxstats.pdf",height=16*1.7,width=6*1.5)
 
 
