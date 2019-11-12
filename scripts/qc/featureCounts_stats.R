@@ -16,16 +16,22 @@ colnames(data.qc) <- gsub("processed.(.+).Aligned.sortedByCoord.out.markdup.bam"
 #data.qc <- data.qc[rowSums(data.qc) > 0,]
 
 t <- data.frame(t(data.qc))
-t <- t[order(t$Assigned,decreasing=T, rownames(t)),]
+t <- t[order(t$Assigned,decreasing=F, rownames(t)),]
+t <- t[,order(colSums(t),decreasing=T)]
+colnames(t)[colnames(t) == "Assigned"] <- "ZAssigned"
+t$x <- 1:nrow(t)
 t <- t[,colSums(t) > 0]
 t$Sample <- as.factor(rownames(t))
-t <- gather(t, type, count, -Sample)
+t <- gather(t, type, count, -Sample, -x)
 t$count <- t$count / 1000000
 
 
-ggplot(t, aes(x = Sample,y = count, fill=type)) +
+ggplot(t, aes(x = x ,y = count, fill=type, label=Sample)) +
+  coord_flip() + 
   geom_bar(stat = "identity", position = "stack") + 
   scale_y_continuous(labels = unit_format(unit = "M"))
+
+
 
 
 
