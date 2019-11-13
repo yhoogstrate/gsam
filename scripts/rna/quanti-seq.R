@@ -6,6 +6,9 @@ library(dplyr)
 library(ggplot2)
 library(Biobase)
 
+#source('scripts/R/qc_metrics_matrix.R')
+source('scripts/R/gsam_metadata.R')
+
 source('scripts/R/job_gg_theme.R')
 
 # ---- load data ----
@@ -36,14 +39,14 @@ data.quantiseq <- immunedeconv::deconvolute(data.TPM.NGSProtocol, method = 'quan
 save(data.quantiseq, file = 'output/tables/quantiseq/data.quantiseq.RData')
 
 
-# ----  ----
+# ---- Grote barplot ----
 
 load('output/tables/quantiseq/data.quantiseq.RData')
 
 # clusteren op waarden kan misschien beter op een transformatie, voglens job de cosine similary en daar de dist van
 
 data.quantiseq.melt <- reshape2::melt(data.quantiseq)
-
+data.quantiseq.melt$Sample <- data.quantiseq.melt$variable
 #data.quantiseq.melt <- data.quantiseq.melt %>% dplyr::inner_join(sampleInfo, c('variable' = 'Accession'))
 
 data.quantiseq.melt$resection <- as.factor(gsub("^.+([0-9])$","\\1",
@@ -55,7 +58,6 @@ clusterData <- scale(data.quantiseq[2:ncol(data.quantiseq)]  , center = T, scale
 #a = clusterData[10,]
 #b = as.numeric(as.matrix(data.quantiseq)[10,-1])
 #plot(a, b)
-
 
 
 
@@ -75,31 +77,71 @@ data.quantiseq.melt$cell_type <- factor(data.quantiseq.melt$cell_type, levels = 
 
 labels <- data.quantiseq.melt[data.quantiseq.melt$cell_type == levels(data.quantiseq.melt$cell_type)[1],]
 
-#plot.quantiseq <- 
-ggplot(data.quantiseq.melt, aes(x = Sample, y = value, fill = cell_type)) + 
-  geom_bar(stat = 'identity', width = 1, color = 'black', size = .1) +
-  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
-  scale_fill_brewer(type = 'seq', palette = 'Paired', direction = 1, guide = guide_legend(title = 'Cell Populations', title.position = 'top', title.hjust = 0.5, nrow = 2, keywidth = 0.5, keyheight = 0.5)) +
-  # Axis titles.
-  labs(x = paste0("G-SAM\n(n = ",ncol(data.quantiseq) - 1,")"), y = 'Relative frequency\n(TIL10)') + 
-  theme(legend.position = 'bottom', 
-        axis.title.y = element_text(size = 8), 
-        text=element_text(size=10, family='Helvetica'),
-        axis.ticks = element_blank(),
-        axis.text.x = element_blank(),
-        panel.grid.major = element_line(colour = 'grey80', linetype = 'dashed'),
-        panel.grid.major.x = element_blank(),
-        panel.background = element_rect(fill = 'white', colour = NA),
-        panel.border = element_rect(fill = NA, colour = 'grey20')
-  )  + 
-  geom_point(aes(x = Sample, y = -0.025, col=resection),pch=22,data=labels,size=0.2)
+#q <- gsub("-",".",levels(data.quantiseq.melt$Sample),fixed=T)
+#q <- gsam.qc.metrics.rna[match(q, rownames(gsam.qc.metrics.rna)) ,]
 
-ggsave("output/figures/rna/quanti-seq/profiles-overview.pdf",width=16*1.7,height=6*1.5)
+dim(data.quantiseq.melt)
+data.quantiseq.melt <- merge(x=data.quantiseq.melt , y=gsam.qc.metrics.rna, by.x = "Sample", by.y="sid", all.x=T)
+dim(data.quantiseq.melt)
+
+data.quantiseq.melt2 <- data.quantiseq.melt
+dim(data.quantiseq.melt2)
+data.quantiseq.melt2$cell_type <- NULL
+data.quantiseq.melt2$value <- NULL
+data.quantiseq.melt2 <- data.quantiseq.melt2[!duplicated(data.quantiseq.melt2$Sample),]
+dim(data.quantiseq.melt2)
 
 
 
 
+plot_grid(
+  #plot.quantiseq <- 
+  ggplot(data.quantiseq.melt, aes(x = Sample, y = value, fill = cell_type, label=Sample)) + 
+    geom_bar(stat = 'identity', width = 1, color = 'black', size = .1) +
+    scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+    scale_fill_brewer(type = 'seq', palette = 'Paired', direction = 1, guide = guide_legend(title = 'Cell Populations', title.position = 'top', title.hjust = 0.5, nrow = 2, keywidth = 0.5, keyheight = 0.5)) +
+    # Axis titles.
+    labs(x = paste0("G-SAM\n(n = ",ncol(data.quantiseq) - 1,")"), y = 'Relative frequency\n(TIL10)') + 
+    theme(legend.position = 'bottom', 
+          axis.title.y = element_text(size = 8), 
+          text=element_text(size=10, family='Helvetica'),
+          axis.ticks = element_blank(),
+          axis.text.x = element_text(angle = 90, size = 4 ),
+          panel.grid.major = element_line(colour = 'grey80', linetype = 'dashed'),
+          panel.grid.major.x = element_blank(),
+          panel.background = element_rect(fill = 'white', colour = NA),
+          panel.border = element_rect(fill = NA, colour = 'grey20')
+    ) + 
+    geom_point(aes(x = Sample, y = -0.025, col=resection),pch=22,data=labels,size=0.2)
 
+,
+
+  ggplot(data.quantiseq.melt2, aes(x = Sample, y = pct.rRNA.by.chrUn.gl000220)) + 
+    geom_bar(stat = 'identity', width = 1, color = 'black', size = .1) +
+    scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+    scale_fill_brewer(type = 'seq', palette = 'Paired', direction = 1, guide = guide_legend(title = 'Cell Populations', title.position = 'top', title.hjust = 0.5, nrow = 2, keywidth = 0.5, keyheight = 0.5)) +
+    # Axis titles.
+    labs(x = paste0("G-SAM\n(n = ",ncol(data.quantiseq) - 1,")"), y = 'Relative frequency\n(TIL10)') + 
+    theme(legend.position = 'bottom', 
+          axis.title.y = element_text(size = 8), 
+          text=element_text(size=10, family='Helvetica'),
+          axis.ticks = element_blank(),
+          axis.text.x = element_text(angle = 90, size = 4 ),
+          panel.grid.major = element_line(colour = 'grey80', linetype = 'dashed'),
+          panel.grid.major.x = element_blank(),
+          panel.background = element_rect(fill = 'white', colour = NA),
+          panel.border = element_rect(fill = NA, colour = 'grey20')
+    )
+,align="v", axis="tblr",ncol=1)
+
+
+
+ggsave("output/figures/rna/quanti-seq/profiles-overview.pdf",width=12*1.7,height=6*1.5)
+
+
+
+
+# ----  ----
 
 tmp <- data.quantiseq.melt[data.quantiseq.melt$cell_type == levels(data.quantiseq.melt$cell_type)[6],]
 tmp <- tmp[order(tmp$resection, tmp$value),]
