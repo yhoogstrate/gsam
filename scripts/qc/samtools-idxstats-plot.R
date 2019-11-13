@@ -66,7 +66,7 @@ ggplot(df2, aes(x = sample ,y = percentage, fill=chr, label=sample)) +
   theme_bw() + 
   barplot_theme
 
-ggsave("output/figures/qc/samtools.idxstats.pdf",height=16*1.7,width=6*1.5)
+ggsave("output/figures/qc/samtools.idxstats.png",height=16*1.5,width=6*1.5)
 
 
 
