@@ -69,3 +69,5 @@ ggplot(df2, aes(x = sample ,y = percentage, fill=chr, label=sample)) +
 ggsave("output/figures/qc/samtools.idxstats.pdf",height=16*1.7,width=6*1.5)
 
 
+
+

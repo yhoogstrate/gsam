@@ -94,22 +94,37 @@ ggplot(data.quantiseq.melt, aes(x = Sample, y = value, fill = cell_type)) +
   )  + 
   geom_point(aes(x = Sample, y = -0.025, col=resection),pch=22,data=labels,size=0.2)
 
-
-
-
-# , guide = guide_legend(title = 'Type', title.position = 'top', title.hjust = 0.5, nrow = 1, keywidth = 0.5, keyheight = 0.5)) 
+ggsave("output/figures/rna/quanti-seq/profiles-overview.pdf",width=16*1.7,height=6*1.5)
 
 
 
 
 
-ggplot(data.quantiseq.melt, aes(x = Sample, y = 'TMPRSS2-ERG', fill = `resection`)) + 
-  geom_tile(color = 'grey75', size = .1) + 
-  scale_fill_manual( values = c(Fusion = 'orange', 'None' = 'white', '.' = 'white'), guide = guide_legend(title = 'Type', title.position = 'top', title.hjust = 0.5, nrow = 1, keywidth = 0.5, keyheight = 0.5)) 
+
+tmp <- data.quantiseq.melt[data.quantiseq.melt$cell_type == levels(data.quantiseq.melt$cell_type)[6],]
+tmp <- tmp[order(tmp$resection, tmp$value),]
+tmp$x <- 1:nrow(tmp)
+labels <- tmp[tmp$cell_type == as.character(tmp$cell_type)[1],]
+ggplot(tmp, aes(x = x, y = value, fill = cell_type)) + 
+  geom_bar(stat = 'identity', width = 1, color = 'black', size = .1) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  scale_fill_brewer(type = 'seq', palette = 'Paired', direction = 1, guide = guide_legend(title = 'Cell Populations', title.position = 'top', title.hjust = 0.5, nrow = 2, keywidth = 0.5, keyheight = 0.5)) +
+  # Axis titles.
+  labs(x = paste0("G-SAM\n(n = ",ncol(data.quantiseq) - 1,")"), y = 'Relative frequency\n(TIL10)') + 
+  theme(legend.position = 'bottom', 
+        axis.title.y = element_text(size = 8), 
+        text=element_text(size=10, family='Helvetica'),
+        axis.ticks = element_blank(),
+        axis.text.x = element_blank(),
+        panel.grid.major = element_line(colour = 'grey80', linetype = 'dashed'),
+        panel.grid.major.x = element_blank(),
+        panel.background = element_rect(fill = 'white', colour = NA),
+        panel.border = element_rect(fill = NA, colour = 'grey20')
+  )  + 
+  geom_point(aes(x = x, y = -0.025, col=resection),pch=22,data=labels,size=0.2)
 
 
-+
-  annoTheme()
+
 
 
 
