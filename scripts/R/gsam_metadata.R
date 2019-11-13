@@ -97,26 +97,29 @@ gsam.metadata <- merge(gsam.metadata, tmp, by.x="pid", by.y="studyID", all.x = T
 # --- RNA-seq metadata [full] ----
 # STAR alignment statistics + patient / sample identifiers
 gsam.rna.metadata <- read.delim("data/output/tables/gsam_featureCounts_readcounts.txt.summary",stringsAsFactors = F,comment="#",row.names=1)
-colnames(gsam.rna.metadata) <- gsub("^[^\\.]+\\.([^\\.]+)\\..+$","\\1",colnames(gsam.rna.metadata),fixed=F)
+colnames(gsam.rna.metadata) <- gsub("^[^\\.]+\\.([^\\]+)\\.Aligned.sorted.+$","\\1",colnames(gsam.rna.metadata),fixed=F)
 gsam.rna.metadata <- t(gsam.rna.metadata)
 gsam.rna.metadata <- gsam.rna.metadata[,colSums(gsam.rna.metadata) != 0] # removal of columns with only 0
 colnames(gsam.rna.metadata) <- paste0("STAR.",colnames(gsam.rna.metadata))
 gsam.rna.metadata <- data.frame(gsam.rna.metadata)
-gsam.rna.metadata$sid <- as.character(rownames(gsam.rna.metadata))
+gsam.rna.metadata$sid <- gsub(".","-",as.character(rownames(gsam.rna.metadata)),fixed=T)
 gsam.rna.metadata$pid <- as.factor(gsub("[0-9]$","",rownames(gsam.rna.metadata)))
 gsam.rna.metadata$resection <- as.factor(gsub("^.+([0-9])$","r\\1",rownames(gsam.rna.metadata)))
+gsam.rna.metadata$pct.duplicate.STAR <- gsam.rna.metadata$STAR.Unassigned_Duplicate / rowSums(gsam.rna.metadata[,gsub("^(.....).+$","\\1",colnames(gsam.rna.metadata)) == "STAR."]) * 100
+gsam.rna.metadata$pct.multimap.STAR <- gsam.rna.metadata$STAR.Unassigned_MultiMapping / rowSums(gsam.rna.metadata[,gsub("^(.....).+$","\\1",colnames(gsam.rna.metadata)) == "STAR."]) * 100
 
-# @ todo add batch [1/2]
 
-## add IDH
-#source("scripts/R/dna_idh.R")
-#tmp <- dna_idh[dna_idh$duplicate == FALSE,]
-#tmp$Sample <- NULL
-#tmp$duplicate <- NULL
-#print(dim(gsam.rna.metadata))
-#gsam.rna.metadata <- merge(gsam.rna.metadata, tmp, by.x = "sid", by.y = "donor_ID", all.x = TRUE)
-#print(dim(gsam.rna.metadata))
-
+# add chromosomal distribution of rRNA containing alternate loci
+tmp <- read.delim("output/tables/idxstats/samtools.indexstats.matrix.txt",stringsAsFactors=F,row.names=1)
+tmp$ref.len <- NULL
+tmp <- t(tmp)
+# rowSums(tmp / rowSums(tmp) * 100) == 100
+tmp <- tmp / rowSums(tmp) * 100
+rownames(tmp) <- gsub(".flagstats.txt","",rownames(tmp),fixed=T)
+tmp <- tmp[,colnames(tmp) == "chrUn_gl000220"]
+tmp <- data.frame(pct.rRNA.by.chrUn.gl000220 = tmp)
+tmp$sid <- gsub(".","-",rownames(tmp),fixed=T)
+gsam.rna.metadata <- merge(gsam.rna.metadata , tmp, by.x = "sid" , by.y = 'sid' , all.x = T)
 
 
 

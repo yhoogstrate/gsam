@@ -8,10 +8,11 @@ from tqdm import tqdm
 with open("output/tables/star_percentage_mapped.txt", "w") as fh_w:
     fh_w.write("sample\tpercentage-uniquely-mapped\tpercentage-multimap\n")
 
-    path = "/mnt/galaxian/data/users/youri/neurogen-tmp/align-gsam/bam"
-    for directory in tqdm([_ for _ in os.listdir(path) if _[-5:] == "_hg19"]):
+    path = "data/RNA/alignments"
+    for directory in tqdm([_ for _ in os.listdir(path)]):
         #print(directory)
-        sid = directory.split("_")[1]
+        sid = directory
+        #.split("_")[1]
         #print(os.listdir(  os.path.join(path, directory, "Log.final.out")  ))
         
         t = None
