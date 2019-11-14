@@ -209,10 +209,10 @@ tmp$delta.percentage[tmp$resection.1.sum < min_reads_rna_seq | tmp$resection.2.s
 
 # Select vIII positive samples
 dim(tmp)
-tmp <- tmp[!(tmp$delta.percentage == 0 & tmp$delta.percentage == 0),]
+tmp <- tmp[!(tmp$delta.percentage == 0 & tmp$qPCR.delta_percentage == 0),]
 dim(tmp)
-#tmp <- tmp[!(is.na(tmp$delta.percentage) & is.na(tmp$qPCR.delta_percentage)),]
-#dim(tmp)
+tmp <- tmp[!(is.na(tmp$delta.percentage) & is.na(tmp$qPCR.delta_percentage)),]
+dim(tmp)
 
 tmp$x <- order(tmp$delta.percentage, tmp$qPCR.delta_percentage)
 tmp <- tmp[tmp$x,]
@@ -223,7 +223,7 @@ plot_grid(
   
   ggplot(tmp, aes(x=x, y=qPCR.delta_percentage, label=sid)) + 
     geom_rect(
-      fill = rgb(0,0,0,0.1),
+      fill = rgb(0,0,0,0.05),
       aes(xmin=x - 0.33,
           xmax=x + 0.33 ,
           ymin=-100,
@@ -238,7 +238,7 @@ plot_grid(
       aes()# col=v3.stat
     ) +
     ylim(-100, 100) + 
-    xlim(1, nrow(tmp)) + 
+    xlim(0,nrow(tmp)+1)  + 
     labs(title = "GSAM: Change in percentage EGFR vIII",
          y = "Change in vIII-% (qPCR)",
          x = NULL) + 
@@ -247,15 +247,23 @@ plot_grid(
   ,
   
   ggplot(tmp, aes(x=x, y=delta.percentage, label=sid)) + 
+    geom_rect(
+      fill = rgb(0,0,0,0.05),
+      aes(xmin=x - 0.33,
+          xmax=x + 0.33 ,
+          ymin=-100,
+          ymax=100),
+      data=subset(tmp, is.na(tmp$delta.percentage))
+      ) +
     geom_bar(
       data = subset(tmp, !is.na(tmp$delta.percentage)),
       aes(x=x, y=delta.percentage),stat="identity",width=0.7) + 
     geom_point(
-      data = subset(tmp, !is.na(tmp$delta.percentage)),
-      aes(col=v3.stat)
+      data = subset(tmp, !is.na(tmp$delta.percentage))
+      #,aes(col=v3.stat)
     ) +
     ylim(-100, 100) + 
-    xlim(1, nrow(tmp)) + 
+    xlim(0,nrow(tmp)+1) + 
     labs(y = "Change in vIII-% (RNA-seq)",
          x = "GSAM patient (ordered on difference in RNA-seq)") + 
     job_gg_theme +
