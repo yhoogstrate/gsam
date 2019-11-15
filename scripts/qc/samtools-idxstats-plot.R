@@ -1,42 +1,56 @@
 #!/usr/bin/env R
 
+# ----config and settings ----
+
+setwd("")
+
 cutoff <- 0.1 # cutoff in percentage for a loci to include in plot - denote that there are quite some rRNA genes on alternate loci
 
-idxstats <- list.files('output/tables/idxstats', pattern = '.txt', full.names = T)
+# ---- load libs ----
 
+# ---- load functions ----
 
-idx <- NA
-df <- data.frame()
-for(idxstat in idxstats) {
-  t <- read.delim(idxstat,header=F,stringsAsFactors = F)
-  colnames(t)[3]  <- gsub(".+/([^/]+).flagstats.txt","\\1",idxstat)
-  t$V4 <- NULL
-  colnames(t)[1]  <- "chr.name"
-  colnames(t)[2]  <- "chr.len"
+get_samtools_idxstats_rna <- function() {
+  idxstats <- list.files('output/tables/idxstats', pattern = '.txt', full.names = T)
   
-  if(is.null(idx) | ncol(df) == 0) {
-    idx <- t
-    idx[,3] <- NULL
+  idx <- NA
+  df <- data.frame()
+  for(idxstat in idxstats) {
+    t <- read.delim(idxstat,header=F,stringsAsFactors = F)
+    colnames(t)[3]  <- gsub(".+/([^/]+).flagstats.txt","\\1",idxstat)
+    t$V4 <- NULL
+    colnames(t)[1]  <- "chr.name"
+    colnames(t)[2]  <- "chr.len"
     
-    df <- t
-  } else {
-    t$chr.name <- NULL
-    t$chr.len <- NULL
-    df <- cbind(df,t)
+    if(is.null(idx) | ncol(df) == 0) {
+      idx <- t
+      idx[,3] <- NULL
+      
+      df <- t
+    } else {
+      t$chr.name <- NULL
+      t$chr.len <- NULL
+      df <- cbind(df,t)
+    }
+    
+    #rm(t)
   }
+  df$chr.name <- NULL
+  df$chr.len <- NULL
   
-  #rm(t)
+  
+  df <- t(df)
+  df <- df / rowSums(df) * 100.0
+  df <- t(df)
+  rownames(df) <- idx$chr.name
+  return (df)
 }
-df$chr.name <- NULL
-df$chr.len <- NULL
 
+# ---- load data ----
 
-df <- t(df)
-df <- df / rowSums(df) * 100.0
-df <- t(df)
-rownames(df) <- idx$chr.name
+rna.samtools.idxstat <- get_samtools_idxstats_rna()
 
-# select those that vary enough
+# select those chromosomes that vary enough
 m <- rowMax(df)
 o <- order(m)
 #plot(c(0,max(o)+3),c(0,120),type="n")

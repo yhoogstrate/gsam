@@ -132,7 +132,7 @@ plot_grid(
           panel.background = element_rect(fill = 'white', colour = NA),
           panel.border = element_rect(fill = NA, colour = 'grey20')
     )
-,align="v", axis="tblr",ncol=1)
+,align="v", axis="tblr",ncol=1, rel_heights = c(0.7, 0.3))
 
 
 
