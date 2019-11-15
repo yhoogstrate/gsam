@@ -8,50 +8,55 @@ cutoff <- 0.1 # cutoff in percentage for a loci to include in plot - denote that
 
 # ---- load libs ----
 
+library(ggplot2)
+library(cowplot)
+
 # ---- load functions ----
 
 get_samtools_idxstats_rna <- function() {
-  idxstats <- list.files('output/tables/idxstats', pattern = '.txt', full.names = T)
+  df <- read.table("output/tables/idxstats/samtools.indexstats.matrix.txt",header=T,stringsAsFactor=F)
+  idx <- df[,1:2]
+  df <- df[,-(1:2)]
   
-  idx <- NA
-  df <- data.frame()
-  for(idxstat in idxstats) {
-    t <- read.delim(idxstat,header=F,stringsAsFactors = F)
-    colnames(t)[3]  <- gsub(".+/([^/]+).flagstats.txt","\\1",idxstat)
-    t$V4 <- NULL
-    colnames(t)[1]  <- "chr.name"
-    colnames(t)[2]  <- "chr.len"
-    
-    if(is.null(idx) | ncol(df) == 0) {
-      idx <- t
-      idx[,3] <- NULL
-      
-      df <- t
-    } else {
-      t$chr.name <- NULL
-      t$chr.len <- NULL
-      df <- cbind(df,t)
-    }
-    
-    #rm(t)
-  }
-  df$chr.name <- NULL
-  df$chr.len <- NULL
+  idx <- idx[rowSums(df) > 0,]
+  df <- df[rowSums(df) > 0,]
   
+  rownames(df) <- idx$ref
+  colnames(df) <- gsub(".samtools.idxstats.txt","",colnames(df),fixed=T)
   
-  df <- t(df)
-  df <- df / rowSums(df) * 100.0
-  df <- t(df)
-  rownames(df) <- idx$chr.name
-  return (df)
+  return( list(idx= idx, data = df))
 }
+
+rowMax <- function(df) {
+  return (apply(df, 1, FUN=max))
+}
+
 
 # ---- load data ----
 
-rna.samtools.idxstat <- get_samtools_idxstats_rna()
+rna.samtools.idxstats <- get_samtools_idxstats_rna()
+
+barplot_theme <- theme(
+  text = element_text(family = 'Helvetica'),
+  axis.text.x = element_text(angle = 45,size=10),
+  axis.text.y = element_text(size=5),
+  legend.position = 'bottom',
+  plot.title = element_text(face = "bold", size = rel(1.2), hjust = 0.5),
+  panel.background = element_rect(fill = 'white', colour = 'white'),
+  axis.title = element_text(face = "bold",size = rel(1)),
+  axis.text = element_text(),
+  axis.line = element_line(colour="black"),
+  panel.grid.major.y = element_line(colour = 'grey90', linetype = 'dotted')
+)
+
+# ---- make jamin-plot ----
 
 # select those chromosomes that vary enough
-m <- rowMax(df)
+rna.samtools.idxstats$data.pct <- t(t(rna.samtools.idxstats$data) / colSums(rna.samtools.idxstats$data) * 100.0)
+
+colSums(rna.samtools.idxstats$data.pct[, 1:10])
+
+m <- rowMax(rna.samtools.idxstats$data.pct)
 o <- order(m)
 #plot(c(0,max(o)+3),c(0,120),type="n")
 #points(1:max(o), m[o],pch=19,col="red")
@@ -60,25 +65,27 @@ s = m[o] > 0.8
 #text(1:max(o) - 1, m[o] + 4, idx$chr.name[o],srt=90,pos=4,cex=0.6)
 
 
-sel <- idx$chr.name[o][s]
+sel <- rna.samtools.idxstats$idx$ref[o][s]
 
-idx2 <- idx[idx$chr.name %in% sel,]
-df2 <- data.frame(df[idx$chr.name %in% sel,])
+idx2 <- rna.samtools.idxstats$idx[rna.samtools.idxstats$idx$ref %in% sel,]
+df2 <- data.frame(rna.samtools.idxstats$data.pct[rna.samtools.idxstats$idx$ref %in% sel,])
 
 df2 <- df2[,order(df2[rownames(df2) == "chrUn_gl000220",],decreasing=T)]
 
-df2$chr <- idx2$chr.name
+df2$ref <- idx2$ref
 
-df2 <- gather(df2, sample, percentage, -chr)
+df2 <- gather(df2, sample, percentage, -ref)
 df2$sample <- factor(as.character(df2$sample), levels=unique(as.character(df2$sample))) # relabel by order
 
 
-ggplot(df2, aes(x = sample ,y = percentage, fill=chr, label=sample)) +
+ggplot(df2, aes(x = sample ,y = percentage, fill=ref, label=sample)) +
   coord_flip() + 
   geom_bar(stat = "identity", position = "stack",colour="black") + 
   scale_y_continuous(labels = unit_format(unit = "%")) + 
   theme_bw() + 
   barplot_theme
+
+
 
 ggsave("output/figures/qc/samtools.idxstats.png",height=16*1.5,width=6*1.5)
 

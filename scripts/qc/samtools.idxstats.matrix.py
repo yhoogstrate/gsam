@@ -5,7 +5,7 @@ from tqdm import tqdm
 
 path = "output/tables/idxstats"
 
-files = sorted([_ for _ in os.listdir(path) if _[-14:] == ".flagstats.txt"])
+files = sorted([_ for _ in os.listdir(path) if _[-22:] == ".samtools.idxstats.txt"])
 
 chrs = []
 chrs_idx = {}
