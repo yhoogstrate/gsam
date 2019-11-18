@@ -3,7 +3,7 @@
 import os
 from tqdm import tqdm
 
-path = "output/tables/idxstats"
+path = "output/tables/qc/idxstats"
 
 files = sorted([_ for _ in os.listdir(path) if _[-22:] == ".samtools.idxstats.txt"])
 
@@ -33,7 +33,7 @@ for _ in tqdm(files):
 
 out = ["reference"] + files
 
-with open("output/tables/idxstats/samtools.indexstats.matrix.txt","w") as fh:
+with open("output/tables/qc/idxstats/samtools.indexstats.matrix.txt","w") as fh:
 	header = ["ref", "ref-len"] + files
 	fh.write("\t".join(header) + "\n")
 	for ref in chrs:

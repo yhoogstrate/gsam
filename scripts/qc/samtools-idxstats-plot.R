@@ -2,7 +2,7 @@
 
 # ----config and settings ----
 
-setwd("")
+setwd("~/projects/gsam")
 
 cutoff <- 0.1 # cutoff in percentage for a loci to include in plot - denote that there are quite some rRNA genes on alternate loci
 
@@ -49,6 +49,9 @@ barplot_theme <- theme(
   panel.grid.major.y = element_line(colour = 'grey90', linetype = 'dotted')
 )
 
+source('scripts/R/gsam_metadata.R')
+source('scripts/rna/dna-contamination.R')
+
 # ---- make jamin-plot ----
 
 # select those chromosomes that vary enough
@@ -84,6 +87,9 @@ df2a <- merge(df2a, gsam.rna.metadata, by.x="sid", by.y="sid")
 df2a <- df2a[order(df2a$x),]
 df2a$sid <- factor(as.character(df2a$sid[df2a$x]), levels = as.character(df2a$sid[df2a$x]))
 #factor(as.character(df2a$sid[df2a$x]), levels = as.character(df2a$sid[df2a$x]))
+
+
+
 
 plot_grid(
   ggplot(df2g, aes(x = sample ,y = percentage, fill=ref, label=sample)) +

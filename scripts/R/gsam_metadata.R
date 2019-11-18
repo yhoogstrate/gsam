@@ -103,15 +103,15 @@ gsam.rna.metadata <- gsam.rna.metadata[,colSums(gsam.rna.metadata) != 0] # remov
 colnames(gsam.rna.metadata) <- paste0("STAR.",colnames(gsam.rna.metadata))
 gsam.rna.metadata <- data.frame(gsam.rna.metadata)
 gsam.rna.metadata$sid <- gsub(".","-",as.character(rownames(gsam.rna.metadata)),fixed=T)
-gsam.rna.metadata$pid <- as.factor(gsub("[0-9]$","",rownames(gsam.rna.metadata)))
-gsam.rna.metadata$resection <- as.factor(gsub("^.+([0-9])$","r\\1",rownames(gsam.rna.metadata)))
+gsam.rna.metadata$pid <- as.factor(  gsub("[0-9]$","",gsub(".replicate","",rownames(gsam.rna.metadata)))  )
+gsam.rna.metadata$resection <- as.factor(gsub("^.+([0-9])$","r\\1",gsub(".replicate$","",rownames(gsam.rna.metadata))))
 gsam.rna.metadata$pct.duplicate.STAR <- gsam.rna.metadata$STAR.Unassigned_Duplicate / rowSums(gsam.rna.metadata[,gsub("^(.....).+$","\\1",colnames(gsam.rna.metadata)) == "STAR."]) * 100
 gsam.rna.metadata$pct.multimap.STAR <- gsam.rna.metadata$STAR.Unassigned_MultiMapping / rowSums(gsam.rna.metadata[,gsub("^(.....).+$","\\1",colnames(gsam.rna.metadata)) == "STAR."]) * 100
 gsam.rna.metadata$pct.nofeature.STAR <- gsam.rna.metadata$STAR.Unassigned_NoFeatures / rowSums(gsam.rna.metadata[,gsub("^(.....).+$","\\1",colnames(gsam.rna.metadata)) == "STAR."]) * 100
 
 
 # add chromosomal distribution of rRNA containing alternate loci
-tmp <- read.delim("output/tables/idxstats/samtools.indexstats.matrix.txt",stringsAsFactors=F,row.names=1)
+tmp <- read.delim("output/tables/qc/idxstats/samtools.indexstats.matrix.txt",stringsAsFactors=F,row.names=1)
 tmp$ref.len <- NULL
 tmp <- t(tmp)
 # rowSums(tmp / rowSums(tmp) * 100) == 100
@@ -122,18 +122,84 @@ tmp <- data.frame(pct.rRNA.by.chrUn.gl000220 = tmp)
 tmp$sid <- gsub(".","-",rownames(tmp),fixed=T)
 gsam.rna.metadata <- merge(gsam.rna.metadata , tmp, by.x = "sid" , by.y = 'sid' , all.x = T)
 rm(tmp)
-
 #plot(gsam.rna.metadata$pct.rRNA.by.chrUn.gl000220 , gsam.rna.metadata$pct.multimap.STAR)
 #plot(gsam.rna.metadata$pct.rRNA.by.chrUn.gl000220 , gsam.rna.metadata$pct.duplicate.STAR)
 #plot(gsam.rna.metadata$pct.rRNA.by.chrUn.gl000220 , gsam.rna.metadata$pct.nofeature.STAR)
 #plot(gsam.rna.metadata$pct.nofeature.STAR , gsam.rna.metadata$pct.duplicate.STAR)
 
 
+
+
+# tin.py qc metrics
 tmp <- read.table('output/tables/qc/tin.py/tin.py.matrix.txt',stringsAsFactors=F,header=T)
 tmp$sid <- gsub(".bam","",tmp$Bam_file,fixed=T)
 rownames(tmp) <- tmp$sid
 tmp$Bam_file <- NULL
 gsam.rna.metadata <- merge(gsam.rna.metadata, tmp , by.x = "sid", by.y = "sid")
+
+
+
+
+# vIII rna-seq counts
+tmp <- read.table('output/tables/v3_extract_readcounts.txt',header=T,stringsAsFactor=F)
+tmp$sample <- gsub("^.+/alignments/([^/]+)/.+$","\\1",tmp$sample)
+rownames(tmp) <- tmp$sample
+
+
+sel <- tmp$wt.reads.v3 + tmp$vIII.reads.v3 > 15
+tmp$vIII.percentage <- NA
+tmp$vIII.percentage[sel] <- tmp$vIII.reads.v3[sel] / (tmp$wt.reads.v3[sel] + tmp$vIII.reads.v3[sel]) * 100
+gsam.rna.metadata <- merge(gsam.rna.metadata, tmp , by.x = "sid", by.y = "sample")
+
+
+
+
+tmp <- read.csv('data/RNA/Final_qPCR_EGFR_GSAM.csv',stringsAsFactors = F)
+tmp <- tmp[,colnames(tmp) %in% c('EGFRCt002', 'vIIICt002', 'recurrent_EGFRCt002', 'recurrent_vIIICt002','recurrent_patientID')]
+
+tmp.1 <- tmp[,match( c( 'EGFRCt002', 'vIIICt002',  'recurrent_patientID' ) , colnames(tmp) ) ]
+tmp.1$resection <- 'r1'
+colnames(tmp.1)[colnames(tmp.1) == "EGFRCt002"] <- 'qPCR.ct.EGFR.wt'
+colnames(tmp.1)[colnames(tmp.1) == "vIIICt002"] <- 'qPCR.ct.EGFR.vIII'
+
+tmp.2 <- tmp[,match( c( 'recurrent_EGFRCt002', 'recurrent_vIIICt002','recurrent_patientID' ) , colnames(tmp) ) ]
+tmp.2$resection <- 'r2'
+colnames(tmp.2)[colnames(tmp.2) == "recurrent_EGFRCt002"] <- 'qPCR.ct.EGFR.wt'
+colnames(tmp.2)[colnames(tmp.2) == "recurrent_vIIICt002"] <- 'qPCR.ct.EGFR.vIII'
+
+tmp <- rbind(tmp.1, tmp.2)
+tmp$resection <- as.factor(tmp$resection)
+rm(tmp.1, tmp.2)
+
+tmp$qPCR.percent.EGFR.vIII <- 100 - (1/(1 + 2 ^ (tmp$qPCR.ct.EGFR.wt - tmp$qPCR.ct.EGFR.vIII)) * 100)
+tmp[tmp$qPCR.ct.EGFR.vIII >= 40,]$qPCR.percent.EGFR.vIII <- 0
+
+gsam.rna.metadata$tmp.id <- paste0(gsam.rna.metadata$pid, ".", gsam.rna.metadata$resection)
+tmp$tmp.id <- paste0(tmp$recurrent_patientID, '.', tmp$resection)
+tmp$resection <- NULL
+tmp$recurrent_patientID <- NULL
+
+gsam.rna.metadata <- merge(gsam.rna.metadata, tmp , by.x="tmp.id" , by.y = "tmp.id" , all.x = T) 
+gsam.rna.metadata$tmp.id <- NULL
+# x-check replictes CAO1, FAB2, GAS2 => works
+
+
+
+#tmp$qPCR.percentageEGFRvIII <- 100 - (1/(1 + 2 ^ (tmp$qPCR.EGFRCt002 - tmp$qPCR.vIIICt002)) * 100)
+#tmp$qPCR.percentageEGFRvIII[tmp$qPCR.vIIICt002 == 40] <- 0
+#tmp$qPCR.recurrent_percentageEGFRvIII <- 100 - (1/(1 + 2 ^ (tmp$qPCR.recurrent_EGFRCt002 - tmp$qPCR.recurrent_vIIICt002)) * 100)
+#tmp$qPCR.recurrent_percentageEGFRvIII[tmp$qPCR.recurrent_vIIICt002 == 40] <- 0
+#tmp$qPCR.delta_percentage <- tmp$qPCR.recurrent_percentageEGFRvIII - tmp$qPCR.percentageEGFRvIII
+
+#dim(vIII.rot)
+#vIII.rot <- merge(x=vIII.rot, y = tmp, by.x="sid" , by.y = "qPCR.recurrent_patientID",
+#                  all.x = T, all.y=T)
+#rm(tmp)
+#dim(vIII.rot)
+
+
+
+
 
 
 
