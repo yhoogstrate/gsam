@@ -3,7 +3,7 @@
 import os
 from tqdm import tqdm
 
-path = 'output/tables/tin.py'
+path = 'output/tables/qc/tin.py'
 sids = [_ for _ in os.listdir(path) if os.path.isdir(path + '/'+ _)]
 
 idx = {}
@@ -21,8 +21,8 @@ for sid in tqdm(sids):
 					header = line
 
 
-with open('output/tables/tin.py/tin.py.matrix.txt', 'w') as fh:
+with open('output/tables/qc/tin.py/tin.py.matrix.txt', 'w') as fh:
 	fh.write("\t".join(header) + "\n")
 	for _ in sorted(idx.values()):
-		fh.write("\t".join(_))
+		fh.write("\t".join(_) + "\n")
 

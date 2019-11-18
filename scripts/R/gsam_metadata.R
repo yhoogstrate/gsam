@@ -129,4 +129,11 @@ rm(tmp)
 #plot(gsam.rna.metadata$pct.nofeature.STAR , gsam.rna.metadata$pct.duplicate.STAR)
 
 
+tmp <- read.table('output/tables/qc/tin.py/tin.py.matrix.txt',stringsAsFactors=F,header=T)
+tmp$sid <- gsub(".bam","",tmp$Bam_file,fixed=T)
+rownames(tmp) <- tmp$sid
+tmp$Bam_file <- NULL
+gsam.rna.metadata <- merge(gsam.rna.metadata, tmp , by.x = "sid", by.y = "sid")
+
+
 

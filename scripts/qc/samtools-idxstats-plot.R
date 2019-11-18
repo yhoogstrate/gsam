@@ -68,26 +68,48 @@ s = m[o] > 0.8
 sel <- rna.samtools.idxstats$idx$ref[o][s]
 
 idx2 <- rna.samtools.idxstats$idx[rna.samtools.idxstats$idx$ref %in% sel,]
+
 df2 <- data.frame(rna.samtools.idxstats$data.pct[rna.samtools.idxstats$idx$ref %in% sel,])
-
 df2 <- df2[,order(df2[rownames(df2) == "chrUn_gl000220",],decreasing=T)]
-
+df2a <- data.frame(sid = gsub(".","-",as.character(colnames(df2)),fixed=T)) # to preserve order
 df2$ref <- idx2$ref
 
-df2 <- gather(df2, sample, percentage, -ref)
-df2$sample <- factor(as.character(df2$sample), levels=unique(as.character(df2$sample))) # relabel by order
+# rotate / gather table
+df2g <- gather(df2, sample, percentage, -ref)
+df2g$sample <- factor(as.character(df2g$sample), levels=unique(as.character(df2g$sample))) # relabel by order
 
 
-ggplot(df2, aes(x = sample ,y = percentage, fill=ref, label=sample)) +
-  coord_flip() + 
+df2a$x <- 1:nrow(df2a)
+df2a <- merge(df2a, gsam.rna.metadata, by.x="sid", by.y="sid")
+df2a <- df2a[order(df2a$x),]
+df2a$sid <- factor(as.character(df2a$sid[df2a$x]), levels = as.character(df2a$sid[df2a$x]))
+#factor(as.character(df2a$sid[df2a$x]), levels = as.character(df2a$sid[df2a$x]))
+
+plot_grid(
+  ggplot(df2g, aes(x = sample ,y = percentage, fill=ref, label=sample)) +
+  #coord_flip() + 
   geom_bar(stat = "identity", position = "stack",colour="black") + 
   scale_y_continuous(labels = unit_format(unit = "%")) + 
   theme_bw() + 
-  barplot_theme
+  barplot_theme + 
+    theme( axis.title.y = element_text(size = 11) ,
+           axis.text.x = element_text(angle = 90, size = 5 )
+    )
+,
+ggplot(df2a, aes(x = sid ,y = ratio.stranded.antistranded.lin, fill=df2a$ratio.stranded.antistranded.dna, label=sid)) +
+  #coord_flip() + 
+  geom_bar(stat = "identity", position = "stack",colour="black") + 
+  scale_y_continuous() + 
+  theme_bw() + 
+  barplot_theme + 
+  theme( axis.title.y = element_text(size = 11) ,
+         axis.text.x = element_text(angle = 90, size = 5 )
+         )
 
 
+,align="v", axis="tblr",ncol=1  , rel_heights = c(3, 1.6))
 
-ggsave("output/figures/qc/samtools.idxstats.png",height=16*1.5,width=6*1.5)
+ggsave("output/figures/qc/samtools.idxstats.pdf",height=7*1.5,width=16*1.5)
 
 
 
