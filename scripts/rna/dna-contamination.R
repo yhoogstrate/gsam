@@ -18,7 +18,7 @@ barplot_theme <- theme(
   axis.line = element_line(colour="black"),
   panel.grid.major.y = element_line(colour = 'grey90', linetype = 'dotted')
 )
-
+source('scripts/R/job_gg_theme.R')
 
 
 # ---- ----
@@ -214,6 +214,51 @@ plot_grid(
 
 
 ggsave("output/figures/qc/dna-contamination_or_rRNA.pdf",height=20,width=16*1.5)
+
+
+# ---- in/exclusion fig ----
+
+tmp <- gsam.rna.metadata
+tmp$isolation.order <- as.numeric(gsub("[\\.\\-][0-9]+$","",tmp$isolation.id))
+
+order <- order(tmp$isolation.order , tmp$blacklist.heavy.dna.contamination,
+               tmp$storage.box, tmp$plate, gsam.rna.metadata$sid)
+tmp <- tmp[order,]
+rm(order)
+tmp$x <- 1:nrow(tmp)
+tmp$sid <- factor(as.character(tmp$sid[tmp$x]), levels = as.character(tmp$sid[tmp$x]))
+
+
+
+cols_low.assigned <- c("FALSE" = "white", "TRUE" = "black",
+                       "24D3"="#000000",
+                       "25A1"="#111111",
+                       "25B1"="darkgreen",#222222",
+                       "25B3"="#333333",
+                       "26A2"="blue",#444444",
+                       "26B1"="#555555",
+                       "27A1"="#666666",
+                       "27A2"="#777777",
+                       "27A4"="yellow",#"#888888",
+                       "27B2"="#999999",
+                       "27B3"="#AAAAAA",
+                       "27B4"="red",#BBBBBB",
+                       "27C2"="#CCCCCC",
+                       "27C3"="#DDDDDD",
+                       "28C3"="#EEEEEE",
+                       "28C4"="#FFFFFF",
+                       "plate1" = "#444444",
+                       "plate2" = "#888888",
+                       "plate3" = "#BBBBBB",
+                       "plate4" = "#FFFFFF"
+                       )
+ggplot( tmp , aes(x = sid ,y = 1 ,  fill = factor(plate)) )   +
+  scale_fill_manual(values = cols_low.assigned) + 
+  geom_tile(color = "black", aes(fill=factor(blacklist.too.low.assigned))) + 
+  geom_tile(color = "black", aes(fill = factor(blacklist.heavy.dna.contamination) , y = 2)) + 
+  geom_tile(color = "black", aes(fill = factor(storage.box) , y = 3)) + 
+  geom_tile(color = "black", aes(fill = factor(plate) , y = 4)) + 
+  job_gg_theme 
 
 
 
