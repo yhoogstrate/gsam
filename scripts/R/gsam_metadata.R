@@ -108,7 +108,7 @@ gsam.rna.metadata$resection <- as.factor(gsub("^.+([0-9])$","r\\1",gsub(".replic
 gsam.rna.metadata$pct.duplicate.STAR <- gsam.rna.metadata$STAR.Unassigned_Duplicate / rowSums(gsam.rna.metadata[,gsub("^(.....).+$","\\1",colnames(gsam.rna.metadata)) == "STAR."]) * 100
 gsam.rna.metadata$pct.multimap.STAR <- gsam.rna.metadata$STAR.Unassigned_MultiMapping / rowSums(gsam.rna.metadata[,gsub("^(.....).+$","\\1",colnames(gsam.rna.metadata)) == "STAR."]) * 100
 gsam.rna.metadata$pct.nofeature.STAR <- gsam.rna.metadata$STAR.Unassigned_NoFeatures / rowSums(gsam.rna.metadata[,gsub("^(.....).+$","\\1",colnames(gsam.rna.metadata)) == "STAR."]) * 100
-
+gsam.rna.metadata$duplicate.fold.STAR <- 1 / (1 - (gsam.rna.metadata$pct.duplicate.STAR / 100)) # 75% duplicate means 4 fold duplication
 
 # add chromosomal distribution of rRNA containing alternate loci
 tmp <- read.delim("output/tables/qc/idxstats/samtools.indexstats.matrix.txt",stringsAsFactors=F,row.names=1)
@@ -154,6 +154,7 @@ gsam.rna.metadata <- merge(gsam.rna.metadata, tmp , by.x = "sid", by.y = "sample
 
 
 
+# vIII qPCR percentage
 tmp <- read.csv('data/RNA/Final_qPCR_EGFR_GSAM.csv',stringsAsFactors = F)
 tmp <- tmp[,colnames(tmp) %in% c('EGFRCt002', 'vIIICt002', 'recurrent_EGFRCt002', 'recurrent_vIIICt002','recurrent_patientID')]
 
@@ -183,19 +184,6 @@ gsam.rna.metadata <- merge(gsam.rna.metadata, tmp , by.x="tmp.id" , by.y = "tmp.
 gsam.rna.metadata$tmp.id <- NULL
 # x-check replictes CAO1, FAB2, GAS2 => works
 
-
-
-#tmp$qPCR.percentageEGFRvIII <- 100 - (1/(1 + 2 ^ (tmp$qPCR.EGFRCt002 - tmp$qPCR.vIIICt002)) * 100)
-#tmp$qPCR.percentageEGFRvIII[tmp$qPCR.vIIICt002 == 40] <- 0
-#tmp$qPCR.recurrent_percentageEGFRvIII <- 100 - (1/(1 + 2 ^ (tmp$qPCR.recurrent_EGFRCt002 - tmp$qPCR.recurrent_vIIICt002)) * 100)
-#tmp$qPCR.recurrent_percentageEGFRvIII[tmp$qPCR.recurrent_vIIICt002 == 40] <- 0
-#tmp$qPCR.delta_percentage <- tmp$qPCR.recurrent_percentageEGFRvIII - tmp$qPCR.percentageEGFRvIII
-
-#dim(vIII.rot)
-#vIII.rot <- merge(x=vIII.rot, y = tmp, by.x="sid" , by.y = "qPCR.recurrent_patientID",
-#                  all.x = T, all.y=T)
-#rm(tmp)
-#dim(vIII.rot)
 
 
 

@@ -6,6 +6,21 @@ setwd("~/projects/gsam")
 
 source("scripts/R/gsam_metadata.R")
 
+barplot_theme <- theme(
+  text = element_text(family = 'Helvetica'),
+  axis.text.x = element_text(angle = 45,size=10),
+  axis.text.y = element_text(size=5),
+  legend.position = 'bottom',
+  plot.title = element_text(face = "bold", size = rel(1.2), hjust = 0.5),
+  panel.background = element_rect(fill = 'white', colour = 'white'),
+  axis.title = element_text(face = "bold",size = rel(1)),
+  axis.text = element_text(),
+  axis.line = element_line(colour="black"),
+  panel.grid.major.y = element_line(colour = 'grey90', linetype = 'dotted')
+)
+
+
+
 # ---- ----
 
 counts_stranded <- read.delim("data/output/tables/gsam_featureCounts_readcounts.txt",stringsAsFactors = F,comment="#")
@@ -87,5 +102,119 @@ df$sid <- gsub(".","-",as.character(df$sid), fixed=T)
 
 rm(dna_c, heavy_dna_c, no_dna_c, stranded_antistranded_ratio)
 gsam.rna.metadata <- merge(gsam.rna.metadata, df, by.x="sid",by.y="sid")
+
+
+# ---- stddev *pm ----
+
+"
+We nemen aan dat wanneer er hoge mate van DNA contaminatie is, dat de read-count per gen linear gecorreleerd is met de grootte van ieder gen
+
+De variantie van FPKM/TPM achtige waardes over alle genen zou dan extreem laag moeten zijn
+"
+
+counts_stranded <- read.delim("data/output/tables/gsam_featureCounts_readcounts.txt",stringsAsFactors = F,comment="#")
+colnames(counts_stranded) <- gsub("^[^\\.]+\\.([^\\]+)\\.Aligned.sorted.+$","\\1",colnames(counts_stranded),fixed=F)
+len <- counts_stranded$Length
+rownames(counts_stranded) <- counts_stranded$Geneid
+counts_stranded$Geneid <- NULL
+counts_stranded$Chr <- NULL
+counts_stranded$Start <- NULL
+counts_stranded$End <- NULL
+counts_stranded$Strand <- NULL
+counts_stranded$Length <- NULL
+
+sel <- rowSums(counts_stranded) > 372 * 15
+counts_stranded <- counts_stranded[sel,]
+
+
+tt <- counts_stranded
+tt <- (tt / len) 
+tt <- (tt / colSums(tt))
+
+colvar1 <- colVars( as.matrix ( tt ))
+names(colvar1) <- colnames(tt)
+plot(log(sort(colvar1)))
+
+
+tt <- counts_stranded
+tt <- (tt / len) 
+#tt <- (tt / colSums(tt))
+
+colvar2 <- colVars( as.matrix ( tt ))
+names(colvar2) <- colnames(tt)
+plot(log(sort(colvar2)))
+
+
+# ---- plot -----
+
+tmp <-  gsam.rna.metadata
+order <- order(  scale(tmp$ratio.stranded.antistranded.lin + scale(tmp$pct.nofeature.STAR)) * (2* scale(tmp$pct.rRNA.by.chrUn.gl000220)) )
+tmp <- tmp[order,]
+tmp$x <- 1:nrow(tmp)
+tmp$sid <- factor(as.character(tmp$sid[tmp$x]), levels = as.character(tmp$sid[tmp$x]))
+
+
+#names(colvar1)[match(gsub("-",".",tmp$sid), names(colvar1))] == tmp$sid
+tmp$colvar1 <- log(  colvar1[match(gsub("-",".",tmp$sid), names(colvar1))]  )
+tmp$colvar2 <- log(  colvar2[match(gsub("-",".",tmp$sid), names(colvar2))]  )
+
+
+plot_grid(
+  ggplot(tmp, aes(x = sid ,y = ratio.stranded.antistranded.lin, fill=ratio.stranded.antistranded.dna, label=sid)) +
+    #coord_flip() + 
+    geom_bar(stat = "identity", position = "stack",colour="black") + 
+    scale_y_continuous() + 
+    theme_bw() + 
+    barplot_theme + 
+    theme( axis.title.y = element_text(size = 11) ,
+           axis.text.x = element_text(angle = 90, size = 5 ))
+  ,
+  ggplot(tmp, aes(x = sid ,y =  pct.nofeature.STAR , label=sid)) +
+    #coord_flip() + 
+    geom_bar(stat = "identity", position = "stack",colour="black") + 
+    scale_y_continuous() + 
+    theme_bw() + 
+    barplot_theme + 
+    theme( axis.title.y = element_text(size = 11) ,
+           axis.text.x = element_text(angle = 90, size = 5 ))
+  ,
+  ggplot(tmp, aes(x = sid ,y =  tmp$pct.rRNA.by.chrUn.gl000220 , label=sid)) +
+    #coord_flip() + 
+    geom_bar(stat = "identity", position = "stack",colour="black") + 
+    scale_y_continuous() + 
+    theme_bw() + 
+    barplot_theme + 
+    theme( axis.title.y = element_text(size = 11) ,
+           axis.text.x = element_text(angle = 90, size = 5 )),
+  ggplot(tmp, aes(x = sid ,y =  STAR.Assigned , label=sid)) +
+    #coord_flip() + 
+    geom_bar(stat = "identity", position = "stack",colour="black") + 
+    scale_y_continuous() + 
+    theme_bw() + 
+    barplot_theme + 
+    theme( axis.title.y = element_text(size = 11) ,
+           axis.text.x = element_text(angle = 90, size = 5 )),
+  ggplot(tmp, aes(x = sid ,y =  colvar1 , label=sid)) +
+    #coord_flip() + 
+    geom_bar(stat = "identity", position = "stack",colour="black") + 
+    scale_y_continuous() + 
+    theme_bw() + 
+    barplot_theme + 
+    theme( axis.title.y = element_text(size = 11) ,
+           axis.text.x = element_text(angle = 90, size = 5 )),
+  ggplot(tmp, aes(x = sid ,y =  colvar2 , label=sid)) +
+    #coord_flip() + 
+    geom_bar(stat = "identity", position = "stack",colour="black") + 
+    scale_y_continuous() + 
+    theme_bw() + 
+    barplot_theme + 
+    theme( axis.title.y = element_text(size = 11) ,
+           axis.text.x = element_text(angle = 90, size = 5 ))
+  ,align="v", axis="tblr",ncol=1  )
+
+
+ggsave("output/figures/qc/dna-contamination_or_rRNA.pdf",height=20,width=16*1.5)
+
+
 
 
