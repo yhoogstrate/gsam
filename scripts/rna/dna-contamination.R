@@ -221,7 +221,8 @@ ggsave("output/figures/qc/dna-contamination_or_rRNA.pdf",height=20,width=16*1.5)
 tmp <- gsam.rna.metadata
 tmp$isolation.order <- as.numeric(gsub("[\\.\\-][0-9]+$","",tmp$isolation.id))
 
-order <- order(tmp$isolation.order , tmp$blacklist.heavy.dna.contamination,
+# tmp$isolation.order , 
+order <- order(tmp$blacklist.heavy.dna.contamination,
                tmp$storage.box, tmp$plate, gsam.rna.metadata$sid)
 tmp <- tmp[order,]
 rm(order)
@@ -255,10 +256,30 @@ cols_low.assigned <- c("FALSE" = "white", "TRUE" = "black",
 ggplot( tmp , aes(x = sid ,y = 1 ,  fill = factor(plate)) )   +
   scale_fill_manual(values = cols_low.assigned) + 
   geom_tile(color = "black", aes(fill=factor(blacklist.too.low.assigned))) + 
-  geom_tile(color = "black", aes(fill = factor(blacklist.heavy.dna.contamination) , y = 2)) + 
-  geom_tile(color = "black", aes(fill = factor(storage.box) , y = 3)) + 
-  geom_tile(color = "black", aes(fill = factor(plate) , y = 4)) + 
+  geom_tile(color = "black", aes(fill = factor(blacklist.heavy.dna.contamination) , y = 2)) +
+  geom_tile(color = "black", aes(fill = factor(blacklist.gender.mislabeling) , y = 3)) + 
+  geom_tile(color = "black", aes(fill = factor(storage.box) , y = 4)) + 
+  geom_tile(color = "black", aes(fill = factor(plate) , y = 5)) + 
   job_gg_theme 
+
+
+
+# how many pairs are affected? =>? 40/186
+blacklisted <- gsam.rna.metadata$blacklist.too.low.assigned | gsam.rna.metadata$blacklist.heavy.dna.contamination | gsam.rna.metadata$blacklist.gender.mislabeling
+print(length(unique(as.character(gsam.rna.metadata[blacklisted,]$pid))))
+print(length(unique(as.character(gsam.rna.metadata$pid))))
+#blacklisted <- gsam.rna.metadata$blacklist.heavy.dna.contamination
+#print(length(unique(as.character(gsam.rna.metadata[blacklisted,]$pid))))
+#print(length(unique(as.character(gsam.rna.metadata$pid))))
+#blacklisted <- gsam.rna.metadata$blacklist.too.low.assigned 
+#print(length(unique(as.character(gsam.rna.metadata[blacklisted,]$pid))))
+#print(length(unique(as.character(gsam.rna.metadata$pid))))
+#blacklisted <- gsam.rna.metadata$blacklist.gender.mislabeling
+#print(length(unique(as.character(gsam.rna.metadata[blacklisted,]$pid))))
+#print(length(unique(as.character(gsam.rna.metadata$pid))))
+
+
+
 
 
 
