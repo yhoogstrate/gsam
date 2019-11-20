@@ -150,6 +150,7 @@ sel <- tmp$wt.reads.v3 + tmp$vIII.reads.v3 > 15
 tmp$vIII.percentage <- NA
 tmp$vIII.percentage[sel] <- tmp$vIII.reads.v3[sel] / (tmp$wt.reads.v3[sel] + tmp$vIII.reads.v3[sel]) * 100
 gsam.rna.metadata <- merge(gsam.rna.metadata, tmp , by.x = "sid", by.y = "sample")
+rm(sel)
 
 
 
@@ -189,7 +190,7 @@ gsam.rna.metadata$tmp.id <- NULL
 
 # blacklist by heavy DNA contamination
 blacklist.too.low.assigned <- c("AKA1", "CAC1", "AAB2", "GAS1", "KAE1", "CCZ1", "GAO2", "JAN1", "BAU2", "EAV2", "AAP1", "AZE1", "HAF1", "GAM1", "HAG1", "BAX2", "EAN1", "CBQ1", "AAD2", "HAK1", "CBG2", "BAI2", "HAE1", "CDH1", "HAI1", "KAB2", "GAE1", "BAN1", "KAC1", "KAA1", "ABA1")
-blacklist.heavy.dna.contamination  <- c("CAV1", "BAT2", "EBW1", "HAE1", "BAU1", "EBO1", "GAE1", "CDH1", "KAC2", "ABA1", "KAA1", "KAC1", "BAN1", "KAB2", "GAJ2", "HAI1")
+blacklist.heavy.dna.contamination  <- c("CAV1", "BAT2", "EBW1", "HAE1", "BAU1", "EBO1", "GAE1", "CDH1", "KAC2", "ABA1", "KAA1", "KAC1", "BAN1", "KAB2", "GAJ2", "HAI1", "AAD2", "CBG2")
 blacklist.gender.mislabeling <- c("AAM1","AAM2","AAT1","AAT2","AZH1","AZH2","FAG1","HAI1","HAI2") # metadata of these samples can't be trusted
 
 gsam.rna.metadata$blacklist.too.low.assigned <- gsam.rna.metadata$sid %in% blacklist.too.low.assigned

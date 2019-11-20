@@ -259,8 +259,15 @@ ggplot( tmp , aes(x = sid ,y = 1 ,  fill = factor(plate)) )   +
   geom_tile(color = "black", aes(fill = factor(blacklist.heavy.dna.contamination) , y = 2)) +
   geom_tile(color = "black", aes(fill = factor(blacklist.gender.mislabeling) , y = 3)) + 
   geom_tile(color = "black", aes(fill = factor(storage.box) , y = 4)) + 
-  geom_tile(color = "black", aes(fill = factor(plate) , y = 5)) + 
-  job_gg_theme 
+#  geom_tile(color = "black", aes(fill = factor(plate) , y = 5)) + 
+  job_gg_theme  + theme(
+    axis.text.x = element_text(angle = 90,size=1.6)
+  )
+
+
+ggsave("output/figures/qc/dropout.samples.rna.pdf")
+
+
 
 
 
@@ -277,10 +284,6 @@ print(length(unique(as.character(gsam.rna.metadata$pid))))
 #blacklisted <- gsam.rna.metadata$blacklist.gender.mislabeling
 #print(length(unique(as.character(gsam.rna.metadata[blacklisted,]$pid))))
 #print(length(unique(as.character(gsam.rna.metadata$pid))))
-
-
-
-
 
 
 
