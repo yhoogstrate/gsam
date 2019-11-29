@@ -3,14 +3,17 @@
 import os
 from tqdm import tqdm
 import json
+import re
 
-path = 'data/RNA/alignments_log'
+path = 'data/RNA/fastp_log'
+splitregex = re.compile("[0-9]{3,}_NGS19")
 
 with open("output/tables/gc_content_rmse.txt", "w") as fh_w:
-    fh_w.write("sample-id\tpercentage.A\tpercentage.C\tpercentage.T\tpercentage.G\tRMSE\n")
+    fh_w.write("sample-id\tfilename\tpercentage.A\tpercentage.C\tpercentage.T\tpercentage.G\tRMSE\n")
     
     for fn in tqdm(sorted([_ for _ in os.listdir(path) if _[-5:] == ".json"])):
-        #print( os.path.join(path, fn))
+        sid = splitregex.split(fn)[0].rstrip('-')
+        #print(sid)
         with open(os.path.join(path, fn) , "r") as fh:
             j = json.loads(fh.read())
 
@@ -34,5 +37,5 @@ with open("output/tables/gc_content_rmse.txt", "w") as fh_w:
             rmse = (ra + rc + rt + rg) / 4.0
             rmse = pow(rmse, 0.5)
 
-            fh_w.write(fn.split("_")[1] + "\t"+str(round(pa,2))+"\t"+str(round(pc,2))+"\t"+str(round(pt,2))+"\t"+str(round(pg,2))+"\t"+str(round(rmse, 3))+"\n")
+            fh_w.write(sid + "\t" + fn + "\t"+str(round(pa,2))+"\t"+str(round(pc,2))+"\t"+str(round(pt,2))+"\t"+str(round(pg,2))+"\t"+str(round(rmse, 3))+"\n")
 

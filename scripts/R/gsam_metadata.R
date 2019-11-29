@@ -190,12 +190,18 @@ gsam.rna.metadata$tmp.id <- NULL
 
 # blacklist by heavy DNA contamination
 blacklist.too.low.assigned <- c("AKA1", "CAC1", "AAB2", "GAS1", "KAE1", "CCZ1", "GAO2", "JAN1", "BAU2", "EAV2", "AAP1", "AZE1", "HAF1", "GAM1", "HAG1", "BAX2", "EAN1", "CBQ1", "AAD2", "HAK1", "CBG2", "BAI2", "HAE1", "CDH1", "HAI1", "KAB2", "GAE1", "BAN1", "KAC1", "KAA1", "ABA1")
-blacklist.heavy.dna.contamination  <- c("CAV1", "BAT2", "EBW1", "HAE1", "BAU1", "EBO1", "GAE1", "CDH1", "KAC2", "ABA1", "KAA1", "KAC1", "BAN1", "KAB2", "GAJ2", "HAI1", "AAD2", "CBG2")
+blacklist.heavy.dna.contamination  <- c("CAV1", "BAT2", "EBW1", "HAE1", "BAU1", "EBO1", "GAE1", "CDH1", "KAC2", "ABA1", "KAA1", "KAC1", "BAN1", "KAB2", "GAJ2", "HAI1", "AAD2", "CBG2","AAP1")
 blacklist.gender.mislabeling <- c("AAM1","AAM2","AAT1","AAT2","AZH1","AZH2","FAG1","HAI1","HAI2") # metadata of these samples can't be trusted
+
+
+
+blacklist.gc.bias <- unique(c("CBI1","CBV2","CBS2","EAP2","AAS1","CBQ1","GAQ2","ECG1","EAP2","AAS1","HAF1","EAG2","HAC1","CCZ2","BAX2","GAA1","CBT1","EAV2","CBT1","HAG1","AAP1","AZG1","AAP1","KAA2","AZH2","CCZ1","AZG1","CAO1","CAO1-replicate","AZH2","ECF2","JAM1","HAF2","GAO2","CBS1","EAN1","KAE1","GAM1","CBS1","AZE1","JAN1","GAS1","EBM1","HAA2","EBN1","AZE1","CAC1","BAY2","JAB1","JAB1","BAU2","BAU2","AKA1","AAB2"))
+
 
 gsam.rna.metadata$blacklist.too.low.assigned <- gsam.rna.metadata$sid %in% blacklist.too.low.assigned
 gsam.rna.metadata$blacklist.heavy.dna.contamination <- gsam.rna.metadata$sid %in% blacklist.heavy.dna.contamination
 gsam.rna.metadata$blacklist.gender.mislabeling  <- gsam.rna.metadata$sid %in% blacklist.gender.mislabeling 
+gsam.rna.metadata$blacklist.gc.bias  <- gsam.rna.metadata$sid %in% blacklist.gc.bias
 
 rm(blacklist.too.low.assigned)
 rm(blacklist.heavy.dna.contamination)
@@ -209,7 +215,15 @@ gsam.rna.metadata$plate <- as.factor(gsam.rna.metadata$plate)
 gsam.rna.metadata$storage.box <- as.factor(gsam.rna.metadata$storage.box )
 
 
-
-
+# add GC offset
+tmp <- read.delim("output/tables/gc_content_rmse.txt",stringsAsFactors = F)
+tmp <- tmp[order(tmp$RMSE, tmp$sample.id),]
+#tmp$filename <- factor(tmp$filename , levels=tmp$filename)
+# take average if multiple FQ files exist ~ manual inspection indicated barely differences across multiple FQs
+tmp$filename <- NULL
+tmp <- aggregate(tmp[,-1], list(tmp$sample.id), mean)
+tmp$Group.1 <- gsub("repl$","replicate",tmp$Group.1)
+gsam.rna.metadata <- merge(gsam.rna.metadata, tmp, by.x="sid", by.y = "Group.1")
+rm(tmp)
 
 
