@@ -18,7 +18,7 @@ expression_matrix$Length <- NULL
 # ---- full dataset ----
 
 expression_matrix_full <- read.delim("data/output/tables/gsam_featureCounts_readcounts.txt",stringsAsFactors = F,comment="#")
-colnames(expression_matrix_full) <- gsub("^[^\\.]+\\.([^\\.]+)\\..+$","\\1",colnames(expression_matrix_full),fixed=F)
+colnames(expression_matrix_full) <- gsub("^[^\\.]+\\.(.+)\\.+Aligned.+$","\\1",colnames(expression_matrix_full),fixed=F)
 
 rownames(expression_matrix_full) <- expression_matrix_full$Geneid
 expression_matrix_full$Geneid <- NULL
