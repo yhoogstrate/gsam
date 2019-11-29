@@ -42,6 +42,8 @@ source("scripts/R/chrom_sizes.R")
 
 
 
+source("scripts/R/job_gg_theme.R")
+
 # ---- unsupervised DESeq2 PCA / MDS / clustering / t-SNE ----
 
 ## PCA: pc1 & pc2  x  resection
@@ -703,6 +705,71 @@ pc1 <- 1
 pc2 <- 2
 plot(pcn[,c(pc1,pc2)],  cex=0.7,pch=19,
      main=paste0("G-SAM RNA PCA (pc",pc1," & pc",pc2,")"),col=as.numeric(cond)+1)
+
+
+# ---- PCA with good samples only ----
+
+
+
+e <- expression_matrix_full
+#m <- gsam.rna.metadata[gsam.rna.metadata$blacklist.heavy.dna.contamination == F & gsam.rna.metadata$blacklist.too.low.assigned == F & gsam.rna.metadata$blacklist.gc.bias == F,]
+m <- gsam.rna.metadata
+e <- e[match(gsub('-','.',m$sid,fixed=T), colnames(e))] # match with metadata; those that are of suff quali
+
+stopifnot( sum(gsub(".","-",colnames(e),fixed=T) != m$sid) == 0 ) # throw error if id's do not match with metadata
+
+
+#cond <- as.factor(gsub("FALSE","DNA.wt", gsub("TRUE","DNA.IDH",as.character(colnames(e) %in% is_idh))))
+cond <- as.factor ( paste0(dna_idh[match(colnames(e), dna_idh$donor_ID),]$IDH.mut != "-" ) )
+cond <- as.factor ( gsub("^...","r",gsub("\\..+","",colnames(e))))
+
+dds <- DESeqDataSetFromMatrix(e, DataFrame(cond), ~cond)
+e.vst <- assay(vst(dds, blind=TRUE))
+
+
+
+ntop <- 250
+variances <- rowVars(e.vst)
+select <- order(variances, decreasing = TRUE)[seq_len(min(ntop, length(variances)))]
+high_variance_genes <- e.vst[select,]
+high_variance_gene_symbols <- gsub("\\..+$","",rownames(high_variance_genes))
+t <- match(high_variance_gene_symbols, gsub("\\..+$","",ens_ids$ens.id))
+high_variance_gene_symbols[!is.na(t)] <- ens_ids[t[!is.na(t)],]$gene.id
+rownames(high_variance_genes) <- high_variance_gene_symbols
+
+
+#pcc <- PCA(t(high_variance_genes))
+
+
+
+pc <- prcomp(t(high_variance_genes))
+tmp <- data.frame(pc$x)
+tmp$resection <- as.factor(gsub("^[A-Z]{3}","resection", gsub("\\..+$","",rownames(tmp)) ))
+tmp$blacklist.heavy.dna.contamination <- m$blacklist.heavy.dna.contamination
+tmp$blacklist.too.low.assigned <- m$blacklist.too.low.assigned
+tmp$blacklist <- "-"
+tmp$blacklist[m$blacklist.gc.bias] <- paste0(tmp$blacklist[m$blacklist.gc.bias],",gc")
+tmp$blacklist[m$blacklist.heavy.dna.contamination] <- paste0(tmp$blacklist[m$blacklist.heavy.dna.contamination],",dna")
+tmp$blacklist[m$blacklist.too.low.assigned] <- paste0(tmp$blacklist[m$blacklist.too.low.assigned],",low")
+tmp$rRNA <- cut(m$pct.rRNA.by.chrUn.gl000220, quantile(m$pct.rRNA.by.chrUn.gl000220))
+tmp$gc.cont <- cut(m$RMSE, quantile(m$RMSE))
+
+x = -30:30
+y = -0.015*x^2 - 2.5
+bl.lines <- data.frame( 
+  PC1 = x,
+  PC2 = y,
+  blacklist = "black")
+ggplot(tmp, aes(x=PC1, y=PC2, col=blacklist)) +
+  geom_point() + 
+  geom_line(data=bl.lines) + 
+  job_gg_theme
+
+
+
+
+# gc is 14 of 15 te streng
+
 
 
 
