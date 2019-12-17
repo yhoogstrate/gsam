@@ -2,6 +2,37 @@
 
 
 
+
+
+#mkdir -p "processed/AAB1";
+#nice ./bin/STAR/bin/Linux_x86_64/STAR \
+    #--outFileNamePrefix "processed/AAB2/" \
+    #--runThreadN 84 \
+    #--genomeDir ref/star-hg19 \
+    #--sjdbGTFfile ref/star-hg19/gencode.v31lift37.annotation.gtf \
+    #--readFilesIn \
+        #data2/fastq-clean/AAB1-1917_NGS19-J295_AHKK5WDSXX_S35_L002_001.clean_yx_R1.fastq.gz,data2/fastq-clean/AAB1-1917_NGS19-J295_BHJTTYDSXX_S29_L001_001.clean_yx_R1.fastq.gz \
+        #data2/fastq-clean/AAB1-1917_NGS19-J295_AHKK5WDSXX_S35_L002_001.clean_yx_R2.fastq.gz,data2/fastq-clean/AAB1-1917_NGS19-J295_BHJTTYDSXX_S29_L001_001.clean_yx_R2.fastq.gz \
+    #--readFilesCommand zcat \
+    #--outSAMtype BAM SortedByCoordinate \
+    #--alignSJoverhangMin 10 \
+    #--alignSJDBoverhangMin 1 \
+    #--alignIntronMin 20 \
+    #--alignIntronMax 1000000 \
+    #--alignMatesGapMax 1000000 \
+    #--chimSegmentMin 12 \
+    #--chimJunctionOverhangMin 12 \
+    #--chimOutType WithinBAM SeparateSAMold \
+    #--outSAMstrandField intronMotif \
+    #--outFilterIntronMotifs RemoveNoncanonicalUnannotated \
+    #--quantMode TranscriptomeSAM
+
+
+
+
+
+
+
 #mkdir -p "processed/AAB2";
 #nice ./bin/STAR/bin/Linux_x86_64/STAR \
     #--outFileNamePrefix "processed/AAB2/" \

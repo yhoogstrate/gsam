@@ -753,6 +753,7 @@ tmp$blacklist[m$blacklist.heavy.dna.contamination] <- paste0(tmp$blacklist[m$bla
 tmp$blacklist[m$blacklist.too.low.assigned] <- paste0(tmp$blacklist[m$blacklist.too.low.assigned],",low")
 tmp$rRNA <- cut(m$pct.rRNA.by.chrUn.gl000220, quantile(m$pct.rRNA.by.chrUn.gl000220))
 tmp$gc.cont <- cut(m$RMSE, quantile(m$RMSE))
+tmp$AAT <- gsub("^(...).+","\\1",rownames(tmp)) == "AAT"
 
 x = -30:30
 y = -0.015*x^2 - 2.5
@@ -760,10 +761,20 @@ bl.lines <- data.frame(
   PC1 = x,
   PC2 = y,
   blacklist = "black")
+
 ggplot(tmp, aes(x=PC1, y=PC2, col=blacklist)) +
   geom_point() + 
-  geom_line(data=bl.lines) + 
+#  geom_line(data=bl.lines) + 
   job_gg_theme
+
+
+ggplot(tmp, aes(x=PC1, y=PC2, col=AAT)) +
+  geom_point() + 
+  geom_point(data=subset(tmp, AAT=="TRUE"),size=3) + 
+  job_gg_theme
+
+
+# maak plot van deze, met namen erbij
 
 
 

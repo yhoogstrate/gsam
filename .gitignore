@@ -21,3 +21,9 @@
 /output/tables/tin.py
 
 .Rhistory
+*.bai
+*.bam
+*.sam
+*.cram
+/output/bam-disco
+/test-star-disco

@@ -6,10 +6,10 @@ library(dplyr)
 library(ggplot2)
 library(Biobase)
 
-#source('scripts/R/qc_metrics_matrix.R')
-source('scripts/R/gsam_metadata.R')
 
+source('scripts/R/gsam_metadata.R')
 source('scripts/R/job_gg_theme.R')
+
 
 # ---- load data ----
 
@@ -102,6 +102,7 @@ ggplot(data.quantiseq.melt, aes(x = Sample, y = value, fill = cell_type, label=S
 
 
 plot_grid(
+
   ggplot(data.quantiseq.melt, aes(x = Sample, y = value, fill = cell_type, label=Sample)) + 
     geom_bar(stat = 'identity', width = 1, color = 'black', size = .1) +
     scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
@@ -121,6 +122,7 @@ plot_grid(
     geom_point(aes(x = Sample, y = -0.025, col=resection),pch=22,size=0.6) + 
     geom_point(aes(x = Sample, y = -0.05, col=blacklist.heavy.dna.contamination ),pch=22,size=0.6) + 
     geom_point(aes(x = Sample, y = -0.075, col=blacklist.too.low.assigned),pch=22,size=0.6) + 
+    geom_point(aes(x = Sample, y = -0.1, col=blacklist.gc.bias),pch=22,size=0.6) + 
     geom_point(aes(x = Sample, y = -0.2 + pct.rRNA.by.chrUn.gl000220 / 1000 ), col="black",pch=22,size=0.6)
 
 ,
