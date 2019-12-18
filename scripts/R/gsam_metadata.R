@@ -9,6 +9,16 @@ library(dplyr) # for distinct() function
 gsam.patient.metadata <- read.csv('data/administratie/GSAM_combined_clinical_molecular.csv',stringsAsFactors=F)
 gsam.patient.metadata <- gsam.patient.metadata[order(gsam.patient.metadata$studyID),] # reorder
 
+gsam.patient.metadata$gender <- as.factor(gsam.patient.metadata$gender)
+
+# there's a number of samples of which the gender does not fit with the omics data - omics data determined genders are the corrected ones
+gsam.patient.metadata$gender.corrected <- gsam.patient.metadata$gender
+actual.males <- c('AAT', 'AAM', 'AZH', 'HAI','FAG')
+gsam.patient.metadata[gsam.patient.metadata$studyID %in% actual.males,]$gender.corrected <- 'Male'
+rm(actual.males)
+
+
+
 # ---- exome-seq CNV metadata ----
 gsam.cnv.metadata <- read.delim('data/output/tables/cnv_copynumber-ratio.cnr_log2_all.txt',stringsAsFactors=F)
 gsam.cnv.metadata <- gsam.cnv.metadata[,-c(1,2,3,4)] # remove columns with geneid, start, end etc.
@@ -211,6 +221,8 @@ gsam.rna.metadata$blacklist.pca <- gsam.rna.metadata$sid %in% blacklist.pca
 rm(blacklist.too.low.assigned)
 rm(blacklist.heavy.dna.contamination)
 rm(blacklist.pca)
+rm(blacklist.gc.bias)
+rm(blacklist.gender.mislabeling)
 
 
 # add batches
