@@ -194,17 +194,23 @@ blacklist.heavy.dna.contamination  <- c("CAV1", "BAT2", "EBW1", "HAE1", "BAU1", 
 blacklist.gender.mislabeling <- c("AAM1","AAM2","AAT1","AAT2","AZH1","AZH2","FAG1","HAI1","HAI2") # metadata of these samples can't be trusted
 
 
-
+# some samples with rather large GC bias do not completely fall of the PCA ~ this metric may indicate bad quality but is not a very severe factory in downstream analysis
 blacklist.gc.bias <- unique(c("CBI1","CBV2","CBS2","EAP2","AAS1","CBQ1","GAQ2","ECG1","EAP2","AAS1","HAF1","EAG2","HAC1","CCZ2","BAX2","GAA1","CBT1","EAV2","CBT1","HAG1","AAP1","AZG1","AAP1","KAA2","AZH2","CCZ1","AZG1","CAO1","CAO1-replicate","AZH2","ECF2","JAM1","HAF2","GAO2","CBS1","EAN1","KAE1","GAM1","CBS1","AZE1","JAN1","GAS1","EBM1","HAA2","EBN1","AZE1","CAC1","BAY2","JAB1","JAB1","BAU2","BAU2","AKA1","AAB2"))
+
+# outlier samples found in PCA [./scripts/rna/unsupervised_expression_analysis.R], that all correlate with different qc metrics
+blacklist.pca <- c("AAB2", "AAD2", "AAP1", "ABA1", "AKA1", "AZE1", "AZH2", "BAN1", "BAT2", "BAU1", "BAU2", "BAX2", "BAY2", "CAC1", "CAO1", "CAO1.replicate", "CAV1", "CBG2", "CBQ1", "CBS1", "CCZ1", "CDH1", "EAN1", "EAV2", "EBL2", "EBM1", "EBN1", "EBO1", "EBW1", "ECF1", "GAE1", "GAJ2", "GAM1", "GAO2", "GAS1", "HAA2", "HAC1", "HAE1", "HAF1", "HAF2", "HAG1", "HAI1", "HAK1", "JAB1", "JAN1", "KAA1", "KAB2", "KAC1", "KAC2", "KAE1")
 
 
 gsam.rna.metadata$blacklist.too.low.assigned <- gsam.rna.metadata$sid %in% blacklist.too.low.assigned
 gsam.rna.metadata$blacklist.heavy.dna.contamination <- gsam.rna.metadata$sid %in% blacklist.heavy.dna.contamination
 gsam.rna.metadata$blacklist.gender.mislabeling  <- gsam.rna.metadata$sid %in% blacklist.gender.mislabeling 
 gsam.rna.metadata$blacklist.gc.bias  <- gsam.rna.metadata$sid %in% blacklist.gc.bias
+gsam.rna.metadata$blacklist.pca <- gsam.rna.metadata$sid %in% blacklist.pca
+
 
 rm(blacklist.too.low.assigned)
 rm(blacklist.heavy.dna.contamination)
+rm(blacklist.pca)
 
 
 # add batches

@@ -708,7 +708,9 @@ plot(pcn[,c(pc1,pc2)],  cex=0.7,pch=19,
      main=paste0("G-SAM RNA PCA (pc",pc1," & pc",pc2,")"),col=as.numeric(cond)+1)
 
 
-# ---- PCA with good samples only ----
+# ---- PCA's with good samples only ----
+
+# ---- * QC outlier removal ----
 
 # load VST data
 
@@ -725,8 +727,7 @@ dds <- DESeqDataSetFromMatrix(e, DataFrame(cond), ~cond)
 e.vst <- assay(vst(dds, blind=TRUE))
 
 
-# ---- * QC outlier removal ----
-
+# PCA + plot
 
 ntop <- 250
 variances <- rowVars(e.vst)
@@ -736,30 +737,30 @@ high_variance_gene_symbols <- gsub("\\..+$","",rownames(high_variance_genes))
 t <- match(high_variance_gene_symbols, gsub("\\..+$","",ens_ids$ens.id))
 high_variance_gene_symbols[!is.na(t)] <- ens_ids[t[!is.na(t)],]$gene.id
 rownames(high_variance_genes) <- high_variance_gene_symbols
-
+rm(t, ntop, select, variances)
 
 
 pc <- prcomp(t(high_variance_genes))
 tmp <- data.frame(pc$x)
+rm(pc)
 tmp$resection <- as.factor(gsub("^[A-Z]{3}","resection", gsub("\\..+$","",rownames(tmp)) ))
 tmp$blacklist.heavy.dna.contamination <- m$blacklist.heavy.dna.contamination
 tmp$blacklist.too.low.assigned <- m$blacklist.too.low.assigned
+tmp$blacklist.rrna <- m$pct.rRNA.by.chrUn.gl000220 > 35
 tmp$blacklist <- "-"
 tmp$gc.RMSE <- m$RMSE
-tmp$blacklist[m$blacklist.gc.bias] <- paste0(tmp$blacklist[m$blacklist.gc.bias],",gc")
-tmp$blacklist[m$blacklist.heavy.dna.contamination] <- paste0(tmp$blacklist[m$blacklist.heavy.dna.contamination],",dna")
-tmp$blacklist[m$blacklist.too.low.assigned] <- paste0(tmp$blacklist[m$blacklist.too.low.assigned],",low")
-tmp$rRNA <- cut(m$pct.rRNA.by.chrUn.gl000220, quantile(m$pct.rRNA.by.chrUn.gl000220))
+tmp$blacklist[m$blacklist.gc.bias] <- paste0(tmp$blacklist[m$blacklist.gc.bias],",GC-content")
+tmp$blacklist[m$blacklist.heavy.dna.contamination] <- paste0(tmp$blacklist[m$blacklist.heavy.dna.contamination],",DNA reads")
+tmp$blacklist[m$blacklist.too.low.assigned] <- paste0(tmp$blacklist[m$blacklist.too.low.assigned],",low count")
+tmp$blacklist[tmp$blacklist.rrna] <- paste0(tmp$blacklist[tmp$blacklist.rrna],",high rRNA")
 tmp$gc.cont <- cut(m$RMSE, quantile(m$RMSE))
-tmp$AAT <- gsub("^(...).+","\\1",rownames(tmp)) == "AAT"
+tmp$blacklist <- gsub("^-,","",tmp$blacklist)
 tmp$sid <- rownames(tmp)
 
-x = -30:30
-y = -0.015*x^2 - 2.5
 bl.lines <- data.frame( 
-  PC1 = x,
-  PC2 = y,
-  blacklist = "black",sid=NA)
+  PC1 = -25:31,
+  PC2 = -0.015*x^2 - 2.5,
+  sid=NA)
 
 
 tmp$blacklist.pca <- as.factor ( tmp$PC2 <  -0.015 * tmp$PC1 ^2 - 2.5 )
@@ -778,27 +779,66 @@ ggplot(tmp, aes(x=PC1, y=PC2, label=sid)) +
   ) +
   job_gg_theme
 
+rm(tmp, bl.lines)
+
+ggsave("output/figures/qc/pca.qc.png",width=1106/72* 0.8,height=672/72 * 0.8)
 
 
 
+rm(e, e.vst, m)
 
 # ---- *  IDH coloring ----
 
-ggplot(tmp, aes(x=PC1, y=PC2, col=AAT)) +
-  geom_point() + 
-  geom_point(data=subset(tmp, AAT=="TRUE"),size=3) + 
+# load VST data
+
+e <- expression_matrix_full
+m <- gsam.rna.metadata
+e <- e[match(gsub('-','.',m$sid,fixed=T), colnames(e))] # match with metadata; those that are of suff quali
+stopifnot( sum(gsub(".","-",colnames(e),fixed=T) != m$sid) == 0 ) # throw error if id's do not match with metadata
+
+# remove low QC samples [remove blacklist.pca == T]
+e <- e[,m$blacklist.pca == F]
+m <- m[m$blacklist.pca == F,]
+stopifnot( sum(gsub(".","-",colnames(e),fixed=T) != m$sid) == 0 ) # throw error if id's do not match with metadata
+
+# insert some random/blind factor(s)
+cond <- as.factor(runif(ncol(e)) > 0.5)
+
+dds <- DESeqDataSetFromMatrix(e, DataFrame(cond), ~cond)
+e.vst <- assay(vst(dds, blind=TRUE))
+
+
+# PCA + plot
+variances <- rowVars(e.vst)
+ntop <- sum(variances >= 1)
+select <- order(variances, decreasing = TRUE)[seq_len(min(ntop, length(variances)))]
+high_variance_genes <- e.vst[select,]
+high_variance_gene_symbols <- gsub("\\..+$","",rownames(high_variance_genes))
+t <- match(high_variance_gene_symbols, gsub("\\..+$","",ens_ids$ens.id))
+high_variance_gene_symbols[!is.na(t)] <- ens_ids[t[!is.na(t)],]$gene.id
+rownames(high_variance_genes) <- high_variance_gene_symbols
+rm(t, ntop, select, variances)
+
+
+pc <- prcomp(t(high_variance_genes))
+tmp <- data.frame(pc$x)
+rm(pc)
+tmp$resection <- as.factor(gsub("^[A-Z]{3}","resection", gsub("\\..+$","",rownames(tmp)) ))
+tmp$sid <- rownames(tmp)
+
+
+ggplot(tmp, aes(x=PC1, y=PC2, label=sid)) +
+  geom_point(aes(col=resection)) +
   job_gg_theme
 
 
-# maak plot van deze, met namen erbij
 
 
 
 
-# gc is 14 of 15 te streng
 
-
-
+rm(tmp)
+rm(e, e.vst, m)
 
 
 
