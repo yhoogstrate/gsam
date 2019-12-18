@@ -9,6 +9,7 @@ setwd("~/projects/gsam")
 
 library(DESeq2)
 library(ggplot2)
+library(ggrepel)
 library(pheatmap)
 library(fgsea)
 library(limma)
@@ -709,23 +710,22 @@ plot(pcn[,c(pc1,pc2)],  cex=0.7,pch=19,
 
 # ---- PCA with good samples only ----
 
-
+# load VST data
 
 e <- expression_matrix_full
-#m <- gsam.rna.metadata[gsam.rna.metadata$blacklist.heavy.dna.contamination == F & gsam.rna.metadata$blacklist.too.low.assigned == F & gsam.rna.metadata$blacklist.gc.bias == F,]
 m <- gsam.rna.metadata
 e <- e[match(gsub('-','.',m$sid,fixed=T), colnames(e))] # match with metadata; those that are of suff quali
 
 stopifnot( sum(gsub(".","-",colnames(e),fixed=T) != m$sid) == 0 ) # throw error if id's do not match with metadata
 
-
-#cond <- as.factor(gsub("FALSE","DNA.wt", gsub("TRUE","DNA.IDH",as.character(colnames(e) %in% is_idh))))
 cond <- as.factor ( paste0(dna_idh[match(colnames(e), dna_idh$donor_ID),]$IDH.mut != "-" ) )
 cond <- as.factor ( gsub("^...","r",gsub("\\..+","",colnames(e))))
 
 dds <- DESeqDataSetFromMatrix(e, DataFrame(cond), ~cond)
 e.vst <- assay(vst(dds, blind=TRUE))
 
+
+# ---- * QC outlier removal ----
 
 
 ntop <- 250
@@ -738,9 +738,6 @@ high_variance_gene_symbols[!is.na(t)] <- ens_ids[t[!is.na(t)],]$gene.id
 rownames(high_variance_genes) <- high_variance_gene_symbols
 
 
-#pcc <- PCA(t(high_variance_genes))
-
-
 
 pc <- prcomp(t(high_variance_genes))
 tmp <- data.frame(pc$x)
@@ -748,25 +745,44 @@ tmp$resection <- as.factor(gsub("^[A-Z]{3}","resection", gsub("\\..+$","",rownam
 tmp$blacklist.heavy.dna.contamination <- m$blacklist.heavy.dna.contamination
 tmp$blacklist.too.low.assigned <- m$blacklist.too.low.assigned
 tmp$blacklist <- "-"
+tmp$gc.RMSE <- m$RMSE
 tmp$blacklist[m$blacklist.gc.bias] <- paste0(tmp$blacklist[m$blacklist.gc.bias],",gc")
 tmp$blacklist[m$blacklist.heavy.dna.contamination] <- paste0(tmp$blacklist[m$blacklist.heavy.dna.contamination],",dna")
 tmp$blacklist[m$blacklist.too.low.assigned] <- paste0(tmp$blacklist[m$blacklist.too.low.assigned],",low")
 tmp$rRNA <- cut(m$pct.rRNA.by.chrUn.gl000220, quantile(m$pct.rRNA.by.chrUn.gl000220))
 tmp$gc.cont <- cut(m$RMSE, quantile(m$RMSE))
 tmp$AAT <- gsub("^(...).+","\\1",rownames(tmp)) == "AAT"
+tmp$sid <- rownames(tmp)
 
 x = -30:30
 y = -0.015*x^2 - 2.5
 bl.lines <- data.frame( 
   PC1 = x,
   PC2 = y,
-  blacklist = "black")
+  blacklist = "black",sid=NA)
 
-ggplot(tmp, aes(x=PC1, y=PC2, col=blacklist)) +
-  geom_point() + 
-#  geom_line(data=bl.lines) + 
+
+tmp$blacklist.pca <- as.factor ( tmp$PC2 <  -0.015 * tmp$PC1 ^2 - 2.5 )
+
+ggplot(tmp, aes(x=PC1, y=PC2, label=sid)) +
+  geom_point(aes(col=blacklist)) +
+  geom_line(data=bl.lines, alpha = 0.25,lty=2) + 
+  geom_text_repel(force =  0.25,
+      
+    segment.size  = 0.2,
+    segment.color = "grey50",
+    direction     = "both",
+    size = 0.75 * 5,
+    nudge_y = -5 , #-40 + subset(tmp, blacklist.pca == T)$PC2,
+    data=subset(tmp, blacklist.pca == T)
+  ) +
   job_gg_theme
 
+
+
+
+
+# ---- *  IDH coloring ----
 
 ggplot(tmp, aes(x=PC1, y=PC2, col=AAT)) +
   geom_point() + 
