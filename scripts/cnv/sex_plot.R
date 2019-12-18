@@ -8,6 +8,7 @@ setwd("~/projects/gsam")
 library(ggplot2)
 library(limma)
 library(ggalt)
+library(ggrepel)
 
 
 # ---- load functions ----
