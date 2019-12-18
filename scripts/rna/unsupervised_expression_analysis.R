@@ -773,7 +773,7 @@ ggplot(tmp, aes(x=PC1, y=PC2, label=sid)) +
     segment.color = "grey50",
     direction     = "both",
     size = 0.75 * 5,
-    nudge_y = -5 , #-40 + subset(tmp, blacklist.pca == T)$PC2,
+    nudge_y = -3.5 , #-40 + subset(tmp, blacklist.pca == T)$PC2,
     data=subset(tmp, blacklist.pca == T)
   ) +
   job_gg_theme
