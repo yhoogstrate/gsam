@@ -876,12 +876,33 @@ rm(pc)
 tmp$resection <- as.factor(gsub("^[A-Z]{3}","resection", gsub("\\..+$","",rownames(tmp)) ))
 tmp$sid <- rownames(tmp)
 #tmp$idh <- as.factor(gsub("^(...).+","\\1",tmp$sid) %in% unique(sort(gsub("^(...).+$","\\1",dna_idh[!is.na(dna_idh$donor_ID) & dna_idh$IDH.mut != '-',]$donor_ID))))
-tmp$dirty.pid <- as.factor(gsub(".$","",tmp$sid))
+tmp$pid <- as.factor(gsub(".$","",gsub(".replicate","",tmp$sid)))
+tmp <- merge(tmp, gsam.patient.metadata, by.x = "pid", by.y="studyID")
+#tmp$svv <- cut(as.numeric(tmp$survivalDays) + 0,3)
+tmp$svv <- "intermediate"
+tmp$svv[tmp$survivalDays < 800] <- "short"
+tmp$svv[tmp$survivalDays > 1300] <- "long"
+tmp$svv <- as.factor(tmp$svv)
 
-ggplot(tmp, aes(x=PC1, y=PC2, label=sid, col=resection, group=dirty.pid)) +
-  geom_line(col=rgb(0,0,0,0.1)) +   
-  geom_point() +
+
+tmp$svv <- "???"
+tmp$svv[tmp$survivalDays <=  median(tmp$survivalDays)] <- "short"
+tmp$svv[tmp$survivalDays >  median(tmp$survivalDays)] <- "long"
+tmp$svv <- as.factor(tmp$svv)
+
+ggplot(tmp, aes(x=PC1, y=PC5, label=sid, col=resection, group=pid)) +
+  #geom_line(col=rgb(0,0,0,0.15),) + 
+  geom_line(aes(col=svv)) + 
+  #geom_point() +
   job_gg_theme
+
+
+
+
+# select fab that has a rep
+##data = subset(tmp, pid %in% levels(pid)[tapply(pid, pid, length) > 2])
+
+# does the distance in the PCA correlate to s.t.h. such as survival?
 
 
 
