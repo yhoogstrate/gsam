@@ -16,11 +16,8 @@ library(limma)
 
 
 # ---- load: functions ----
-"
-get_ensembl_hsapiens_gene_ids
 
-Loads a function that allows to translate ENSEMBL IDs into HUGO symbols (handy for sharing tables) and Entrez IDs (handy for GSEa like analysis)
-"
+source("scripts/R/ensembl_to_geneid.R") # obsolete? can be replaced with the get_ensembl function
 ensembl_genes <- get_ensembl_hsapiens_gene_ids()
 
 
@@ -36,11 +33,7 @@ gene_matrix$Start <- gsub("^([^;]+);.+$","\\1",gene_matrix$Start)
 source("scripts/R/dna_idh.R")
 
 
-source("scripts/R/ensembl_to_geneid.R") # obsolete? can be replaced with the get_ensembl function
-ensembl_genes <- get_ensembl_hsapiens_gene_ids()
-
 source("scripts/R/chrom_sizes.R")
-
 
 
 source("scripts/R/job_gg_theme.R")
@@ -757,11 +750,12 @@ tmp$gc.cont <- cut(m$RMSE, quantile(m$RMSE))
 tmp$blacklist <- gsub("^-,","",tmp$blacklist)
 tmp$sid <- rownames(tmp)
 
+x <- (-25:31)
 bl.lines <- data.frame( 
-  PC1 = -25:31,
+  PC1 = x,
   PC2 = -0.015*x^2 - 2.5,
   sid=NA)
-
+rm(x)
 
 tmp$blacklist.pca <- as.factor ( tmp$PC2 <  -0.015 * tmp$PC1 ^2 - 2.5 )
 
@@ -780,6 +774,7 @@ ggplot(tmp, aes(x=PC1, y=PC2, label=sid)) +
   job_gg_theme
 
 rm(tmp, bl.lines)
+
 
 ggsave("output/figures/qc/pca.qc.png",width=1106/72* 0.8,height=672/72 * 0.8)
 
@@ -841,10 +836,52 @@ rm(tmp)
 rm(e, e.vst, m)
 
 
+# ---- * PCA high-q patient lines ----
 
 
+# load VST data
+e <- expression_matrix_full
+m <- gsam.rna.metadata
+e <- e[match(gsub('-','.',m$sid,fixed=T), colnames(e))] # match with metadata; those that are of suff quali
+stopifnot( sum(gsub(".","-",colnames(e),fixed=T) != m$sid) == 0 ) # throw error if id's do not match with metadata
+
+# remove low QC samples [remove blacklist.pca == T]
+e <- e[,m$blacklist.pca == F]
+m <- m[m$blacklist.pca == F,]
+stopifnot( sum(gsub(".","-",colnames(e),fixed=T) != m$sid) == 0 ) # throw error if id's do not match with metadata
+
+# insert some random/blind factor(s)
+cond <- as.factor(runif(ncol(e)) > 0.5)
+dds <- DESeqDataSetFromMatrix(e, DataFrame(cond), ~cond)
+rm(cond)
+e.vst <- assay(vst(dds, blind=TRUE))
+
+# PCA + plot
+variances <- rowVars(e.vst)
+ntop <- sum(variances >= 1)
+print(paste0("ntop = ",ntop))
+select <- order(variances, decreasing = TRUE)[seq_len(min(ntop, length(variances)))]
+high_variance_genes <- e.vst[select,]
+high_variance_gene_symbols <- gsub("\\..+$","",rownames(high_variance_genes))
+t <- match(high_variance_gene_symbols, gsub("\\..+$","",ens_ids$ens.id))
+high_variance_gene_symbols[!is.na(t)] <- ens_ids[t[!is.na(t)],]$gene.id
+rownames(high_variance_genes) <- high_variance_gene_symbols
+rm(t, ntop, select, variances)
 
 
+# actual PCA
+pc <- prcomp(t(high_variance_genes))
+tmp <- data.frame(pc$x)
+rm(pc)
+tmp$resection <- as.factor(gsub("^[A-Z]{3}","resection", gsub("\\..+$","",rownames(tmp)) ))
+tmp$sid <- rownames(tmp)
+#tmp$idh <- as.factor(gsub("^(...).+","\\1",tmp$sid) %in% unique(sort(gsub("^(...).+$","\\1",dna_idh[!is.na(dna_idh$donor_ID) & dna_idh$IDH.mut != '-',]$donor_ID))))
+tmp$dirty.pid <- as.factor(gsub(".$","",tmp$sid))
+
+ggplot(tmp, aes(x=PC1, y=PC2, label=sid, col=resection, group=dirty.pid)) +
+  geom_line(col=rgb(0,0,0,0.1)) +   
+  geom_point() +
+  job_gg_theme
 
 
 
