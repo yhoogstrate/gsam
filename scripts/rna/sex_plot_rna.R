@@ -118,8 +118,9 @@ plot(gg)
 ggsave("output/figures/rna/sex-plot_dna_rna.pdf")
 ggsave("output/figures/rna/sex-plot_dna_rna.png")
 
+rm(gg, cond, tmp)
 
 
-
+# ---- ----
 
 
