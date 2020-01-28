@@ -787,10 +787,9 @@ ggsave("output/figures/qc/pca.qc.png",width=1106/72* 0.8,height=672/72 * 0.8)
 
 rm(e, e.vst, m)
 
-# ---- *  IDH coloring ----
+# ---- * x all kind of factors ----
 
 # load VST data
-
 e <- expression_matrix_full
 m <- gsam.rna.metadata
 e <- e[match(gsub('-','.',m$sid,fixed=T), colnames(e))] # match with metadata; those that are of suff quali
@@ -803,14 +802,20 @@ stopifnot( sum(gsub(".","-",colnames(e),fixed=T) != m$sid) == 0 ) # throw error 
 
 # insert some random/blind factor(s)
 cond <- as.factor(runif(ncol(e)) > 0.5)
-
 dds <- DESeqDataSetFromMatrix(e, DataFrame(cond), ~cond)
+rm(cond)
 e.vst <- assay(vst(dds, blind=TRUE))
 
+# correct for [corrected] gender(!)
+pid <- gsub("^(...).+$","\\1",colnames(e.vst))
+gender <- gsam.patient.metadata[match(pid, gsam.patient.metadata$studyID),]$gender.corrected # use corrected because of 5 mislabeled samples
+e.vst <- removeBatchEffect(e.vst, gender)
+rm(pid)
 
 # PCA + plot
 variances <- rowVars(e.vst)
 ntop <- sum(variances >= 1)
+print(paste0("ntop = ",ntop))
 select <- order(variances, decreasing = TRUE)[seq_len(min(ntop, length(variances)))]
 high_variance_genes <- e.vst[select,]
 high_variance_gene_symbols <- gsub("\\..+$","",rownames(high_variance_genes))
@@ -825,20 +830,21 @@ tmp <- data.frame(pc$x)
 rm(pc)
 tmp$resection <- as.factor(gsub("^[A-Z]{3}","resection", gsub("\\..+$","",rownames(tmp)) ))
 tmp$sid <- rownames(tmp)
+tmp$idh <- as.factor(gsub("^(...).+","\\1",tmp$sid) %in% unique(sort(gsub("^(...).+$","\\1",dna_idh[!is.na(dna_idh$donor_ID) & dna_idh$IDH.mut != '-',]$donor_ID))))
 
-
-ggplot(tmp, aes(x=PC1, y=PC2, label=sid)) +
-  geom_point(aes(col=resection)) +
+ggplot(tmp, aes(x=PC3, y=PC5, label=sid, col=idh)) +
+  geom_point() +
   job_gg_theme
-
-
-
-
-
 
 
 rm(tmp)
 rm(e, e.vst, m)
+
+
+
+
+
+
 
 
 
