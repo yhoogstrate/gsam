@@ -2,13 +2,7 @@
 
 # ---- initialization setup ----
 
-wd <- "/home/youri/projects/gsam"
-wd <- "/home/yhoogstrate/projects/gsam"
-
-setwd(wd)
-
-rm(wd)
-
+setwd("~/projects/gsam")
 
 # ---- load: libs ----
 
@@ -25,7 +19,7 @@ get_ensembl_hsapiens_gene_ids
 
 Loads a function that allows to translate ENSEMBL IDs into HUGO symbols (handy for sharing tables) and Entrez IDs (handy for GSEa like analysis)
 "
-ensembl_genes <- get_ensembl_hsapiens_gene_ids()
+#ensembl_genes <- get_ensembl_hsapiens_gene_ids()
 
 
 # ---- load: data ----
@@ -46,7 +40,7 @@ ensembl_genes <- get_ensembl_hsapiens_gene_ids()
 source("scripts/R/chrom_sizes.R")
 source("scripts/R/plotDiffAnalysis.R")
 
-# ---- DGE: rechtse wolk ----
+# ---- [old] DE: rechtse wolk ----
 # De wolk aan de rechterkant
 # DGE / DESeq2 part
 "
@@ -348,4 +342,51 @@ ggsurvplot(s2, data=survival.data, pval=T)
 
 ```
 
+
+
+
+
+# ---- DE: resection 1 x 2 ----
+
+# load VST data
+e <- expression_matrix_full
+m <- gsam.rna.metadata
+e <- e[match(gsub('-','.',m$sid,fixed=T), colnames(e))] # match with metadata; those that are of suff quali
+stopifnot( sum(gsub(".","-",colnames(e),fixed=T) != m$sid) == 0 ) # throw error if id's do not match with metadata
+
+# remove low QC samples [remove blacklist.pca == T]
+e <- e[,m$blacklist.pca == F]
+m <- m[m$blacklist.pca == F,]
+stopifnot( sum(gsub(".","-",colnames(e),fixed=T) != m$sid) == 0 ) # throw error if id's do not match with metadata
+
+# remove lowly expressed genes (avg rc < 3)
+e <- e[rowSums(e) / ncol(e) >= 3, ]
+
+# unpaired
+cond.resection <- as.factor(  paste0('resection', gsub("^...(.).*?$","\\1",colnames(e)) ))
+#cond.patient <-as.factor( gsub("^(...).*?$","\\1",colnames(e)) )# matching factor / batch factor
+
+
+dds <- DESeqDataSetFromMatrix(e, DataFrame(cond.resection), ~ cond.resection)
+dds <- DESeq(dds)
+res <- results(dds)
+res <- res[order(res$padj, res$pvalue),]
+
+res$ensid <- ens_ids[ match(gsub("\\..+$","",rownames(res)) , gsub("\\..+$","",ens_ids$ens.id)) ,]$gene.i
+write.table(res, file="output/tables/de-unpaired-resection.txt")
+
+
+
+
+# paired
+cond.resection <- as.factor(  paste0('resection', gsub("^...(.).*?$","\\1",colnames(e)) ))
+cond.patient <-as.factor( gsub("^(...).*?$","\\1",colnames(e)) )# matching factor / batch factor
+
+
+dds <- DESeqDataSetFromMatrix(e, DataFrame(cond.resection, cond.patient),  ~ cond.patient + cond.resection)
+dds <- DESeq(dds)
+res <- results(dds)
+res <- res[order(res$padj, res$pvalue),]
+
+# make vulcano
 
