@@ -8,38 +8,57 @@ setwd("~/projects/gsam")
 
 # ---- load data ----
 
-tmp <- read.delim("output/tables/gc_content_rmse.txt",stringsAsFactors = F)
-tmp <- tmp[order(tmp$RMSE, tmp$sample.id),]
-tmp$filename <- factor(tmp$filename , levels=tmp$filename)
+source('scripts/R/gsam_metadata.R')
+source('scripts/R/youri_gg_theme.R')
+
+
+
+gsam.gc.content <- read.delim("output/tables/gc_content_rmse.txt",stringsAsFactors = F)
+gsam.gc.content <- gsam.gc.content[order(gsam.gc.content$RMSE, tmp$sample.id),]
+gsam.gc.content$filename <- factor(gsam.gc.content$filename , levels=gsam.gc.content$filename)
 
 # mediane waarden in niet outlier samples:
 # a     c     t     g
 # 25.11 24.61 25.61 24.67
 
 
-source('scripts/R/gsam_metadata.R')
-source('scripts/R/job_gg_theme.R')
-
 
 # ---- make plot ----
 
+tmp.A <- gsam.gc.content[,colnames(gsam.gc.content) %in% c("sample.id","filename","percentage.A","RMSE")]
+tmp.A$type <- "A"
+colnames(tmp.A)[3] <- "Percentage"
+
+tmp.C <- gsam.gc.content[,colnames(gsam.gc.content) %in% c("sample.id","filename","percentage.C","RMSE")]
+tmp.C$type <- "C"
+colnames(tmp.C)[3] <- "Percentage"
+
+tmp.T <- gsam.gc.content[,colnames(gsam.gc.content) %in% c("sample.id","filename","percentage.T","RMSE")]
+tmp.T$type <- "T"
+colnames(tmp.T)[3] <- "Percentage"
+
+tmp.G <- gsam.gc.content[,colnames(gsam.gc.content) %in% c("sample.id","filename","percentage.G","RMSE")]
+tmp.G$type <- "G"
+colnames(tmp.G)[3] <- "Percentage"
+
+tmp.RMSE <- gsam.gc.content[,colnames(gsam.gc.content) %in% c("sample.id","filename","RMSE")]
+tmp.RMSE$type <- "RMSE"
+colnames(tmp.RMSE)[3] <- "Percentage"
+tmp.RMSE$RMSE <-tmp.RMSE$Percentage
+
+plt <- rbind(tmp.A, tmp.C, tmp.T, tmp.G, tmp.RMSE)
+
+ggplot(plt , aes(x = reorder(sample.id, RMSE) ,y = Percentage, group=filename, col=type)) +
+  geom_point(pch="-",size=3) +
+  labs(x="GSAM RNA-Seq sample", y="Percentage",col="Percentage of:") + 
+  ylim(0, 50) + theme( axis.text.x = element_text(angle = 90, size = 5 )) + job_gg_theme
 
 
-#ggplot(tmp, aes(x = filename ,y = RMSE, label=sample.id)) +
-ggplot(tmp, aes(x = reorder(sample.id, RMSE) ,y = RMSE, group=filename)) +
-  geom_point(col="black",pch="-",size=2) + 
-  geom_point(aes(y=percentage.A),pch="-",col=rgb(0,0.5,0.0),size=2) +
-  geom_point(aes(y=percentage.C),pch="-",col=rgb(0.5,0.5,0),size=2) +
-  geom_point(aes(y=percentage.T),pch="-",col=rgb(0.5,0,0.5),size=2) +
-  geom_point(aes(y=percentage.G),pch="-",col="blue",size=2) +
-  geom_hline(yintercept = 3.75) + 
-  ylim(0, 50) + theme( axis.text.x = element_text(angle = 90, size = 5 ))
+ggsave("output/figures/qc/gc_conent_rmse.pdf", width=12,height=6)
+ggsave("output/figures/qc/gc_conent_rmse.png", width=12 * 0.75,height=6)
 
 
-ggsave("output/figures/qc/gc_conent_rmse.pdf", width=24,height=6)
-
-
-
+# ---- ----
 
 e <- tmp
 #png("output/figures/gc_content_rmse.png", width=480*4,heigh=480*2,res=72*2)
