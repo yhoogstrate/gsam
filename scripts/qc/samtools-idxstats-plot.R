@@ -13,6 +13,8 @@ library(cowplot)
 
 # ---- load functions ----
 
+source('scripts/R/utils.R')
+
 get_samtools_idxstats_rna <- function() {
   df <- read.table("output/tables/qc/idxstats/samtools.indexstats.matrix.txt",header=T,stringsAsFactor=F)
   idx <- df[,1:2]
@@ -27,9 +29,6 @@ get_samtools_idxstats_rna <- function() {
   return( list(idx= idx, data = df))
 }
 
-rowMax <- function(df) {
-  return (apply(df, 1, FUN=max))
-}
 
 
 # ---- load data ----

@@ -1,6 +1,6 @@
 #!/usr/bin/env R
 
-setwd("/home/youri/projects/gsam")
+setwd("~/projects/gsam")
 
 d <- read.delim("output/tables/star_percentage_mapped.txt",stringsAsFactors = F)
 d$percentage.uniquely.mapped <- as.numeric(gsub("%","",d$percentage.uniquely.mapped,fixed=T))
