@@ -16,30 +16,6 @@ source("scripts/R/job_gg_theme.R")
 
 # ---- load: data ----
 
-source("scripts/R/vIII.R")
-vIII.rot$sid <- rownames(vIII.rot)
-
-tmp <- read.csv('data/RNA/Final_qPCR_EGFR_GSAM.csv',stringsAsFactors = F)
-tmp$recurrent_patientSampleID <- NULL # intuitive
-tmp$recurrent_sampleID <- NULL # intuitive
-tmp$patientSampleID <- NULL # intuitive
-tmp$X <- NULL
-tmp$type <- NULL
-tmp$recurrent_type <- NULL
-colnames(tmp) <- paste0("qPCR.",colnames(tmp))
-tmp$qPCR.percentageEGFRvIII <- 100 - (1/(1 + 2 ^ (tmp$qPCR.EGFRCt002 - tmp$qPCR.vIIICt002)) * 100)
-tmp$qPCR.percentageEGFRvIII[tmp$qPCR.vIIICt002 == 40] <- 0
-tmp$qPCR.recurrent_percentageEGFRvIII <- 100 - (1/(1 + 2 ^ (tmp$qPCR.recurrent_EGFRCt002 - tmp$qPCR.recurrent_vIIICt002)) * 100)
-tmp$qPCR.recurrent_percentageEGFRvIII[tmp$qPCR.recurrent_vIIICt002 == 40] <- 0
-tmp$qPCR.delta_percentage <- tmp$qPCR.recurrent_percentageEGFRvIII - tmp$qPCR.percentageEGFRvIII
-
-dim(vIII.rot)
-vIII.rot <- merge(x=vIII.rot, y = tmp, by.x="sid" , by.y = "qPCR.recurrent_patientID",
-                  all.x = T, all.y=T)
-rm(tmp)
-dim(vIII.rot)
-
-
 # Load the data (expression values; metadata) into data frames
 
 source("scripts/R/ligands.R")# @ todo gsub suffixes in ensembl ids
@@ -49,6 +25,10 @@ source("scripts/R/expression_matrix.R")
 gene_matrix$Chr <- gsub("^([^;]+);.+$","\\1",gene_matrix$Chr)
 gene_matrix$Start <- gsub("^([^;]+);.+$","\\1",gene_matrix$Start)
 
+source("scripts/R/vIII.R")
+vIII.rot$sid <- rownames(vIII.rot)
+
+#match(paste0(vIII.rot$sid,"1"), gsam.rna.metadata$sid)
 
 
 # ---- plot v3 x resection [linear] ----
@@ -348,7 +328,6 @@ outliers2 <- subset(tmp,
  
 
 plot_grid(
-
     ggplot(tmp, aes(x=x,y=delta.percentage, label=sid) ) + 
       geom_rect(
         fill = rgb(0,0,0,0.1),
@@ -379,7 +358,7 @@ plot_grid(
       data = subset(tmp, tmp$qPCR.percentageEGFRvIII == 0 & tmp$qPCR.recurrent_percentageEGFRvIII == 0)
     ) + 
     labs(title = "GSAM: Changes in EGFR vIII percentage per resection",
-         y = "Percentage vIII (qPCR)",x=NULL) + 
+         y = "%-vIII (qPCR)",x=NULL) + 
     scale_colour_manual(name = 'Legend', 
                         guide = 'legend',
                         values = c('MA50' = 'red',
@@ -416,18 +395,18 @@ plot_grid(
       col="red",
       data = subset(tmp, tmp$resection.1.p == 0 & tmp$resection.2.p == 0  )
     ) + 
-    labs(y = "Percentage vIII (RNA-seq)",
-         x = "GSAM patient (ordered on difference in RNA-seq)") + 
+    labs(y = "%-vIII (RNA-seq)",
+         x = "GSAM patient (ordered on Delta-% in RNA-seq)") + 
     scale_colour_manual(name = 'Legend', 
                         guide = 'legend',
                         values = c('MA50' = 'red',
                                    'MA200' = 'blue'), 
                         labels = c('SMA(50)',
                                    'SMA(200)')) +
-    job_gg_theme      ,
-  align="hv", axis="tblr",ncol=1, c(0.7, 0.3))
+    job_gg_theme,
+  align="hv",ncol=1, axis="tblr",rel_heights = c(0.5, 0.5))
 
-ggsave("output/figures/rna/GSAM_percentage_EGFRvIII_arrowplot.png")
+ggsave("output/figures/rna/GSAM_percentage_EGFRvIII_arrowplot.png",width=10,height=8)
 
 
   #  geom_text_repel(
