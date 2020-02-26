@@ -27,3 +27,4 @@
 *.cram
 /output/bam-disco
 /test-star-disco
+*.RData

@@ -9,7 +9,8 @@ path = 'data/RNA/fastp_log'
 splitregex = re.compile("[0-9]{3,}_NGS19")
 
 with open("output/tables/fastp_duplication_statistics.txt", "w") as fh_w:
-    fh_w.write("sample-id\tfilename\tinput-reads\tduplication-rate\tavg-duplication-per-read\n")
+    fh_w.write("sample-id\tfilename\tinput-reads\tduplication-rate\tavg-duplication-per-read\tread1_mean_length\tread2_mean_length\n")
+    
     
     for fn in tqdm(sorted([_ for _ in os.listdir(path) if _[-5:] == ".json"])):
         sid = splitregex.split(fn)[0].rstrip('-')
@@ -24,5 +25,13 @@ with open("output/tables/fastp_duplication_statistics.txt", "w") as fh_w:
             #print('---------------\n')
 
             adpr = round(1.0 / (1.0 - float(j['duplication']['rate'])) , 4)
-            fh_w.write(sid + "\t" + fn + "\t"+str(j['summary']['before_filtering']['total_reads'])+"\t"+str(j['duplication']['rate'])+"\t"+str(adpr)+"\n")
+            fh_w.write(
+                sid + "\t" +
+                fn + "\t" +
+                str(j['summary']['before_filtering']['total_reads']) + "\t" +
+                str(j['duplication']['rate']) + "\t" + 
+                str(adpr) + "\t" +
+                str(j['summary']['after_filtering']['read1_mean_length']) + "\t" +
+                str(j['summary']['after_filtering']['read2_mean_length']) + 
+                "\n")
 

@@ -1,8 +1,56 @@
 #!/usr/bin/env R
 
-setwd("/home/youri/projects/gsam")
+setwd("~/projects/gsam")
 
-d <- read.delim("output/tables/duplicate_reads_sambamba_stats.txt",stringsAsFactors = F)
+# ---- load libraries ----
+
+library(ggplot2)
+
+# ---- load functions ----
+
+# ---- load themes ----
+
+source('scripts/R/youri_gg_theme.R')
+source('scripts/R/job_gg_theme.R')
+
+# ---- load data ----
+
+# not in the mood to also run sambamba
+#d <- read.delim("data/output/tables/duplicate_reads_sambamba_stats.txt",stringsAsFactors = F)
+gsam.fastp.duplication.stats <- read.delim("output/tables/fastp_duplication_statistics.txt" ,stringsAsFactors = F)
+gsam.fastp.duplication.stats <- gsam.fastp.duplication.stats[order(gsam.fastp.duplication.stats$duplication.rate,decreasing=T),]
+gsam.fastp.duplication.stats$run <- gsub("^.+_([^_]{7,15})_S.+$","\\1", gsam.fastp.duplication.stats$filename)
+gsam.fastp.duplication.stats$lane <- gsub("^.+_(L[0-9]+)_.+$","\\1",gsam.fastp.duplication.stats$filename)
+gsam.fastp.duplication.stats$run.lane <- paste0(gsam.fastp.duplication.stats$run,"_",gsam.fastp.duplication.stats$lane)
+
+gsam.fastp.duplication.stats$sid <- gsub("^(.+)-[0-9]+_.+$","\\1",gsam.fastp.duplication.stats$filename)
+
+# ---- ----
+
+# ,col=type,fill=type
+
+plt <- gsam.fastp.duplication.stats
+
+
+ggplot(plt , aes(x = input.reads ,y = duplication.rate, col=run, label=sid)) + 
+  geom_point() + 
+  geom_text(data=subset(plt, run=="AHKK5WDSXX" & lane=="L002"), col="black", size=2.5) +
+  youri_gg_theme
+
+ggsave('output/figures/qc/duplicate_read_stats_01.png',width=7,height=6)
+
+
+ggplot(plt , aes(x = input.reads ,y = duplication.rate, col=run, label=sid)) + 
+  geom_point() + 
+  geom_text(data=subset(plt, run=="AHKK5WDSXX" & lane=="L002"), col="black", size=2.5) +
+  youri_gg_theme
+
+ggsave('output/figures/qc/duplicate_read_stats_02.png',width=7,height=6)
+
+
+
+# ------
+
 
 e <- d[order(d[,2]),]
 e$ampli_factor <- paste0(round (1 / (1 - (e$percentage.duplicate.reads/100)),1),'x' )

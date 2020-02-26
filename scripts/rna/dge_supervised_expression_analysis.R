@@ -4,22 +4,22 @@
 
 setwd("~/projects/gsam")
 
+
 # ---- load: libs ----
 
 library(DESeq2)
 library(ggplot2)
+library(ggrepel)
 library(pheatmap)
 library(fgsea)
 library(limma)
+library(EnhancedVolcano)
 
 
 # ---- load: functions ----
-"
-get_ensembl_hsapiens_gene_ids
 
-Loads a function that allows to translate ENSEMBL IDs into HUGO symbols (handy for sharing tables) and Entrez IDs (handy for GSEa like analysis)
-"
-#ensembl_genes <- get_ensembl_hsapiens_gene_ids()
+source("scripts/R/ensembl_to_geneid.R") # obsolete? can be replaced with the get_ensembl function
+ensembl_genes <- get_ensembl_hsapiens_gene_ids()
 
 
 # ---- load: data ----
@@ -33,28 +33,45 @@ gene_matrix$Start <- gsub("^([^;]+);.+$","\\1",gene_matrix$Start)
 
 source("scripts/R/dna_idh.R")
 
-
-source("scripts/R/ensembl_to_geneid.R") # obsolete? can be replaced with the get_ensembl function
-ensembl_genes <- get_ensembl_hsapiens_gene_ids()
-
 source("scripts/R/chrom_sizes.R")
-source("scripts/R/plotDiffAnalysis.R")
 
-# ---- [old] DE: rechtse wolk ----
-# De wolk aan de rechterkant
-# DGE / DESeq2 part
-"
-@todo factor out gender
-"
+source("scripts/R/job_gg_theme.R")
 
-e <- expression_matrix
 
-stopifnot(sum(colnames(e) == gsam.metadata[match(colnames(e) , gsam.metadata$sample.id),]$sample.id) == ncol(e))
-cond <- as.factor(gsub("[ \\+\\.\\/\\-]{1,}",".",gsam.metadata$primary710,fixed=F)) # chr7gain + chr10 loss
-cond2 <- as.factor(gsub("FALSE","DNA.wt", gsub("TRUE","DNA.IDH",as.character(colnames(e) %in% is_idh)))) # idh
+
+
+# ---- |--------------| ----
+
+# read new table
+
+expression_matrix_full <- read.delim("data/output/tables/gsam_featureCounts_readcounts.txt",stringsAsFactors = F,comment="#")
+colnames(expression_matrix_full) <- gsub("^[^\\.]+\\.([^\\.]+)\\..+$","\\1",colnames(expression_matrix_full),fixed=F)
+
+#gene_matrix <- expression_matrix[,1:6]
+
+rownames(expression_matrix_full) <- expression_matrix_full$Geneid
+expression_matrix_full$Geneid <- NULL
+expression_matrix_full$Chr <- NULL
+expression_matrix_full$Start <- NULL
+expression_matrix_full$End <- NULL
+expression_matrix_full$Strand <- NULL
+expression_matrix_full$Length <- NULL
+
+# old and new values correlate very high
+#em <- expression_matrix[,20:30]
+#tmp <- expression_matrix_full[,match(colnames(em) , colnames(expression_matrix_full))]
+#colnames(tmp) <- paste0(colnames(tmp), ".f")
+#tmp <- cbind(em,tmp)
+#c <- cor(tmp,method="spearman")
+#corrplot(c)
+
+
+# resection as condition
+e <- expression_matrix_full
+cond <- factor(paste0("r",gsub("^.+([0-9])$","\\1",colnames(e))))
 
 dds <- DESeqDataSetFromMatrix(e, DataFrame(cond), ~cond)
-e.vst <- assay(vst(dds, blind=T))
+e.vst <- assay(vst(dds,blind=T))
 
 
 ntop <- 500
@@ -62,291 +79,51 @@ variances <- rowVars(e.vst)
 select <- order(variances, decreasing = TRUE)[seq_len(min(ntop, length(variances)))]
 high_variance_genes <- e.vst[select,]
 
+idh = as.factor(gsam.rna.metadata$IDH.mut != "-")
+
 pc <- prcomp(t(high_variance_genes))
-outliers <- rownames(pc$x)[ pc$x[,1] > 14 ] 
-cond <- as.factor(colnames(e) %in% outliers)
+pc1 <- 3
+pc2 <- 4
+plot(pc$x[,c(pc1,pc2)],  cex=0.7,pch=19,
+     main=paste0("G-SAM RNA PCA (pc",pc1," & pc",pc2,")"),col=idh)
 
 
-dds <- DESeqDataSetFromMatrix(e, DataFrame(cond), ~cond)
-e.vst <- assay(vst(dds))
+legend("bottomleft", unique(as.character(cond)),col=unique(as.numeric(cond) + 1),pch=19)
 
-# Keep only on average 3 reads per sample
-print(dim(dds))
-keep <- (rowSums(counts(dds)) >= ncol(e) * 3)
-dds <- dds[keep,]
-print(dim(dds))
 
-dds <- DESeq(dds)
-res <- results(dds)
-dim(res)
-res <- res[!is.na(res$padj),] # remove those that have failed, probably 0,0,0,0, high, high, high, high?
-res <- res[order(res$padj),]
-res <- res[order(res$padj),]
-res$gid <- ens_ids[match(gsub("\\..+","",rownames(res)), gsub("\\..+","",ens_ids$ens.id)),]$gene.id
-res <- res[order(res$padj),]
-# Add things like chr/pos , HGNC gene symbol & Entrez gene id
-o <- match(rownames(res) , gene_matrix$Geneid)
-res$chr <- gene_matrix[o,]$Chr
-res$start <- as.numeric(gene_matrix[o,]$Start)
-rownames(res) <- gsub("\\..+$","",rownames(res)) 
-#
-write.table(res, "output/tables/de_right_cloud.txt")
 
 
+# https://stats.stackexchange.com/questions/2592/how-to-project-a-new-vector-onto-pca-space
 
-# subtract significant ones (not for GSEA, which requires all of them)
-sig <- res[res$padj < 0.01,]
+#e <- expression_matrix_full
 
 
 
-# take a look at some specific genes/regions
-#cdkn2ab_r <- res[res$chr == "chr9" & res$start > 21600000 & res$start < 22300000,]
-#mgmt
-
-
-
-
-##write.table(sig, "/tmp/sig-right-area.txt")
-
-
-
-png("output/figures/unsupervised_expression_analysis__de_right_pca_cloud.png", width=480*3.5 , height=480*2 , res=72*2)
-
-#plot(c(chrs_hg19_s["chr6"] + 10000000, chrs_hg19_s["chr6"] + 40000000 ), c(min(sig$log2FoldChange), max(sig$log2FoldChange)), pch=19, cex=0.2 , main="DE Rechter wolk PCA",type="n")
-plot(c(chrs_hg19_s["chr1"] + 10000000, chrs_hg19_e["chr22"] ), c(min(sig$log2FoldChange), max(sig$log2FoldChange)), pch=19, cex=0.2 , main="DE Rechter wolk PCA",type="n",xlab="Chromosomal location",xaxt="n",ylab="LogFC DE Genes (padj<0.01)")
-points(chrs_hg19_s[sig$chr] + as.numeric(sig$start) , sig$log2FoldChange, pch=19, cex=0.2)
-abline(v=chrs_hg19_s)
-
-#chr19 <- sig[sig$chr == "chr10",]
-#plot(as.integer(gsub("M","",chr19$start)), chr19$log2FoldChange, pch=19,cex=0.6)
-
-for(chr in names(chrs_hg19)) {
-  text( (chrs_hg19_s[chr] + chrs_hg19_e[chr]) / 2 , -6 , chr, srt=90,cex=0.7)
-}
-
-#abline(v=chrs_hg19_s["chr6"] + 30000000, col="red", lwd=2)
-#abline(v=chrs_hg19_s["chr6"] + 34000000, col="red", lwd=2)
-
-dev.off()
-
-
-
-## GSEA / fgsea part
-
-```{r}
-res$entrez <- ensembl_genes[ match(gsub("\\..+$","",rownames(res)), ensembl_genes$ensembl_gene_id) ,]$entrezgene_id
-stopifnot(length(res$entrez) == nrow(res))
-
-dim(res)
-#[1] 26729    10
-
-gseaDat <- res[!is.na(res$entrez),]
-dim(gseaDat)
-#[1] 16366    10
-
-gseaDat <- gseaDat[!duplicated(gseaDat$entrez),] # conversion leads to two duplicated ENTREZ ids, remove them
-dim(gseaDat)
-#[1] 16346    10
-
-
-pws <- reactomePathways(as.character(gseaDat$entrez))
-#pws <- fgsea::gmtPathways('misc/h.all.v6.2.entrez.gmt')
-#pws <- fgsea::gmtPathways('misc/msigdb.v6.2.entrez.gmt')
-
-
-#gseaDat <- gseaDat [order(gseaDat$log2FoldChange) , ]
-#ranks <- gseaDat$log2FoldChange
-gseaDat <- gseaDat [order(gseaDat$stat) , ]
-ranks <- gseaDat$stat
-names(ranks) <- gseaDat$entrez
-
-# do GSEA and reorder table
-fgseaRes <- fgsea(pws, ranks, minSize=15, maxSize = 500, nperm=10000)# higher number of permutations for more stable results
-fgseaRes <- fgseaRes[order(fgseaRes$pval),]
-
-
-# High scoring gene set:
-plotEnrichment(pws$`REACTOME_ADAPTIVE_IMMUNE_SYSTEM`, ranks, gseaParam = 1, ticksSize = 0.2)
-
-# Gene set scoring high in other comparison
-plotEnrichment(pws$`SHEDDEN_LUNG_CANCER_POOR_SURVIVAL_A6`, ranks, gseaParam = 1, ticksSize = 0.2)
-
-#pdf("gsea.msigdb.hallmark.pdf")
-plotGseaTable(pws, ranks, fgseaRes, gseaParam = 1, colwidths = c(5, 3, 0.8, 1.2, 1.2), render = TRUE)
-#dev.off()
-
-
-# DGE: top left corner containing IDH mutants
-## DGE / DESeq2
-e <- expression_matrix
-
-# create VST transformed data
-cond <- as.factor(round(runif(ncol(e))) + 1)
-dds <- DESeqDataSetFromMatrix(e, DataFrame(cond), ~cond)
-e.vst <- assay(vst(dds))
-rm(cond, dds)
-
-# do PCA on VST transformed data
-ntop <- 500
-variances <- rowVars(e.vst)
-select <- order(variances, decreasing = TRUE)[seq_len(min(ntop, length(variances)))]
-high_variance_genes <- e.vst[select,]
-pc <- prcomp(t(high_variance_genes))
-
-# create subgroups based on that PCA
-outliers2 = rownames(pc$x)[ pc$x[,1] < 0 & pc$x[,2] > 12.5] 
-cond <- as.factor(colnames(e) %in% outliers2)
-
-# do DE analyses based on the subgroups
-dds <- DESeqDataSetFromMatrix(e, DataFrame(cond), ~cond)
-
-
-# Keep only on average 3 reads per sample
-print(dim(dds))
-keep <- (rowSums(counts(dds)) >= ncol(e) * 3)
-dds <- dds[keep,]
-print(dim(dds))
-
-dds <- DESeq(dds)
-res <- results(dds)
-res$gid <- ens_ids[match(gsub("\\..+","",rownames(res)), gsub("\\..+","",ens_ids$ens.id)),]$gene.id
-dim(res)
-res <- res[!is.na(res$padj),] # remove those that have failed, probably 0,0,0,0, high, high, high, high?
-res <- res[order(res$padj),]
-dim(res)
-
-res <- res[order(res$padj),]
-o <- match(rownames(res) , gene_matrix$Geneid)
-res$chr <- gene_matrix[o,]$Chr
-res$start <- as.numeric(gene_matrix[o,]$Start)
-rownames(res) <- gsub("\\..+$","",rownames(res))
-
-sig <- res[res$padj < 0.01,]
-
-
-cdkn2ab_tl <- res[res$chr == "chr9" & res$start > 21600000 & res$start < 22300000,]
-
-
-
-png("output/figures/unsupervised_expression_analysis__de_topleft_idh_corner.png", width=480*3.5 , height=480*2 , res=72*2)
-
-plot(c(chrs_hg19_s["chr1"] + 10000000, chrs_hg19_e["chr22"] ), c(min(sig$log2FoldChange), max(sig$log2FoldChange)), pch=19, cex=0.2 , main="DE top-left corner w/IDH samples in PCA",type="n",xlab="Chromosomal location",xaxt="n",ylab="LogFC DE Genes (padj<0.01)")
-
-points(chrs_hg19_s[sig$chr] + as.numeric(sig$start) , sig$log2FoldChange, pch=19, cex=0.2)
-abline(v=chrs_hg19_s)
-
-#chr19 <- sig[sig$chr == "chr10",]
-#plot(as.integer(gsub("M","",chr19$start)), chr19$log2FoldChange, pch=19,cex=0.6)
-
-for(chr in names(chrs_hg19)) {
-  text( (chrs_hg19_s[chr] + chrs_hg19_e[chr]) / 2 , -5.25 , chr, srt=90,cex=0.7)
-}
-
-#abline(v=chrs_hg19_s["chr6"] + 30000000, col="red", lwd=2)
-#abline(v=chrs_hg19_s["chr6"] + 34000000, col="red", lwd=2)
-
-dev.off()
-
-write.table(sig, "/tmp/sig-upper-corner-cluster.txt")
-
-
-## GSEA
-genes <- get_ensembl_hsapiens_gene_ids()
-res$entrez <- genes[ match(ens, genes$ensembl_gene_id) ,]$entrezgene_id
-stopifnot(length(res$entrez) == length(ens))
-
-dim(res)
-gseaDat <- res[!is.na(res$entrez),]
-dim(gseaDat)
-gseaDat <- gseaDat[!duplicated(gseaDat$entrez),] # conversion leads to two duplicated ENTREZ ids, remove them
-dim(gseaDat)
-
-pws <- reactomePathways(as.character(gseaDat$entrez))
-#pws <- fgsea::gmtPathways('misc/h.all.v6.2.entrez.gmt') # 50 gene sets
-pws <- fgsea::gmtPathways('misc/msigdb.v6.2.entrez.gmt')
-
-
-gseaDat <- gseaDat [order(gseaDat$stat) , ]
-ranks <- gseaDat$stat
-#gseaDat <- gseaDat [order(gseaDat$log2FoldChange) , ]
-#ranks <- gseaDat$log2FoldChange
-
-names(ranks) <- gseaDat$entrez
-
-fgseaRes <- fgsea(pws, ranks, minSize=15, maxSize = 500, nperm=10000)# higher number of permutations for more stable results
-
-fgseaRes <- fgseaRes[order(fgseaRes$pval),]
-
-
-#fgseaResa <- fgsea(pws, ranks, minSize=15, maxSize = 500, nperm=10000)# higher number of permutations for more stable results
-#fgseaResb <- fgsea(pws, ranks, minSize=15, maxSize = 500, nperm=10000)# higher number of permutations for more stable results
-
-plot(fgseaResa$pval , fgseaResb$pval, pch=19,cex=0.1)
-
-
-
-#plotEnrichment(pws, ranks, gseaParam = 1, ticksSize = 0.2)
-plotEnrichment(pws$`Neuronal System`, ranks, gseaParam = 1, ticksSize = 0.2)
-
-plotEnrichment(pws$`SHEDDEN_LUNG_CANCER_POOR_SURVIVAL_A6`, ranks, gseaParam = 1, ticksSize = 0.2)
-
-#pdf("gsea.msigdb.hallmark.pdf")
-plotGseaTable(pws, ranks, fgseaRes, gseaParam = 1, colwidths = c(5, 3, 0.8, 1.2, 1.2), render = TRUE)
-#dev.off()
-
-
-
-
-
-# Survival analysis on groups
-
-# First make subgroups, append to table, and add to metadata and plot to confirm if it fits
-e <- expression_matrix
-
-# create VST transformed data
-cond <- as.factor(round(runif(ncol(e))) + 1)
-dds <- DESeqDataSetFromMatrix(e, DataFrame(cond), ~cond)
-e.vst <- assay(vst(dds))
-rm(cond, dds)
-
-# do PCA on VST transformed data
-ntop <- 500
-variances <- rowVars(e.vst)
-select <- order(variances, decreasing = TRUE)[seq_len(min(ntop, length(variances)))]
-high_variance_genes <- e.vst[select,]
-pc <- prcomp(t(high_variance_genes))
-
-# create subgroups based on that PCA
-outliers_topleft_idh <- rownames(pc$x)[ pc$x[,1] < 0 & pc$x[,2] > 12.5] 
-outliers_right <- rownames(pc$x)[ pc$x[,1] > 14 ] 
-cond <- rep("main", ncol(e))
-cond[ colnames(e) %in% outliers_topleft_idh ] <- "idh"
-cond[ colnames(e) %in% outliers_right ] <- "right"
+e2 <- expression_matrix_full #[,match(colnames(e), colnames(expression_matrix_full))]
+cond <- as.character( dna_idh[match(colnames(e2), dna_idh$donor_ID),]$IDH.mut != "-" )
+cond[is.na(cond)] <- "NA"
 cond <- as.factor(cond)
 
-plot(pc$x[,1], pc$x[,2], col = as.numeric(cond) + 1,pch=19,cex=0.5)
+#pcn <- scale(e2, pc$center, pc$scale) %*% pc$rotation
+
+select <- match(rownames(high_variance_genes), rownames(e.vst2))
+high_variance_genes2 <- e.vst2[select,]
+
+pc <- prcomp(t(high_variance_genes2))
+pc1 <- 1
+pc2 <- 2
+plot(pc$x[,c(pc1,pc2)],  cex=0.7,pch=19,
+     main=paste0("G-SAM RNA PCA (pc",pc1," & pc",pc2,")"),col=as.numeric(cond)+1)
 
 
-survival.data <- data.frame(sid = colnames(e),pid=gsub("[0-9]$","",colnames(e)), group=cond)
-survival.data$studyID <- tmp[match(survival.data$pid , tmp$studyID),]$studyID
-survival.data$survivalDays <- tmp[match(survival.data$pid , tmp$studyID),]$survivalDays
-survival.data$status <- tmp[match(survival.data$pid , tmp$studyID),]$status
-survival.data <- survival.data[!is.na(survival.data$survivalDays),] # exclude 2 NA's
+pc1 <- 1
+pc2 <- 2
+plot(pcn[,c(pc1,pc2)],  cex=0.7,pch=19,
+     main=paste0("G-SAM RNA PCA (pc",pc1," & pc",pc2,")"),col=as.numeric(cond)+1)
 
 
-s2 <- survfit(Surv(survival.data$survivalDays) ~ survival.data$group, data=survival.data)
-#survplot(s2)
-ggsurvplot(s2, data=survival.data, pval=T)
+# ---- * DE: res1 <=> res2 ----
 
-# geen verschil
-
-```
-
-
-
-
-
-# ---- DE: resection 1 x 2 ----
 
 # load VST data
 e <- expression_matrix_full
@@ -356,37 +133,31 @@ stopifnot( sum(gsub(".","-",colnames(e),fixed=T) != m$sid) == 0 ) # throw error 
 
 # remove low QC samples [remove blacklist.pca == T]
 e <- e[,m$blacklist.pca == F]
+e <- e[rowSums(e) / ncol(e) > 4,]
 m <- m[m$blacklist.pca == F,]
 stopifnot( sum(gsub(".","-",colnames(e),fixed=T) != m$sid) == 0 ) # throw error if id's do not match with metadata
 
-# remove lowly expressed genes (avg rc < 3)
-e <- e[rowSums(e) / ncol(e) >= 3, ]
-
-# unpaired
-cond.resection <- as.factor(  paste0('resection', gsub("^...(.).*?$","\\1",colnames(e)) ))
-#cond.patient <-as.factor( gsub("^(...).*?$","\\1",colnames(e)) )# matching factor / batch factor
-
-
-dds <- DESeqDataSetFromMatrix(e, DataFrame(cond.resection), ~ cond.resection)
+# simple test, not correct for gender nor patient
+cond <- as.factor(gsub("r","resection", m$resection,fixed=T))
+dds <- DESeqDataSetFromMatrix(e, DataFrame(cond), ~cond)
 dds <- DESeq(dds)
+
 res <- results(dds)
-res <- res[order(res$padj, res$pvalue),]
-
-res$ensid <- ens_ids[ match(gsub("\\..+$","",rownames(res)) , gsub("\\..+$","",ens_ids$ens.id)) ,]$gene.i
-write.table(res, file="output/tables/de-unpaired-resection.txt")
-
-
-
-
-# paired
-cond.resection <- as.factor(  paste0('resection', gsub("^...(.).*?$","\\1",colnames(e)) ))
-cond.patient <-as.factor( gsub("^(...).*?$","\\1",colnames(e)) )# matching factor / batch factor
+ens <- ensembl_genes[match(gsub("\\..+$","",rownames(res)), ensembl_genes$ensembl_gene_id),]$hgnc_symbol
+ens[ens == ""] <- NA
+ens[is.na(ens)] <- gsub("\\..+$","",rownames(res)[is.na(ens)])
+res$gene <- ens
+rm(ens)
+res <- res[order(res$padj),]
 
 
-dds <- DESeqDataSetFromMatrix(e, DataFrame(cond.resection, cond.patient),  ~ cond.patient + cond.resection)
-dds <- DESeq(dds)
-res <- results(dds)
-res <- res[order(res$padj, res$pvalue),]
+EnhancedVolcano(res,
+                lab = res$gene,
+                x = 'log2FoldChange',
+                y = 'pvalue')
 
-# make vulcano
+#save.image(file = "dge_supervised_expression_analysis.RData")
+#load(file = "dge_supervised_expression_analysis.RData")
+
+
 

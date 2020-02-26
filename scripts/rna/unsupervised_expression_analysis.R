@@ -890,11 +890,57 @@ tmp$svv[tmp$survivalDays <=  median(tmp$survivalDays)] <- "short"
 tmp$svv[tmp$survivalDays >  median(tmp$survivalDays)] <- "long"
 tmp$svv <- as.factor(tmp$svv)
 
-ggplot(tmp, aes(x=PC1, y=PC5, label=sid, col=resection, group=pid)) +
+
+tmp$Svvl2ndSurgeryDays <- "???"
+tmp$Svvl2ndSurgeryDays[tmp$survivalFromSecondSurgeryDays <=  median(tmp$survivalFromSecondSurgeryDays)] <- "short"
+tmp$Svvl2ndSurgeryDays[tmp$survivalFromSecondSurgeryDays >  median(tmp$survivalFromSecondSurgeryDays)] <- "long"
+tmp$Svvl2ndSurgeryDays <- as.factor(tmp$Svvl2ndSurgeryDays,)
+
+
+sel <- tmp$cnStatusEGFRs == "Stable" & tmp$PC1 < -10 & resection == "resection2"
+
+ggplot(tmp, aes(x=PC1, y=PC2, label=sid, col=cnStatusEGFRs,
+                #ggplot(tmp, aes(x=PC1, y=PC2, label=sid, col=Svvl2ndSurgeryDays,
+                shape=resection, group=pid)) +
   #geom_line(col=rgb(0,0,0,0.15),) + 
-  geom_line(aes(col=svv)) + 
-  #geom_point() +
+  geom_point() + #col=rgb(0,0,0,0.25)) +
+  geom_line() + 
+  #geom_text_repel(aes(col="black"),col="black", data = subset(tmp, resection == "resection2" & pid %in% c("GAQ", "CAF", "GAE", "CBM"))) + 
   job_gg_theme
+
+
+# hebben CBM en GAQ inderdaad EGFR amplificatie in tweede resectie?
+# x-check data en x-check RNA data
+
+ggsave("output/figures/rna/pca_high-q-RNA-seq_x_EGFR-ampli_status.png",height = 8.5, width = 11.0)
+
+
+ggplot(tmp, aes(x=PC1, y=PC2, label=sid, col=resection,
+                #ggplot(tmp, aes(x=PC1, y=PC2, label=sid, col=Svvl2ndSurgeryDays,
+                shape=resection, group=pid)) +
+  geom_line(col=rgb(0,0,0,0.05),) + 
+  geom_point() + #col=rgb(0,0,0,0.25)) +
+  #geom_line() + 
+  #geom_text_repel(aes(col="black"),col="black", data = subset(tmp, resection == "resection2" & pid %in% c("GAQ", "CAF", "GAE", "CBM"))) + 
+  job_gg_theme
+
+
+# hebben CBM en GAQ inderdaad EGFR amplificatie in tweede resectie?
+# x-check data en x-check RNA data
+
+ggsave("output/figures/rna/pca_high-q-RNA-seq_x_resection.png",height = 8.5, width = 11.0)
+
+
+
+ggplot(tmp, aes(x=PC3, y=PC1, label=sid, col=IDH1,
+                shape=resection, group=pid)) +
+  #geom_line(col=rgb(0,0,0,0.15),) + 
+  geom_point() + #col=rgb(0,0,0,0.25)) +
+  geom_line() + 
+  job_gg_theme
+
+
+ggsave("output/figures/rna/pca_high-q-RNA-seq_x_IDH_status.pdf",height = 8.5, width = 11.0)
 
 
 
