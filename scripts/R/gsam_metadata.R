@@ -1,6 +1,7 @@
 #!/usr/bin/env R
 
 library(dplyr) # for distinct() function
+library("readxl")
 
 
 # ---- patient metadata ----
@@ -243,5 +244,31 @@ tmp <- aggregate(tmp[,-1], list(tmp$sample.id), mean)
 tmp$Group.1 <- gsub("repl$","replicate",tmp$Group.1)
 gsam.rna.metadata <- merge(gsam.rna.metadata, tmp, by.x="sid", by.y = "Group.1")
 rm(tmp)
+
+
+# ---- GIGA run statistics----
+
+# N sheets: 6
+tmp <- 'data/documents/PFrench_Summary-sheet_input-DV-qPCR.xlsx'
+tmp <- read_excel(tmp,sheet=1)
+tmp <- tmp[!is.na(tmp$seqID),]
+tmp$seqID <- gsub("_","-",tmp$seqID,fixed=T)
+tmp$`#` <- NULL
+tmp$...10 <- NULL
+tmp$...12 <- NULL
+colnames(tmp) <- paste0('giga.', colnames(tmp))
+#print(tmp)
+
+#print(dim(gsam.rna.metadata))
+merge(gsam.rna.metadata, tmp, by.x = 'sid', by.y= 'giga.seqID')
+#print(dim(gsam.rna.metadata))
+
+rm(tmp, tmp)
+
+# ---- DV200 ----
+
+
+
+
 
 
