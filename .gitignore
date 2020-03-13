@@ -10,7 +10,7 @@
 .Rproj.user
 *.pdf
 /*.txt
-/docs
+/documents
 
 /data2
 /ref
