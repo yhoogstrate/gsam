@@ -295,16 +295,11 @@ stopifnot(length(unique(c(colnames(tmp.1)[1],colnames(tmp.2)[1],colnames(tmp.3)[
 stopifnot(length(unique(c(colnames(tmp.1)[2],colnames(tmp.2)[2],colnames(tmp.3)[2],colnames(tmp.4)[2]))) == 1)# [2] = isolationID
 stopifnot(length(unique(c(colnames(tmp.1)[3],colnames(tmp.2)[3],colnames(tmp.3)[3],colnames(tmp.4)[3]))) == 1)
 stopifnot(length(unique(c(colnames(tmp.1)[4],colnames(tmp.2)[4],colnames(tmp.3)[4],colnames(tmp.4)[4]))) == 1)
-
 stopifnot(length(unique(c(colnames(tmp.1)[5],colnames(tmp.2)[5],colnames(tmp.3)[5],colnames(tmp.4)[5]))) == 1)
-
-
-
-# already in slide above
-#tmp.1$plate <- 'Plate1'
-#tmp.2$plate <- 'Plate2'
-#tmp.3$plate <- 'Plate3'
-#tmp.4$plate <- 'Plate4'
+stopifnot(length(unique(c(colnames(tmp.1)[6],colnames(tmp.2)[6],colnames(tmp.3)[6],colnames(tmp.4)[6]))) == 1)
+stopifnot(length(unique(c(colnames(tmp.1)[7],colnames(tmp.2)[7],colnames(tmp.3)[7],colnames(tmp.4)[7]))) == 1)
+stopifnot(length(unique(c(colnames(tmp.1)[8],colnames(tmp.2)[8],colnames(tmp.3)[8],colnames(tmp.4)[8]))) == 1)
+stopifnot(length(unique(c(colnames(tmp.1)[9],colnames(tmp.2)[9],colnames(tmp.3)[9],colnames(tmp.4)[9]))) == 1)
 
 tmp <- rbind(tmp.1, tmp.2, tmp.3, tmp.4)
 rm(tmp.1, tmp.2, tmp.3, tmp.4)
