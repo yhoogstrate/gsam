@@ -263,11 +263,44 @@ colnames(tmp) <- paste0('giga.', colnames(tmp))
 merge(gsam.rna.metadata, tmp, by.x = 'sid', by.y= 'giga.seqID')
 #print(dim(gsam.rna.metadata))
 
-rm(tmp, tmp)
+rm(tmp)
 
 # ---- DV200 ----
 
 
+tmp <- 'data/documents/PFrench_Summary-sheet_input-DV-qPCR.xlsx'
+tmp.1 <- read_excel(tmp,sheet=3)
+tmp.2 <- read_excel(tmp,sheet=4)
+tmp.3 <- read_excel(tmp,sheet=5)
+tmp.4 <- read_excel(tmp,sheet=6)
+
+tmp.1$`#` <- NULL
+tmp.2$`#` <- NULL
+tmp.3$`#` <- NULL
+tmp.4$`#` <- NULL
+
+colnames(tmp.1) <- colnames(tmp.2)
+colnames(tmp.3) <- colnames(tmp.2)
+colnames(tmp.4) <- colnames(tmp.2)
+
+tmp.1$plate <- 'Plate1'
+tmp.2$plate <- 'Plate2'
+tmp.3$plate <- 'Plate3'
+tmp.4$plate <- 'Plate4'
+
+tmp <- rbind(tmp.1, tmp.2, tmp.3, tmp.4)
+rm(tmp.1, tmp.2, tmp.3, tmp.4)
+
+tmp <- tmp[!is.na(tmp$seqID),]
+tmp$seqID <- gsub("_","-",tmp$seqID,fixed=T)
+colnames(tmp) <- paste0('giga.', colnames(tmp))
+colnames(tmp) <- gsub("[\r\n ]+",".",colnames(tmp)) # avoid white spaces
+
+print(dim(gsam.rna.metadata))
+merge(gsam.rna.metadata, tmp, by.x = 'sid', by.y= 'giga.seqID')
+print(dim(gsam.rna.metadata))
+
+rm(tmp)
 
 
 
