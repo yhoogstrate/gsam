@@ -257,10 +257,11 @@ tmp$`#` <- NULL
 tmp$...10 <- NULL
 tmp$...12 <- NULL
 colnames(tmp) <- paste0('giga.', colnames(tmp))
+tmp$giga.Plate <- paste0('plate',tmp$giga.Plate)
 #print(tmp)
 
 #print(dim(gsam.rna.metadata))
-merge(gsam.rna.metadata, tmp, by.x = 'sid', by.y= 'giga.seqID')
+gsam.rna.metadata <- merge(gsam.rna.metadata, tmp, by.x = 'sid', by.y= 'giga.seqID')
 #print(dim(gsam.rna.metadata))
 
 rm(tmp)
@@ -279,14 +280,31 @@ tmp.2$`#` <- NULL
 tmp.3$`#` <- NULL
 tmp.4$`#` <- NULL
 
-colnames(tmp.1) <- colnames(tmp.2)
-colnames(tmp.3) <- colnames(tmp.2)
-colnames(tmp.4) <- colnames(tmp.2)
+tmp.1$`RNA quantity \r\nà atteindre\r\n(selon DV200)` <- NA
+tmp.2$`ng/µL Ribo` <- NA
+tmp.3$`ng/µL Ribo` <- NA
+tmp.4$`ng/µL Ribo` <- NA
 
-tmp.1$plate <- 'Plate1'
-tmp.2$plate <- 'Plate2'
-tmp.3$plate <- 'Plate3'
-tmp.4$plate <- 'Plate4'
+tmp.1 <- tmp.1[,c(1, 2, 3, 4, 5, 6, 9, 7 , 8)]
+tmp.2 <- tmp.2[,c(1, 2, 3, 9, 4, 5 , 6 , 7 , 8 )]
+tmp.3 <- tmp.3[,c(1, 2, 3, 9, 4, 5 , 6 , 7 , 8 )]
+tmp.4 <- tmp.4[,c(1, 2, 3, 9, 4, 5 , 6 , 7 , 8 )]
+
+
+stopifnot(length(unique(c(colnames(tmp.1)[1],colnames(tmp.2)[1],colnames(tmp.3)[1],colnames(tmp.4)[1]))) == 1)# [1] = seqID
+stopifnot(length(unique(c(colnames(tmp.1)[2],colnames(tmp.2)[2],colnames(tmp.3)[2],colnames(tmp.4)[2]))) == 1)# [2] = isolationID
+stopifnot(length(unique(c(colnames(tmp.1)[3],colnames(tmp.2)[3],colnames(tmp.3)[3],colnames(tmp.4)[3]))) == 1)
+stopifnot(length(unique(c(colnames(tmp.1)[4],colnames(tmp.2)[4],colnames(tmp.3)[4],colnames(tmp.4)[4]))) == 1)
+
+stopifnot(length(unique(c(colnames(tmp.1)[5],colnames(tmp.2)[5],colnames(tmp.3)[5],colnames(tmp.4)[5]))) == 1)
+
+
+
+# already in slide above
+#tmp.1$plate <- 'Plate1'
+#tmp.2$plate <- 'Plate2'
+#tmp.3$plate <- 'Plate3'
+#tmp.4$plate <- 'Plate4'
 
 tmp <- rbind(tmp.1, tmp.2, tmp.3, tmp.4)
 rm(tmp.1, tmp.2, tmp.3, tmp.4)
@@ -297,7 +315,7 @@ colnames(tmp) <- paste0('giga.', colnames(tmp))
 colnames(tmp) <- gsub("[\r\n ]+",".",colnames(tmp)) # avoid white spaces
 
 print(dim(gsam.rna.metadata))
-merge(gsam.rna.metadata, tmp, by.x = 'sid', by.y= 'giga.seqID')
+gsam.rna.metadata <- merge(gsam.rna.metadata, tmp, by.x = 'sid', by.y= 'giga.seqID')
 print(dim(gsam.rna.metadata))
 
 rm(tmp)
