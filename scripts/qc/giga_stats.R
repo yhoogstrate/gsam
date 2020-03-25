@@ -35,9 +35,42 @@ ggplot(plt, aes(y = `giga.DV200`, x=`giga.nM.on.qPCR`, group=blacklist, col=blac
   geom_point(cex=0.6) + 
   facet_grid(. ~ giga.Plate)  + 
   labs(x="nM on qPCR",y = "DV200", faced="plate")
+ggsave("output/figures/qc/giga_stats_dv200x_nm-qpcr_plate.pdf")
 
 
 
+ggplot(plt, aes(y = `giga.DV200`, x=`giga.nM.on.qPCR`, group=blacklist, col=blacklist)) +
+  geom_point(cex=0.6) + 
+  labs(x="nM on qPCR",y = "DV200", faced="plate")
+ggsave("output/figures/qc/giga_stats_dv200x_nm-qpcr.pdf")
 
+
+
+ggplot(plt, aes(y = `giga.DV200`, x=`giga.ng/µL.Bio-.analyzer`, group=blacklist, col=blacklist)) +
+  geom_point(cex=0.6) + 
+  labs(x="ng/µL.Bio-.analyzer",y = "DV200", faced="plate")
+ggsave("output/figures/qc/giga_stats_dv200x_ng_ul_bioanalyser_plate.pdf")
+
+
+
+ggplot(plt, aes(y = `giga.DV200`, x=`giga.ng/µL.Bio-.analyzer`, group=blacklist, col=blacklist)) +
+  geom_point(cex=0.6) + 
+  facet_grid(. ~ giga.Plate)  + 
+  labs(x="ng/µL.Bio-.analyzer",y = "DV200", faced="plate")
+ggsave("output/figures/qc/giga_stats_dv200x_ng_ul_bioanalyser.pdf")
+
+
+
+gsam.rna.metadata$wt.reads.v3 <- NULL
+gsam.rna.metadata$vIII.reads.v3 <- NULL
+gsam.rna.metadata$vIII.percentage <- NULL
+gsam.rna.metadata$qPCR.ct.EGFR.wt <- NULL
+gsam.rna.metadata$qPCR.ct.EGFR.vIII <- NULL
+gsam.rna.metadata$qPCR.percent.EGFR.vIII <- NULL
+gsam.rna.metadata$blacklist.gender.mislabeling <- NULL
+
+write.csv(gsam.rna.metadata,"/tmp/g-sam.rna-seq.metadata.csv")
+write.csv2(gsam.rna.metadata,"/tmp/g-sam.rna-seq.metadata.csv2")
+write.table(gsam.rna.metadata,"/tmp/g-sam.rna-seq.metadata.tab.txt")
 
 
