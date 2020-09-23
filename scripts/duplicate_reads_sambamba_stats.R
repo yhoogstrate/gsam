@@ -17,13 +17,19 @@ source('scripts/R/job_gg_theme.R')
 
 # not in the mood to also run sambamba
 #d <- read.delim("data/output/tables/duplicate_reads_sambamba_stats.txt",stringsAsFactors = F)
-gsam.fastp.duplication.stats <- read.delim("output/tables/fastp_duplication_statistics.txt" ,stringsAsFactors = F)
-gsam.fastp.duplication.stats <- gsam.fastp.duplication.stats[order(gsam.fastp.duplication.stats$duplication.rate,decreasing=T),]
+gsam.fastp.duplication.stats <- read.delim("output/tables/fastp_duplication_statistics.txt" ,stringsAsFactors = F) %>%
+  dplyr::arrange(duplication.rate, decreasing=T)
+
+
 gsam.fastp.duplication.stats$run <- gsub("^.+_([^_]{7,15})_S.+$","\\1", gsam.fastp.duplication.stats$filename)
 gsam.fastp.duplication.stats$lane <- gsub("^.+_(L[0-9]+)_.+$","\\1",gsam.fastp.duplication.stats$filename)
 gsam.fastp.duplication.stats$run.lane <- paste0(gsam.fastp.duplication.stats$run,"_",gsam.fastp.duplication.stats$lane)
 
 gsam.fastp.duplication.stats$sid <- gsub("^(.+)-[0-9]+_.+$","\\1",gsam.fastp.duplication.stats$filename)
+
+gsam.fastp.duplication.stats <- gsam.fastp.duplication.stats %>%
+  dplyr::mutate(new.batch = )
+
 
 # ---- ----
 

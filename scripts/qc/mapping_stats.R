@@ -5,6 +5,7 @@ setwd("~/projects/gsam")
 # ---- load libraries ----
 
 library(ggplot2)
+library(tidyverse)
 
 # ---- load functions ----
 

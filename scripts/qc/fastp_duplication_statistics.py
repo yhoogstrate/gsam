@@ -15,7 +15,8 @@ with open("output/tables/fastp_duplication_statistics.txt", "w") as fh_w:
     
     for fn in tqdm(sorted([_ for _ in os.listdir(path) if _[-5:] == ".json"])):
         if fn.find("NGS19") != -1:
-            sid = splitregex_19.split(fn)[0].rstrip('-')
+            sid = fn.split("_NGS19")[0]
+            sid = re.sub("\\-[0-9]{3,}","", sid)
         elif fn.find("NGS20") != -1:
             sid = fn.split("_NGS20")[0].split("-", 1)[1]+"-new"
         else:

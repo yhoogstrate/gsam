@@ -29,3 +29,8 @@
 /test-star-disco
 *.RData
 /raw
+/output/tables/idxstat/
+/output/tables/rseqc/
+/fastq-clean
+/processed_gsamrun2
+*.bak
