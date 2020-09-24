@@ -1,31 +1,46 @@
 #!/usr/bin/env R
 
-expression_matrix <- read.delim("data/RNA/output/tables/featureCounts_gsam_1st96.exon-level.txt",stringsAsFactors = F,comment="#")
-colnames(expression_matrix) <- gsub("^[^_]+_([^_]+)_.+$","\\1",colnames(expression_matrix),fixed=F)
+#expression_matrix <- read.delim("data/RNA/output/tables/featureCounts_gsam_1st96.exon-level.txt",stringsAsFactors = F,comment="#")
+#colnames(expression_matrix) <- gsub("^[^_]+_([^_]+)_.+$","\\1",colnames(expression_matrix),fixed=F)
+#
+#gene_matrix <- expression_matrix[,1:6]
+#
+#rownames(expression_matrix) <- expression_matrix$Geneid
+#expression_matrix$Geneid <- NULL
+#expression_matrix$Chr <- NULL
+#expression_matrix$Start <- NULL
+#expression_matrix$End <- NULL
+#expression_matrix$Strand <- NULL
+#expression_matrix$Length <- NULL
 
-gene_matrix <- expression_matrix[,1:6]
+# ---- load libraries ----
 
-rownames(expression_matrix) <- expression_matrix$Geneid
-expression_matrix$Geneid <- NULL
-expression_matrix$Chr <- NULL
-expression_matrix$Start <- NULL
-expression_matrix$End <- NULL
-expression_matrix$Strand <- NULL
-expression_matrix$Length <- NULL
-
-
+library(tidyverse)
 
 # ---- full dataset ----
 
-expression_matrix_full <- read.delim("data/output/tables/gsam_featureCounts_readcounts.txt",stringsAsFactors = F,comment="#")
-colnames(expression_matrix_full) <- gsub("^[^\\.]+\\.(.+)\\.+Aligned.+$","\\1",colnames(expression_matrix_full),fixed=F)
 
-rownames(expression_matrix_full) <- expression_matrix_full$Geneid
-expression_matrix_full$Geneid <- NULL
-expression_matrix_full$Chr <- NULL
-expression_matrix_full$Start <- NULL
-expression_matrix_full$End <- NULL
-expression_matrix_full$Strand <- NULL
-expression_matrix_full$Length <- NULL
+gencode.31 <- read.delim("ref/star-hg19/gencode.v31lift37.annotation.gtf", comment.char="#",stringsAsFactors = F,header=F) %>%
+  dplyr::filter(V3 == "gene") %>%
+  dplyr::mutate(ENSG = gsub("^.+(ENSG[^;]+);.+$","\\1", V9)) %>%
+  dplyr::mutate(GENE = gsub("^.+gene_name ([^;]+);.+$","\\1", V9)) %>%
+  dplyr::mutate(V9 = NULL)
+
+
+
+# file is currently not at server and @ wrong permissions @ ccbc
+#expression_matrix_full <- read.delim("data/output/tables/gsam_featureCounts_readcounts_new.txt",stringsAsFactors = F,comment="#")
+expression_matrix_full_new <- read.delim("output/tables/gsam_featureCounts_readcounts_new.txt",stringsAsFactors = F,comment="#") %>%
+  `colnames<-`(gsub("^.+RNA.alignments\\.(.+)\\.Aligned.sortedByCoord.+$","\\1", colnames(.) ,fixed=F)) %>%
+  dplyr::left_join(gencode.31, by=c('Geneid' = 'ENSG') ) %>%
+  dplyr::mutate(rn = paste0 ( Geneid,"|", GENE , "|", unlist(lapply(str_split(Chr,";") , unique)), ':', unlist(lapply(str_split(Start,";") , min)), '-', unlist(lapply(str_split(End,";") , max)) , '(', unlist(lapply(str_split(Strand,";") , unique)), ')' ) ) %>%
+  dplyr::mutate(Chr=NULL, Start = NULL, End = NULL, Strand = NULL, Length=NULL, Geneid=NULL) %>%
+  tibble::column_to_rownames("rn")
+
+
+
+
+
+
 
 
