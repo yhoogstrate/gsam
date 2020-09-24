@@ -1,7 +1,8 @@
 #!/usr/bin/env R
 
-library(dplyr) # for distinct() function
-library("readxl")
+library(tidyverse) # for distinct() function
+library(readxl)
+
 
 
 # ---- patient metadata ----
@@ -42,7 +43,7 @@ gsam.cnv.metadata <- merge(gsam.cnv.metadata, gsam.patient.metadata, by.x = "pid
 gsam.cnv.metadata$donor_sex <- NULL # incomplete, the one from patient metadata = complete
 
 
-# --- RNA-seq metadata ----
+# --- RNA-seq metadata [depracated] ----
 
 ## duplicate reads
 #gsam.metadata <- read.delim("data/RNA/output/tables/duplicate_reads_sambamba_stats.txt",header=T,sep="\t",stringsAsFactors=F)
@@ -107,19 +108,22 @@ gsam.cnv.metadata$donor_sex <- NULL # incomplete, the one from patient metadata 
 
 # --- RNA-seq metadata [full] ----
 # STAR alignment statistics + patient / sample identifiers
-gsam.rna.metadata <- read.delim("data/output/tables/gsam_featureCounts_readcounts.txt.summary",stringsAsFactors = F,comment="#",row.names=1)
-colnames(gsam.rna.metadata) <- gsub("^[^\\.]+\\.([^\\]+)\\.Aligned.sorted.+$","\\1",colnames(gsam.rna.metadata),fixed=F)
-gsam.rna.metadata <- t(gsam.rna.metadata)
-gsam.rna.metadata <- gsam.rna.metadata[,colSums(gsam.rna.metadata) != 0] # removal of columns with only 0
-colnames(gsam.rna.metadata) <- paste0("STAR.",colnames(gsam.rna.metadata))
-gsam.rna.metadata <- data.frame(gsam.rna.metadata)
-gsam.rna.metadata$sid <- gsub(".","-",as.character(rownames(gsam.rna.metadata)),fixed=T)
-gsam.rna.metadata$pid <- as.factor(  gsub("[0-9]$","",gsub(".replicate","",rownames(gsam.rna.metadata)))  )
-gsam.rna.metadata$resection <- as.factor(gsub("^.+([0-9])$","r\\1",gsub(".replicate$","",rownames(gsam.rna.metadata))))
-gsam.rna.metadata$pct.duplicate.STAR <- gsam.rna.metadata$STAR.Unassigned_Duplicate / rowSums(gsam.rna.metadata[,gsub("^(.....).+$","\\1",colnames(gsam.rna.metadata)) == "STAR."]) * 100
-gsam.rna.metadata$pct.multimap.STAR <- gsam.rna.metadata$STAR.Unassigned_MultiMapping / rowSums(gsam.rna.metadata[,gsub("^(.....).+$","\\1",colnames(gsam.rna.metadata)) == "STAR."]) * 100
-gsam.rna.metadata$pct.nofeature.STAR <- gsam.rna.metadata$STAR.Unassigned_NoFeatures / rowSums(gsam.rna.metadata[,gsub("^(.....).+$","\\1",colnames(gsam.rna.metadata)) == "STAR."]) * 100
-gsam.rna.metadata$duplicate.fold.STAR <- 1 / (1 - (gsam.rna.metadata$pct.duplicate.STAR / 100)) # 75% duplicate means 4 fold duplication
+gsam.rna.metadata <- read.delim("output/tables/gsam_featureCounts_readcounts_new.txt.summary",stringsAsFactors = F,comment="#",row.names=1) %>%
+  `colnames<-`(gsub("^.+RNA.alignments\\.(.+)\\.Aligned.sortedByCoord.+$","\\1",colnames(.),fixed=F)) %>%
+  dplyr::filter(rowSums(.) > 0) %>%
+  t() %>%
+  `colnames<-`(paste0("STAR.",colnames(.))) %>%
+  data.frame(stringsAsFactors = F) %>%
+  tibble::rownames_to_column("sample") %>%
+  dplyr::mutate(STAR.sum = (STAR.Assigned + STAR.Unassigned_Chimera + STAR.Unassigned_Duplicate + STAR.Unassigned_MultiMapping + STAR.Unassigned_NoFeatures + STAR.Unassigned_Ambiguity)) %>%
+  dplyr::mutate(pct.duplicate.STAR = STAR.Unassigned_Duplicate / STAR.sum * 100) %>%
+  dplyr::mutate(pct.multimap.STAR = STAR.Unassigned_MultiMapping / STAR.sum * 100) %>%
+  dplyr::mutate(pct.nofeature.STAR = STAR.Unassigned_NoFeatures / STAR.sum * 100) %>%
+  dplyr::mutate(duplicate.fold.STAR = 1 / (1 - (pct.duplicate.STAR / 100)) ) %>%  # 75% duplicate means 4 fold duplication
+  dplyr::mutate(sid =  gsub(".","-", sample,fixed=T) ) %>%
+  dplyr::mutate(pid = as.factor( gsub("^(...).*$","\\1", sid) )) %>%
+  dplyr::mutate(resection = as.factor(gsub("^...(.).*$","r\\1", sid) ))
+
 
 # add chromosomal distribution of rRNA containing alternate loci
 tmp <- read.delim("output/tables/qc/idxstats/samtools.indexstats.matrix.txt",stringsAsFactors=F,row.names=1)
@@ -133,12 +137,15 @@ tmp <- data.frame(pct.rRNA.by.chrUn.gl000220 = tmp)
 tmp$sid <- gsub(".","-",rownames(tmp),fixed=T)
 gsam.rna.metadata <- merge(gsam.rna.metadata , tmp, by.x = "sid" , by.y = 'sid' , all.x = T)
 rm(tmp)
+
+
 #plot(gsam.rna.metadata$pct.rRNA.by.chrUn.gl000220 , gsam.rna.metadata$pct.multimap.STAR)
 #plot(gsam.rna.metadata$pct.rRNA.by.chrUn.gl000220 , gsam.rna.metadata$pct.duplicate.STAR)
 #plot(gsam.rna.metadata$pct.rRNA.by.chrUn.gl000220 , gsam.rna.metadata$pct.nofeature.STAR)
 #plot(gsam.rna.metadata$pct.nofeature.STAR , gsam.rna.metadata$pct.duplicate.STAR)
 
 
+# TODO voeg tin.py toe, ook voor laatste samples
 
 
 # tin.py qc metrics

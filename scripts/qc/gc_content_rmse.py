@@ -5,15 +5,23 @@ from tqdm import tqdm
 import json
 import re
 
-path = 'data/RNA/fastp_log'
+path = 'data/RNA/output/tables/fastp_log'
 splitregex = re.compile("[0-9]{3,}_NGS19")
 
-with open("output/tables/gc_content_rmse.txt", "w") as fh_w:
+with open("output/tables/qc/gc_content_rmse.txt", "w") as fh_w:
     fh_w.write("sample-id\tfilename\tpercentage.A\tpercentage.C\tpercentage.T\tpercentage.G\tRMSE\n")
     
     for fn in tqdm(sorted([_ for _ in os.listdir(path) if _[-5:] == ".json"])):
-        sid = splitregex.split(fn)[0].rstrip('-')
-        #print(sid)
+        if fn.find("NGS19") != -1:
+            sid = fn.split("_NGS19")[0]
+            sid = re.sub("\\-[0-9]{3,}","", sid)
+        elif fn.find("NGS20") != -1:
+            sid = fn.split("_NGS20")[0].split("-", 1)[1]+"-new"
+        else:
+            print(fn)
+            import sys
+            sys.exit(1)
+        
         with open(os.path.join(path, fn) , "r") as fh:
             j = json.loads(fh.read())
 

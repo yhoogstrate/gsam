@@ -4,18 +4,27 @@ setwd("~/projects/gsam")
 
 # ---- load libs ----
 
-
+library(tidyverse)
 
 # ---- load data ----
 
 source('scripts/R/gsam_metadata.R')
+source('scripts/R/job_gg_theme.R')
 source('scripts/R/youri_gg_theme.R')
 
 
 
-gsam.gc.content <- read.delim("output/tables/gc_content_rmse.txt",stringsAsFactors = F)
-gsam.gc.content <- gsam.gc.content[order(gsam.gc.content$RMSE, tmp$sample.id),]
-gsam.gc.content$filename <- factor(gsam.gc.content$filename , levels=gsam.gc.content$filename)
+gsam.gc.content <- read.delim("output/tables/qc/gc_content_rmse.txt",stringsAsFactors = F) %>%
+  dplyr::arrange(RMSE, sample.id) %>%
+  dplyr::mutate(filename = factor(filename , levels=filename)) %>% 
+  dplyr::mutate(new.batch = grepl("new", sample.id)) %>%
+  dplyr::mutate(name.strip = ifelse(new.batch == T ,gsub("-new", "", .$sample.id, fixed=T),"") ) %>%
+  dplyr::mutate(old.batch = sample.id %in% name.strip) %>%
+  dplyr::mutate(name.strip = NULL) %>%
+  dplyr::mutate(batch = dplyr::case_when ((old.batch == T & new.batch == F) ~ "old" , (old.batch == F & new.batch == T) ~ "new" , (old.batch == F & new.batch == F) ~ "single" )) %>%
+  dplyr::mutate(batch = as.factor(batch))
+  
+
 
 # mediane waarden in niet outlier samples:
 # a     c     t     g
@@ -25,37 +34,48 @@ gsam.gc.content$filename <- factor(gsam.gc.content$filename , levels=gsam.gc.con
 
 # ---- make plot ----
 
-tmp.A <- gsam.gc.content[,colnames(gsam.gc.content) %in% c("sample.id","filename","percentage.A","RMSE")]
+tmp.A <- gsam.gc.content[,colnames(gsam.gc.content) %in% c("sample.id","filename","percentage.A","RMSE", "batch")]
 tmp.A$type <- "A"
 colnames(tmp.A)[3] <- "Percentage"
 
-tmp.C <- gsam.gc.content[,colnames(gsam.gc.content) %in% c("sample.id","filename","percentage.C","RMSE")]
+tmp.C <- gsam.gc.content[,colnames(gsam.gc.content) %in% c("sample.id","filename","percentage.C","RMSE", "batch")]
 tmp.C$type <- "C"
 colnames(tmp.C)[3] <- "Percentage"
 
-tmp.T <- gsam.gc.content[,colnames(gsam.gc.content) %in% c("sample.id","filename","percentage.T","RMSE")]
+tmp.T <- gsam.gc.content[,colnames(gsam.gc.content) %in% c("sample.id","filename","percentage.T","RMSE", "batch")]
 tmp.T$type <- "T"
 colnames(tmp.T)[3] <- "Percentage"
 
-tmp.G <- gsam.gc.content[,colnames(gsam.gc.content) %in% c("sample.id","filename","percentage.G","RMSE")]
+tmp.G <- gsam.gc.content[,colnames(gsam.gc.content) %in% c("sample.id","filename","percentage.G","RMSE", "batch")]
 tmp.G$type <- "G"
 colnames(tmp.G)[3] <- "Percentage"
 
-tmp.RMSE <- gsam.gc.content[,colnames(gsam.gc.content) %in% c("sample.id","filename","RMSE")]
+tmp.RMSE <- gsam.gc.content[,colnames(gsam.gc.content) %in% c("sample.id","filename","RMSE", "batch")]
 tmp.RMSE$type <- "RMSE"
 colnames(tmp.RMSE)[3] <- "Percentage"
 tmp.RMSE$RMSE <-tmp.RMSE$Percentage
 
-plt <- rbind(tmp.A, tmp.C, tmp.T, tmp.G, tmp.RMSE)
+plt <- rbind(tmp.A, tmp.C, tmp.T, tmp.G, tmp.RMSE) %>%
+  dplyr::mutate(order = reorder(sample.id, RMSE))
 
-ggplot(plt , aes(x = reorder(sample.id, RMSE) ,y = Percentage, group=filename, col=type)) +
+# , alpha=batch
+ggplot(plt , aes(x = order ,y = Percentage, group=sample.id, col=type)) +
+  #geom_segment(aes(y=0, yend=50, x = order, xend=order), data=plt %>% dplyr::filter(batch == "new") %>% dplyr::mutate(order = factor(order, levels = levels(plt$order)))) + 
   geom_point(pch="-",size=3) +
+  #geom_vline( aes(xintercept = order), data=plt %>% dplyr::filter(batch == "new" ) , alpha=0.1 ) + 
+  geom_vline( aes(xintercept = order), data=plt %>% dplyr::filter(batch == "old" ) , alpha=0.1 , col="red") + 
   labs(x="GSAM RNA-Seq sample", y="Percentage",col="Percentage of:") + 
-  ylim(0, 50) + theme( axis.text.x = element_text(angle = 90, size = 5 )) + job_gg_theme
+  ylim(0, 50) +
+  theme( axis.text.x = element_text(angle = 90, size = 5 )) +
+  job_gg_theme +
+  scale_alpha_manual(NULL, values=c('new'=1.0, 'old'=0.45, 'single'=0.1))
+
 
 
 ggsave("output/figures/qc/gc_conent_rmse.pdf", width=12,height=6)
 ggsave("output/figures/qc/gc_conent_rmse.png", width=12 * 0.75,height=6)
+
+
 
 
 # ---- ----
