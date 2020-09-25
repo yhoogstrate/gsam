@@ -7,7 +7,7 @@ library("readxl")
 # ---- patient metadata ----
 # three CNV samples samples not in metadata: "AMA" "AMA" "BAO" "BAO" "FAF" "FAF"
 #gsam.patient.metadata <- read.csv('data/administratie/dbGSAM_PUBLIC_VERSION.csv',stringsAsFactors=F)
-gsam.patient.metadata <- read.csv('~/mnt/neuro-genomic-1/gsam/administratie/GSAM_combined_clinical_molecular.csv',stringsAsFactors=F)
+gsam.patient.metadata <- read.csv('data/administratie/GSAM_combined_clinical_molecular.csv',stringsAsFactors=F)
 gsam.patient.metadata <- gsam.patient.metadata[order(gsam.patient.metadata$studyID),] # reorder
 
 gsam.patient.metadata$gender <- as.factor(gsam.patient.metadata$gender)
@@ -19,7 +19,7 @@ gsam.patient.metadata[gsam.patient.metadata$studyID %in% actual.males,]$gender.c
 rm(actual.males)
 
 # ---- exome-seq CNV metadata ----
-gsam.cnv.metadata <- read.delim('~/mnt/neuro-genomic-1/gsam/output/tables/cnv_copynumber-ratio.cnr_log2_all.txt',stringsAsFactors=F)
+gsam.cnv.metadata <- read.delim('data/output/tables/cnv_copynumber-ratio.cnr_log2_all.txt',stringsAsFactors=F)
 gsam.cnv.metadata <- gsam.cnv.metadata[,-c(1,2,3,4)] # remove columns with geneid, start, end etc.
 gsam.cnv.metadata <- data.frame(
   cnv.table.id = colnames(head(gsam.cnv.metadata)),
@@ -29,7 +29,7 @@ gsam.cnv.metadata <- data.frame(
 
 # Add CNV -> regular patient identifiers and some DNA metrics
 # gender from this table is incomplete, add it from gsam.patient.metadata later on
-tmp <- read.delim("~/mnt/neuro-genomic-1/gsam/DNA/sample codes sanger gsam.txt",stringsAsFactors=FALSE)
+tmp <- read.delim("data/DNA/sample codes sanger gsam.txt",stringsAsFactors=FALSE)
 tmp$pid <- gsub("[1-2]$","",tmp$donor_ID)
 tmp <- tmp[,match(c("donor_ID", "pid", "PD_ID", "donor_sex", "donor_age_at_diagnosis","Concentration.at.QC..ng.ul.","Volume.at.QC..ul.","Amount.at.QC..ug."), colnames(tmp))]
 gsam.cnv.metadata <- merge(gsam.cnv.metadata,tmp,by.x="sid",by.y="PD_ID")
@@ -42,7 +42,7 @@ gsam.cnv.metadata$donor_sex <- NULL # incomplete, the one from patient metadata 
 
 # --- RNA-seq metadata [full] ----
 # STAR alignment statistics + patient / sample identifiers
-gsam.rna.metadata <- read.delim("data/gsam_featureCounts_readcounts_new.txt.summary",stringsAsFactors = F,comment="#",row.names=1) %>%
+gsam.rna.metadata <- read.delim("data/output/tables/gsam_featureCounts_readcounts_new.txt.summary",stringsAsFactors = F,comment="#",row.names=1) %>%
   `colnames<-`(gsub("^.+RNA.alignments\\.(.+)\\.Aligned.sortedByCoord.+$","\\1",colnames(.),fixed=F)) %>%
   dplyr::filter(rowSums(.) > 0) %>%
   t() %>%
@@ -56,21 +56,25 @@ gsam.rna.metadata <- read.delim("data/gsam_featureCounts_readcounts_new.txt.summ
   dplyr::mutate(duplicate.fold.STAR = 1 / (1 - (pct.duplicate.STAR / 100)) ) %>%  # 75% duplicate means 4 fold duplication
   dplyr::mutate(sid =  gsub(".","-", sample,fixed=T) ) %>%
   dplyr::mutate(pid = as.factor( gsub("^(...).*$","\\1", sid) )) %>%
-  dplyr::mutate(resection = as.factor(gsub("^...(.).*$","r\\1", sid) ))
+  dplyr::mutate(resection = as.factor(gsub("^...(.).*$","r\\1", sid) )) %>%
+  dplyr::arrange(sample) %>%
+  dplyr::left_join( # add chromosomal distribution of rRNA containing alternate loci
+    (
+      read.delim("data/output/tables/qc/idxstats/samtools.indexstats.matrix.txt",stringsAsFactors=F,row.names=1) %>%
+        `colnames<-`(gsub(".samtools.idxstats.txt","",colnames(.),fixed=T)) %>%
+        t() %>%
+        data.frame(stringsAsFactors = F ) %>%
+        tibble::rownames_to_column("sample") %>%
+        dplyr::filter(sample != "ref.len") %>%
+        dplyr::mutate(X. = NULL) %>%
+        dplyr::mutate(idxstats.sum = rowSums( select(. , c(-sample) ) )) %>%
+        dplyr::mutate(pct.rRNA.by.chrUn.gl000220 = chrUn_gl000220 / idxstats.sum )
+    ), by=c('sample' = 'sample') )
 
-# add chromosomal distribution of rRNA containing alternate loci
-tmp <- read.delim("data/samtools.indexstats.matrix.txt",stringsAsFactors=F,row.names=1)
-tmp$ref.len <- NULL
-tmp <- t(tmp)
 
-# rowSums(tmp / rowSums(tmp) * 100) == 100
-tmp <- tmp / rowSums(tmp) * 100
-rownames(tmp) <- gsub(".samtools.idxstats.txt","",rownames(tmp),fixed=T)
-tmp <- tmp[,colnames(tmp) == "chrUn_gl000220"]
-tmp <- data.frame(pct.rRNA.by.chrUn.gl000220 = tmp)
-tmp$sid <- gsub(".","-",rownames(tmp),fixed=T)
-gsam.rna.metadata <- merge(gsam.rna.metadata , tmp, by.x = "sid" , by.y = 'sid' , all.x = T)
-rm(tmp)
+
+
+
 
 #plot(gsam.rna.metadata$pct.rRNA.by.chrUn.gl000220 , gsam.rna.metadata$pct.multimap.STAR)
 #plot(gsam.rna.metadata$pct.rRNA.by.chrUn.gl000220 , gsam.rna.metadata$pct.duplicate.STAR)
@@ -160,7 +164,7 @@ rm(blacklist.gender.mislabeling)
 
 
 # add GC offset
-tmp <- read.delim("data/gc_content_rmse.txt",stringsAsFactors = F)
+tmp <- read.delim("data/output/tables/qc/gc_content_rmse.txt",stringsAsFactors = F)
 tmp <- tmp[order(tmp$RMSE, tmp$sample.id),]
 #tmp$filename <- factor(tmp$filename , levels=tmp$filename)
 # take average if multiple FQ files exist ~ manual inspection indicated barely differences across multiple FQs
@@ -174,7 +178,7 @@ rm(tmp)
 # ---- GIGA run statistics----
 
 # N sheets: 6
-tmp <- '~/mnt/neuro-genomic-1/gsam/documents/PFrench_Summary-sheet_input-DV-qPCR.xlsx'
+tmp <- 'data/documents/PFrench_Summary-sheet_input-DV-qPCR.xlsx'
 tmp <- read_excel(tmp,sheet=1)
 tmp <- tmp[!is.na(tmp$seqID),]
 tmp$seqID <- gsub("_","-",tmp$seqID,fixed=T)
@@ -194,7 +198,7 @@ rm(tmp)
 # ---- DV200 ----
 
 
-tmp <- '~/mnt/neuro-genomic-1/gsam/documents/PFrench_Summary-sheet_input-DV-qPCR.xlsx'
+tmp <- 'data/documents/PFrench_Summary-sheet_input-DV-qPCR.xlsx'
 tmp.1 <- read_excel(tmp,sheet=3)
 tmp.2 <- read_excel(tmp,sheet=4)
 tmp.3 <- read_excel(tmp,sheet=5)
