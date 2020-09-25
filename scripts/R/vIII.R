@@ -2,6 +2,7 @@
 
 # ---- just counts / sample ----
 
+
 # these info should taken from gsam.rna.metadata ( scripts/R/gsam_metadata.R )
 #vIII <- read.table('output/tables/v3_extract_readcounts.txt',header=T,stringsAsFactor=F)
 #vIII$sample <- gsub("_.+$","",gsub("^[^_]+_","",vIII$sample))
