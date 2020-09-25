@@ -32,7 +32,7 @@ gsam.gc.content <- read.delim("output/tables/qc/gc_content_rmse.txt",stringsAsFa
 
 
 
-# ---- make plot ----
+# ---- make plot (ggplot) ----
 
 tmp.A <- gsam.gc.content[,colnames(gsam.gc.content) %in% c("sample.id","filename","percentage.A","RMSE", "batch")]
 tmp.A$type <- "A"
@@ -78,10 +78,10 @@ ggsave("output/figures/qc/gc_conent_rmse.png", width=12 * 0.75,height=6)
 
 
 
-# ---- ----
+# ---- plot (base R) ----
 
-e <- tmp
-#png("output/figures/gc_content_rmse.png", width=480*4,heigh=480*2,res=72*2)
+e <- gsam.gc.content
+png("output/figures/gc_content_rmse.png", width=480*4,heigh=480*2,res=72*2)
 plot(c(1,nrow(e)), c(0,50), type="n", ylab="",xlab="Sample nr. / order",main="GC deviation")
 
 for(i in 1:nrow(e)) {
@@ -104,5 +104,5 @@ text(1:nrow(e) - 0.8,  45, e$sample.id , pos=4, srt=90, cex=0.75)
 
 legend(0, 20, pch=c("-","-","-","-","o"), col=c(rgb(0,0.5,0.0),rgb(0.5,0.5,0),rgb(0.5,0,0.5),"blue","black"), c("%A","%C","%T","%G","RMSE from 25%") )
 
-#dev.off()
+dev.off()
 
