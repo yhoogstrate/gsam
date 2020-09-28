@@ -8,6 +8,9 @@ setwd("~/projects/gsam")
 
 library(tidyverse)
 
+source('scripts/R/youri_gg_theme.R')
+source('scripts/R/job_gg_theme.R')
+
 # ---- load data ----
 
 plt <- read.delim("data/output/tables/qc/low_complexity_reads.txt", header=T, stringsAsFactors = F) %>%
@@ -41,9 +44,10 @@ points(1:nrow(e) , e$percentage_numerical, pch=19,cex=0.6, col = as.numeric(grep
 ggplot(plt, aes(x=reorder(sample, percentage_numerical), fill = batch, y=percentage_numerical, label=sample)) +
   geom_point(col = "black",pch=21) +
   ggrepel::geom_text_repel(aes(col=batch),srt = 90, data=subset(plt, batch !="single"))
+  #+ job_gg_theme
 
 
-
+ggsave("output/figures/qc/low_complexity_reads_plot_gg.pdf",width=20,height=8)
 
 
 
