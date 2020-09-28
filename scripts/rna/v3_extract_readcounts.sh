@@ -378,5 +378,34 @@ egfr-v3-determiner \
 		data/RNA/alignments/KAD1/Aligned.sortedByCoord.out.markdup.bam \
 		data/RNA/alignments/KAD2/Aligned.sortedByCoord.out.markdup.bam \
 		data/RNA/alignments/KAE1/Aligned.sortedByCoord.out.markdup.bam \
+		\
+		data/RNA/alignments/AAB2-new/Aligned.sortedByCoord.out.markdup.bam \
+		data/RNA/alignments/AAP1-new/Aligned.sortedByCoord.out.markdup.bam \
+		data/RNA/alignments/AZE1-new/Aligned.sortedByCoord.out.markdup.bam \
+		data/RNA/alignments/AZH2-new/Aligned.sortedByCoord.out.markdup.bam \
+		data/RNA/alignments/BAI2-new/Aligned.sortedByCoord.out.markdup.bam \
+		data/RNA/alignments/BAT2-new/Aligned.sortedByCoord.out.markdup.bam \
+		data/RNA/alignments/BAY2-new/Aligned.sortedByCoord.out.markdup.bam \
+		data/RNA/alignments/CAC1-new/Aligned.sortedByCoord.out.markdup.bam \
+		data/RNA/alignments/CAO1-new/Aligned.sortedByCoord.out.markdup.bam \
+		data/RNA/alignments/CAV1-new/Aligned.sortedByCoord.out.markdup.bam \
+		data/RNA/alignments/CBQ1-new/Aligned.sortedByCoord.out.markdup.bam \
+		data/RNA/alignments/CBS1-new/Aligned.sortedByCoord.out.markdup.bam \
+		data/RNA/alignments/CCZ1-new/Aligned.sortedByCoord.out.markdup.bam \
+		data/RNA/alignments/CDH1-new/Aligned.sortedByCoord.out.markdup.bam \
+		data/RNA/alignments/GAE1-new/Aligned.sortedByCoord.out.markdup.bam \
+		data/RNA/alignments/GAM1-new/Aligned.sortedByCoord.out.markdup.bam \
+		data/RNA/alignments/GAO2-new/Aligned.sortedByCoord.out.markdup.bam \
+		data/RNA/alignments/GAS1-new/Aligned.sortedByCoord.out.markdup.bam \
+		data/RNA/alignments/HAA2-new/Aligned.sortedByCoord.out.markdup.bam \
+		data/RNA/alignments/HAE1-new/Aligned.sortedByCoord.out.markdup.bam \
+		data/RNA/alignments/HAF1-new/Aligned.sortedByCoord.out.markdup.bam \
+		data/RNA/alignments/HAF2-new/Aligned.sortedByCoord.out.markdup.bam \
+		data/RNA/alignments/JAN1-new/Aligned.sortedByCoord.out.markdup.bam \
+		data/RNA/alignments/KAA1-new/Aligned.sortedByCoord.out.markdup.bam \
+		data/RNA/alignments/KAC1-new/Aligned.sortedByCoord.out.markdup.bam \
+		data/RNA/alignments/KAC2-new/Aligned.sortedByCoord.out.markdup.bam \
+		data/RNA/alignments/KAE1-new/Aligned.sortedByCoord.out.markdup.bam \
+		\
     > output/tables/v3_extract_readcounts.txt
 
