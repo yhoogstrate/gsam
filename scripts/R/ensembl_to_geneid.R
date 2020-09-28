@@ -1,7 +1,7 @@
 #!/usr/bin/env R
 
 # ensembl_to_geneid <- function() {
-#  d <- read.table("/mnt/data/ccbc_environment/project/gsam-neurology/ref/star-hg19/gencode.v31lift37.annotation.gtf",sep="\t",comment.char="#",stringsAsFactors = F)
+#  d <- read.table("data/ref/star-hg19/gencode.v31lift37.annotation.gtf",sep="\t",comment.char="#",stringsAsFactors = F)
 #  d$V2 <- NULL
 #  d$V6 <- NULL
 #  d$V7 <- NULL
