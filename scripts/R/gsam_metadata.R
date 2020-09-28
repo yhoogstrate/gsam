@@ -67,14 +67,9 @@ gsam.rna.metadata <- read.delim("data/output/tables/gsam_featureCounts_readcount
         tibble::rownames_to_column("sample") %>%
         dplyr::filter(sample != "ref.len") %>%
         dplyr::mutate(X. = NULL) %>%
-        dplyr::mutate(idxstats.sum = rowSums( select(. , c(-sample) ) )) %>%
+        dplyr::mutate(idxstats.sum = rowSums( dplyr::select(. , c(-sample) ) )) %>%
         dplyr::mutate(pct.rRNA.by.chrUn.gl000220 = chrUn_gl000220 / idxstats.sum )
     ), by=c('sample' = 'sample') )
-
-
-
-
-
 
 #plot(gsam.rna.metadata$pct.rRNA.by.chrUn.gl000220 , gsam.rna.metadata$pct.multimap.STAR)
 #plot(gsam.rna.metadata$pct.rRNA.by.chrUn.gl000220 , gsam.rna.metadata$pct.duplicate.STAR)
@@ -88,18 +83,18 @@ gsam.rna.metadata <- read.delim("data/output/tables/gsam_featureCounts_readcount
 # tmp$Bam_file <- NULL
 # gsam.rna.metadata <- merge(gsam.rna.metadata, tmp , by.x = "sid", by.y = "sid")
 
-# vIII rna-seq counts 'TO DO!!!!!!!
-# tmp <- read.table('output/tables/v3_extract_readcounts.txt',header=T,stringsAsFactor=F)
-# tmp$sample <- gsub("^.+/alignments/([^/]+)/.+$","\\1",tmp$sample)
-# rownames(tmp) <- tmp$sample
+#vIII rna-seq counts
+tmp <- read.table('data/output/tables/v3_extract_readcounts.txt',header=T,stringsAsFactor=F)
+tmp$sample <- gsub("^.+/alignments/([^/]+)/.+$","\\1",tmp$sample)
+rownames(tmp) <- tmp$sample
 
-# sel <- tmp$wt.reads.v3 + tmp$vIII.reads.v3 > 15
-# tmp$vIII.percentage <- NA
-# tmp$vIII.percentage[sel] <- tmp$vIII.reads.v3[sel] / (tmp$wt.reads.v3[sel] + tmp$vIII.reads.v3[sel]) * 100
-# gsam.rna.metadata <- merge(gsam.rna.metadata, tmp , by.x = "sid", by.y = "sample")
-# rm(sel)
+sel <- tmp$wt.reads.v3 + tmp$vIII.reads.v3 > 15
+tmp$vIII.percentage <- NA
+tmp$vIII.percentage[sel] <- tmp$vIII.reads.v3[sel] / (tmp$wt.reads.v3[sel] + tmp$vIII.reads.v3[sel]) * 100
+gsam.rna.metadata <- merge(gsam.rna.metadata, tmp , by.x = "sid", by.y = "sample")
+rm(sel)
 
-# vIII qPCR percentage 'TODO!!!!!!
+# @TODO vIII qPCR percentage 'TODO!!!!!!
 # tmp <- read.csv('data/RNA/Final_qPCR_EGFR_GSAM.csv',stringsAsFactors = F)
 # tmp <- tmp[,colnames(tmp) %in% c('EGFRCt002', 'vIIICt002', 'recurrent_EGFRCt002', 'recurrent_vIIICt002','recurrent_patientID')]
 # 
@@ -155,7 +150,7 @@ rm(blacklist.pca)
 rm(blacklist.gc.bias)
 rm(blacklist.gender.mislabeling)
 
-# add batches 'TO DO
+# @TODO add batches 'TO DO
 # tmp <- read.table('data/administratie/plate.layout.table.txt',stringsAsFactors=F,header=T)
 # gsam.rna.metadata <- merge(gsam.rna.metadata, tmp , by.x="sid" , by.y = "sid")
 # rm(tmp)
@@ -175,7 +170,7 @@ gsam.rna.metadata <- merge(gsam.rna.metadata, tmp, by.x="sid", by.y = "Group.1")
 rm(tmp)
 
 
-# ---- GIGA run statistics----
+# ---- GIGA sequencing facility run statistics----
 
 # N sheets: 6
 tmp <- 'data/documents/PFrench_Summary-sheet_input-DV-qPCR.xlsx'
@@ -190,7 +185,7 @@ tmp$giga.Plate <- paste0('plate',tmp$giga.Plate)
 #print(tmp)
 
 #print(dim(gsam.rna.metadata))
-gsam.rna.metadata <- merge(gsam.rna.metadata, tmp, by.x = 'sid', by.y= 'giga.seqID')
+gsam.rna.metadata <- merge(gsam.rna.metadata, tmp, by.x = 'sid', by.y= 'giga.seqID',all=TRUE)
 #print(dim(gsam.rna.metadata))
 
 rm(tmp)
@@ -239,7 +234,7 @@ colnames(tmp) <- paste0('giga.', colnames(tmp))
 colnames(tmp) <- gsub("[\r\n ]+",".",colnames(tmp)) # avoid white spaces
 
 print(dim(gsam.rna.metadata))
-gsam.rna.metadata <- merge(gsam.rna.metadata, tmp, by.x = 'sid', by.y= 'giga.seqID')
+gsam.rna.metadata <- merge(gsam.rna.metadata, tmp, by.x = 'sid', by.y= 'giga.seqID',all=TRUE)
 print(dim(gsam.rna.metadata))
 
 rm(tmp)
