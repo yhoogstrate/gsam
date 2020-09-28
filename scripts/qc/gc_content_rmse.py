@@ -5,10 +5,10 @@ from tqdm import tqdm
 import json
 import re
 
-path = 'data/RNA/fastp_log'
+path = 'data/RNA/output/tables/fastp_log'
 splitregex = re.compile("[0-9]{3,}_NGS19")
 
-with open("output/tables/gc_content_rmse.txt", "w") as fh_w:
+with open("output/tables/qc/gc_content_rmse.txt", "w") as fh_w:
     fh_w.write("sample-id\tfilename\tpercentage.A\tpercentage.C\tpercentage.T\tpercentage.G\tRMSE\n")
     
     for fn in tqdm(sorted([_ for _ in os.listdir(path) if _[-5:] == ".json"])):
