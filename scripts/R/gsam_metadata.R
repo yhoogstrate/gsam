@@ -3,7 +3,6 @@
 library(dplyr) # for distinct() function
 library("readxl")
 
-
 # ---- patient metadata ----
 # three CNV samples samples not in metadata: "AMA" "AMA" "BAO" "BAO" "FAF" "FAF"
 #gsam.patient.metadata <- read.csv('data/administratie/dbGSAM_PUBLIC_VERSION.csv',stringsAsFactors=F)
@@ -17,6 +16,12 @@ gsam.patient.metadata$gender.corrected <- gsam.patient.metadata$gender
 actual.males <- c('AAT', 'AAM', 'AZH', 'HAI','FAG')
 gsam.patient.metadata[gsam.patient.metadata$studyID %in% actual.males,]$gender.corrected <- 'Male'
 rm(actual.males)
+
+gsam.patient.metadata <- gsam.patient.metadata %>%
+  dplyr::mutate(survival.event = NA) %>%
+  dplyr::mutate(survival.event = ifelse(status == "Deceased", 1, survival.event)) %>%
+  dplyr::mutate(survival.event = ifelse(status == "Censored", 0, survival.event)) %>%
+  dplyr::mutate(survival.months = survivalDays / 365.0 * 12.0)
 
 # ---- exome-seq CNV metadata ----
 gsam.cnv.metadata <- read.delim('data/output/tables/cnv_copynumber-ratio.cnr_log2_all.txt',stringsAsFactors=F)
@@ -39,7 +44,6 @@ rm(tmp)
 gsam.cnv.metadata <- merge(gsam.cnv.metadata, gsam.patient.metadata, by.x = "pid",by.y = "studyID",all.x=TRUE)
 gsam.cnv.metadata$donor_sex <- NULL # incomplete, the one from patient metadata = complete
 
-
 # --- RNA-seq metadata [full] ----
 # STAR alignment statistics + patient / sample identifiers
 gsam.rna.metadata <- read.delim("data/output/tables/gsam_featureCounts_readcounts_new.txt.summary",stringsAsFactors = F,comment="#",row.names=1) %>%
@@ -57,6 +61,12 @@ gsam.rna.metadata <- read.delim("data/output/tables/gsam_featureCounts_readcount
   dplyr::mutate(sid =  gsub(".","-", sample,fixed=T) ) %>%
   dplyr::mutate(pid = as.factor( gsub("^(...).*$","\\1", sid) )) %>%
   dplyr::mutate(resection = as.factor(gsub("^...(.).*$","r\\1", sid) )) %>%
+  dplyr::mutate(new.batch=grepl("new", sid)) %>%
+  dplyr::mutate(name.strip = ifelse(new.batch == T ,gsub("-new", "", .$sid, fixed=T),"")) %>%
+  dplyr::mutate(old.batch = sid %in% name.strip) %>%
+  dplyr::mutate(name.strip = NULL) %>%
+  dplyr::mutate(batch = dplyr::case_when ((old.batch == T & new.batch == F) ~ "old" , (old.batch == F & new.batch == T) ~ "new" , (old.batch == F & new.batch == F) ~ "single" )) %>%
+  dplyr::mutate(batch = as.factor(batch)) %>%
   dplyr::arrange(sample) %>%
   dplyr::left_join( # add chromosomal distribution of rRNA containing alternate loci
     (
@@ -69,7 +79,14 @@ gsam.rna.metadata <- read.delim("data/output/tables/gsam_featureCounts_readcount
         dplyr::mutate(X. = NULL) %>%
         dplyr::mutate(idxstats.sum = rowSums( dplyr::select(. , c(-sample) ) )) %>%
         dplyr::mutate(pct.rRNA.by.chrUn.gl000220 = chrUn_gl000220 / idxstats.sum )
-    ), by=c('sample' = 'sample') )
+    ), by=c('sample' = 'sample')) %>% 
+  dplyr::mutate(resection_pair=ifelse(grepl(1,sample) == T,"matching_r1","matching_r2")) %>%
+  dplyr::mutate(resection_pair=replace(resection_pair,which(batch=="old"|sample%in%c("CAO1.replicate","GAS2.replicate","FAB2","FAH2","EBP1","KAE1.new","KAE1")),NA)) %>%
+  dplyr::mutate(sample = NULL)
+
+#EBP1, FAH2 and KAE1: no pair
+#FAB2: FAB2.replicate contains more vIII reads 
+#CAO1.replicate, GAS2.replicate: CAO1 and GAS2 contain more vIII reads
 
 #plot(gsam.rna.metadata$pct.rRNA.by.chrUn.gl000220 , gsam.rna.metadata$pct.multimap.STAR)
 #plot(gsam.rna.metadata$pct.rRNA.by.chrUn.gl000220 , gsam.rna.metadata$pct.duplicate.STAR)
@@ -91,7 +108,12 @@ rownames(tmp) <- tmp$sample
 sel <- tmp$wt.reads.v3 + tmp$vIII.reads.v3 > 15
 tmp$vIII.percentage <- NA
 tmp$vIII.percentage[sel] <- tmp$vIII.reads.v3[sel] / (tmp$wt.reads.v3[sel] + tmp$vIII.reads.v3[sel]) * 100
-gsam.rna.metadata <- merge(gsam.rna.metadata, tmp , by.x = "sid", by.y = "sample")
+
+#gsam.rna.metadata <- merge(gsam.rna.metadata, tmp , by.x = "sid", by.y = "sample")
+gsam.rna.metadata <- gsam.rna.metadata %>%
+  dplyr::left_join(tmp, by=c('sid' = 'sample'))
+
+
 rm(sel)
 
 # @TODO vIII qPCR percentage 'TODO!!!!!!
@@ -166,7 +188,12 @@ tmp <- tmp[order(tmp$RMSE, tmp$sample.id),]
 tmp$filename <- NULL
 tmp <- aggregate(tmp[,-1], list(tmp$sample.id), mean)
 tmp$Group.1 <- gsub("repl$","replicate",tmp$Group.1)
-gsam.rna.metadata <- merge(gsam.rna.metadata, tmp, by.x="sid", by.y = "Group.1")
+
+# old line, probably failed:
+#gsam.rna.metadata <- merge(gsam.rna.metadata, tmp, by.x="sid", by.y = "Group.1")
+gsam.rna.metadata <- gsam.rna.metadata %>%
+  dplyr::left_join(tmp, by=c('sid'='Group.1'))
+
 rm(tmp)
 
 
@@ -191,7 +218,6 @@ gsam.rna.metadata <- merge(gsam.rna.metadata, tmp, by.x = 'sid', by.y= 'giga.seq
 rm(tmp)
 
 # ---- DV200 ----
-
 
 tmp <- 'data/documents/PFrench_Summary-sheet_input-DV-qPCR.xlsx'
 tmp.1 <- read_excel(tmp,sheet=3)
@@ -238,3 +264,23 @@ gsam.rna.metadata <- merge(gsam.rna.metadata, tmp, by.x = 'sid', by.y= 'giga.seq
 print(dim(gsam.rna.metadata))
 
 rm(tmp)
+
+
+# ---- Tumor Percentages (DNA) ----
+
+tmp <- read.delim('output/tables/cnv/tumor.percentage.estimate.txt', sep=" ") %>%
+  dplyr::mutate(lfc.3p = NULL) %>%
+  dplyr::mutate(lfc.4p = NULL) %>%
+  dplyr::mutate(lfc.n = NULL) %>%
+  dplyr::mutate(dist = NULL) %>%
+  dplyr::rename(tumour.percentage.dna = pct)
+
+gsam.rna.metadata <- gsam.rna.metadata %>%
+  dplyr::mutate(tmp = gsub('-replicate','',sid, fixed=T)) %>% # dummy
+  dplyr::left_join(tmp, by=c('tmp' = 'sample')) %>%
+  dplyr::mutate(tmp = NULL)
+
+rm(tmp)
+
+
+
