@@ -283,4 +283,19 @@ gsam.rna.metadata <- gsam.rna.metadata %>%
 rm(tmp)
 
 
+# ---- gliovis subtypes -----
+
+# done by santoesha
+
+tmp <- read.csv('output/tables/GlioVis_subtypes.csv') %>%
+  dplyr::mutate(Sample = gsub('.','-', Sample, fixed=T)) %>%
+  dplyr::rename(gliovis.svm_call = svm_call) %>%
+  dplyr::rename(gliovis.knn_call = knn_call) %>%
+  dplyr::rename(gliovis.gsea_call = gsea_call) %>%
+  dplyr::rename(gliovis.equal_call = equal.call) %>%
+  dplyr::rename(gliovis.majority_call = majority.call)
+
+gsam.rna.metadata <- gsam.rna.metadata %>%
+  dplyr::left_join(tmp, by=c('sid' = 'Sample' ))
+
 
