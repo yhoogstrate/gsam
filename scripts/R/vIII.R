@@ -12,7 +12,7 @@
 
 # ---- rotated table; per patient ----
 
-vIII.rot <- read.delim("output/tables/v3_extract_readcounts_rotated.txt")
+vIII.rot <- read.delim("v3_extract_readcounts_rotated.txt")
 rownames(vIII.rot) <- vIII.rot$sid
 vIII.rot$resection.1.sum <- vIII.rot$resection.1.wt + vIII.rot$resection.1.v3
 vIII.rot$resection.2.sum <- vIII.rot$resection.2.wt + vIII.rot$resection.2.v3
