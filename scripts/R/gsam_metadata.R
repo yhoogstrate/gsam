@@ -6,7 +6,7 @@ library("readxl")
 # ---- patient metadata ----
 # three CNV samples samples not in metadata: "AMA" "AMA" "BAO" "BAO" "FAF" "FAF"
 #gsam.patient.metadata <- read.csv('data/administratie/dbGSAM_PUBLIC_VERSION.csv',stringsAsFactors=F)
-gsam.patient.metadata <- read.csv('data/administratie/GSAM_combined_clinical_molecular.csv',stringsAsFactors=F)
+gsam.patient.metadata <- read.csv('data/gsam/administratie/GSAM_combined_clinical_molecular.csv',stringsAsFactors=F)
 gsam.patient.metadata <- gsam.patient.metadata[order(gsam.patient.metadata$studyID),] # reorder
 
 gsam.patient.metadata$gender <- as.factor(gsam.patient.metadata$gender)
@@ -23,18 +23,19 @@ gsam.patient.metadata <- gsam.patient.metadata %>%
   dplyr::mutate(survival.event = ifelse(status == "Censored", 0, survival.event)) %>%
   dplyr::mutate(survival.months = survivalDays / 365.0 * 12.0)
 
+
 # ---- exome-seq CNV metadata ----
-gsam.cnv.metadata <- read.delim('data/output/tables/cnv_copynumber-ratio.cnr_log2_all.txt',stringsAsFactors=F)
+
+gsam.cnv.metadata <- read.delim('data/gsam/output/tables/cnv_copynumber-ratio.cnr_log2_all.txt',stringsAsFactors=F)
 gsam.cnv.metadata <- gsam.cnv.metadata[,-c(1,2,3,4)] # remove columns with geneid, start, end etc.
 gsam.cnv.metadata <- data.frame(
   cnv.table.id = colnames(head(gsam.cnv.metadata)),
   sid = gsub("\\.b[12]$","",colnames(head(gsam.cnv.metadata))),
-  batch = as.factor(gsub("^[^\\.]+\\.","",colnames(head(gsam.cnv.metadata))))
-)
+  batch = as.factor(gsub("^[^\\.]+\\.","",colnames(head(gsam.cnv.metadata)))))
 
 # Add CNV -> regular patient identifiers and some DNA metrics
 # gender from this table is incomplete, add it from gsam.patient.metadata later on
-tmp <- read.delim("data/DNA/sample codes sanger gsam.txt",stringsAsFactors=FALSE)
+tmp <- read.delim("data/gsam/DNA/sample codes sanger gsam.txt",stringsAsFactors=FALSE)
 tmp$pid <- gsub("[1-2]$","",tmp$donor_ID)
 tmp <- tmp[,match(c("donor_ID", "pid", "PD_ID", "donor_sex", "donor_age_at_diagnosis","Concentration.at.QC..ng.ul.","Volume.at.QC..ul.","Amount.at.QC..ug."), colnames(tmp))]
 gsam.cnv.metadata <- merge(gsam.cnv.metadata,tmp,by.x="sid",by.y="PD_ID")
@@ -46,7 +47,7 @@ gsam.cnv.metadata$donor_sex <- NULL # incomplete, the one from patient metadata 
 
 # --- RNA-seq metadata [full] ----
 # STAR alignment statistics + patient / sample identifiers
-gsam.rna.metadata <- read.delim("data/output/tables/gsam_featureCounts_readcounts_new.txt.summary",stringsAsFactors = F,comment="#",row.names=1) %>%
+gsam.rna.metadata <- read.delim("data/gsam/output/tables/gsam_featureCounts_readcounts_new.txt.summary",stringsAsFactors = F,comment="#",row.names=1) %>%
   `colnames<-`(gsub("^.+RNA.alignments\\.(.+)\\.Aligned.sortedByCoord.+$","\\1",colnames(.),fixed=F)) %>%
   dplyr::filter(rowSums(.) > 0) %>%
   t() %>%
@@ -70,7 +71,7 @@ gsam.rna.metadata <- read.delim("data/output/tables/gsam_featureCounts_readcount
   dplyr::arrange(sample) %>%
   dplyr::left_join( # add chromosomal distribution of rRNA containing alternate loci
     (
-      read.delim("data/output/tables/qc/idxstats/samtools.indexstats.matrix.txt",stringsAsFactors=F,row.names=1) %>%
+      read.delim("data/gsam/output/tables/qc/idxstats/samtools.indexstats.matrix.txt",stringsAsFactors=F,row.names=1) %>%
         `colnames<-`(gsub(".samtools.idxstats.txt","",colnames(.),fixed=T)) %>%
         t() %>%
         data.frame(stringsAsFactors = F ) %>%
@@ -101,7 +102,7 @@ gsam.rna.metadata <- read.delim("data/output/tables/gsam_featureCounts_readcount
 # gsam.rna.metadata <- merge(gsam.rna.metadata, tmp , by.x = "sid", by.y = "sid")
 
 #vIII rna-seq counts
-tmp <- read.table('data/output/tables/v3_extract_readcounts.txt',header=T,stringsAsFactor=F)
+tmp <- read.table('data/gsam/output/tables/v3_extract_readcounts.txt',header=T,stringsAsFactor=F)
 tmp$sample <- gsub("^.+/alignments/([^/]+)/.+$","\\1",tmp$sample)
 rownames(tmp) <- tmp$sample
 
@@ -181,7 +182,7 @@ rm(blacklist.gender.mislabeling)
 
 
 # add GC offset
-tmp <- read.delim("data/output/tables/qc/gc_content_rmse.txt",stringsAsFactors = F)
+tmp <- read.delim("data/gsam/output/tables/qc/gc_content_rmse.txt",stringsAsFactors = F)
 tmp <- tmp[order(tmp$RMSE, tmp$sample.id),]
 #tmp$filename <- factor(tmp$filename , levels=tmp$filename)
 # take average if multiple FQ files exist ~ manual inspection indicated barely differences across multiple FQs
@@ -200,7 +201,7 @@ rm(tmp)
 # ---- GIGA sequencing facility run statistics----
 
 # N sheets: 6
-tmp <- 'data/documents/PFrench_Summary-sheet_input-DV-qPCR.xlsx'
+tmp <- 'data/gsam/documents/PFrench_Summary-sheet_input-DV-qPCR.xlsx'
 tmp <- read_excel(tmp,sheet=1)
 tmp <- tmp[!is.na(tmp$seqID),]
 tmp$seqID <- gsub("_","-",tmp$seqID,fixed=T)
@@ -219,7 +220,7 @@ rm(tmp)
 
 # ---- DV200 ----
 
-tmp <- 'data/documents/PFrench_Summary-sheet_input-DV-qPCR.xlsx'
+tmp <- 'data/gsam/documents/PFrench_Summary-sheet_input-DV-qPCR.xlsx'
 tmp.1 <- read_excel(tmp,sheet=3)
 tmp.2 <- read_excel(tmp,sheet=4)
 tmp.3 <- read_excel(tmp,sheet=5)
@@ -285,17 +286,99 @@ rm(tmp)
 
 # ---- gliovis subtypes -----
 
-# done by santoesha
+# https://gliovis.shinyapps.io/GlioVis/
 
-tmp <- read.csv('output/tables/GlioVis_subtypes.csv') %>%
-  dplyr::mutate(Sample = gsub('.','-', Sample, fixed=T)) %>%
+
+tmp <- read.csv('output/tables/gliovis/GlioVis_-_Visualization_Tools_for_Glioma_Datasets_ThreeWay.csv') %>%
   dplyr::rename(gliovis.svm_call = svm_call) %>%
   dplyr::rename(gliovis.knn_call = knn_call) %>%
   dplyr::rename(gliovis.gsea_call = gsea_call) %>%
   dplyr::rename(gliovis.equal_call = equal.call) %>%
-  dplyr::rename(gliovis.majority_call = majority.call)
+  dplyr::rename(gliovis.majority_call = majority.call) %>%
+  dplyr::left_join(read.csv('output/tables/gliovis/GlioVis_-_Visualization_Tools_for_Glioma_Datasets_SVM.csv') %>%
+                     dplyr::rename(svm.Classical = Classical) %>%
+                     dplyr::rename(svm.Mesenchymal = Mesenchymal) %>%
+                     dplyr::rename(svm.Proneural = Proneural)
+                  , by=c('Sample' = 'Sample')) %>%
+  dplyr::left_join(read.csv('output/tables/gliovis/GlioVis_-_Visualization_Tools_for_Glioma_Datasets_KNN.csv') %>%
+                     dplyr::rename(knn.Classical = Classical) %>%
+                     dplyr::rename(knn.Mesenchymal = Mesenchymal) %>%
+                     dplyr::rename(knn.Proneural = Proneural)
+                  , by=c('Sample' = 'Sample')) %>%
+  dplyr::left_join(read.csv('output/tables/gliovis/GlioVis_-_Visualization_Tools_for_Glioma_Datasets_ssGSEA.csv') %>%
+                     dplyr::mutate(Sample = gsub(".","-",X, fixed=T), X = NULL) %>%
+                     dplyr::rename(ssGSEA.Classical.score = Classical) %>%
+                     dplyr::rename(ssGSEA.Mesenchymal.score = Mesenchymal) %>%
+                     dplyr::rename(ssGSEA.Proneural.score = Proneural) %>%
+                     dplyr::rename(ssGSEA.Classical = Classical_pval) %>%
+                     dplyr::rename(ssGSEA.Mesenchymal = Mesenchymal_pval) %>%
+                     dplyr::rename(ssGSEA.Proneural = Proneural_pval)
+                   , by=c('Sample' = 'Sample'))
+
+
+stopifnot(tmp$gliovis.svm_call == tmp$svm.subtype.call)
+stopifnot(tmp$gliovis.knn_call == tmp$knn.subtype.call)
+stopifnot(tmp$gliovis.gsea_call == tmp$gsea.subtype.call)
+
+
+tmp <- tmp %>%
+  dplyr::mutate(svm.subtype.call = NULL) %>%
+  dplyr::mutate(knn.subtype.call = NULL) %>%
+  dplyr::mutate(gsea.subtype.call = NULL)
+
+
+
 
 gsam.rna.metadata <- gsam.rna.metadata %>%
   dplyr::left_join(tmp, by=c('sid' = 'Sample' ))
+
+
+rm(tmp)
+
+
+# 
+# a <- gsam.rna.metadata %>%
+#   dplyr::select(c('sid','tumour.percentage.dna', 'svm.Classical', 'svm.Mesenchymal', 'svm.Proneural', 'gliovis.svm_call')) %>%
+#   dplyr::filter(!is.na(svm.Proneural)) %>%
+#   dplyr::mutate(svm.mean = (svm.Classical + svm.Mesenchymal + svm.Proneural) / 3) %>%
+#   dplyr::mutate(svm.rmse = 
+#                   (svm.Classical - svm.mean)^2 +
+#                   (svm.Mesenchymal - svm.mean)^2 +
+#                   (svm.Proneural - svm.mean)^2
+#                 ) %>%
+#   dplyr::mutate(svm.max = pmax (svm.Classical , svm.Mesenchymal, svm.Proneural) )
+# 
+# ggplot(a, aes(y = svm.max , x = tumour.percentage.dna)) + 
+#   geom_point() + 
+#   geom_smooth()
+# 
+# 
+# 
+# a <- gsam.rna.metadata %>%
+#   dplyr::select(c('sid','tumour.percentage.dna', 'knn.Classical', 'knn.Mesenchymal', 'knn.Proneural')) %>%
+#   dplyr::filter(!is.na(knn.Proneural)) %>%
+#   dplyr::mutate(knn.mean = 1/3 ) %>%
+#   dplyr::mutate(knn.rmse = 
+#                   (knn.Classical - knn.mean)^2 +
+#                   (knn.Mesenchymal - knn.mean)^2 +
+#                   (knn.Proneural - knn.mean)^2
+#   ) %>%
+#   dplyr::mutate(knn.max = pmax (knn.Classical , knn.Mesenchymal, knn.Proneural) )
+# 
+# 
+# #plot(a$knn.max, a$tumour.percentage.dna)
+# #plot(a$knn.rmse, a$tumour.percentage.dna)
+# 
+# 
+# ggplot(a, aes(y = knn.max , x = tumour.percentage.dna)) + 
+#   geom_point() + 
+#   geom_smooth()
+# 
+# 
+# rm(a)
+# 
+
+
+
 
 

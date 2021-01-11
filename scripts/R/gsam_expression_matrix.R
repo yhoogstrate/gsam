@@ -19,6 +19,14 @@ expression_matrix_full_new <- read.delim("data/output/tables/gsam_featureCounts_
   tibble::column_to_rownames("rn") %>%
   `colnames<-`(gsub ('.', '-', colnames(.) , fixed=T)) # bla.new -> bla-new
 
+
+
+
+# RPKM = count_assigned_to_gene / (gene_length/1000 * totalReads /1e6)
+# choose totalReads carefully as rRNA type outliers can mess things tramendously up
+
+
+
 # unstranded counts, useful to determine possible DNA contamination ratios
 # only force parsing this file when a flag has been set, and remove flag accordingly
 if(exists("PARSE_EXPRESSION_MATRIX_UNSTRANDED")) {
