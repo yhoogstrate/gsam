@@ -1,6 +1,11 @@
 #!/usr/bin/env R 
 
 
+if(!exists('gencode.31')) {
+  source('scripts/R/gsam_expression_matrix.R')
+}
+
+
 subtype.classical.tt2 <- {{}}
 subtype.classical.tt2['1'] <- 'PTPRA'
 subtype.classical.tt2['2'] <- 'ELOVL2'
@@ -182,8 +187,8 @@ subtype.classical <-data.frame(symbol=subtype.classical.tt2) %>%
 
 
 
-stopifnot(subtype.mesenchymal$id %in% rownames(expression_matrix_full_new.vst))
-stopifnot(subtype.proneural$id %in% rownames(expression_matrix_full_new.vst))
-stopifnot(subtype.classical$id %in% rownames(expression_matrix_full_new.vst))
+stopifnot(subtype.mesenchymal$id %in% rownames(expression_matrix_full_new))
+stopifnot(subtype.proneural$id %in% rownames(expression_matrix_full_new))
+stopifnot(subtype.classical$id %in% rownames(expression_matrix_full_new))
 
 
