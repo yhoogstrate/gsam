@@ -7,7 +7,7 @@ from tqdm import tqdm
 encrypted_archives = {}
 encryption_keys = {}
 
-p = 'data/DNA/dna_data_2020/request_962/PDexport'
+p = 'data/gsam/DNA/dna_data_2020/request_962/PDexport'
 for _ in tqdm(os.listdir(p)):
     if _[-7:] == ".gz.gpg":
         fn = os.path.abspath(p + "/" + _)
@@ -16,7 +16,7 @@ for _ in tqdm(os.listdir(p)):
         encrypted_archives[sid] = fn
 
 
-p = 'data/DNA/dna_data_2020'
+p = 'data/gsam/DNA/dna_data_2020'
 for _ in sorted(tqdm(os.listdir(p))):
     if _[-7:] == ".gpgkey":
         fn = os.path.abspath(p + "/" + _)
@@ -41,8 +41,8 @@ if len(a) != len(c):
 
 
 for _ in sorted(tqdm(encrypted_archives)):
-    
-    print('gpg -o \'/mnt/neuro-genomic-1-rw/gsam/'+sid+'.tar.gz\' --decrypt --passphrase '+encryption_keys[_]+' --batch --yes \''+encrypted_archives[_]+'\'')
+    print(_)
+    print('gpg -o \'/home/yhoogstrate/mnt/neuro-genomic-rw/gsam/DNA/dna_data_2020/request_962/PDexport/decrypted/'+_+'.tar.gz\' --decrypt --passphrase '+encryption_keys[_]+' --batch --yes \''+encrypted_archives[_]+'\'')
 
 
 
