@@ -1,6 +1,14 @@
 #!/usr/bin/env R
 
+# ---- config ----
+
 setwd("~/projects/gsam")
+
+# ---- load libs ----
+
+library(tidyverse)
+library(ggplot2)
+library(cowplot)
 
 # ---- load data ----
 
@@ -21,40 +29,17 @@ barplot_theme <- theme(
 source('scripts/R/job_gg_theme.R')
 
 
-# ---- ----
+# ---- get stranded counts ----
 
-counts_stranded <- read.delim("data/output/tables/gsam_featureCounts_readcounts.txt",stringsAsFactors = F,comment="#")
-colnames(counts_stranded) <- gsub("^[^\\.]+\\.([^\\]+)\\.Aligned.sorted.+$","\\1",colnames(counts_stranded),fixed=F)
-
-rownames(counts_stranded) <- counts_stranded$Geneid
-counts_stranded$Geneid <- NULL
-counts_stranded$Chr <- NULL
-counts_stranded$Start <- NULL
-counts_stranded$End <- NULL
-counts_stranded$Strand <- NULL
-counts_stranded$Length <- NULL
-
-
-# 
-
-
-counts_unstranded <- read.delim("output/tables/gsam_featureCounts_readcounts.unstranded.txt",stringsAsFactors = F,comment="#")
-colnames(counts_unstranded) <- gsub("^[^\\.]+\\.RNA.alignments.([^\\]+)\\.Aligned.sorted.+$","\\1",colnames(counts_unstranded),fixed=F)
-
-rownames(counts_unstranded) <- counts_unstranded$Geneid
-counts_unstranded$Geneid <- NULL
-counts_unstranded$Chr <- NULL
-counts_unstranded$Start <- NULL
-counts_unstranded$End <- NULL
-counts_unstranded$Strand <- NULL
-counts_unstranded$Length <- NULL
+PARSE_EXPRESSION_MATRIX_UNSTRANDED <- TRUE
+source('scripts/R/expression_matrix.R')
 
 
 
-
-# 
-
+counts_stranded <- expression_matrix_full_new
 counts_stranded[counts_stranded < 1 ] <- 1
+
+counts_unstranded <- expression_matrix_full_new_unstranded
 
 counts_antistranded <- counts_unstranded - counts_stranded
 counts_antistranded[counts_antistranded < 1 ] <- 1
@@ -62,7 +47,7 @@ counts_antistranded[counts_antistranded < 1 ] <- 1
 
 # ---- selecet only genes that have some reads ----
 
-sel <- rowSums(counts_stranded) > 372 * 15
+sel <- rowSums(counts_stranded) > ncol(counts_antistranded) * 15
 counts_stranded <- counts_stranded[sel,]
 counts_antistranded <- counts_antistranded[sel,]
 counts_unstranded <- counts_unstranded[sel,]
@@ -160,14 +145,15 @@ tmp$colvar2 <- log(  colvar2[match(gsub("-",".",tmp$sid), names(colvar2))]  )
 
 
 plot_grid(
-  ggplot(tmp, aes(x = sid ,y = ratio.stranded.antistranded.lin, fill=ratio.stranded.antistranded.dna, label=sid)) +
+  tmp.2 = subset(tmp, grepl("new", tmp$sid))
+  ggplot(tmp.2, aes(x = sid ,y = ratio.stranded.antistranded.lin, fill=ratio.stranded.antistranded.dna, label=sid)) +
     #coord_flip() + 
     geom_bar(stat = "identity", position = "stack",colour="black") + 
     scale_y_continuous() + 
     theme_bw() + 
     barplot_theme + 
     theme( axis.title.y = element_text(size = 11) ,
-           axis.text.x = element_text(angle = 90, size = 5 ))
+           axis.text.x = element_text(angle = 90, size = 15 ))
   ,
   ggplot(tmp, aes(x = sid ,y =  pct.nofeature.STAR , label=sid)) +
     #coord_flip() + 

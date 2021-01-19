@@ -27,6 +27,7 @@ ensembl_genes <- get_ensembl_hsapiens_gene_ids()
 source("scripts/R/ligands.R")# @ todo gsub suffixes in ensembl ids
 source("scripts/R/gsam_metadata.R")
 source("scripts/R/expression_matrix.R")
+
 gene_matrix$Chr <- gsub("^([^;]+);.+$","\\1",gene_matrix$Chr)
 gene_matrix$Start <- gsub("^([^;]+);.+$","\\1",gene_matrix$Start)
 
@@ -763,7 +764,6 @@ ggplot(tmp, aes(x=PC1, y=PC2, label=sid)) +
   geom_point(aes(col=blacklist)) +
   geom_line(data=bl.lines, alpha = 0.25,lty=2) + 
   geom_text_repel(force =  0.25,
-      
     segment.size  = 0.2,
     segment.color = "grey50",
     direction     = "both",
