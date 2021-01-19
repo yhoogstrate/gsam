@@ -41,7 +41,7 @@ if len(a) != len(c):
 
 
 for _ in sorted(tqdm(encrypted_archives)):
-    print(_)
+    #print(_)
     print('gpg -o \'/home/yhoogstrate/mnt/neuro-genomic-rw/gsam/DNA/dna_data_2020/request_962/PDexport/decrypted/'+_+'.tar.gz\' --decrypt --passphrase '+encryption_keys[_]+' --batch --yes \''+encrypted_archives[_]+'\'')
 
 
