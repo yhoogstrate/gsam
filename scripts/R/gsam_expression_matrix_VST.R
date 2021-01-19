@@ -10,7 +10,7 @@ library(tidyverse)
 source('scripts/R/ligands.R')
 
 if(!exists('expression_matrix_full_new')) {
-  source('scripts/R/expression_matrix.R')
+  source('scripts/R/gsam_expression_matrix.R')
 }
 
 if(!exists('gsam.patient.metadata') | !exists('gsam.rna.metadata') ) {
