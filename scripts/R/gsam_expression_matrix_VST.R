@@ -22,6 +22,9 @@ if(!exists('gsam.viii.rnaseq')) {
 }
 
 
+#a = rownames(expression_matrix_full_new)
+#a[grepl("EGFR",a)] # EGFRvIII is nog niet gekoppeld :)
+
 # ---- subsample - take out low-Q ----
 
 
@@ -66,6 +69,11 @@ if(file.exists("tmp/expression_matrix_full_new.vst.Rds")) {
   
   # check duplicates?
   stopifnot(sum(duplicated(gsub("-new","", colnames(expression_matrix_full_new.vst) , fixed = T))) == 0)
+  
+  
+  #a = rownames(expression_matrix_full_new.vst)
+  #a[grepl("EGFR",a)] # EGFRvIII is nog niet gekoppeld :)
+  
   
   
   rm(exclude, viii.tmp)

@@ -1,61 +1,53 @@
 # Set wd
 
-# ---- initialization setup ----
+# load ----
+## libs ----
 
-setwd("~/projects/gsam")
+library(tidyverse)
 
+#library(DESeq2)
+#library(ggplot2)
+#library(ggrepel)
+#library(pheatmap)
+#library(fgsea)
+#library(limma)
+#library(EnhancedVolcano)
 
-# ---- load: libs ----
+## functions & templates ----
 
-library(DESeq2)
-library(ggplot2)
-library(ggrepel)
-library(pheatmap)
-library(fgsea)
-library(limma)
-library(EnhancedVolcano)
-
-
-# ---- load: functions ----
-
-source("scripts/R/ensembl_to_geneid.R") # obsolete? can be replaced with the get_ensembl function
-ensembl_genes <- get_ensembl_hsapiens_gene_ids()
-
-
-# ---- load: data ----
-# Load the data (expression values; metadata) into data frames
-
-source("scripts/R/ligands.R")# @ todo gsub suffixes in ensembl ids
-source("scripts/R/gsam_metadata.R")
-source("scripts/R/expression_matrix.R")
-gene_matrix$Chr <- gsub("^([^;]+);.+$","\\1",gene_matrix$Chr)
-gene_matrix$Start <- gsub("^([^;]+);.+$","\\1",gene_matrix$Start)
-
-source("scripts/R/dna_idh.R")
-
-source("scripts/R/chrom_sizes.R")
+#source("scripts/R/ensembl_to_geneid.R") # obsolete? can be replaced with the get_ensembl function
+#ensembl_genes <- get_ensembl_hsapiens_gene_ids()
 
 source("scripts/R/job_gg_theme.R")
+source("scripts/R/youri_gg_theme.R")
 
 
+## data ----
+# Load the data (expression values; metadata) into data frames
+
+source("scripts/R/ligands.R")
+source("scripts/R/subtype_genes.R")
+
+source("scripts/R/gsam_metadata.R")
+source("scripts/R/gsam_expression_matrix.R")
+source("scripts/R/dna_idh.R") # IDH mutants must be excluded
+
+source("scripts/R/glass_metadata.R")
+
+source('scripts/R/wang_glioma_intrinsic_genes.R')
 
 
-# ---- |--------------| ----
+#source("scripts/R/chrom_sizes.R")
 
-# read new table
 
-expression_matrix_full <- read.delim("data/output/tables/gsam_featureCounts_readcounts.txt",stringsAsFactors = F,comment="#")
-colnames(expression_matrix_full) <- gsub("^[^\\.]+\\.([^\\.]+)\\..+$","\\1",colnames(expression_matrix_full),fixed=F)
+# data transformation(s) ----
 
-#gene_matrix <- expression_matrix[,1:6]
+# - exclude IDH mutants
+# - exclude low tumour percentage
 
-rownames(expression_matrix_full) <- expression_matrix_full$Geneid
-expression_matrix_full$Geneid <- NULL
-expression_matrix_full$Chr <- NULL
-expression_matrix_full$Start <- NULL
-expression_matrix_full$End <- NULL
-expression_matrix_full$Strand <- NULL
-expression_matrix_full$Length <- NULL
+
+# some code? ----
+
 
 # old and new values correlate very high
 #em <- expression_matrix[,20:30]
@@ -122,7 +114,8 @@ plot(pcn[,c(pc1,pc2)],  cex=0.7,pch=19,
      main=paste0("G-SAM RNA PCA (pc",pc1," & pc",pc2,")"),col=as.numeric(cond)+1)
 
 
-# ---- * DE: res1 <=> res2 ----
+# DE ----
+## TP ~ R1 (~15k genes) ----
 
 
 # load VST data
