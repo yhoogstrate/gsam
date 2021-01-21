@@ -44,6 +44,7 @@ plt.data[] <- lapply(plt.data, as.character) # quotes..
   
 # ---- boxplot + jitter ----
 
+
 plt <- gsam.rna.metadata %>%
   dplyr::filter(!is.na(gliovis.majority_call))
 
@@ -52,8 +53,6 @@ ggplot2::ggplot(data=plt, mapping=aes(x=gliovis.majority_call , y  = tumour.perc
   geom_jitter(width = 0.2) +
   youri_gg_theme +
   labs(colour="GBM subtype")
-
-
 
 
 # ---- PCA on subtype genes ----
@@ -71,7 +70,8 @@ plt <- prcomp(plt.data, scale=F)$x %>%
   dplyr::mutate(tumour.percentage.dna = ifelse(is.na(tumour.percentage.dna), -1 , tumour.percentage.dna) ) %>%
   dplyr::mutate(tumour.percentage.dna.bin = cut(tumour.percentage.dna, breaks=3) ) %>%
   dplyr::mutate(tumour.percentage.dna = ifelse(tumour.percentage.dna == -1, NA , tumour.percentage.dna) ) %>%
-  dplyr::mutate(pid = gsub("^(...).+$","\\1", sid))
+  dplyr::mutate(pid = gsub("^(...).+$","\\1", sid)) %>%
+  dplyr::mutate(resection = as.factor(gsub("^...(.).*$","R\\1", sid)) )
 
 
 # PC2 correleert met pecentage
@@ -82,12 +82,20 @@ plt <- prcomp(plt.data, scale=F)$x %>%
 # PC3 = tumour purity...
 ggplot2::ggplot(plt, aes(x = PC1, y=PC2, col = gliovis.majority_call, shape =  tumour.percentage.dna >= 20, group=pid)) + 
   geom_line(alpha=0.2, col="gray60") +
-  geom_point() +
+  geom_point(size = 3) +
   youri_gg_theme +
   labs(colour="GlioVis GBM subtype") +
   scale_shape_manual(values=c(19, 1))
-
 ggsave("output/figures/paper_subtype_pca.png",width=10 * 1.3, height=6 * 1.3)
+
+# PC3 = tumour purity...
+ggplot2::ggplot(plt, aes(x = PC1, y=PC2, col = gliovis.majority_call, shape = resection, group=pid)) + 
+  geom_line(alpha=0.2, col="gray60") +
+  geom_point(size = 3) +
+  youri_gg_theme +
+  labs(colour="GlioVis GBM subtype") +
+  scale_shape_manual(values=c(19, 1))
+ggsave("output/figures/paper_subtype_pca_res.png",width=10 * 1.3, height=6 * 1.3)
 
 
 #plot(plt$tumour.percentage.dna , plt$PC2)
@@ -110,17 +118,28 @@ plt <- Rtsne::Rtsne(plt.data)$Y %>%
   dplyr::left_join(
     gsam.rna.metadata %>% dplyr::select(c('sid', 'gliovis.majority_call', 'tumour.percentage.dna'))
     , by = c('sid' = 'sid')) %>%
-  dplyr::mutate(pid = gsub("^(...).+$","\\1", sid))
+  dplyr::mutate(pid = gsub("^(...).+$","\\1", sid)) %>%
+  dplyr::mutate(resection = as.factor(gsub("^...(.).*$","R\\1", sid)) )
 
 
 ggplot2::ggplot(plt, aes(x = tsne1, y=tsne2, col = gliovis.majority_call, shape =  tumour.percentage.dna >= 10, group=pid)) + 
   geom_line(alpha=0.2, col="gray60") +
-  geom_point() +
+  geom_point(size = 3) +
   youri_gg_theme +
   labs(colour="GlioVis GBM subtype",x="t-SNE 1", y="t-SNE 2") +
   scale_shape_manual(values=c(19, 1))
 
 ggsave("output/figures/paper_subtype_tSNE.png",width=10 * 1.3, height=6 * 1.3)
+
+
+ggplot2::ggplot(plt, aes(x = tsne1, y=tsne2, col = gliovis.majority_call, shape =  resection , group=pid)) + 
+  geom_line(alpha=0.2, col="gray60") +
+  geom_point(size = 3) +
+  youri_gg_theme +
+  labs(colour="GlioVis GBM subtype",x="t-SNE 1", y="t-SNE 2") +
+  scale_shape_manual(values=c(19, 1))
+
+ggsave("output/figures/paper_subtype_tSNE_res.png",width=10 * 1.3, height=6 * 1.3)
 
 
 
@@ -137,18 +156,31 @@ plt <- uwot::umap(plt.data) %>%
   dplyr::left_join(
     gsam.rna.metadata %>% dplyr::select(c('sid', 'gliovis.majority_call', 'tumour.percentage.dna'))
     , by = c('sid' = 'sid')) %>%
-  dplyr::mutate(pid = gsub("^(...).+$","\\1", sid))
+  dplyr::mutate(pid = gsub("^(...).+$","\\1", sid)) %>%
+  dplyr::mutate(resection = as.factor(gsub("^...(.).*$","R\\1", sid)) )
 
 
 
 ggplot2::ggplot(plt, aes(x = umap1, y=umap2, col = gliovis.majority_call, shape =  tumour.percentage.dna >= 10, group=pid)) + 
   geom_line(alpha=0.2, col="gray60") +
-  geom_point() +
+  geom_point(size = 3) +
   youri_gg_theme +
   labs(colour="GlioVis GBM subtype", x="UMAP 1" , y = "UMAP 2") +
   scale_shape_manual(values=c(19, 1))
 
 ggsave("output/figures/paper_subtype_UMAP.png",width=10 * 1.3, height=6 * 1.3)
+
+
+
+
+ggplot2::ggplot(plt, aes(x = umap1, y=umap2, col = gliovis.majority_call, shape =  resection , group=pid)) + 
+  geom_line(alpha=0.2, col="gray60") +
+  geom_point(size = 3) +
+  youri_gg_theme +
+  labs(colour="GlioVis GBM subtype", x="UMAP 1" , y = "UMAP 2") +
+  scale_shape_manual(values=c(19, 1))
+
+ggsave("output/figures/paper_subtype_UMAP_res.png",width=10 * 1.3, height=6 * 1.3)
 
 
 
