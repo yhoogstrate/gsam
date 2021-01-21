@@ -10,6 +10,7 @@ import gzip
 
 import glob
 
+fh_out = open('output/tables/dna/idh_mutations.txt', 'w')
 
 #for f in [_ for _ in os.listdir(path) if _[-7:] == ".vcf.gz"]:
     #print(f)
@@ -32,15 +33,18 @@ for fn in tqdm(glob.glob('data/gsam/DNA/dna_data_2020/*/*/decrypted/*/*/*cavem*.
                 
                 coverage = line.split("DP=")[1].split(";")[0]
                 
-                print(sid + "\t" + mut + "\t" + line.split("\t")[6] + '\t' +  vaf + "\t" + coverage)
+                fh_out.write(sid + "\t" + mut + "\t" + line.split("\t")[6] + '\t' +  vaf + "\t" + coverage + "\n")
                 idh = True
 
         if not idh:
-            print(sid + "\t-\t-\tNA\tNA")
+            fh_out.write(sid + "\t-\t-\tNA\tNA"+"\n")
 
 # there were no idh2's
 #            elif line.find("IDH2") != -1:
 #                if(line.find )
+
+
+fh_out.close()
 
 """
 
