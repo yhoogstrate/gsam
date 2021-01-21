@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-path = 'data/DNA/snv_vcf'
+#path = 'data/DNA/snv_vcf'
 
 
 from tqdm import tqdm
@@ -8,13 +8,23 @@ import os
 import gzip
 
 
-for f in [_ for _ in os.listdir(path) if _[-7:] == ".vcf.gz"]:
+import glob
+
+
+#for f in [_ for _ in os.listdir(path) if _[-7:] == ".vcf.gz"]:
     #print(f)
-    fn = os.path.join(path, f)
+    #fn = os.path.join(path, f)
+for fn in tqdm(glob.glob('data/gsam/DNA/dna_data_2020/*/*/decrypted/*/*/*cavem*.vcf.gz')):
+    #print(fn)
     with gzip.open(fn, 'rb') as fh:
+
+        idh = False
+        sid = fn.split("_")[-2].split(".")[0]
+
         for line in fh:
-            if line[0:10] == "2\t20911311":# and  line.find("R132") != -1:
-                sid = f.split("_")[-2].split(".")[0]
+            #if line[0:10] == "2\t20911311":# and  line.find("R132") != -1:
+            if (line.find('IDH1') != -1 and line.find('R132') != -1):
+                # or (line.find('IDH2') != -1 and (line.find('172') != -1 or line.find('140') != -1 ) ):
                 mut = line.split(';VW=')[1].split("|")
                 mut = mut[0] + mut[4][1:]
                 
@@ -23,6 +33,10 @@ for f in [_ for _ in os.listdir(path) if _[-7:] == ".vcf.gz"]:
                 coverage = line.split("DP=")[1].split(";")[0]
                 
                 print(sid + "\t" + mut + "\t" + line.split("\t")[6] + '\t' +  vaf + "\t" + coverage)
+                idh = True
+
+        if not idh:
+            print(sid + "\t-\t-\tNA\tNA")
 
 # there were no idh2's
 #            elif line.find("IDH2") != -1:
