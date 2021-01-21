@@ -26,24 +26,28 @@ gsam.patient.metadata <- gsam.patient.metadata %>%
 
 # ---- exome-seq CNV metadata ----
 
-gsam.cnv.metadata <- read.delim('data/gsam/output/tables/cnv_copynumber-ratio.cnr_log2_all.txt',stringsAsFactors=F)
-gsam.cnv.metadata <- gsam.cnv.metadata[,-c(1,2,3,4)] # remove columns with geneid, start, end etc.
-gsam.cnv.metadata <- data.frame(
-  cnv.table.id = colnames(head(gsam.cnv.metadata)),
-  sid = gsub("\\.b[12]$","",colnames(head(gsam.cnv.metadata))),
-  batch = as.factor(gsub("^[^\\.]+\\.","",colnames(head(gsam.cnv.metadata)))))
 
-# Add CNV -> regular patient identifiers and some DNA metrics
-# gender from this table is incomplete, add it from gsam.patient.metadata later on
-tmp <- read.delim("data/gsam/DNA/sample codes sanger gsam.txt",stringsAsFactors=FALSE)
-tmp$pid <- gsub("[1-2]$","",tmp$donor_ID)
-tmp <- tmp[,match(c("donor_ID", "pid", "PD_ID", "donor_sex", "donor_age_at_diagnosis","Concentration.at.QC..ng.ul.","Volume.at.QC..ul.","Amount.at.QC..ug."), colnames(tmp))]
-gsam.cnv.metadata <- merge(gsam.cnv.metadata,tmp,by.x="sid",by.y="PD_ID")
-rm(tmp)
+gsam.cnv.metadata <- read.delim("data/gsam/DNA/sample codes sanger gsam.txt",stringsAsFactors=FALSE) %>%
+  dplyr::mutate(pid = gsub("[1-2]$","",donor_ID)) %>%
+  dplyr::select(c("donor_ID", "pid", "PD_ID", "donor_sex", "donor_age_at_diagnosis","Concentration.at.QC..ng.ul.","Volume.at.QC..ul.","Amount.at.QC..ug.")) %>%
+  dplyr::full_join(
+    
+    tmp <- read.delim('data/gsam/output/tables/cnv_copynumber-ratio.cnr_log2_all.txt',stringsAsFactors=F) %>%
+      dplyr::select( - c('chromosome', 'start', 'end', 'gene') ) %>%
+      dplyr::slice_head(n=1) %>%
+      t() %>%
+      as.data.frame() %>%
+      tibble::rownames_to_column('cnv.table.id') %>%
+      dplyr::mutate(V1 = NULL) %>%
+      dplyr::mutate(sid = gsub("\\.b[12]$","",cnv.table.id) ) %>%
+      dplyr::mutate(batch =  as.factor(gsub("^[^\\.]+\\.","",cnv.table.id)) )  
+    
+    , by=c('PD_ID' = 'sid'))  %>%
+  dplyr::left_join(gsam.patient.metadata , by=c('pid' = 'studyID')) %>%
+  dplyr::mutate(donor_sex = NULL)
 
-# previous genders are incomplete
-gsam.cnv.metadata <- merge(gsam.cnv.metadata, gsam.patient.metadata, by.x = "pid",by.y = "studyID",all.x=TRUE)
-gsam.cnv.metadata$donor_sex <- NULL # incomplete, the one from patient metadata = complete
+
+
 
 # --- RNA-seq metadata [full] ----
 # STAR alignment statistics + patient / sample identifiers
@@ -335,48 +339,17 @@ gsam.rna.metadata <- gsam.rna.metadata %>%
 
 rm(tmp)
 
+# ---- NMF per-sample error ----
 
-# 
-# a <- gsam.rna.metadata %>%
-#   dplyr::select(c('sid','tumour.percentage.dna', 'svm.Classical', 'svm.Mesenchymal', 'svm.Proneural', 'gliovis.svm_call')) %>%
-#   dplyr::filter(!is.na(svm.Proneural)) %>%
-#   dplyr::mutate(svm.mean = (svm.Classical + svm.Mesenchymal + svm.Proneural) / 3) %>%
-#   dplyr::mutate(svm.rmse = 
-#                   (svm.Classical - svm.mean)^2 +
-#                   (svm.Mesenchymal - svm.mean)^2 +
-#                   (svm.Proneural - svm.mean)^2
-#                 ) %>%
-#   dplyr::mutate(svm.max = pmax (svm.Classical , svm.Mesenchymal, svm.Proneural) )
-# 
-# ggplot(a, aes(y = svm.max , x = tumour.percentage.dna)) + 
-#   geom_point() + 
-#   geom_smooth()
-# 
-# 
-# 
-# a <- gsam.rna.metadata %>%
-#   dplyr::select(c('sid','tumour.percentage.dna', 'knn.Classical', 'knn.Mesenchymal', 'knn.Proneural')) %>%
-#   dplyr::filter(!is.na(knn.Proneural)) %>%
-#   dplyr::mutate(knn.mean = 1/3 ) %>%
-#   dplyr::mutate(knn.rmse = 
-#                   (knn.Classical - knn.mean)^2 +
-#                   (knn.Mesenchymal - knn.mean)^2 +
-#                   (knn.Proneural - knn.mean)^2
-#   ) %>%
-#   dplyr::mutate(knn.max = pmax (knn.Classical , knn.Mesenchymal, knn.Proneural) )
-# 
-# 
-# #plot(a$knn.max, a$tumour.percentage.dna)
-# #plot(a$knn.rmse, a$tumour.percentage.dna)
-# 
-# 
-# ggplot(a, aes(y = knn.max , x = tumour.percentage.dna)) + 
-#   geom_point() + 
-#   geom_smooth()
-# 
-# 
-# rm(a)
-# 
+nmf_per.sample.error <- readRDS("tmp/nmf_per-sample-error.Rds") %>%
+  data.frame(stringsAsFactors = F) %>%
+  `colnames<-`('nmf_per.sample.error') %>%
+  tibble::rownames_to_column('sid')
+
+gsam.rna.metadata <- gsam.rna.metadata %>%
+  dplyr::left_join(nmf_per.sample.error, by = c('sid' = 'sid'))
+
+rm(nmf_per.sample.error)
 
 
 
