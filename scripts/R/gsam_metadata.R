@@ -3,7 +3,7 @@
 # load libs ----
 
 library(tidyverse) # for distinct() function
-library("readxl")
+library(readxl)
 
 
 # patient metadata ----
@@ -78,6 +78,7 @@ gsam.cnv.metadata <- read.delim("data/gsam/DNA/sample codes sanger gsam.txt",str
 
 ## STAR alignment statistics + patient / sample identifiers ----
 
+
 gsam.rna.metadata <- read.delim("data/gsam/output/tables/gsam_featureCounts_readcounts_new.txt.summary",stringsAsFactors = F,comment="#",row.names=1) %>%
   `colnames<-`(gsub("^.+RNA.alignments\\.(.+)\\.Aligned.sortedByCoord.+$","\\1",colnames(.),fixed=F)) %>%
   dplyr::filter(rowSums(.) > 0) %>%
@@ -116,6 +117,7 @@ gsam.rna.metadata <- read.delim("data/gsam/output/tables/gsam_featureCounts_read
   dplyr::mutate(resection_pair=replace(resection_pair,which(batch=="old"|sample%in%c("CAO1.replicate","GAS2.replicate","FAB2","FAH2","EBP1","KAE1.new","KAE1")),NA)) %>%
   dplyr::mutate(sample = NULL)
 
+
 #EBP1, FAH2 and KAE1: no pair
 #FAB2: FAB2.replicate contains more vIII reads 
 #CAO1.replicate, GAS2.replicate: CAO1 and GAS2 contain more vIII reads
@@ -132,6 +134,7 @@ gsam.rna.metadata <- read.delim("data/gsam/output/tables/gsam_featureCounts_read
 # tmp$Bam_file <- NULL
 # gsam.rna.metadata <- merge(gsam.rna.metadata, tmp , by.x = "sid", by.y = "sid")
 
+
 #vIII rna-seq counts
 tmp <- read.table('data/gsam/output/tables/v3_extract_readcounts.txt',header=T,stringsAsFactor=F)
 tmp$sample <- gsub("^.+/alignments/([^/]+)/.+$","\\1",tmp$sample)
@@ -146,7 +149,8 @@ gsam.rna.metadata <- gsam.rna.metadata %>%
   dplyr::left_join(tmp, by=c('sid' = 'sample'))
 
 
-rm(sel)
+rm(sel, tmp)
+
 
 # @TODO vIII qPCR percentage 'TODO!!!!!!
 # tmp <- read.csv('data/RNA/Final_qPCR_EGFR_GSAM.csv',stringsAsFactors = F)
@@ -366,6 +370,7 @@ gsam.rna.metadata <- gsam.rna.metadata %>%
 
 rm(tmp)
 
+
 ## NMF per-sample error ----
 
 
@@ -384,8 +389,6 @@ rm(nmf_per.sample.error)
 ## Add IDH status to RNA samples ----
 
 
-
-
 gsam.rna.metadata <- gsam.rna.metadata %>%
   dplyr::mutate(tmp = gsub('-new','', sid, fixed=T) ) %>%
   dplyr::mutate(tmp = gsub('-replicate','', tmp, fixed=T) ) %>%
@@ -398,5 +401,7 @@ gsam.rna.metadata <- gsam.rna.metadata %>%
     
     , by = c('tmp' = 'sid')) %>%
   dplyr::mutate(tmp = NULL)
+
+
 
 

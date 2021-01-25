@@ -1,6 +1,8 @@
 #!/usr/bin/env R
 
-# ---- obtain metadata to exclude poor samples (blacklist.pca == T) ----
+# obtain metadata to exclude poor samples (blacklist.pca == T) ----
+
+
 if(!exists("gsam.rnaseq.metadata")) {
   source('scripts/R/gsam_metadata.R')
 }
@@ -10,10 +12,11 @@ if(!exists("gsam.viii.rnaseq")) {
 }
 
 
+
 #expression_matrix_full <- read.delim("data/output/tables/gsam_featureCounts_readcounts_new.txt",stringsAsFactors = F,comment="#")
 #Load gene annotation data
 if(!exists("gencode.31")) {
-  gencode.31 <- read.delim("data/ref/star-hg19/gencode.v31lift37.annotation.gtf", comment.char="#",stringsAsFactors = F,header=F) %>%
+  gencode.31 <- read.delim("data/gsam/ref/star-hg19/gencode.v31lift37.annotation.gtf", comment.char="#",stringsAsFactors = F,header=F) %>%
     dplyr::filter(V3 == "gene") %>%
     dplyr::mutate(ENSG = gsub("^.+(ENSG[^;]+);.+$","\\1",V9)) %>%
     dplyr::mutate(GENE = gsub("^.+gene_name ([^;]+);.+$","\\1",V9)) %>%
@@ -21,7 +24,7 @@ if(!exists("gencode.31")) {
 }
 
 
-# ---- full dataset ----
+# full dataset ----
 
 blacklist <- gsam.rna.metadata %>%
   dplyr::filter(blacklist.pca == T) %>%
@@ -31,7 +34,7 @@ blacklist <- gsam.rna.metadata %>%
   unique()
 
 
-gsam.rnaseq.expression <- "data/output/tables/gsam_featureCounts_readcounts_new.txt" %>%
+gsam.rnaseq.expression <- "data/gsam/output/tables/gsam_featureCounts_readcounts_new.txt" %>%
   read.delim(stringsAsFactors = F,comment="#") %>%
   `colnames<-`(gsub("^.+RNA.alignments\\.(.+)\\.Aligned.sortedByCoord.+$","\\1", colnames(.) ,fixed=F)) %>%
   `colnames<-`(gsub(".","-", colnames(.) ,fixed=T)) %>%
@@ -67,35 +70,42 @@ rm(blacklist)
 # - KAC2-new << van nieuwe samples
 
 
-## ---- vst ---
+## vst ----
 
-library(DESeq2)
 
 if(!exists('gsam.viii.rnaseq')) {
   source('scripts/R/gsam_rnaseq_egfrviii_expression.R')
 }
 
-tmp <- gsam.rnaseq.expression %>%
-  dplyr::filter(rowSums(.) >= ncol(.)) %>%
-  rbind( # Add EGFRvIII
-    gsam.viii.rnaseq %>%
-      dplyr::mutate(wt.reads = NULL) %>%
-      dplyr::mutate(n.reads = NULL) %>%
-      dplyr::mutate(egfrviii.pct = NULL) %>%
-      dplyr::mutate(sid = NULL) %>%
-      dplyr::rename(EGFRvIII = vIII.reads) %>%
-      tibble::column_to_rownames('sample') %>%
-      t()
-    )
+if(!exists('gsam.rnaseq.expression.vst')) {
+  tmp <-
+    rbind(
+      gsam.rnaseq.expression %>%
+        dplyr::filter(rowSums(.) >= ncol(.))
+      ,
+      gsam.viii.rnaseq %>%
+        dplyr::mutate(wt.reads = NULL) %>%
+        dplyr::mutate(n.reads = NULL) %>%
+        dplyr::mutate(egfrviii.pct = NULL) %>%
+        dplyr::mutate(sid = NULL) %>%
+        dplyr::rename(EGFRvIII = vIII.reads) %>%
+        tibble::column_to_rownames('sample') %>%
+        t() %>%
+        as.data.frame(stringsAsFactors = F) %>%
+        dplyr::select(colnames(a))
+      )
+  
+  
+  
+  cond <- as.factor(paste0('r',sample(c(1,2),ncol(tmp), T)))
+  tmp <- DESeq2::DESeqDataSetFromMatrix(tmp,  DataFrame(cond), ~cond)
+  gsam.rnaseq.expression.vst <- assay(vst(tmp,blind=T))
+  rm(cond, tmp)
+
+}
 
 
-cond <- as.factor(paste0('r',sample(c(1,2),ncol(tmp),T)))
-tmp <- DESeq2::DESeqDataSetFromMatrix(tmp,  DataFrame(cond), ~cond)
-gsam.rnaseq.expression.vst <- assay(vst(tmp,blind=T))
-rm(cond, tmp)
-
-
-## ---- egfr high/low ----
+## egfr high/low ----
 
 tmp <- sort(gsam.rnaseq.expression.vst[gsub("\\..+$","",rownames(gsam.rnaseq.expression.vst)) == "ENSG00000146648",])
 
@@ -115,8 +125,8 @@ gsam.egfr.not.high.expressed <- names(tmp[tmp < cutoff])
 rm(cutoff, tmp, splt)
 
 
-## ---- MDM2 high/low ----
-## ENSG00000135679
+## MDM2 high/low ----
+# ENSG00000135679
 
 tmp <- sort(gsam.rnaseq.expression.vst[gsub("\\..+$","",rownames(gsam.rnaseq.expression.vst)) == "ENSG00000135679",])
 
