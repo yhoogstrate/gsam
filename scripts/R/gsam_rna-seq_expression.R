@@ -97,8 +97,8 @@ if(!exists('gsam.rnaseq.expression.vst')) {
   rm(tmp.1, tmp.2)
   
   cond <- as.factor(paste0('r',sample(c(1,2),ncol(tmp), T)))
-  tmp <- DESeq2::DESeqDataSetFromMatrix(tmp,  DataFrame(cond), ~cond)
-  gsam.rnaseq.expression.vst <- assay(vst(tmp,blind=T))
+  tmp <- DESeq2::DESeqDataSetFromMatrix(tmp, S4Vectors::DataFrame(cond), ~cond)
+  gsam.rnaseq.expression.vst <- SummarizedExperiment::assay(DESeq2::vst(tmp,blind=T))
   rm(cond, tmp)
 }
 

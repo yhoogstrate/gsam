@@ -1,5 +1,12 @@
 #!/usr/bin/env R
 
+# load libs ----
+
+library(tidyverse)
+library(NMF)
+
+
+
 # load data ----
 
 source('scripts/R/gsam_metadata.R')
@@ -34,23 +41,33 @@ if(min(tmp) < 0) { # not the case
 ### make 150 set ----
 
 
+metadata <- gsam.rna.metadata %>%
+  dplyr::filter(sid %in% colnames(tmp))
+
+
 gsam.rnaseq.expression.vst.150 <- tmp %>%
   as.data.frame() %>%
   tibble::rownames_to_column('gid') %>%
-  dplyr::mutate(gid = gsub("\\..+$","",gid)) %>%
-  dplyr::filter(gid %in%
+  dplyr::mutate(ensg = gsub("\\..+$","",gid)) %>%
+  dplyr::filter(ensg %in%
                   (wang.glioma.intrinsic.genes %>%
                     dplyr::filter(Subtyping_Signature_Gene. != "") %>%
                     dplyr::pull(ENSG.short))
                   ) %>%
-  dplyr::mutate(gid = NULL)
+  dplyr::mutate(ensg = NULL) %>%
+  tibble::column_to_rownames('gid')
 
-metadata <- gsam.rna.metadata %>%
-  dplyr::filter(sid %in% colnames(gsam.rnaseq.expression.vst.150))
 
 stopifnot(ncol(gsam.rnaseq.expression.vst.150) == nrow(metadata))
+stopifnot(colnames(gsam.rnaseq.expression.vst.150) %in% metadata$sid)
+stopifnot( metadata$sid %in% colnames(gsam.rnaseq.expression.vst.150))
 
 
+gsam.rnaseq.expression.vst.150 <- gsam.rnaseq.expression.vst.150 %>%
+  dplyr::select(metadata$sid)
+
+
+stopifnot(colnames(gsam.rnaseq.expression.vst.150) == metadata$sid)
 
 
 
@@ -58,10 +75,25 @@ stopifnot(ncol(gsam.rnaseq.expression.vst.150) == nrow(metadata))
 
 ## Perform NMF by Wang-code [seeds: ] ----
 
+# TEST REGULAR PCA - SHOULD WORK(!)
+p <- prcomp(t(gsam.rnaseq.expression.vst.150))
+plot(
+  p$x[,1],
+  p$x[,2],
+  
+  col = as.factor(metadata$gliovis.majority_call)
+)
+
+#screeplot(p)
+
+
+
 
 for(seed in seeds) {
   gsam_nmf_150[[as.character(seed)]] <- NMF(as.matrix(gsam.rnaseq.expression.vst.150), 3, seed = seed)
 }
+
+gsam_nmf_150[["nmf"]] <- nmf(as.data.frame(gsam.rnaseq.expression.vst.150), 3, seed=12345)
 
 
 gsam_nmf_150$`909`$membership
@@ -70,32 +102,75 @@ gsam_nmf_150$`123456`$membership
 gsam_nmf_150$`1337`$membership
 
 
+# comparison w/ gliovis
+plt <- data.frame(nmf = as.factor(gsam_nmf_150$`1337`$membership) ,
+                  gliovis = as.character(metadata$gliovis.majority_call ) ) %>%
+  dplyr::mutate(gliovis = ifelse(is.na(gliovis), 'NA', as.character(gliovis)  )) %>%
+  table() %>%
+  as.data.frame()
+
+ggplot(plt, aes(x = nmf, y = Freq, col=gliovis)  ) +
+  geom_bar(stat="identity")
+
+
+# # PCA to also fit NMF 3 into two dimensions (is a better fit)
+# p <- prcomp(t(gsam_nmf_150$`909`$H))
+# plot(
+#   p$x[,1],
+#   p$x[,2],
+#   
+#   #col = as.factor(metadata$gliovis.majority_call)
+#   col = as.factor(gsam_nmf_150$`909`$membership)
+# )
+# 
+# # PCA to also fit NMF 3 into two dimensions (is a better fit)
+# p <- prcomp(t(gsam_nmf_150$`1337`$H))
+# plot(
+#   p$x[,1],
+#   p$x[,2],
+#   
+#   #col = as.factor(metadata$gliovis.majority_call)
+#   col = as.factor(gsam_nmf_150$`1337`$membership)
+# )
+# 
+# 
+# # PCA to also fit NMF 3 into two dimensions (is a better fit)
+# p <- prcomp(t(gsam_nmf_150$`1337`$H))
+# plot(
+#   p$x[,1],
+#   p$x[,2],
+#   
+#   #col = as.factor(metadata$gliovis.majority_call)
+#   col = as.factor(gsam_nmf_150$`1337`$membership)
+# )
+# 
+# 
+# # PCA to also fit NMF 3 into two dimensions (is a better fit)
+# p <- prcomp(t(gsam_nmf_150$`12345`$H))
+# plot(
+#   p$x[,1],
+#   p$x[,2],
+#   
+#   #col = as.factor(metadata$gliovis.majority_call)
+#   col = as.factor(gsam_nmf_150$`12345`$membership)
+# )
+
+
+# clearly the nicest fit (!!!!!)
+# PCA to also fit NMF 3 into two dimensions (is a better fit)
+p <- prcomp(t(gsam_nmf_150$`123456`$H))
 plot(
-  gsam_nmf_150$`909`$W[,1],
-  gsam_nmf_150$`909`$W[,2],
-  col = as.factor(gsam_nmf_150$`909`$membership)
+  p$x[,1],
+  p$x[,2],
+  
+  #col = as.factor(metadata$gliovis.majority_call)
+  col = as.factor(gsam_nmf_150$`123456`$membership)
 )
 
 
-plot(
-  gsam_nmf_150$`1337`$W[,1],
-  gsam_nmf_150$`1337`$W[,2],
-)
-
-
-
-plot(
-  gsam_nmf_150$`909`$W[,1],
-  gsam_nmf_150$`909`$W[,2],
-)
-
-
-
-plot(
-  gsam_nmf_150$`909`$W[,1],
-  gsam_nmf_150$`909`$W[,2],
-)
-
+# perform linear classifier on the PCA
+train.in <- p$x 
+test.lda <- lda(gliovis ~ PC1 + PC2 )
 
 
 
