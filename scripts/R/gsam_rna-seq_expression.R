@@ -3,7 +3,7 @@
 # obtain metadata to exclude poor samples (blacklist.pca == T) ----
 
 
-if(!exists("gsam.rnaseq.metadata")) {
+if(!exists("gsam.rna.metadata")) {
   source('scripts/R/gsam_metadata.R')
 }
 
@@ -78,99 +78,98 @@ if(!exists('gsam.viii.rnaseq')) {
 }
 
 if(!exists('gsam.rnaseq.expression.vst')) {
-  tmp <-
-    rbind(
-      gsam.rnaseq.expression %>%
-        dplyr::filter(rowSums(.) >= ncol(.))
-      ,
-      gsam.viii.rnaseq %>%
-        dplyr::mutate(wt.reads = NULL) %>%
-        dplyr::mutate(n.reads = NULL) %>%
-        dplyr::mutate(egfrviii.pct = NULL) %>%
-        dplyr::mutate(sid = NULL) %>%
-        dplyr::rename(EGFRvIII = vIII.reads) %>%
-        tibble::column_to_rownames('sample') %>%
-        t() %>%
-        as.data.frame(stringsAsFactors = F) %>%
-        dplyr::select(colnames(a))
-      )
+  tmp.1 <- gsam.rnaseq.expression %>%
+      dplyr::filter(rowSums(.) >= ncol(.))
+
+  tmp.2 <- gsam.viii.rnaseq %>%
+      dplyr::mutate(wt.reads = NULL) %>%
+      dplyr::mutate(n.reads = NULL) %>%
+      dplyr::mutate(egfrviii.pct = NULL) %>%
+      dplyr::mutate(sid = NULL) %>%
+      dplyr::rename(EGFRvIII = vIII.reads) %>%
+      tibble::column_to_rownames('sample') %>%
+      t() %>%
+      as.data.frame(stringsAsFactors = F) %>%
+      dplyr::select(colnames(tmp.1))
+
+    tmp <- rbind(tmp.1, tmp.2)
   
-  
+  rm(tmp.1, tmp.2)
   
   cond <- as.factor(paste0('r',sample(c(1,2),ncol(tmp), T)))
   tmp <- DESeq2::DESeqDataSetFromMatrix(tmp,  DataFrame(cond), ~cond)
   gsam.rnaseq.expression.vst <- assay(vst(tmp,blind=T))
   rm(cond, tmp)
-
 }
 
 
-## egfr high/low ----
 
-tmp <- sort(gsam.rnaseq.expression.vst[gsub("\\..+$","",rownames(gsam.rnaseq.expression.vst)) == "ENSG00000146648",])
-
-#plot(tmp)
-
-splt <- 189
-
-#abline(v=splt)
-#abline(v=splt + 1)
-
-cutoff <- (tmp[splt] + tmp[splt + 1]) / 2
-#abline(h=cutoff,col="red")
-
-gsam.egfr.high.expressed <- names(tmp[tmp >= cutoff])
-gsam.egfr.not.high.expressed <- names(tmp[tmp < cutoff])
-
-rm(cutoff, tmp, splt)
-
-
-## MDM2 high/low ----
-# ENSG00000135679
-
-tmp <- sort(gsam.rnaseq.expression.vst[gsub("\\..+$","",rownames(gsam.rnaseq.expression.vst)) == "ENSG00000135679",])
-
-#plot(tmp)
-
-splt <- 315
-
-#abline(v=splt)
-#abline(v=splt + 1)
-
-cutoff <- (tmp[splt] + tmp[splt + 1]) / 2
-
-#abline(h=cutoff,col="red")
-
-gsam.mdm2.high.expressed <- names(tmp[tmp >= cutoff])
-gsam.mdm2.not.high.expressed <- names(tmp[tmp < cutoff])
-
-rm(cutoff, tmp, splt)
-
-
-
-
-## ---- CDK4 high/low ----
-
-## ENSG00000135446
-
-tmp <- sort(gsam.rnaseq.expression.vst[gsub("\\..+$","",rownames(gsam.rnaseq.expression.vst)) == "ENSG00000135446",])
-
-#plot(tmp)
-
-splt <- 300
-
-#abline(v=splt)
-#abline(v=splt + 1)
-
-cutoff <- (tmp[splt] + tmp[splt + 1]) / 2
-
-#abline(h=cutoff,col="red")
-
-gsam.cdk4.high.expressed <- names(tmp[tmp >= cutoff])
-gsam.cdk4.not.high.expressed <- names(tmp[tmp < cutoff])
-
-rm(cutoff, tmp, splt)
-
+# ## egfr high/low ----
+# 
+# tmp <- sort(gsam.rnaseq.expression.vst[gsub("\\..+$","",rownames(gsam.rnaseq.expression.vst)) == "ENSG00000146648",])
+# 
+# #plot(tmp)
+# 
+# splt <- 189
+# 
+# #abline(v=splt)
+# #abline(v=splt + 1)
+# 
+# cutoff <- (tmp[splt] + tmp[splt + 1]) / 2
+# #abline(h=cutoff,col="red")
+# 
+# gsam.egfr.high.expressed <- names(tmp[tmp >= cutoff])
+# gsam.egfr.not.high.expressed <- names(tmp[tmp < cutoff])
+# 
+# rm(cutoff, tmp, splt)
+# 
+# 
+# ## MDM2 high/low ----
+# # ENSG00000135679
+# 
+# tmp <- sort(gsam.rnaseq.expression.vst[gsub("\\..+$","",rownames(gsam.rnaseq.expression.vst)) == "ENSG00000135679",])
+# 
+# #plot(tmp)
+# 
+# splt <- 315
+# 
+# #abline(v=splt)
+# #abline(v=splt + 1)
+# 
+# cutoff <- (tmp[splt] + tmp[splt + 1]) / 2
+# 
+# #abline(h=cutoff,col="red")
+# 
+# gsam.mdm2.high.expressed <- names(tmp[tmp >= cutoff])
+# gsam.mdm2.not.high.expressed <- names(tmp[tmp < cutoff])
+# 
+# rm(cutoff, tmp, splt)
+# 
+# 
+# 
+# 
+# ## ---- CDK4 high/low ----
+# 
+# ## ENSG00000135446
+# 
+# tmp <- sort(gsam.rnaseq.expression.vst[gsub("\\..+$","",rownames(gsam.rnaseq.expression.vst)) == "ENSG00000135446",])
+# 
+# #plot(tmp)
+# 
+# splt <- 300
+# 
+# #abline(v=splt)
+# #abline(v=splt + 1)
+# 
+# cutoff <- (tmp[splt] + tmp[splt + 1]) / 2
+# 
+# #abline(h=cutoff,col="red")
+# 
+# gsam.cdk4.high.expressed <- names(tmp[tmp >= cutoff])
+# gsam.cdk4.not.high.expressed <- names(tmp[tmp < cutoff])
+# 
+# rm(cutoff, tmp, splt)
+# 
 
 
 
