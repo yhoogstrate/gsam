@@ -3,19 +3,28 @@
 # load  ----
 ## libs ----
 
+
 library(tidyverse)
+
 
 ## gencode 22 ----
 
 if(!exists('gencode.22')) {
-  gencode.22 <- read.table("data/tcga/read-counts/gencode.v22.annotation.gtf",sep="\t",comment.char="#",stringsAsFactors = F) %>%
-    dplyr::filter(V3 == "gene") %>%
-    dplyr::mutate(ENSG = gsub("^.+(ENSG[^;]+);.+$","\\1",V9)) %>%
-    dplyr::mutate(GENE = gsub("^.+gene_name ([^;]+);.+$","\\1",V9)) %>%
-    dplyr::mutate(V9 = NULL) %>%
-    dplyr::mutate(ENSG.short = gsub('\\..*?$','',ENSG) )
-  
   rm.gencode <- T
+  
+  if(file.exists('tmp/gencode.22.Rds')) {
+    gencode.22 <- readRDS('tmp/gencode.22.Rds')
+  }
+  else {
+    gencode.22 <- read.table("data/tcga/read-counts/gencode.v22.annotation.gtf",sep="\t",comment.char="#",stringsAsFactors = F) %>%
+      dplyr::filter(V3 == "gene") %>%
+      dplyr::mutate(ENSG = gsub("^.+(ENSG[^;]+);.+$","\\1",V9)) %>%
+      dplyr::mutate(GENE = gsub("^.+gene_name ([^;]+);.+$","\\1",V9)) %>%
+      dplyr::mutate(V9 = NULL) %>%
+      dplyr::mutate(ENSG.short = gsub('\\..*?$','',ENSG) )
+    
+    saveRDS(gencode.22, file='tmp/gencode.22.Rds')
+  }
 } else {
   rm.gencode <- F
 }
@@ -111,6 +120,8 @@ if(!exists('isct')) {
   
   rm(a,b,c, tcga.gtf)
 }
+
+
 
 
 wang.glioma.intrinsic.genes <- wang.glioma.intrinsic.genes %>% 
