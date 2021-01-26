@@ -11,12 +11,14 @@ library(readxl)
 # three CNV samples samples not in metadata: "AMA" "AMA" "BAO" "BAO" "FAF" "FAF"
 #gsam.patient.metadata <- read.csv('data/administratie/dbGSAM_PUBLIC_VERSION.csv',stringsAsFactors=F)
 
-gsam.patient.metadata <- read.csv('data/gsam/administratie/GSAM_combined_clinical_molecular.csv',stringsAsFactors=F)
-gsam.patient.metadata <- gsam.patient.metadata[order(gsam.patient.metadata$studyID),] # reorder
 
-gsam.patient.metadata$gender <- as.factor(gsam.patient.metadata$gender)
+gsam.patient.metadata <- read.csv('data/gsam/administratie/GSAM_combined_clinical_molecular.csv',stringsAsFactors=F) %>%
+                          dplyr::arrange(studyID) %>%
+                          dplyr::mutate(gender = as.factor(gender))
+
 
 # there's a number of samples of which the gender does not fit with the omics data - omics data determined genders are the corrected ones
+
 gsam.patient.metadata$gender.corrected <- gsam.patient.metadata$gender
 actual.males <- c('AAT', 'AAM', 'AZH', 'HAI','FAG')
 gsam.patient.metadata[gsam.patient.metadata$studyID %in% actual.males,]$gender.corrected <- 'Male'
@@ -397,11 +399,19 @@ gsam.rna.metadata <- gsam.rna.metadata %>%
     gsam.cnv.metadata %>%
       dplyr::select(c('donor_ID' , 'PD_ID', 'pat.with.IDH')) %>%
       dplyr::rename(sid = donor_ID) %>%
-      dplyr::filter(!is.na(pat.with.IDH))
+      dplyr::filter(!is.na(pat.with.IDH)) %>%
+      dplyr::mutate(pat.with.IDH = ifelse(is.na(pat.with.IDH), 0, pat.with.IDH)) %>% # collapse those with replicates
+      dplyr::mutate(pat.with.IDH = ifelse(pat.with.IDH == F, 1, pat.with.IDH)) %>%
+      dplyr::mutate(pat.with.IDH = ifelse(pat.with.IDH == T, 2, pat.with.IDH)) %>%
+      dplyr::group_by(sid) %>%
+      dplyr::summarise(pat.with.IDH = max(pat.with.IDH), .groups = 'drop') %>%
+      as.data.frame() %>%
+      dplyr::mutate(pat.with.IDH = ifelse(pat.with.IDH  == 0, NA, pat.with.IDH)) %>%
+      dplyr::mutate(pat.with.IDH = ifelse(pat.with.IDH  == 1, F, pat.with.IDH)) %>%
+      dplyr::mutate(pat.with.IDH = ifelse(pat.with.IDH  == 2, T, pat.with.IDH))
     
     , by = c('tmp' = 'sid')) %>%
   dplyr::mutate(tmp = NULL)
-
 
 
 
