@@ -411,7 +411,8 @@ gsam.rna.metadata <- gsam.rna.metadata %>%
       dplyr::mutate(pat.with.IDH = ifelse(pat.with.IDH  == 2, T, pat.with.IDH))
     
     , by = c('tmp' = 'sid')) %>%
-  dplyr::mutate(tmp = NULL)
+  dplyr::mutate(tmp = NULL) %>%
+  dplyr::mutate( pat.with.IDH = as.logical(pat.with.IDH) )
 
 
 

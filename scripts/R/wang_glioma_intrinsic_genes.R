@@ -154,7 +154,7 @@ wang.glioma.intrinsic.genes <- wang.glioma.intrinsic.genes %>%
 
 wang.glioma.intrinsic.genes <- wang.glioma.intrinsic.genes %>%
   dplyr::mutate(ENSG =       ifelse(is.na(ENSG), ENSG.GENCODE.31, ENSG )) %>%
-  dplyr::mutate(ENSG.short = ifelse(is.na(ENSG), ENSG.short.GENCODE.31, ENSG.short )) %>%
+  dplyr::mutate(ENSG.short = ifelse(is.na(ENSG.short), ENSG.short.GENCODE.31, ENSG.short )) %>%
   dplyr::mutate(GENE.GENCODE.31 = NULL, ENSG.short.GENCODE.31 = NULL, ENSG.GENCODE.31 = NULL)
 
 
