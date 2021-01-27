@@ -31,6 +31,7 @@ blacklist <- gsam.rna.metadata %>%
   dplyr::pull('sid') %>%
   c("CAO1-replicate", "GAS2-replicate","FAB2") %>% # replicates
   c("KAC2-new") %>% # dna contaminiation
+  c("BAI2") %>% # Has BAI2-new, which likely wasn't in the PCA blacklist
   unique()
 
 
@@ -69,13 +70,18 @@ rm(blacklist)
 # - blacklistp.pca
 # - KAC2-new << van nieuwe samples
 
+# BAI2, KAC1-new en KAE1-new hebben geen subtypes?
+# BAI2: should be replaced by BAI2-new
+#
+# in featureCounts;
+# KAC1-new: ja - zat ook in Santoesha's classi
+"KAC1-new" %in% colnames(gsam.rnaseq.expression.vst)
+# KAE1-new: ja - zat ook in Santoesha's classi
+"KAE1-new" %in% colnames(gsam.rnaseq.expression.vst)
 
 ## vst ----
 
 
-if(!exists('gsam.viii.rnaseq')) {
-  source('scripts/R/gsam_rnaseq_egfrviii_expression.R')
-}
 
 if(!exists('gsam.rnaseq.expression.vst')) {
   tmp.1 <- gsam.rnaseq.expression %>%
@@ -100,6 +106,7 @@ if(!exists('gsam.rnaseq.expression.vst')) {
   tmp <- DESeq2::DESeqDataSetFromMatrix(tmp, S4Vectors::DataFrame(cond), ~cond)
   gsam.rnaseq.expression.vst <- SummarizedExperiment::assay(DESeq2::vst(tmp,blind=T))
   rm(cond, tmp)
+
 }
 
 

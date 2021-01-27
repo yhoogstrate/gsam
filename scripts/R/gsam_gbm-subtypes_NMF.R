@@ -17,6 +17,8 @@ source('data/wang/msig.library.12.R') # license is incomplete regarding sharing,
 source('scripts/R/subtype_genes.R')
 source('scripts/R/wang_glioma_intrinsic_genes.R')
 
+source('scripts/R/youri_gg_theme.R')
+
 
 # NMF ----
 
@@ -34,6 +36,8 @@ tmp <- gsam.rnaseq.expression.vst
 if(min(tmp) < 0) { # not the case
   tmp <- tmp - min(tmp) + .Machine$double.eps
 }
+
+# TODO separate IDH wt/mutants into distinct matrices
 
 
 ### make 15k set ----
@@ -178,6 +182,7 @@ points(
   
   ,pch=19, cex=0.6
 )
+# screeplot(p)
 
 
 points( test.lda$means[,1] ,  test.lda$means[,2] , col = rgb(0.5,0.5,0.5,0.05) , pch=19, cex = 25)
@@ -221,7 +226,7 @@ ggplot(plt, aes(x = PC1, y = PC2, col = class)) +
   youri_gg_theme +
   labs(x = "PC1 on NMF[k=3] (150 C-genes)",
        y = "PC2 on NMF[k=3] (150 C-genes)",
-       col = "GlioVis subtype",
+       col = "GlioVis Majority subtype",
        fill = "NMF/PCA/LDA subtype")
   
 
