@@ -4,7 +4,7 @@
 
 library(tidyverse)
 library(NMF)
-
+library(scales)
 
 
 # load data ----
@@ -156,21 +156,74 @@ ggplot(plt, aes(x = nmf, y = Freq, col=gliovis)  ) +
 # )
 
 
+
 # clearly the nicest fit (!!!!!)
 # PCA to also fit NMF 3 into two dimensions (is a better fit)
 p <- prcomp(t(gsam_nmf_150$`123456`$H))
-plot(
+# perform linear classifier on the PCA
+train.in <- p$x %>%
+  as.data.frame() %>%
+  dplyr::mutate(gliovis = metadata$gliovis.majority_call)
+
+test.lda <- MASS::lda(gliovis ~ PC1 + PC2, data = train.in)
+
+
+plot(c(-6,6), c(-6,6), type="n")
+points(
   p$x[,1],
   p$x[,2],
   
-  #col = as.factor(metadata$gliovis.majority_call)
-  col = as.factor(gsam_nmf_150$`123456`$membership)
+  col = as.factor(metadata$gliovis.majority_call)
+  #col = as.factor(gsam_nmf_150$`123456`$membership)
+  
+  ,pch=19, cex=0.6
 )
 
 
-# perform linear classifier on the PCA
-train.in <- p$x 
-test.lda <- lda(gliovis ~ PC1 + PC2 )
+points( test.lda$means[,1] ,  test.lda$means[,2] , col = rgb(0.5,0.5,0.5,0.05) , pch=19, cex = 25)
+
+# ---- brute force class labels ----
+
+resolution <- 250 # 1000 x 1000 data points
+
+range_pc1 = seq(from = min(p$x[,1]), to = max(p$x[,1]), length.out = resolution) * 1.2
+range_pc2 = seq(from = min(p$x[,2]), to = max(p$x[,2]), length.out = resolution) * 1.2
+
+range_df = expand.grid(PC1 = range_pc1, PC2 = range_pc2)
+range_predictions = predict(test.lda, newdata = range_df)
+
+# range_df[1:10,1:2]
+points(
+  range_df$PC1,
+  range_df$PC2,
+  
+  col=as.factor(range_predictions$class), pch=19, cex=0.01 , alpha=0.1 )
+
+
+
+
+plt <- data.frame(PC1 = p$x[,1], PC2 = p$x[,2], class = metadata$gliovis.majority_call, type = "GlioVis") %>%
+  rbind( 
+    data.frame(
+      PC1 = range_df$PC1 ,
+      PC2 = range_df$PC2 ,
+      class = range_predictions$class,
+      type = "LDA on NVM+PCA"
+    )
+    )
+
+
+ggplot(plt, aes(x = PC1, y = PC2, col = class)) + 
+  #geom_point(data = subset(plt, type != "GlioVis"), alpha = 0.15, size = 0.4) +
+  geom_raster(data = subset(plt, type != "GlioVis"), aes(fill = factor(class)),alpha=0.2) +
+  geom_contour(data= subset(plt, type != "GlioVis"), aes(z=as.numeric(class)), colour="gray", alpha=0.85,breaks=c(1.5,2.5)) +
+  geom_point(data = subset(plt, type == "GlioVis")) +
+  youri_gg_theme +
+  labs(x = "PC1 on NMF[k=3] (150 C-genes)",
+       y = "PC2 on NMF[k=3] (150 C-genes)",
+       col = "GlioVis subtype",
+       fill = "NMF/PCA/LDA subtype")
+  
 
 
 
