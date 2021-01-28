@@ -37,8 +37,6 @@ if(min(tmp) < 0) { # not the case
   tmp <- tmp - min(tmp) + .Machine$double.eps
 }
 
-# TODO separate IDH wt/mutants into distinct matrices
-
 
 ### make 15k set ----
 ### make 7k set ----

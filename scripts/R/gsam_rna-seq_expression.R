@@ -75,9 +75,9 @@ rm(blacklist)
 #
 # in featureCounts;
 # KAC1-new: ja - zat ook in Santoesha's classi
-"KAC1-new" %in% colnames(gsam.rnaseq.expression.vst)
+# "KAC1-new" %in% colnames(gsam.rnaseq.expression.vst)
 # KAE1-new: ja - zat ook in Santoesha's classi
-"KAE1-new" %in% colnames(gsam.rnaseq.expression.vst)
+# "KAE1-new" %in% colnames(gsam.rnaseq.expression.vst)
 
 ## vst ----
 
