@@ -193,8 +193,8 @@ plt.nmf.pca.lda.150.p <- ggplot(plt.nmf.pca.lda.150, aes(x = PC1, y = PC2, col =
                ) +
   geom_point(data = subset(plt.nmf.pca.lda.150, type == "GlioVis"), size=1.5) +
   youri_gg_theme +
-  labs(x = "PC1 on NMF[k=3] (150 C-genes)",
-       y = "PC2 on NMF[k=3] (150 C-genes)",
+  labs(x = "PC1 on NMF[k=3] (150 S-Genes)",
+       y = "PC2 on NMF[k=3] (150 S-Genes)",
        col = "GlioVis Majority subtype",
        fill = "NMF/PCA/LDA subtype") + 
   scale_color_manual(name = NULL, values = subtype_colors, guide = guide_legend(title = NULL, title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75)) + 
@@ -231,8 +231,8 @@ plt.nmf.pca.lda.reclass.150.p <- ggplot(plt.nmf.pca.lda.reclass.150, aes(x = PC1
   ) +
   geom_point(data = subset(plt.nmf.pca.lda.reclass.150, type == "LDA on NVM+PCA data"), size=1.5) +
   youri_gg_theme +
-  labs(x = "PC1 on NMF[k=3] (150 C-genes)",
-       y = "PC2 on NMF[k=3] (150 C-genes)",
+  labs(x = "PC1 on NMF[k=3] (150 S-Genes)",
+       y = "PC2 on NMF[k=3] (150 S-Genes)",
        col = "GlioVis Majority subtype",
        fill = "NMF/PCA/LDA subtype") + 
   scale_color_manual(name = NULL, values = subtype_colors, guide = guide_legend(title = NULL, title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75)) + 
