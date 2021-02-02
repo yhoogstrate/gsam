@@ -29,7 +29,7 @@ source("scripts/R/ligands.R")
 source("scripts/R/subtype_genes.R")
 
 source("scripts/R/gsam_metadata.R")
-source("scripts/R/gsam_expression_matrix.R")
+source("scripts/R/gsam_rna-seq_expression.R")
 source("scripts/R/dna_idh.R") # IDH mutants must be excluded
 
 source("scripts/R/glass_metadata.R")
