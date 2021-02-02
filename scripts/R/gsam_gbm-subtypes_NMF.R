@@ -27,17 +27,13 @@ source('scripts/R/palette.R')
 
 ## Normalize for NMF ----
 
-### normalize the VST values ----
 tmp <- gsam.rnaseq.expression.vst
 
 if(min(tmp) < 0) { # not the case
   tmp <- tmp - min(tmp) + .Machine$double.eps
 }
 
-
-### make 15k set ----
-### make 7k set ----
-### make 150 set ----
+## make 150 set ----
 
 
 metadata <- gsam.rna.metadata %>%
@@ -69,14 +65,12 @@ gsam.rnaseq.expression.vst.150 <- gsam.rnaseq.expression.vst.150 %>%
 stopifnot(colnames(gsam.rnaseq.expression.vst.150) == metadata$sid)
 
 
+## Exclude IDH muts [after normalisation, so they can be mapped back into the coordinates later] ----
+## not really possible with NMF
 
-### exclude IDH muts [after normalisation, so they can be mapped back into the coordinates later] ----
+## Make regular PCA ---- 
 
-## Perform NMF by Wang-code [seeds: ] ----
-
-# TEST REGULAR PCA - SHOULD WORK(!)
 p <- prcomp(t(gsam.rnaseq.expression.vst.150))#screeplot(p)
-
 
 plt.pca.150   <- data.frame(PC1 = p$x[,1], PC2 = p$x[,2], gliovis = as.factor(metadata$gliovis.majority_call))
 plt.pca.150.p <- ggplot(plt.pca.150, aes(x = PC1, y = PC2, col = gliovis) ) + 
@@ -87,6 +81,10 @@ plt.pca.150.p <- ggplot(plt.pca.150, aes(x = PC1, y = PC2, col = gliovis) ) +
                                               'Proneural'='#ff5f68'),#red/pink
                      guide = guide_legend(title = NULL, title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75))
 
+rm(p, plt.pca.150, plt.pca.150.p)
+
+
+## NMF using Wang-code ----
 
 # actual nmf
 if(!file.exists("tmp/gsam_nmf_150.Rds")) {
