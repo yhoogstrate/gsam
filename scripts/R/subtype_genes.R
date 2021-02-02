@@ -2,7 +2,7 @@
 
 
 if(!exists('gencode.31')) {
-  source('scripts/R/gsam_expression_matrix.R')
+  source('scripts/R/gsam_rna-seq_expression.R')
 }
 
 

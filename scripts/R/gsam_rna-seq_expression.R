@@ -54,7 +54,7 @@ gsam.rnaseq.expression <- "data/gsam/output/tables/gsam_featureCounts_readcounts
     unlist(lapply(stringr::str_split(Strand,";") , unique)),
     ')' ) ) %>%
   dplyr::mutate(Chr=NULL, Start = NULL, End = NULL, Strand = NULL, Length=NULL, Geneid=NULL, GENE=NULL) %>%
-  dplyr::select(-paste0("V",1:8)) %>%
+  dplyr::select(-all_of(paste0("V",1:8))) %>%
   tibble::column_to_rownames("rn") %>%
   dplyr::select( -c(blacklist) )
 
