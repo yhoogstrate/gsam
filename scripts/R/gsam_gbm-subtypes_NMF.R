@@ -65,28 +65,49 @@ gsam.rnaseq.expression.vst.150 <- gsam.rnaseq.expression.vst.150 %>%
 stopifnot(colnames(gsam.rnaseq.expression.vst.150) == metadata$sid)
 
 
+
+plt.single <- metadata %>%
+  dplyr::select(c('sid', 'gliovis.majority_call', 'pat.with.IDH', 'resection')) %>%
+  dplyr::mutate(resection = gsub('r','R',resection)) %>%
+  dplyr::mutate(pid = gsub('^(...).*$','\\1',sid))
+
+
+
 ## Exclude IDH muts [after normalisation, so they can be mapped back into the coordinates later] ----
 ## not really possible with NMF
 
-## Make regular PCA ---- 
+## Add regular PCA ---- 
 
 p <- prcomp(t(gsam.rnaseq.expression.vst.150))#screeplot(p)
 
-plt.pca.150   <- data.frame(PC1 = p$x[,1], PC2 = p$x[,2], gliovis = as.factor(metadata$gliovis.majority_call))
-plt.pca.150.p <- ggplot(plt.pca.150, aes(x = PC1, y = PC2, col = gliovis) ) + 
-  geom_point(size=1.5) +
-  youri_gg_theme + 
-  scale_color_manual(name = NULL, values =  c('Classical'='#6ba6e5',# blue
-                                              'Mesenchymal'='#eab509',#mustard
-                                              'Proneural'='#ff5f68'),#red/pink
-                     guide = guide_legend(title = NULL, title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75))
+plt.single <- plt.single %>%
+  dplyr::left_join(
+    p %>%
+      purrr::pluck('x') %>%
+      as.data.frame() %>%
+      tibble::rownames_to_column('sid') %>%
+      dplyr::select(c('sid','PC1','PC2','PC3','PC4'))
+    , by=c('sid' = 'sid') )
 
-rm(p, plt.pca.150, plt.pca.150.p)
+rm(p)
 
+
+# # 
+# 
+# 
+# plt.pca.150.p <- ggplot(plt.single, aes(x = PC1, y = PC2, col = gliovis.majority_call) ) + 
+#   geom_point(size=1.5) +
+#   youri_gg_theme + 
+#   scale_color_manual(name = NULL, values =  c('Classical'='#6ba6e5',# blue
+#                                               'Mesenchymal'='#eab509',#mustard
+#                                               'Proneural'='#ff5f68'),#red/pink
+#                      guide = guide_legend(title = NULL, title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75))
+# 
 
 ## NMF using Wang-code ----
 
 # actual nmf
+
 if(!file.exists("tmp/gsam_nmf_150.Rds")) {
   gsam_nmf_150 <- {{}}
   #gsam_nmf_15k <- {{}}
@@ -106,20 +127,56 @@ if(!file.exists("tmp/gsam_nmf_150.Rds")) {
 }
 
 
+plt.single <- plt.single %>%
+  dplyr::left_join(
+    gsam_nmf_150 %>%
+      purrr::pluck('123456') %>%
+      purrr::pluck('H') %>%
+      t() %>%
+      as.data.frame() %>%
+      `colnames<-`(c('NMF:123456.1','NMF:123456.2','NMF:123456.3')) %>%
+      tibble::rownames_to_column('sid') %>%
+      dplyr::mutate(`NMF:123456.membership` = as.factor (gsam_nmf_150 %>% purrr::pluck('123456') %>% purrr::pluck('membership') %>% gsub('^(.+)$','NMF:\\1',.) ) )
+    , by=c('sid' = 'sid') )
+
+
+
+
 # 
 
-plt.nmf.150   <- as.data.frame(t(gsam_nmf_150$`123456`$H)) %>%
-  tibble::rownames_to_column('sid') %>%
-  dplyr::rename(NMF1 = V1, NMF2 = V2, NMF3 = V3) %>%
-  dplyr::left_join(metadata %>% dplyr::select(c('sid','gliovis.majority_call','pat.with.IDH')), by=c('sid' = 'sid')) %>%
-  dplyr::rename(gliovis = gliovis.majority_call)
 
-plt.nmf.150.p <- ggplot(plt.nmf.150, aes(x = NMF1, y = NMF2, col = gliovis) ) + 
-  geom_point(size=1.5) +
-  youri_gg_theme + 
-  scale_color_manual(name = NULL, values = subtype_colors, guide = guide_legend(title = NULL, title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75)) +
-  scale_x_continuous(limits= c(min(plt.nmf.150$NMF1), max(plt.nmf.150$NMF1)) * 1.1  ) +
-  scale_y_continuous(limits= c(min(plt.nmf.150$NMF2), max(plt.nmf.150$NMF2)) * 1.1  )
+
+# ggplot(plt.nmf.150, aes(x = NMF1, y = NMF2, col = NMF.mem) ) + 
+#   geom_point(size=1.5) +
+#   youri_gg_theme + 
+#   scale_color_manual(
+#     name = "Subtype by NMF Meta-feature:",
+#     values = c('1'="#6ba6e5", # Classical
+#                '3'= "#eab509", # Mesenchymal 
+#                '2'= "#ff5f68" # Proneural
+#     ),
+#     guide = guide_legend(title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75)
+#   ) +
+#   scale_x_continuous(limits= c(min(plt.nmf.150$NMF1), max(plt.nmf.150$NMF1)) , expand = expansion(mult = c(.1, .1)) ) +
+#   scale_y_continuous(limits= c(min(plt.nmf.150$NMF2), max(plt.nmf.150$NMF2)) , expand = expansion(mult = c(.1, .1)) ) 
+# ggsave("output/figures/paper_subtypes_nmf_nmf_1_2_nmf.png",width=7,height=7.2)
+# 
+# 
+# #plt.nmf.150.p <-
+# ggplot(plt.nmf.150, aes(x = NMF1, y = NMF2, col = gliovis) ) + 
+#   geom_point(size=1.5) +
+#   youri_gg_theme + 
+#   scale_color_manual(
+#     name = "Subtype by GlioVis:",
+#     values = subtype_colors,
+#     guide = guide_legend(title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75)
+#   ) +
+#   scale_x_continuous(limits= c(min(plt.nmf.150$NMF1), max(plt.nmf.150$NMF1)) , expand = expansion(mult = c(.1, .1)) ) +
+#   scale_y_continuous(limits= c(min(plt.nmf.150$NMF2), max(plt.nmf.150$NMF2)) , expand = expansion(mult = c(.1, .1)) ) 
+# ggsave("output/figures/paper_subtypes_nmf_nmf_1_2_gliovis.png",width=7,height=7.2)
+# 
+
+
 
 
 
@@ -144,24 +201,79 @@ plt.nmf.150.p <- ggplot(plt.nmf.150, aes(x = NMF1, y = NMF2, col = gliovis) ) +
 
 # clearly the nicest fit (!!!!!)
 # PCA to also fit NMF 3 into two dimensions (is a better fit)
-p <- prcomp(t(gsam_nmf_150$`123456`$H))
-plt.nmf.pca.150   <- data.frame(NMF.PC1 = p$x[,1], NMF.PC2 = p$x[,2], gliovis = as.factor(metadata$gliovis.majority_call))
-plt.nmf.pca.150.p <- ggplot(plt.nmf.pca.150 , aes(x = NMF.PC1, y = NMF.PC2, col = gliovis) ) + 
-  geom_point(size=1.5) +
-  youri_gg_theme + 
-  scale_color_manual(name = NULL, values =  subtype_colors, guide = guide_legend(title = NULL, title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75)) +
-  scale_x_continuous(limits= c(min(plt.nmf.pca.150$NMF.PC1), max(plt.nmf.pca.150$NMF.PC1)) * 1.1  ) +
-  scale_y_continuous(limits= c(min(plt.nmf.pca.150$NMF.PC2), max(plt.nmf.pca.150$NMF.PC2)) * 1.1  )
-  
+
+
+p <- plt.single %>%
+  dplyr::select(c('sid',"NMF:123456.1","NMF:123456.2","NMF:123456.3")) %>%
+  tibble::column_to_rownames('sid') %>%
+  #t() %>%
+  prcomp()
+
+
+#png("output/figures/tmp-screeplot.png")
+#screeplot(p)
+#dev.off()
+
+
+plt.single <- plt.single %>%
+  dplyr::left_join(
+    p %>%
+      purrr::pluck('x') %>%
+      as.data.frame() %>%
+      `colnames<-`(gsub('^PC','NMF:123456.PC',colnames(.))) %>%
+      tibble::rownames_to_column('sid') %>%
+      dplyr::select(c('sid','NMF:123456.PC1','NMF:123456.PC2','NMF:123456.PC3'))
+    , by=c('sid' = 'sid') ) %>%
+  dplyr::mutate(`NMF:123456.PC1.n` = as.numeric(scale(`NMF:123456.PC1`))) %>% # scaled PC's, to be used for Eucledian distances
+  dplyr::mutate(`NMF:123456.PC2.n` = as.numeric(scale(`NMF:123456.PC2`))) %>%
+  dplyr::mutate(`NMF:123456.PC3.n` = as.numeric(scale(`NMF:123456.PC3`)))
+
+rm(p)
 
 
 
-# perform linear classifier on the PCA
-train.in <- p$x %>%
-  as.data.frame() %>%
-  dplyr::mutate(gliovis = metadata$gliovis.majority_call)
+# 
+# 
+# p <- prcomp(t(gsam_nmf_150$`123456`$H))
+# plt.nmf.pca.150   <- data.frame(NMF.PC1 = p$x[,1], NMF.PC2 = p$x[,2], gliovis = as.factor(metadata$gliovis.majority_call))
+# plt.nmf.pca.150.p <- 
+# 
+#   ggplot(plt.nmf.pca.150 , aes(x = NMF.PC1, y = NMF.PC2, col = gliovis) ) + 
+#   geom_point(size=1.5) +
+#   youri_gg_theme + 
+#   scale_color_manual(
+#     name = "Subtype by GlioVis:",
+#     values = subtype_colors,
+#     guide = guide_legend(title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75)
+#   ) +
+#   scale_x_continuous(limits= c(min(plt.nmf.pca.150$NMF.PC1), max(plt.nmf.pca.150$NMF.PC1)) * 1.1  ) +
+#   scale_y_continuous(limits= c(min(plt.nmf.pca.150$NMF.PC2), max(plt.nmf.pca.150$NMF.PC2)) * 1.1  )
+# ggsave("output/figures/paper_subtypes_nmf_pca_1_2_gliovis.png",width=7,height=7.2)
+#   
 
-test.lda <- MASS::lda(gliovis ~ PC1 + PC2, data = train.in)
+
+
+classifier.lda <- MASS::lda(`gliovis.majority_call` ~ `NMF:123456.PC1` + `NMF:123456.PC2` , data = train.in <- plt.single %>%
+                              dplyr::select(c('sid','NMF:123456.PC1', 'NMF:123456.PC2', 'gliovis.majority_call')) %>%
+                              tibble::column_to_rownames('sid') %>%
+                              as.data.frame())
+
+
+
+plt.single <- plt.single %>% dplyr::left_join(
+  predict(classifier.lda, newdata = plt.single %>%
+            dplyr::select(c('sid','NMF:123456.PC1', 'NMF:123456.PC2', 'gliovis.majority_call')) %>%
+            tibble::column_to_rownames('sid') %>%
+            as.data.frame() ) %>%
+    data.frame() %>%
+    dplyr::select(c('class', 'posterior.Classical', 'posterior.Mesenchymal', 'posterior.Proneural')) %>%
+    `colnames<-`( gsub('^(.+)$','NMF:123456.PCA.LDA.\\1', colnames(.))  ) %>%
+    tibble::rownames_to_column('sid')
+  ,  by=c('sid'='sid') )
+
+
+
+
 
 
 #plot(c(-6,6), c(-6,6), type="n")
@@ -173,7 +285,7 @@ test.lda <- MASS::lda(gliovis ~ PC1 + PC2, data = train.in)
 #  ,pch=19, cex=0.6
 #)# screeplot(p)
 
-# ---- brute force class labels ----
+### brute force class labels for plotting ----
 
 resolution <- 250 # 1000 x 1000 data points
 
@@ -206,7 +318,7 @@ plt.nmf.pca.lda.150.p <- ggplot(plt.nmf.pca.lda.150, aes(x = PC1, y = PC2, col =
        fill = "NMF/PCA/LDA subtype") + 
   scale_color_manual(name = NULL, values = subtype_colors, guide = guide_legend(title = NULL, title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75)) + 
   scale_fill_manual(values = subtype_colors)
-
+ggsave("output/figures/paper_subtypes_nmf_pca_1_2_lda-contour.png",width=7,height=7.2)
 
 
 
@@ -229,7 +341,9 @@ rm(range_predictions)
 
 
 
-plt.nmf.pca.lda.reclass.150.p <- ggplot(plt.nmf.pca.lda.reclass.150, aes(x = PC1, y = PC2, col = class)) + 
+plt.nmf.pca.lda.reclass.150.p <-
+
+  ggplot(plt.nmf.pca.lda.reclass.150, aes(x = PC1, y = PC2, col = class)) + 
   geom_contour(data= subset(plt.nmf.pca.lda.150, type != "GlioVis"), aes(z=as.numeric(class)),
                colour="gray40",
                size=0.25,
@@ -242,8 +356,13 @@ plt.nmf.pca.lda.reclass.150.p <- ggplot(plt.nmf.pca.lda.reclass.150, aes(x = PC1
        y = "PC2 on NMF[k=3] (150 S-Genes)",
        col = "GlioVis Majority subtype",
        fill = "NMF/PCA/LDA subtype") + 
-  scale_color_manual(name = NULL, values = subtype_colors, guide = guide_legend(title = NULL, title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75)) + 
+  scale_color_manual(
+    name = "Subtype by LDA labels:",
+    values = subtype_colors,
+    guide = guide_legend(title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75)
+  ) +
   scale_fill_manual(values = subtype_colors)
+ggsave("output/figures/paper_subtypes_nmf_pca_1_2_lda-labels.png",width=7,height=7.2)
 
 
 
@@ -255,36 +374,81 @@ plt.nmf.150.p + plt.nmf.pca.150.p + plt.nmf.pca.lda.150.p + plt.nmf.pca.lda.recl
 
 ## Perform PCA on NMF coordinates ? ----
 
-## Export ----
+# Per pair stats ----
 
-## asd ----
 
-# determine the eucledian distance between any two pairs and make p-dist
-distances.paired <- plt.nmf.pca.lda.150 %>% 
-  dplyr::filter(type == 'GlioVis') %>%
-  tibble::rownames_to_column('sid') %>%
-  dplyr::mutate(pid = gsub('^(...).*','\\1',sid) ) %>%
-  dplyr::mutate(res = gsub('^...(.).*','R\\1',sid) ) %>%
+plt.paired <- plt.single %>%
   dplyr::group_by(pid) %>%
   dplyr::filter(n() == 2) %>%
-  dplyr::mutate(PC1 = NULL, PC2=NULL) # use normaalised ones
+  dplyr::top_n(1, sid) %>%
+  dplyr::select(all_of('pid')) %>%
+  as.data.frame() %>%
+  dplyr::left_join(plt.single %>% dplyr::filter(resection == 'R1') %>% `colnames<-`( paste0(colnames(.) , ".R1") ) , by=c('pid'='pid.R1') ) %>%
+  dplyr::left_join(plt.single %>% dplyr::filter(resection == 'R2') %>% `colnames<-`( paste0(colnames(.) , ".R2") ) , by=c('pid'='pid.R2') ) %>%
+  dplyr::mutate(eucledian.dist = sqrt((`NMF:123456.PC1.n.R1` - `NMF:123456.PC1.n.R2`)^2 +
+                                      (`NMF:123456.PC2.n.R1` - `NMF:123456.PC2.n.R2`)^2))
 
-distances.paired.R1 <- distances.paired %>%
-  dplyr::filter(res == "R1")
 
-distances.paired.R2 <- distances.paired %>%
-  dplyr::filter(res == "R2")
-
-stopifnot(distances.paired.R1$pid == distances.paired.R2$pid)
-
-distances.paired <- data.frame(pid = distances.paired.R1$pid,
-                               eucledian.dist = sqrt((distances.paired.R1$PC1.n - distances.paired.R2$PC1.n)^2 +
-                                                     (distances.paired.R2$PC1.n - distances.paired.R2$PC2.n)^2),
-                               stringsAsFactors = F)
 
 plot(density(distances.paired$eucledian.dist))
 hist(distances.paired$eucledian.dist,breaks=15)
 
+
+
+plt.anti.paired <- expand.grid(
+  plt.single %>%
+    dplyr::filter(resection == 'R1') %>%
+    dplyr::pull(pid)
+  ,
+  plt.single %>%
+    dplyr::filter(resection == 'R2') %>%
+    dplyr::pull(pid)
+  ) %>%
+  dplyr::rename(pid.R1 = Var1) %>%
+  dplyr::rename(pid.R2 = Var2) %>%
+  dplyr::mutate(pid.R1 = as.character(pid.R1)) %>%
+  dplyr::mutate(pid.R2 = as.character(pid.R2)) %>%
+  dplyr::filter(`pid.R1` != `pid.R2`) %>%
+  dplyr::left_join(plt.single %>% dplyr::filter(resection == 'R1') %>% `colnames<-`( paste0(colnames(.) , ".R1") ) , by=c('pid.R1'='pid.R1') ) %>%
+  dplyr::left_join(plt.single %>% dplyr::filter(resection == 'R2') %>% `colnames<-`( paste0(colnames(.) , ".R2") ) , by=c('pid.R2'='pid.R2') ) %>%
+  dplyr::mutate(eucledian.dist = sqrt((`NMF:123456.PC1.n.R1` - `NMF:123456.PC1.n.R2`)^2 +
+                                      (`NMF:123456.PC2.n.R1` - `NMF:123456.PC2.n.R2`)^2))
+
+
+wilcox.test(plt.anti.paired$eucledian.dist, plt.paired$eucledian.dist)
+median(plt.anti.paired$eucledian.dist)
+median(plt.paired$eucledian.dist)
+
+
+
+## asd ----
+
+# # determine the eucledian distance between any two pairs and make p-dist
+# distances.paired <- plt.nmf.pca.lda.150 %>% 
+#   dplyr::filter(type == 'GlioVis') %>%
+#   tibble::rownames_to_column('sid') %>%
+#   dplyr::mutate(pid = gsub('^(...).*','\\1',sid) ) %>%
+#   dplyr::mutate(res = gsub('^...(.).*','R\\1',sid) ) %>%
+#   dplyr::group_by(pid) %>%
+#   dplyr::filter(n() == 2) %>%
+#   dplyr::mutate(PC1 = NULL, PC2=NULL) # use normalised ones
+# 
+# distances.paired.R1 <- distances.paired %>%
+#   dplyr::filter(res == "R1")
+# 
+# distances.paired.R2 <- distances.paired %>%
+#   dplyr::filter(res == "R2")
+# 
+# stopifnot(distances.paired.R1$pid == distances.paired.R2$pid)
+# 
+# distances.paired <- data.frame(pid = distances.paired.R1$pid,
+#                                eucledian.dist = sqrt((distances.paired.R1$PC1.n - distances.paired.R2$PC1.n)^2 +
+#                                                      (distances.paired.R1$PC2.n - distances.paired.R2$PC2.n)^2),
+#                                stringsAsFactors = F)
+# 
+# plot(density(distances.paired$eucledian.dist))
+# hist(distances.paired$eucledian.dist,breaks=15)
+# 
 
 # calc distances of all R1 to any R2 from another tumour
 
@@ -472,8 +636,8 @@ for(sid.r1 in r1.paired) {
   for(sid.r2 in plt$sid) {
     b <- plt %>% dplyr::filter(sid == sid.r2)
     
-    #if(a$pid != b$pid & b$res == 'R2') {
-    if(b$res == 'R2') {
+    if(a$pid != b$pid & b$res == 'R2') {
+    #if(b$res == 'R2') {
       d.b <- sqrt((a$PC1.n - b$PC1.n)^2 + (a$PC2.n - b$PC2.n)^2)
       
       if(d.b <= d) { # fits within 'circle'
@@ -494,6 +658,7 @@ for(sid.r1 in r1.paired) {
 }
 
 
+
 probable_transitions.s <- probable_transitions %>%
   dplyr::group_by(from) %>%
   dplyr::summarize(to.cl = sum(to.class == 'Classical'),
@@ -501,16 +666,43 @@ probable_transitions.s <- probable_transitions %>%
                    to.pn = sum(to.class == 'Proneural')
                    ) %>%
   dplyr::mutate(to.n = to.cl + to.mes + to.pn) %>%
-  dplyr::left_join(plt %>% dplyr::select(c('sid','class')) %>% dplyr::rename(class.r1 = class) , by = c('from' = 'sid'))
-
-
-probable_transitions.s <- probable_transitions.s %>%
-  dplyr::mutate(retained = case_when(
+  dplyr::left_join(plt %>% dplyr::select(c('sid','class')) %>% dplyr::rename(class.r1 = class) , by = c('from' = 'sid')) %>%
+  dplyr::mutate(p.retained = case_when(
     class.r1 == "Classical" ~ to.cl / to.n,
     class.r1 == "Mesenchymal" ~ to.mes / to.n,
     class.r1 == "Proneural" ~ to.pn / to.n
   )) %>%
-  dplyr::mutate(transition = 1 - retained)
+  dplyr::mutate(p.transition = 1 - p.retained) %>%
+  dplyr::full_join(
+    data.frame(sid=r1.paired) %>%
+      dplyr::left_join(
+        plt %>%
+          dplyr::select(c('sid','class')) %>%
+          dplyr::rename(class.r1.tmp = class)
+        , by=c('sid'='sid'))
+    , by = c('from' = 'sid')) %>%
+  dplyr::mutate(pid = gsub('^(...).*$','\\1', from) ) %>%
+  dplyr::left_join(
+    plt %>%
+      dplyr::filter(res == 'R2') %>%
+      dplyr::select(c('sid','class','pid') ) %>%
+      dplyr::rename(class.r2 = class) %>%
+      dplyr::rename(to = sid)
+    ,
+    by = c('pid' = 'pid')
+  ) %>%
+  dplyr::mutate(p.retained = ifelse(is.na(p.retained), 1, p.retained) ) %>%
+  dplyr::mutate(p.transition = ifelse(is.na(p.transition), 1, p.transition) ) %>%
+  dplyr::mutate(class.r1 = as.factor( ifelse( is.na(class.r1),as.character(class.r1.tmp), as.character(class.r1) ) ) ) %>%
+  dplyr::mutate(class.r1.tmp = NULL) %>%
+  dplyr::mutate(status = as.factor(ifelse(class.r1 == class.r2,"retained","transition")))
+
+
+sum(probable_transitions.s$p.transition)
+sum(probable_transitions.s$p.retained)
+probable_transitions.s$status
+
+
 
 
 # er zijn er 2 die zo dicht bij hun partner liggen dat er geen ttansities worden gevonden
@@ -537,5 +729,9 @@ probable_transitions.s %>%
 
 ## find actual transitions (distribution) ----
 
+
+# TODO check aantal transities met gliovis gewone klassificate
+# TODO check aantal transities met gliovis deze klassificate
+# TODO check aantal transities met gliovis NMF klassificate
 
 
