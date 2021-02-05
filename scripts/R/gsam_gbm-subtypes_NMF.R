@@ -164,7 +164,6 @@ plt.single <- plt.single %>%
   dplyr::mutate(`NMF:123456.PC2.n` = as.numeric(scale(`NMF:123456.PC2`))) %>%
   dplyr::mutate(`NMF:123456.PC3.n` = as.numeric(scale(`NMF:123456.PC3`)))
 
-
 #png("output/figures/tmp-screeplot.png")
 #screeplot(p)
 #dev.off()
@@ -203,7 +202,7 @@ plt.single <- plt.single %>% dplyr::left_join(
 
 
 # Per pair stats ----
-
+## Split table into pairs + eucl dist ----
 
 plt.paired <- plt.single %>%
   dplyr::group_by(pid) %>%
@@ -214,12 +213,20 @@ plt.paired <- plt.single %>%
   dplyr::left_join(plt.single %>% dplyr::filter(resection == 'R1') %>% `colnames<-`( paste0(colnames(.) , ".R1") ) , by=c('pid'='pid.R1') ) %>%
   dplyr::left_join(plt.single %>% dplyr::filter(resection == 'R2') %>% `colnames<-`( paste0(colnames(.) , ".R2") ) , by=c('pid'='pid.R2') ) %>%
   dplyr::mutate(eucledian.dist = sqrt((`NMF:123456.PC1.n.R1` - `NMF:123456.PC1.n.R2`)^2 +
-                                      (`NMF:123456.PC2.n.R1` - `NMF:123456.PC2.n.R2`)^2))
+                                      (`NMF:123456.PC2.n.R1` - `NMF:123456.PC2.n.R2`)^2)) %>%
+  dplyr::mutate(gliovis.status = as.factor(ifelse(gliovis.majority_call.R1 == gliovis.majority_call.R2, "Stable", "Transition"))) %>%
+  dplyr::mutate(`NMF:123456.membership.status` = as.factor(ifelse(`NMF:123456.membership.R1`== `NMF:123456.membership.R2`, "Stable", "Transition"))) %>%
+  dplyr::mutate(`NMF:123456.PCA.LDA.status` = as.factor(ifelse(`NMF:123456.PCA.LDA.class.R1` == `NMF:123456.PCA.LDA.class.R2`, "Stable", "Transition")))
+  
+
+  
 
 
 plot(density(plt.paired$eucledian.dist))
 hist(plt.paired$eucledian.dist,breaks=15)
 
+
+## table w/ non-matching tumour pairs (control) ----
 
 
 plt.anti.paired <- expand.grid(
@@ -239,7 +246,11 @@ plt.anti.paired <- expand.grid(
   dplyr::left_join(plt.single %>% dplyr::filter(resection == 'R1') %>% `colnames<-`( paste0(colnames(.) , ".R1") ) , by=c('pid.R1'='pid.R1') ) %>%
   dplyr::left_join(plt.single %>% dplyr::filter(resection == 'R2') %>% `colnames<-`( paste0(colnames(.) , ".R2") ) , by=c('pid.R2'='pid.R2') ) %>%
   dplyr::mutate(eucledian.dist = sqrt((`NMF:123456.PC1.n.R1` - `NMF:123456.PC1.n.R2`)^2 +
-                                      (`NMF:123456.PC2.n.R1` - `NMF:123456.PC2.n.R2`)^2))
+                                      (`NMF:123456.PC2.n.R1` - `NMF:123456.PC2.n.R2`)^2)) %>%
+  #dplyr::mutate(gliovis.status = as.factor(ifelse(gliovis.majority_call.R1 == gliovis.majority_call.R2, "Stable", "Transition"))) %>%
+  #dplyr::mutate(`NMF:123456.membership.status` = as.factor(ifelse(`NMF:123456.membership.R1`== `NMF:123456.membership.R2`, "Stable", "Transition"))) %>%
+  dplyr::mutate(`NMF:123456.PCA.LDA.status` = as.factor(ifelse(`NMF:123456.PCA.LDA.class.R1` == `NMF:123456.PCA.LDA.class.R2`, "Stable", "Transition")))
+
 
 
 
@@ -259,7 +270,9 @@ median(plt.anti.paired %>% dplyr::filter(`NMF:123456.PCA.LDA.class.R1` == 'Mesen
 median(plt.anti.paired %>% dplyr::filter(`NMF:123456.PCA.LDA.class.R1` == 'Proneural') %>% dplyr::pull(eucledian.dist))
 
 
+## Fit gamma distr on eucl distances ----
 
+library(fitdistrplus)
 gamma.paired.fit <- fitdist(plt.paired$eucledian.dist, "gamma")
 gamma.anti.paired.fit <- fitdist(plt.anti.paired$eucledian.dist, "gamma")
 
@@ -278,155 +291,125 @@ plot(gamma.anti.paired.fit)
 
 
 
-#plt.paired <- plt.paired %>%
-  #dplyr::mutate(p.gamma.paired = 1 - pgamma(c( eucledian.dist ), shape = gamma.paired.fit$estimate[1], rate = gamma.paired.fit$estimate[2]) )%>%
-  #dplyr::mutate(p.gamma.anti.paired = 1 - pgamma(c( eucledian.dist ), shape = gamma.anti.paired.fit$estimate[1], rate = gamma.anti.paired.fit$estimate[2]) )
 
-
-plt.anti.paired <- plt.anti.paired %>% 
-  dplyr::mutate(p.gamma.paired = 1 - pgamma(c( eucledian.dist ), shape = gamma.paired.fit$estimate[1], rate = gamma.paired.fit$estimate[2]) )
-
-
-
-
-
-plt.paired <- plt.paired %>%
-  dplyr::left_join(
-    
-    plt.anti.paired %>%
-      dplyr::filter(sid.R1 %in% plt.paired$sid.R1) %>%
-      dplyr::select(c('sid.R1', 'sid.R2',"eucledian.dist", "p.gamma.paired",
-                      'NMF:123456.PCA.LDA.class.R1','NMF:123456.PCA.LDA.class.R2')) %>%
-      dplyr::group_by(sid.R1 , `NMF:123456.PCA.LDA.class.R2`) %>%
-      dplyr::summarise(sum.p.gamma.paired = sum(p.gamma.paired), .groups='drop' ) %>%
-      dplyr::ungroup() %>% 
-      tidyr::pivot_wider(names_from = `NMF:123456.PCA.LDA.class.R2`, values_from = `sum.p.gamma.paired`) %>%
-      dplyr::mutate(tmp.sum = Classical + Mesenchymal + Proneural,
-                    p.gamma.to.cl = Classical / tmp.sum,
-                    p.gamma.to.mes = Mesenchymal / tmp.sum,
-                    p.gamma.to.pr = Proneural / tmp.sum,
-                    tmp.sum = NULL, Classical = NULL, Mesenchymal = NULL,  Proneural = NULL)
-
-  ,by=c('sid.R1'='sid.R1')) %>%
-  dplyr::mutate(
-    p.gamma.stable = case_when(
-      `NMF:123456.PCA.LDA.class.R1` == 'Classical' ~ p.gamma.to.cl,
-      `NMF:123456.PCA.LDA.class.R1` == 'Mesenchymal' ~ p.gamma.to.mes,
-      `NMF:123456.PCA.LDA.class.R1` == 'Proneural' ~ p.gamma.to.pr)
-    ) %>%
-  dplyr::mutate(p.gamma.transition = 1 - p.gamma.stable)
-
-
-
-plt.paired %>% dplyr::pull(p.gamma.transition) %>% median()
-plt.paired %>% dplyr::filter(`NMF:123456.PCA.LDA.class.R1` == "Classical")  %>% dplyr::pull(p.gamma.transition) %>% median()
-plt.paired %>% dplyr::filter(`NMF:123456.PCA.LDA.class.R1` == "Proneural")  %>% dplyr::pull(p.gamma.transition) %>% median()
-plt.paired %>% dplyr::filter(`NMF:123456.PCA.LDA.class.R1` == "Mesenchymal")  %>% dplyr::pull(p.gamma.transition) %>% median()
-
-
-# check in plt.anti.paired:
-# mean + median eucledian distance per patient in mesenchymal & see if this is close to median in the fit
-
-plt.anti.paired %>%
-  dplyr::group_by(sid.R1) %>%
-  dplyr::filter(`NMF:123456.PCA.LDA.class.R1` == "Mesenchymal") %>%
-  dplyr::pull(eucledian.dist) %>% median()
-
-
-pgamma(c( 1.8 ), shape = gamma.paired.fit$estimate[1], rate = gamma.paired.fit$estimate[2])
-
-## Voorspellen hoeveel swaps door toeval  ----
+## Determine transitions by chance ----
 ### 1 gamma CDS on eucledian ----
 
-# 
-# plt <- plt.nmf.pca.lda.reclass.150 %>%
-#   tibble::rownames_to_column('sid') %>%
-#   dplyr::mutate(pid = gsub('^(...).*','\\1',sid) ) %>%
-#   dplyr::mutate(res = as.factor(gsub('^...(.).*','R\\1',sid)))%>%
-#   dplyr::mutate(i = 1:nrow(.) )
+
+#plt.paired <- plt.paired %>%
+#dplyr::mutate(p.gamma.paired = 1 - pgamma(c( eucledian.dist ), shape = gamma.paired.fit$estimate[1], rate = gamma.paired.fit$estimate[2]) )%>%
+#dplyr::mutate(p.gamma.anti.paired = 1 - pgamma(c( eucledian.dist ), shape = gamma.anti.paired.fit$estimate[1], rate = gamma.anti.paired.fit$estimate[2]) )
 # 
 # 
+# plt.anti.paired <- plt.anti.paired %>% 
+#   dplyr::mutate(p.gamma.paired = 1 - pgamma(c( eucledian.dist ), shape = gamma.paired.fit$estimate[1], rate = gamma.paired.fit$estimate[2]) )
 # 
-# ggplot(subset(plt, i == 8 | res == "R2"), aes(x = PC1, y = PC2, col = class, shape=res, label=sid, group=pid)) + 
-# ggplot(plt, aes(x = PC1, y = PC2, col = class, shape=res, label=sid, group=pid)) + 
-#   geom_contour(data= subset(plt.nmf.pca.lda.150, type != "GlioVis") %>% dplyr::mutate(res='R1', sid=''), aes(z=as.numeric(class)),
-#                colour="gray40",
-#                size=0.25,
-#                lty=2,
-#                group=""
-#                ,breaks=c(1.5,2.5)
-#   ) +
-#   geom_point(size=1.5) +
-#   #geom_text() +
-#   youri_gg_theme +
-#   labs(x = "PC1 on NMF[k=3] (150 S-Genes)",
-#        y = "PC2 on NMF[k=3] (150 S-Genes)",
-#        col = "GlioVis Majority subtype",
-#        fill = "NMF/PCA/LDA subtype") + 
-#   scale_color_manual(name = NULL, values = subtype_colors, guide = guide_legend(title = NULL, title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75)) + 
-#   scale_fill_manual(values = subtype_colors) + 
-#   scale_shape_manual(values = c('R1' = 19, 'R2' = 1)) +
-#   geom_line(alpha=0.2, col="gray60")
+# 
+# 
+# 
+# 
+# plt.paired <- plt.paired %>%
+#   dplyr::left_join(
+#     
+#     plt.anti.paired %>%
+#       dplyr::filter(sid.R1 %in% plt.paired$sid.R1) %>%
+#       dplyr::select(c('sid.R1', 'sid.R2',"eucledian.dist", "p.gamma.paired",
+#                       'NMF:123456.PCA.LDA.class.R1','NMF:123456.PCA.LDA.class.R2')) %>%
+#       dplyr::group_by(sid.R1 , `NMF:123456.PCA.LDA.class.R2`) %>%
+#       dplyr::summarise(sum.p.gamma.paired = sum(p.gamma.paired), .groups='drop' ) %>%
+#       dplyr::ungroup() %>% 
+#       tidyr::pivot_wider(names_from = `NMF:123456.PCA.LDA.class.R2`, values_from = `sum.p.gamma.paired`) %>%
+#       dplyr::mutate(tmp.sum = Classical + Mesenchymal + Proneural,
+#                     p.gamma.to.cl = Classical / tmp.sum,
+#                     p.gamma.to.mes = Mesenchymal / tmp.sum,
+#                     p.gamma.to.pr = Proneural / tmp.sum,
+#                     tmp.sum = NULL, Classical = NULL, Mesenchymal = NULL,  Proneural = NULL)
+#     
+#     ,by=c('sid.R1'='sid.R1')) %>%
+#   dplyr::mutate(
+#     p.gamma.stable = case_when(
+#       `NMF:123456.PCA.LDA.class.R1` == 'Classical' ~ p.gamma.to.cl,
+#       `NMF:123456.PCA.LDA.class.R1` == 'Mesenchymal' ~ p.gamma.to.mes,
+#       `NMF:123456.PCA.LDA.class.R1` == 'Proneural' ~ p.gamma.to.pr)
+#   ) %>%
+#   dplyr::mutate(p.gamma.transition = 1 - p.gamma.stable)
+# 
+# 
+# 
+# plt.paired %>% dplyr::pull(p.gamma.transition) %>% median()
+# plt.paired %>% dplyr::filter(`NMF:123456.PCA.LDA.class.R1` == "Classical")  %>% dplyr::pull(p.gamma.transition) %>% median()
+# plt.paired %>% dplyr::filter(`NMF:123456.PCA.LDA.class.R1` == "Proneural")  %>% dplyr::pull(p.gamma.transition) %>% median()
+# plt.paired %>% dplyr::filter(`NMF:123456.PCA.LDA.class.R1` == "Mesenchymal")  %>% dplyr::pull(p.gamma.transition) %>% median()
+# 
+# 
+# # check in plt.anti.paired:
+# # mean + median eucledian distance per patient in mesenchymal & see if this is close to median in the fit
+# 
+# plt.anti.paired %>%
+#   dplyr::group_by(sid.R1) %>%
+#   dplyr::filter(`NMF:123456.PCA.LDA.class.R1` == "Mesenchymal") %>%
+#   dplyr::pull(eucledian.dist) %>% median()
+# 
+# 
+# pgamma(c( 1.8 ), shape = gamma.paired.fit$estimate[1], rate = gamma.paired.fit$estimate[2])
+
+# 
+# plt.paired <- plt.paired %>% dplyr::left_join(
+#              rbind(
+#               plt.paired %>%
+#                 dplyr::select(-c('pid') ),
+#               plt.anti.paired %>%
+#                 dplyr::select(-c("pid.R1", "pid.R2", "p.gamma.paired"))) %>%
+#               dplyr::left_join(
+#                 plt.paired %>%
+#                   dplyr::select(c('sid.R1', 'eucledian.dist')) %>%
+#                   dplyr::rename(eucledian.dist.max = eucledian.dist)
+#                 , by=c('sid.R1'='sid.R1')
+#               ) %>%
+#               dplyr::arrange('sid.R1') %>%
+#               dplyr::select(c('sid.R1', 'sid.R2', 'NMF:123456.PCA.LDA.class.R1', 'NMF:123456.PCA.LDA.class.R2', 'eucledian.dist', 'eucledian.dist.max')) %>%
+#               dplyr::filter(eucledian.dist <= eucledian.dist.max) %>%
+#               dplyr::group_by(sid.R1) %>%
+#               dplyr::summarise(n.eucledian.stable = sum(`NMF:123456.PCA.LDA.class.R1`==`NMF:123456.PCA.LDA.class.R2`),
+#                                n.eucledian.transition = sum(`NMF:123456.PCA.LDA.class.R1`!=`NMF:123456.PCA.LDA.class.R2`), .groups='drop'
+#                                ) %>%
+#               dplyr::ungroup() %>%
+#               as.data.frame() %>%
+#               dplyr::mutate(n.eucledian.sum = n.eucledian.stable + n.eucledian.transition) %>%
+#               dplyr::mutate(p.eucledian.stable = n.eucledian.stable / n.eucledian.sum) %>%
+#               dplyr::mutate(p.eucledian.transition = 1 - p.eucledian.stable)
+#              ,by=c('sid.R1'='sid.R1')
+#             )
+# 
+# 
+# 
+# p.stable <- plt.paired$p.eucledian.stable
+# events <- plt.paired$`NMF:123456.PCA.LDA.class.R1` == plt.paired$`NMF:123456.PCA.LDA.class.R2`
+# 
+# observed = c(stable=sum(events), trans=sum(events == F))
+# expected = c(stable=sum(p.stable) , (sum(1 - p.stable) ))
+# 
+# chisq = sum((expected - observed)^2 / expected)
+# #chi = sqrt(chisq)
+# 
+# # kans dat een transitie plaats vind
+# expected / sum(expected) * 100
+# 
+# # kans dat het aantal gevonden transities plaatsvind op basis van toeval
+# pchisq(chisq, df=1, lower.tail=FALSE)
 
 
-plt.paired <- plt.paired %>% dplyr::left_join(
-             rbind(
-              plt.paired %>%
-                dplyr::select(-c('pid') ),
-              plt.anti.paired %>%
-                dplyr::select(-c("pid.R1", "pid.R2", "p.gamma.paired"))) %>%
-              dplyr::left_join(
-                plt.paired %>%
-                  dplyr::select(c('sid.R1', 'eucledian.dist')) %>%
-                  dplyr::rename(eucledian.dist.max = eucledian.dist)
-                , by=c('sid.R1'='sid.R1')
-              ) %>%
-              dplyr::arrange('sid.R1') %>%
-              dplyr::select(c('sid.R1', 'sid.R2', 'NMF:123456.PCA.LDA.class.R1', 'NMF:123456.PCA.LDA.class.R2', 'eucledian.dist', 'eucledian.dist.max')) %>%
-              dplyr::filter(eucledian.dist <= eucledian.dist.max) %>%
-              dplyr::group_by(sid.R1) %>%
-              dplyr::summarise(n.eucledian.stable = sum(`NMF:123456.PCA.LDA.class.R1`==`NMF:123456.PCA.LDA.class.R2`),
-                               n.eucledian.transition = sum(`NMF:123456.PCA.LDA.class.R1`!=`NMF:123456.PCA.LDA.class.R2`), .groups='drop'
-                               ) %>%
-              dplyr::ungroup() %>%
-              as.data.frame() %>%
-              dplyr::mutate(n.eucledian.sum = n.eucledian.stable + n.eucledian.transition) %>%
-              dplyr::mutate(p.eucledian.stable = n.eucledian.stable / n.eucledian.sum) %>%
-              dplyr::mutate(p.eucledian.transition = 1 - p.eucledian.stable)
-             ,by=c('sid.R1'='sid.R1')
-            )
+
+# ---- 2 non-parameteric & perimeter ----
 
 
-
-p.stable <- plt.paired$p.eucledian.stable
-events <- plt.paired$`NMF:123456.PCA.LDA.class.R1` == plt.paired$`NMF:123456.PCA.LDA.class.R2`
-
-observed = c(stable=sum(events), trans=sum(events == F))
-expected = c(stable=sum(p.stable) , (sum(1 - p.stable) ))
-
-chisq = sum((expected - observed)^2 / expected)
-#chi = sqrt(chisq)
-
-# kans dat een transitie plaats vind
-expected / sum(expected) * 100
-
-# kans dat het aantal gevonden transities plaatsvind op basis van toeval
-pchisq(chisq, df=1, lower.tail=FALSE)
-
-
-# ---- redo to randomised class labels ----
-
-
-
-plt.paired <-
-  
-plt.paired %>% 
+plt.paired <- plt.paired %>% 
   dplyr::left_join(
     rbind(
       plt.paired %>%
-        dplyr::select(-c('pid') ),
+        dplyr::select(-c('pid','gliovis.status','NMF:123456.membership.status','NMF:123456.PCA.LDA.status') ),
       plt.anti.paired %>%
-        dplyr::select(-c("pid.R1", "pid.R2", "p.gamma.paired"))) %>%
+        dplyr::select(-c("pid.R1", "pid.R2",'NMF:123456.PCA.LDA.status'))) %>%
       dplyr::left_join(
         plt.paired %>%
           dplyr::select(c('sid.R1', 'eucledian.dist')) %>%
@@ -479,32 +462,27 @@ plt.paired %>%
 
 
 
+# Perform tests ----
 
-## find actual transitions (distribution) ----
+## find overall transition rate(s)) ----
 
 
-# TODO check aantal transities met gliovis gewone klassificate
 plt.paired %>%
-  dplyr::mutate(status.gliovis = as.factor(ifelse(gliovis.majority_call.R1 == gliovis.majority_call.R2, "Stable", "Transition"))) %>%
-  dplyr::pull(status.gliovis) %>%
+  dplyr::pull(gliovis.status) %>%
   summary
 # Stable Transition 
 # 99         61
 
 
-# TODO check aantal transities met gliovis deze klassificate
 plt.paired %>%
-  dplyr::mutate(status.gliovis = as.factor(ifelse(`NMF:123456.PCA.LDA.class.R1` == `NMF:123456.PCA.LDA.class.R2`, "Stable", "Transition"))) %>%
-  dplyr::pull(status.gliovis) %>%
+  dplyr::pull('NMF:123456.PCA.LDA.status') %>%
   summary()
 # Stable Transition 
 # 103         57
 
 
-# TODO check aantal transities met gliovis NMF klassificate
 plt.paired %>%
-  dplyr::mutate(status.gliovis = as.factor(ifelse(`NMF:123456.membership.R1`== `NMF:123456.membership.R2`, "Stable", "Transition"))) %>%
-  dplyr::pull(status.gliovis) %>%
+  dplyr::pull('NMF:123456.membership.status') %>%
   summary()
 # Stable Transition 
 # 92         68 
@@ -512,6 +490,148 @@ plt.paired %>%
 
 
 
+events <- plt.paired %>%
+  dplyr::mutate(status.gliovis = as.factor(ifelse(`NMF:123456.PCA.LDA.class.R1` == `NMF:123456.PCA.LDA.class.R2`, "Stable", "Transition"))) %>%
+  dplyr::pull(status.gliovis)
+
+observed = c(stable=sum(events == "Stable"), trans=sum(events == "Transition"))
+expected = c(stable=plt.paired$p.eucledian.stable %>% sum() , trans=(1 - plt.paired$p.eucledian.stable) %>% sum()  )
+
+chisq = sum((expected - observed)^2 / expected)
+#chi = sqrt(chisq)
+
+# kans dat een transitie plaats vind
+#expected / sum(expected) * 100
+
+
+# kans dat het aantal gevonden transities plaatsvind op basis van toeval
+pchisq(chisq, df=1, lower.tail=FALSE)
+
+
+observed
+expected
+(observed[2] / (observed[1] + observed[2])) / 
+  (expected[2] / (expected[1] + expected[2]))
+
+
+
+
+## find classical transition rate(s)) ----
+
+plt.paired %>%
+  dplyr::filter(`NMF:123456.PCA.LDA.class.R1` == 'Classical') %>%
+  dplyr::mutate(status.gliovis = as.factor(ifelse(`NMF:123456.PCA.LDA.class.R1` == `NMF:123456.PCA.LDA.class.R2`, "Stable", "Transition"))) %>%
+  dplyr::pull(status.gliovis) %>%
+  summary()
+
+events <- plt.paired %>%
+  dplyr::filter(`NMF:123456.PCA.LDA.class.R1` == 'Classical') %>%
+  dplyr::mutate(status.gliovis = as.factor(ifelse(`NMF:123456.PCA.LDA.class.R1` == `NMF:123456.PCA.LDA.class.R2`, "Stable", "Transition"))) %>%
+  dplyr::pull(status.gliovis)
+
+observed = c(stable=sum(events == "Stable"), trans=sum(events == "Transition"))
+expected = c(stable=sum(  (plt.paired %>%
+                             dplyr::filter(`NMF:123456.PCA.LDA.class.R1` == 'Classical') %>%
+                             dplyr::pull(p.eucledian.stable)) ) ,
+             trans=sum( 1 - (plt.paired %>%
+                               dplyr::filter(`NMF:123456.PCA.LDA.class.R1` == 'Classical') %>%
+                               dplyr::pull(p.eucledian.stable)) )   )
+
+chisq = sum((expected - observed)^2 / expected)
+
+
+
+#expected / sum(expected) * 100 # kans dat een transitie plaats vind
+pchisq(chisq, df=1, lower.tail=FALSE)# kans dat het aantal gevonden transities plaatsvind op basis van toeval
+
+observed
+expected
+(observed[2] / (observed[1] + observed[2])) / 
+  (expected[2] / (expected[1] + expected[2]))
+
+
+
+## find Mesenchymal transition rate(s)) ----
+
+plt.paired %>%
+  dplyr::filter(`NMF:123456.PCA.LDA.class.R1` == 'Mesenchymal') %>%
+  dplyr::mutate(status.gliovis = as.factor(ifelse(`NMF:123456.PCA.LDA.class.R1` == `NMF:123456.PCA.LDA.class.R2`, "Stable", "Transition"))) %>%
+  dplyr::pull(status.gliovis) %>%
+  summary()
+
+events <- plt.paired %>%
+  dplyr::filter(`NMF:123456.PCA.LDA.class.R1` == 'Mesenchymal') %>%
+  dplyr::mutate(status.gliovis = as.factor(ifelse(`NMF:123456.PCA.LDA.class.R1` == `NMF:123456.PCA.LDA.class.R2`, "Stable", "Transition"))) %>%
+  dplyr::pull(status.gliovis)
+
+observed = c(stable=sum(events == "Stable"), trans=sum(events == "Transition"))
+expected = c(stable=sum(  (plt.paired %>%
+                             dplyr::filter(`NMF:123456.PCA.LDA.class.R1` == 'Mesenchymal') %>%
+                             dplyr::pull(p.eucledian.stable)) ) ,
+             trans=sum( 1 - (plt.paired %>%
+                               dplyr::filter(`NMF:123456.PCA.LDA.class.R1` == 'Mesenchymal') %>%
+                               dplyr::pull(p.eucledian.stable)) )   )
+
+chisq = sum((expected - observed)^2 / expected)
+
+
+#expected / sum(expected) * 100 # kans dat een transitie plaats vind
+pchisq(chisq, df=1, lower.tail=FALSE)# kans dat het aantal gevonden transities plaatsvind op basis van toeval
+
+
+observed
+expected
+(observed[2] / (observed[1] + observed[2])) / 
+  (expected[2] / (expected[1] + expected[2]))
+
+
+
+
+## find Proneural transition rate(s)) ----
+
+plt.paired %>%
+  dplyr::filter(`NMF:123456.PCA.LDA.class.R1` == 'Proneural') %>%
+  dplyr::mutate(status.gliovis = as.factor(ifelse(`NMF:123456.PCA.LDA.class.R1` == `NMF:123456.PCA.LDA.class.R2`, "Stable", "Transition"))) %>%
+  dplyr::pull(status.gliovis) %>%
+  summary()
+
+events <- plt.paired %>%
+  dplyr::filter(`NMF:123456.PCA.LDA.class.R1` == 'Proneural') %>%
+  dplyr::mutate(status.gliovis = as.factor(ifelse(`NMF:123456.PCA.LDA.class.R1` == `NMF:123456.PCA.LDA.class.R2`, "Stable", "Transition"))) %>%
+  dplyr::pull(status.gliovis)
+
+observed = c(stable=sum(events == "Stable"), trans=sum(events == "Transition"))
+expected = c(stable=sum(  (plt.paired %>%
+                             dplyr::filter(`NMF:123456.PCA.LDA.class.R1` == 'Proneural') %>%
+                             dplyr::pull(p.eucledian.stable)) ) ,
+             trans=sum( 1 - (plt.paired %>%
+                               dplyr::filter(`NMF:123456.PCA.LDA.class.R1` == 'Proneural') %>%
+                               dplyr::pull(p.eucledian.stable)) )   )
+
+chisq = sum((expected - observed)^2 / expected)
+
+
+#expected / sum(expected) * 100 # kans dat een transitie plaats vind
+pchisq(chisq, df=1, lower.tail=FALSE)# kans dat het aantal gevonden transities plaatsvind op basis van toeval
+
+
+observed
+expected
+(observed[2] / (observed[1] + observed[2])) / 
+  (expected[2] / (expected[1] + expected[2]))
+
+
+## eucledian distances diff ----
+
+
+plt.paired %>%
+
+  dplyr::select(c('pid','eucledian.dist')) %>%
+
+
+
+
+# predict random transition and see if this is indeed closer ----
 
 
 rnd <- plt.anti.paired[sample(1:nrow(plt.anti.paired) ),] %>%
@@ -563,32 +683,32 @@ sum(1 - rnd$p.eucledian.stable)
 
 
 
-# test chi-sq ----
+# example test chi-sq
 
-p.stable <- c(0.9,0.5,0.7,0.8,0.8,0.2,0.9)
-events <- c(1,1,0,1,1,0,1)
-
-observed = c(stable=5, trans=2)
-expected = c(stable=sum(p.stable) , (sum(1 - p.stable) ))
-
-chisq = sum((expected - observed)^2 / expected)
-#chi = sqrt(chisq)
-
-# kans dat een transitie plaats vind
-expected / sum(expected) * 100
-
-# kans dat het aantal gevonden transities plaatsvind op basis van toeval
-pchisq(chisq, df=1, lower.tail=FALSE)
-
-
-# test combinations
-
-kk = 0:2 # first all 
-nn = 10
-
-for(k in kk) {
-  t(combn(nn, k))
-}
+# p.stable <- c(0.9,0.5,0.7,0.8,0.8,0.2,0.9)
+# events <- c(1,1,0,1,1,0,1)
+# 
+# observed = c(stable=5, trans=2)
+# expected = c(stable=sum(p.stable) , (sum(1 - p.stable) ))
+# 
+# chisq = sum((expected - observed)^2 / expected)
+# #chi = sqrt(chisq)
+# 
+# # kans dat een transitie plaats vind
+# expected / sum(expected) * 100
+# 
+# # kans dat het aantal gevonden transities plaatsvind op basis van toeval
+# pchisq(chisq, df=1, lower.tail=FALSE)
+# 
+# 
+# # test combinations
+# 
+# kk = 0:2 # first all 
+# nn = 10
+# 
+# for(k in kk) {
+#   t(combn(nn, k))
+# }
 
 
 
