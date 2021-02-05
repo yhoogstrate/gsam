@@ -15,12 +15,16 @@ if(!exists("gsam.viii.rnaseq")) {
 
 #expression_matrix_full <- read.delim("data/output/tables/gsam_featureCounts_readcounts_new.txt",stringsAsFactors = F,comment="#")
 #Load gene annotation data
-if(!exists("gencode.31")) {
+if(!file.exists('tmp/gencode.31.Rds')) {
   gencode.31 <- read.delim("data/gsam/ref/star-hg19/gencode.v31lift37.annotation.gtf", comment.char="#",stringsAsFactors = F,header=F) %>%
     dplyr::filter(V3 == "gene") %>%
     dplyr::mutate(ENSG = gsub("^.+(ENSG[^;]+);.+$","\\1",V9)) %>%
     dplyr::mutate(GENE = gsub("^.+gene_name ([^;]+);.+$","\\1",V9)) %>%
     dplyr::mutate(V9 = NULL)
+  
+  saveRDS(gencode.31, 'tmp/gencode.31.Rds')
+} else {
+  gencode.31 <- readRDS('tmp/gencode.31.Rds')
 }
 
 
