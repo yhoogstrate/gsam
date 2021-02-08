@@ -72,8 +72,9 @@ stopifnot(colnames(gsam.rnaseq.expression.vst.150) == metadata$sid)
 
 
 
+
 plt.single <- metadata %>%
-  dplyr::select(c('sid', 'gliovis.majority_call', 'pat.with.IDH', 'resection')) %>%
+  dplyr::select(c('sid', 'gliovis.majority_call', 'pat.with.IDH', 'resection', 'gliovis.knn_call', 'gliovis.svm_call', 'gliovis.gsea_call')) %>%
   dplyr::mutate(resection = gsub('r','R',resection)) %>%
   dplyr::mutate(pid = gsub('^(...).*$','\\1',sid))
 
@@ -752,7 +753,7 @@ ggsave('output/figures/paper_subtypes_nmf_S150G_nmf1_nmf2_nmf-membership.png',wi
 ## NMF:1 & NMF:2 + GlioVis labels ----
 
 
-#plt.nmf.150.p <-
+
 ggplot(plt.single, aes(x = `NMF:123456.1`, y = `NMF:123456.2`, col = gliovis.majority_call) ) +
   geom_point(size=1.5) +
   youri_gg_theme +
@@ -763,7 +764,7 @@ ggplot(plt.single, aes(x = `NMF:123456.1`, y = `NMF:123456.2`, col = gliovis.maj
   scale_x_continuous(expand = expansion(mult = c(.05, .05)) ) +
   scale_y_continuous(expand = expansion(mult = c(.05, .05)) ) +
   labs(x = "NMF meta-feature 1", y="NMF meta-feature 2", col='Subtype by GlioVis [majority call]')
-ggsave("output/figures/paper_subtypes_nmf_nmf_1_2_gliovis.png",width=7,height=7.2)
+ggsave('output/figures/paper_subtypes_nmf_S150G_nmf1_nmf2_GlioVis.png',width=7,height=7.2)
 
 
 
@@ -781,8 +782,7 @@ ggplot(plt.single , aes(x = `NMF:123456.PC1` , y = `NMF:123456.PC2`, col = gliov
   scale_x_continuous(expand = expansion(mult = c(.05, .05)) ) +
   scale_y_continuous(expand = expansion(mult = c(.05, .05)) ) +
   labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", col='Subtype by GlioVis [majority call]')
-
-#ggsave("output/figures/paper_subtypes_nmf_pca_1_2_gliovis.png",width=7,height=7.2)
+ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_GlioVis.png',width=7,height=7.2)
 
 
 
@@ -807,15 +807,6 @@ nmf.pca.lda.countours <- predict(s150.pca.nmf.subtype.classifier.lda, newdata = 
 rm(resolution, off_x, off_y, range_pc1, range_pc2, range_df)
 
 
-# nmf.pca.lda.countours <- data.frame(PC1 = plt.single$`NMF:123456.PC1`,
-#                                   PC2 = plt.single$`NMF:123456.PC2`,
-#                                   class = metadata$gliovis.majority_call,
-#                                   type = "GlioVis") %>%
-#   rbind( data.frame(PC1 = range_df$`NMF:123456.PC1`,
-#                     PC2 = range_df$`NMF:123456.PC2`,
-#                     class = range_predictions$class,
-#                     type = "LDA on NVM + PCA"))
-
 
 
 ## PCA:1+2(NMF:1+2+3) + LDA countours + GlioVis labels ----
@@ -837,7 +828,9 @@ ggplot(plt, aes(x = `NMF:123456.PC1`, y = `NMF:123456.PC2`, col = class)) +
   labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", col='Subtype by GlioVis [majority call]',fill="LDA countour") +
   scale_color_manual(values = subtype_colors, guide = guide_legend(title = NULL, title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75)) + 
   scale_fill_manual(values = subtype_colors)
-ggsave("output/figures/paper_subtypes_nmf_pca_1_2_lda-contour.png",width=7,height=7.2)
+
+ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_GlioVis_LDA-countours.png',width=7,height=7.2)
+
 
 
 
@@ -860,6 +853,67 @@ ggplot(plt, aes(x = `NMF:123456.PC1`, y = `NMF:123456.PC2`, col = class)) +
   labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", col='Subtype by GlioVis [majority call]',fill="LDA countour") +
   scale_color_manual(values = subtype_colors, guide = guide_legend(title = NULL, title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75)) + 
   scale_fill_manual(values = subtype_colors)
+
+ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_LDA-reclassification_LDA-countours.png',width=7,height=7.2)
+
+
+
+
+# Per sample predicted class bar / grid plot (geom_tile) ----
+
+# 1 LDA reclassification
+# 2 GlioVis majority
+#  2.a KNN 
+#  2.b SVM
+#  2.c GSEA 
+# 3 NMF clustering
+
+#df <- expand.grid(x=x, y=x)
+
+
+plt <- plt.single %>%
+  dplyr::select(c('sid',
+                  `NMF:123456.PCA.LDA.class`,
+                  gliovis.majority_call,
+                  gliovis.knn_call,
+                  gliovis.svm_call,
+                  gliovis.gsea_call,
+                  `NMF:123456.membership` )) %>%
+  dplyr::mutate(`NMF:123456.membership` = as.character(`NMF:123456.membership`) ) %>%
+  dplyr::mutate(`NMF:123456.membership` = as.factor(case_when(
+    `NMF:123456.membership` == "NMF-cluster:1" ~ "Classical",
+    `NMF:123456.membership` == "NMF-cluster:2" ~ "Proneural",
+    `NMF:123456.membership` == "NMF-cluster:3" ~ "Mesenchymal")))  %>%
+  dplyr::mutate(order = match(1:nrow(.), order(`NMF:123456.PCA.LDA.class`,
+                                               gliovis.majority_call,
+                                               `NMF:123456.membership`,
+                                               gliovis.svm_call,
+                                               gliovis.gsea_call,
+                                               gliovis.knn_call,
+                                               sid))) %>%
+  reshape2::melt(id=c("sid","order")) %>%
+  dplyr::rename(classifier = variable) %>%
+  dplyr::rename(predicted.class = value) %>%
+  dplyr::mutate(classifier = 
+                  factor(classifier, levels = c(
+                    "NMF:123456.membership", "gliovis.gsea_call", "gliovis.svm_call", "gliovis.knn_call", "gliovis.majority_call", "NMF:123456.PCA.LDA.class"
+                  ))) %>%
+  dplyr::mutate(subclassifier = case_when(
+    classifier == "NMF:123456.membership" ~ "no",
+    classifier == "gliovis.majority_call" ~ "no",
+    classifier == "NMF:123456.PCA.LDA.class" ~ "no",
+    classifier == "gliovis.gsea_call" ~ "yes",
+    classifier == "gliovis.svm_call" ~ "yes",
+    classifier == "gliovis.knn_call" ~ "yes"))
+  
+
+  
+
+
+ggplot(plt , aes(x = reorder(sid, order), y = classifier, fill = predicted.class, alpha=subclassifier) )  +
+  geom_tile(colour="black",size=0.15) +
+  scale_fill_manual(values = subtype_colors) + 
+  scale_alpha_manual(values = c('no' = 0.8, 'yes' = 0.4))
 
 
 
