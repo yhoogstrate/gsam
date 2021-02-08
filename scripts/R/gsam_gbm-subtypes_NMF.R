@@ -904,14 +904,35 @@ plt <- plt.single %>%
     classifier == "NMF:123456.PCA.LDA.class" ~ "no",
     classifier == "gliovis.gsea_call" ~ "yes",
     classifier == "gliovis.svm_call" ~ "yes",
-    classifier == "gliovis.knn_call" ~ "yes"))
+    classifier == "gliovis.knn_call" ~ "yes")) %>%
+  dplyr::mutate(xmin=order,xmax=order+1) %>%
+  dplyr::mutate(ymin = case_when(
+      classifier == "NMF:123456.membership" ~ 1,
+      classifier == "gliovis.gsea_call" ~ 1 + 3,
+      classifier == "gliovis.svm_call" ~ 1 + 3 + 1,
+      classifier == "gliovis.knn_call" ~  1 + 3 + 1 + 1,
+      classifier == "gliovis.majority_call" ~ 1 + 3 + 1 + 1 + 1,
+      classifier == "NMF:123456.PCA.LDA.class" ~ 1 + 3 + 1 + 1 + 1 + 3
+    )) %>%
+  dplyr::mutate(ymax = case_when(
+      classifier == "NMF:123456.membership" ~ 1 + 3,
+      classifier == "gliovis.gsea_call" ~ 1 + 3 + 1,
+      classifier == "gliovis.svm_call" ~ 1 + 3 + 1 +1 ,
+      classifier == "gliovis.knn_call" ~  1 + 3 + 1 + 1 + 1,
+      classifier == "gliovis.majority_call" ~ 1 + 3 + 1 + 1 + 1 + 3,
+      classifier == "NMF:123456.PCA.LDA.class" ~ 1 + 3 + 1 + 1 + 1 + 3 + 3
+    ))
   
 
   
 
 
-ggplot(plt , aes(x = reorder(sid, order), y = classifier, fill = predicted.class, alpha=subclassifier) )  +
-  geom_tile(colour="black",size=0.15) +
+ggplot(plt , aes(
+  #x = reorder(sid, order),
+                        #y = classifier, 
+                        xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax, fill = predicted.class, alpha=subclassifier) )  +
+  #geom_tile(colour="black",size=0.15) +
+  geom_rect(colour="black",size=0.15) +
   scale_fill_manual(values = subtype_colors) + 
   scale_alpha_manual(values = c('no' = 0.8, 'yes' = 0.4))
 
