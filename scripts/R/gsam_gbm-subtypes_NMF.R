@@ -9,6 +9,7 @@ library(scales)
 #library(MASS)
 library(fitdistrplus)
 library(patchwork)
+library(ggplot2)
 
 
 # load data ----
@@ -132,7 +133,7 @@ plt.single <- plt.single %>%
       as.data.frame() %>%
       `colnames<-`(c('NMF:123456.1','NMF:123456.2','NMF:123456.3')) %>%
       tibble::rownames_to_column('sid') %>%
-      dplyr::mutate(`NMF:123456.membership` = as.factor (gsam_nmf_150 %>% purrr::pluck('123456') %>% purrr::pluck('membership') %>% gsub('^(.+)$','NMF:\\1',.) ) )
+      dplyr::mutate(`NMF:123456.membership` = as.factor (gsam_nmf_150 %>% purrr::pluck('123456') %>% purrr::pluck('membership') %>% gsub('^(.+)$','NMF-cluster:\\1',.) ) )
     , by=c('sid' = 'sid') )
 
 
@@ -490,22 +491,13 @@ plt.paired %>%
 
 
 
-events <- plt.paired %>%
-  dplyr::mutate(status.gliovis = as.factor(ifelse(`NMF:123456.PCA.LDA.class.R1` == `NMF:123456.PCA.LDA.class.R2`, "Stable", "Transition"))) %>%
-  dplyr::pull(status.gliovis)
-
+events <- plt.paired %>% dplyr::pull('NMF:123456.PCA.LDA.status')
 observed = c(stable=sum(events == "Stable"), trans=sum(events == "Transition"))
 expected = c(stable=plt.paired$p.eucledian.stable %>% sum() , trans=(1 - plt.paired$p.eucledian.stable) %>% sum()  )
 
-chisq = sum((expected - observed)^2 / expected)
-#chi = sqrt(chisq)
-
-# kans dat een transitie plaats vind
-#expected / sum(expected) * 100
-
-
-# kans dat het aantal gevonden transities plaatsvind op basis van toeval
-pchisq(chisq, df=1, lower.tail=FALSE)
+chisq = sum((expected - observed)^2 / expected) #chi = sqrt(chisq)
+# kans dat een transitie plaats vind #expected / sum(expected) * 100
+pchisq(chisq, df=1, lower.tail=FALSE)# kans dat het aantal gevonden transities plaatsvind op basis van toeval
 
 
 observed
@@ -520,14 +512,13 @@ expected
 
 plt.paired %>%
   dplyr::filter(`NMF:123456.PCA.LDA.class.R1` == 'Classical') %>%
-  dplyr::mutate(status.gliovis = as.factor(ifelse(`NMF:123456.PCA.LDA.class.R1` == `NMF:123456.PCA.LDA.class.R2`, "Stable", "Transition"))) %>%
-  dplyr::pull(status.gliovis) %>%
+  dplyr::pull('NMF:123456.PCA.LDA.status') %>%
   summary()
 
 events <- plt.paired %>%
   dplyr::filter(`NMF:123456.PCA.LDA.class.R1` == 'Classical') %>%
-  dplyr::mutate(status.gliovis = as.factor(ifelse(`NMF:123456.PCA.LDA.class.R1` == `NMF:123456.PCA.LDA.class.R2`, "Stable", "Transition"))) %>%
-  dplyr::pull(status.gliovis)
+  dplyr::pull('NMF:123456.PCA.LDA.status')
+
 
 observed = c(stable=sum(events == "Stable"), trans=sum(events == "Transition"))
 expected = c(stable=sum(  (plt.paired %>%
@@ -537,10 +528,9 @@ expected = c(stable=sum(  (plt.paired %>%
                                dplyr::filter(`NMF:123456.PCA.LDA.class.R1` == 'Classical') %>%
                                dplyr::pull(p.eucledian.stable)) )   )
 
+
+
 chisq = sum((expected - observed)^2 / expected)
-
-
-
 #expected / sum(expected) * 100 # kans dat een transitie plaats vind
 pchisq(chisq, df=1, lower.tail=FALSE)# kans dat het aantal gevonden transities plaatsvind op basis van toeval
 
@@ -624,10 +614,14 @@ expected
 ## eucledian distances diff ----
 
 
-plt.paired %>%
+plt <- plt.paired %>%
+  dplyr::select(c('pid','eucledian.dist','NMF:123456.PCA.LDA.status','NMF:123456.PCA.LDA.class.R1'))
 
-  dplyr::select(c('pid','eucledian.dist')) %>%
 
+ggplot(plt, aes(x = `NMF:123456.PCA.LDA.status` , y = eucledian.dist , col =  `NMF:123456.PCA.LDA.class.R1`  )) +
+  geom_point() +
+  facet_grid(. ~ `NMF:123456.PCA.LDA.class.R1` ) +
+  youri_gg_theme
 
 
 
@@ -714,116 +708,134 @@ sum(1 - rnd$p.eucledian.stable)
 
 
 # Plots ----
+
 ## Original S-150 PCA space ----
 
-# # 
-# 
-# 
-# plt.pca.150.p <- ggplot(plt.single, aes(x = PC1, y = PC2, col = gliovis.majority_call) ) + 
-#   geom_point(size=1.5) +
-#   youri_gg_theme + 
-#   scale_color_manual(name = NULL, values =  c('Classical'='#6ba6e5',# blue
-#                                               'Mesenchymal'='#eab509',#mustard
-#                                               'Proneural'='#ff5f68'),#red/pink
-#                      guide = guide_legend(title = NULL, title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75))
-# 
+
+ggplot(plt.single, aes(x = PC1, y = PC2, col = gliovis.majority_call) ) +
+  geom_point(size=1.5) +
+  youri_gg_theme +
+  scale_color_manual(name = NULL, values =  c('Classical'='#6ba6e5',# blue
+                                              'Mesenchymal'='#eab509',#mustard
+                                              'Proneural'='#ff5f68'),#red/pink
+                     guide = guide_legend(title = NULL, title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75))
+
+
+ggsave('output/figures/paper_subtypes_pca_S150G_PC1_PC2_GlioVis.png',width=7,height=7.2)
+
 
 
 ## NMF:1 & NMF:2 + NMF membership ----
 
-# 
-# ggplot(plt.nmf.150, aes(x = NMF1, y = NMF2, col = NMF.mem) ) + 
-#   geom_point(size=1.5) +
-#   youri_gg_theme + 
-#   scale_color_manual(
-#     name = "Subtype by NMF Meta-feature:",
-#     values = c('1'="#6ba6e5", # Classical
-#                '3'= "#eab509", # Mesenchymal 
-#                '2'= "#ff5f68" # Proneural
-#     ),
-#     guide = guide_legend(title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75)
-#   ) +
-#   scale_x_continuous(limits= c(min(plt.nmf.150$NMF1), max(plt.nmf.150$NMF1)) , expand = expansion(mult = c(.1, .1)) ) +
-#   scale_y_continuous(limits= c(min(plt.nmf.150$NMF2), max(plt.nmf.150$NMF2)) , expand = expansion(mult = c(.1, .1)) ) 
-# ggsave("output/figures/paper_subtypes_nmf_nmf_1_2_nmf.png",width=7,height=7.2)
+
+ggplot(plt.single, aes(x = `NMF:123456.1`, y = `NMF:123456.2`, col = `NMF:123456.membership`) ) +
+  geom_point(size=1.5) +
+  youri_gg_theme +
+  scale_color_manual(
+    values = c('NMF-cluster:1'="#6ba6e5", # Classical
+               'NMF-cluster:3'= "#eab509", # Mesenchymal
+               'NMF-cluster:2'= "#ff5f68" # Proneural
+    ),
+    guide = guide_legend(title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75)
+  ) +
+  scale_x_continuous(limits= c(min( plt.single$`NMF:123456.1`), max( plt.single$`NMF:123456.1`)) ,
+                     expand = expansion(mult = c(.1, .1)) ) +
+  scale_y_continuous(limits= c(min( plt.single$`NMF:123456.2`), max( plt.single$`NMF:123456.2`)) ,
+                     expand = expansion(mult = c(.1, .1)) ) +
+  labs(x = "NMF meta-feature 1", y="NMF meta-feature 2", col='Subtype by NMF meta-feature')
+
+
+ggsave('output/figures/paper_subtypes_nmf_S150G_nmf1_nmf2_nmf-membership.png',width=7,height=7.2)
 
 
 
 ## NMF:1 & NMF:2 + GlioVis labels ----
 
 
-# #plt.nmf.150.p <-
-# ggplot(plt.nmf.150, aes(x = NMF1, y = NMF2, col = gliovis) ) + 
-#   geom_point(size=1.5) +
-#   youri_gg_theme + 
-#   scale_color_manual(
-#     name = "Subtype by GlioVis:",
-#     values = subtype_colors,
-#     guide = guide_legend(title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75)
-#   ) +
-#   scale_x_continuous(limits= c(min(plt.nmf.150$NMF1), max(plt.nmf.150$NMF1)) , expand = expansion(mult = c(.1, .1)) ) +
-#   scale_y_continuous(limits= c(min(plt.nmf.150$NMF2), max(plt.nmf.150$NMF2)) , expand = expansion(mult = c(.1, .1)) ) 
-# ggsave("output/figures/paper_subtypes_nmf_nmf_1_2_gliovis.png",width=7,height=7.2)
-# 
+#plt.nmf.150.p <-
+ggplot(plt.single, aes(x = `NMF:123456.1`, y = `NMF:123456.2`, col = gliovis.majority_call) ) +
+  geom_point(size=1.5) +
+  youri_gg_theme +
+  scale_color_manual(
+    values = subtype_colors,
+    guide = guide_legend(title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75)
+  ) +
+  scale_x_continuous(expand = expansion(mult = c(.05, .05)) ) +
+  scale_y_continuous(expand = expansion(mult = c(.05, .05)) ) +
+  labs(x = "NMF meta-feature 1", y="NMF meta-feature 2", col='Subtype by GlioVis [majority call]')
+ggsave("output/figures/paper_subtypes_nmf_nmf_1_2_gliovis.png",width=7,height=7.2)
+
 
 
 
 ## PCA:1+2(NMF:1+2+3) + GlioVis labels ----
 
-# 
-# 
-# p <- prcomp(t(gsam_nmf_150$`123456`$H))
-# plt.nmf.pca.150   <- data.frame(NMF.PC1 = p$x[,1], NMF.PC2 = p$x[,2], gliovis = as.factor(metadata$gliovis.majority_call))
-# plt.nmf.pca.150.p <- 
-# 
-#   ggplot(plt.nmf.pca.150 , aes(x = NMF.PC1, y = NMF.PC2, col = gliovis) ) + 
-#   geom_point(size=1.5) +
-#   youri_gg_theme + 
-#   scale_color_manual(
-#     name = "Subtype by GlioVis:",
-#     values = subtype_colors,
-#     guide = guide_legend(title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75)
-#   ) +
-#   scale_x_continuous(limits= c(min(plt.nmf.pca.150$NMF.PC1), max(plt.nmf.pca.150$NMF.PC1)) * 1.1  ) +
-#   scale_y_continuous(limits= c(min(plt.nmf.pca.150$NMF.PC2), max(plt.nmf.pca.150$NMF.PC2)) * 1.1  )
-# ggsave("output/figures/paper_subtypes_nmf_pca_1_2_gliovis.png",width=7,height=7.2)
-#   
 
+ggplot(plt.single , aes(x = `NMF:123456.PC1` , y = `NMF:123456.PC2`, col = gliovis.majority_call) ) +
+  geom_point(size=1.5) +
+  youri_gg_theme +
+  scale_color_manual(
+    values = subtype_colors,
+    guide = guide_legend(title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75)
+  ) +
+  scale_x_continuous(expand = expansion(mult = c(.05, .05)) ) +
+  scale_y_continuous(expand = expansion(mult = c(.05, .05)) ) +
+  labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", col='Subtype by GlioVis [majority call]')
+
+#ggsave("output/figures/paper_subtypes_nmf_pca_1_2_gliovis.png",width=7,height=7.2)
+
+
+
+## contour ----
+
+resolution <- 250 # 1000 x 1000 data points
+
+off_x <- (max(plt.single$`NMF:123456.PC1`) - min(plt.single$`NMF:123456.PC1`)) * 0.05
+off_y <- (max(plt.single$`NMF:123456.PC2`) - min(plt.single$`NMF:123456.PC2`)) * 0.05
+
+
+range_pc1 = seq(from = min(plt.single$`NMF:123456.PC1`) - off_x, to = max(plt.single$`NMF:123456.PC1`) + off_x, length.out = resolution)
+range_pc2 = seq(from = min(plt.single$`NMF:123456.PC2`) - off_y, to = max(plt.single$`NMF:123456.PC2`) + off_y, length.out = resolution)
+
+range_df = expand.grid('NMF:123456.PC1' = range_pc1, 'NMF:123456.PC2' = range_pc2)
+nmf.pca.lda.countours <- predict(s150.pca.nmf.subtype.classifier.lda, newdata = range_df) %>%
+  as.data.frame() %>%
+  cbind(range_df) %>%
+  dplyr::select(c('class', 'NMF:123456.PC1', 'NMF:123456.PC2')) %>%
+  dplyr::mutate(type="Contour")
+
+rm(resolution, off_x, off_y, range_pc1, range_pc2, range_df)
+
+
+# nmf.pca.lda.countours <- data.frame(PC1 = plt.single$`NMF:123456.PC1`,
+#                                   PC2 = plt.single$`NMF:123456.PC2`,
+#                                   class = metadata$gliovis.majority_call,
+#                                   type = "GlioVis") %>%
+#   rbind( data.frame(PC1 = range_df$`NMF:123456.PC1`,
+#                     PC2 = range_df$`NMF:123456.PC2`,
+#                     class = range_predictions$class,
+#                     type = "LDA on NVM + PCA"))
 
 
 
 ## PCA:1+2(NMF:1+2+3) + LDA countours + GlioVis labels ----
 
-resolution <- 250 # 1000 x 1000 data points
+plt <- rbind(plt.single %>%
+    dplyr::select(c(`NMF:123456.PC1`, `NMF:123456.PC2`, 'gliovis.majority_call')) %>%
+    dplyr::mutate(type = "Patient Sample") %>%
+    dplyr::rename(class = gliovis.majority_call),
+  nmf.pca.lda.countours)
 
-range_pc1 = seq(from = min(p$x[,1]), to = max(p$x[,1]), length.out = resolution) * 1.1
-range_pc2 = seq(from = min(p$x[,2]), to = max(p$x[,2]), length.out = resolution) * 1.1
-
-range_df = expand.grid(PC1 = range_pc1, PC2 = range_pc2)
-range_predictions = predict(test.lda, newdata = range_df)
-
-
-
-plt.nmf.pca.lda.150 <- data.frame(PC1 = p$x[,1], PC2 = p$x[,2], class = metadata$gliovis.majority_call, type = "GlioVis") %>%
-  rbind( data.frame(PC1 = range_df$PC1 ,PC2 = range_df$PC2 ,class = range_predictions$class,type = "LDA on NVM+PCA")) %>%
-  dplyr::mutate(PC1.n = as.numeric(scale(PC1)),
-                PC2.n = as.numeric(scale(PC2)))
-
-plt.nmf.pca.lda.150.p <- ggplot(plt.nmf.pca.lda.150, aes(x = PC1, y = PC2, col = class)) + 
-  geom_raster(data = subset(plt.nmf.pca.lda.150, type != "GlioVis"), aes(fill = factor(class)),alpha=0.1) +
-  geom_contour(data= subset(plt.nmf.pca.lda.150, type != "GlioVis"), aes(z=as.numeric(class)),
+ggplot(plt, aes(x = `NMF:123456.PC1`, y = `NMF:123456.PC2`, col = class)) + 
+  geom_raster(data = subset(plt, type == "Contour"), aes(fill = factor(class)), alpha=0.1) +
+  geom_contour(data= subset(plt, type == "Contour"), aes(z=as.numeric(class)),
                colour="gray40",
                size=0.25,
-               lty=2
-               ,breaks=c(1.5,2.5)
-  ) +
-  geom_point(data = subset(plt.nmf.pca.lda.150, type == "GlioVis"), size=1.5) +
+               lty=2,breaks=c(1.5,2.5)) +
+  geom_point(data = subset(plt, type == "Patient Sample"), size=1.5) +
   youri_gg_theme +
-  labs(x = "PC1 on NMF[k=3] (150 S-Genes)",
-       y = "PC2 on NMF[k=3] (150 S-Genes)",
-       col = "GlioVis Majority subtype",
-       fill = "NMF/PCA/LDA subtype") + 
-  scale_color_manual(name = NULL, values = subtype_colors, guide = guide_legend(title = NULL, title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75)) + 
+  labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", col='Subtype by GlioVis [majority call]',fill="LDA countour") +
+  scale_color_manual(values = subtype_colors, guide = guide_legend(title = NULL, title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75)) + 
   scale_fill_manual(values = subtype_colors)
 ggsave("output/figures/paper_subtypes_nmf_pca_1_2_lda-contour.png",width=7,height=7.2)
 
@@ -831,45 +843,23 @@ ggsave("output/figures/paper_subtypes_nmf_pca_1_2_lda-contour.png",width=7,heigh
 
 ## PCA:1+2(NMF:1+2+3) + LDA countours + LDA labels ----
 
+plt <- rbind(plt.single %>%
+               dplyr::select(c(`NMF:123456.PC1`, `NMF:123456.PC2`, 'NMF:123456.PCA.LDA.class')) %>%
+               dplyr::mutate(type = "Patient Sample") %>%
+               dplyr::rename(class = `NMF:123456.PCA.LDA.class`),
+             nmf.pca.lda.countours)
 
-plt.nmf.pca.lda.reclass.150 <- plt.nmf.pca.lda.150 %>%
-  dplyr::filter(type == 'GlioVis') %>%
-  dplyr::select(c('PC1','PC2', 'PC1.n', 'PC2.n'))
-
-range_predictions = predict(test.lda, newdata = plt.nmf.pca.lda.reclass.150)
-
-plt.nmf.pca.lda.reclass.150$class <- range_predictions$class
-plt.nmf.pca.lda.reclass.150$type <- "LDA on NVM+PCA data"
-#plt.nmf.pca.lda.reclass.150 <- rbind(plt.nmf.pca.lda.reclass.150, plt.nmf.pca.lda.150 %>%
-#                                       dplyr::filter(type != 'GlioVis'))
-
-rm(range_predictions)
-
-
-
-
-plt.nmf.pca.lda.reclass.150.p <-
-  
-  ggplot(plt.nmf.pca.lda.reclass.150, aes(x = PC1, y = PC2, col = class)) + 
-  geom_contour(data= subset(plt.nmf.pca.lda.150, type != "GlioVis"), aes(z=as.numeric(class)),
+ggplot(plt, aes(x = `NMF:123456.PC1`, y = `NMF:123456.PC2`, col = class)) + 
+  geom_raster(data = subset(plt, type == "Contour"), aes(fill = factor(class)), alpha=0.1) +
+  geom_contour(data= subset(plt, type == "Contour"), aes(z=as.numeric(class)),
                colour="gray40",
                size=0.25,
-               lty=2
-               ,breaks=c(1.5,2.5)
-  ) +
-  geom_point(data = subset(plt.nmf.pca.lda.reclass.150, type == "LDA on NVM+PCA data"), size=1.5) +
+               lty=2,breaks=c(1.5,2.5)) +
+  geom_point(data = subset(plt, type == "Patient Sample"), size=1.5) +
   youri_gg_theme +
-  labs(x = "PC1 on NMF[k=3] (150 S-Genes)",
-       y = "PC2 on NMF[k=3] (150 S-Genes)",
-       col = "GlioVis Majority subtype",
-       fill = "NMF/PCA/LDA subtype") + 
-  scale_color_manual(
-    name = "Subtype by LDA labels:",
-    values = subtype_colors,
-    guide = guide_legend(title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75)
-  ) +
+  labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", col='Subtype by GlioVis [majority call]',fill="LDA countour") +
+  scale_color_manual(values = subtype_colors, guide = guide_legend(title = NULL, title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75)) + 
   scale_fill_manual(values = subtype_colors)
-ggsave("output/figures/paper_subtypes_nmf_pca_1_2_lda-labels.png",width=7,height=7.2)
 
 
 
