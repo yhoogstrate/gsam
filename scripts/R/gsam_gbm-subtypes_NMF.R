@@ -809,7 +809,7 @@ rm(resolution, off_x, off_y, range_pc1, range_pc2, range_df)
 
 
 
-## PCA:1+2(NMF:1+2+3) + LDA countours + GlioVis labels ----
+## PCA:1+2(NMF:1+2+3) + LDA contours + GlioVis labels ----
 
 plt <- rbind(plt.single %>%
     dplyr::select(c(`NMF:123456.PC1`, `NMF:123456.PC2`, 'gliovis.majority_call')) %>%
@@ -834,7 +834,7 @@ ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_GlioVis_LDA-countours.pn
 
 
 
-## PCA:1+2(NMF:1+2+3) + LDA countours + LDA labels ----
+## PCA:1+2(NMF:1+2+3) + LDA contours + LDA labels ----
 
 plt <- rbind(plt.single %>%
                dplyr::select(c(`NMF:123456.PC1`, `NMF:123456.PC2`, 'NMF:123456.PCA.LDA.class')) %>%
@@ -855,6 +855,100 @@ ggplot(plt, aes(x = `NMF:123456.PC1`, y = `NMF:123456.PC2`, col = class)) +
   scale_fill_manual(values = subtype_colors)
 
 ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_LDA-reclassification_LDA-countours.png',width=7,height=7.2)
+
+
+
+
+
+## PCA:1+2(NMF:1+2+3) + LDA countors + LDA labels [classical] ----
+
+
+plt <- plt.single %>%
+  dplyr::left_join(plt.paired %>% dplyr::select(c("pid", `NMF:123456.PCA.LDA.status` )) , by=c('pid'='pid')) %>%
+  dplyr::mutate(primary.classical = pid %in% (plt.single %>% dplyr::filter(`NMF:123456.PCA.LDA.class` == "Classical" & resection == "R1") %>% dplyr::pull(pid))) %>%
+  dplyr::arrange(resection, sid) %>%
+  dplyr::mutate(pid = as.factor(pid))
+
+
+ggplot(plt, aes(x = `NMF:123456.PC1`, y = `NMF:123456.PC2`, group=pid, col = `NMF:123456.PCA.LDA.status`)) + 
+  geom_raster(data = nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.LDA.status' = NA) , aes(fill = factor(class)), alpha=0.1) +
+  geom_contour(data=  nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.LDA.status' = NA) , aes(z=as.numeric(class)),
+               colour="gray40", size=0.25, lty=2,breaks=c(1.5,2.5)) +
+  geom_point(data = plt %>% dplyr::filter(`NMF:123456.PCA.LDA.class` != "Classical" ), size=1.0, col="gray80") +
+  geom_point(data = plt %>% dplyr::filter(`NMF:123456.PCA.LDA.class` == "Classical" & resection == "R1"), size=1.5) +
+  geom_path(
+    data = plt %>% dplyr::filter(pid %in% .$pid[duplicated(.$pid)]) %>%
+      dplyr::filter(primary.classical == T),
+    arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.125, "inches"))
+  ) + 
+  youri_gg_theme +
+  labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", col='Subtype by LDA',fill="LDA countour") +
+  scale_color_manual(values=c('Stable'= rgb(0,0.75,0), 'Transition' = 'black','NA'='purple')) +
+  scale_fill_manual(values = subtype_colors)
+
+
+ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_LDA-reclassification_LDA-countours_classical.png',width=7,height=7.2)
+
+
+
+## PCA:1+2(NMF:1+2+3) + LDA countors + LDA labels [proneural] ----
+
+plt <- plt.single %>%
+  dplyr::left_join(plt.paired %>% dplyr::select(c("pid", `NMF:123456.PCA.LDA.status` )) , by=c('pid'='pid')) %>%
+  dplyr::mutate(pid = as.factor(pid)) %>%
+  dplyr::mutate(primary.proneural = pid %in% (plt.single %>% dplyr::filter(`NMF:123456.PCA.LDA.class` == "Proneural" & resection == "R1") %>% dplyr::pull(pid)))
+
+
+
+ggplot(plt, aes(x = `NMF:123456.PC1`, y = `NMF:123456.PC2`, group=pid, col = `NMF:123456.PCA.LDA.status`)) + 
+  geom_raster(data = nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.LDA.status' = NA) , aes(fill = factor(class)), alpha=0.1) +
+  geom_contour(data=  nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.LDA.status' = NA) , aes(z=as.numeric(class)),
+               colour="gray40", size=0.25, lty=2,breaks=c(1.5,2.5)) +
+  
+  geom_point(data = plt %>% dplyr::filter(`NMF:123456.PCA.LDA.class` != "Proneural" ), size=1.0, col="gray80") +
+  geom_point(data = plt %>% dplyr::filter(`NMF:123456.PCA.LDA.class` == "Proneural" & resection == "R1"), size=1.5) +
+  geom_path(
+    data = plt %>% dplyr::filter(pid %in% .$pid[duplicated(.$pid)]) %>%
+      dplyr::filter(primary.proneural == T),
+    arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.125, "inches"))
+  ) + 
+  youri_gg_theme +
+  labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", col='Subtype by LDA',fill="LDA countour") +
+  scale_color_manual(values=c('Stable'= rgb(0,0.75,0), 'Transition' = 'black','NA'='purple')) +
+  scale_fill_manual(values = subtype_colors)
+
+
+
+ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_LDA-reclassification_LDA-countours_proneural.png',width=7,height=7.2)
+
+
+## PCA:1+2(NMF:1+2+3) + LDA countors + LDA labels [mesenchymal] ----
+
+plt <- plt.single %>%
+  dplyr::left_join(plt.paired %>% dplyr::select(c("pid", `NMF:123456.PCA.LDA.status` )) , by=c('pid'='pid')) %>%
+  dplyr::mutate(pid = as.factor(pid)) %>%
+  dplyr::mutate(primary.mesenchymal = pid %in% (plt.single %>% dplyr::filter(`NMF:123456.PCA.LDA.class` == "Mesenchymal" & resection == "R1") %>% dplyr::pull(pid)))
+
+
+
+ggplot(plt, aes(x = `NMF:123456.PC1`, y = `NMF:123456.PC2`, group=pid, col = `NMF:123456.PCA.LDA.status`)) + 
+  geom_raster(data = nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.LDA.status' = NA) , aes(fill = factor(class)), alpha=0.1) +
+  geom_contour(data=  nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.LDA.status' = NA) , aes(z=as.numeric(class)),
+               colour="gray40", size=0.25, lty=2,breaks=c(1.5,2.5)) +
+  geom_point(data = plt %>% dplyr::filter(`NMF:123456.PCA.LDA.class` != "Mesenchymal" ), size=1.0, col="gray80") +
+  geom_point(data = plt %>% dplyr::filter(`NMF:123456.PCA.LDA.class` == "Mesenchymal" & resection == "R1"), size=1.5) +
+  geom_path(
+    data = plt %>% dplyr::filter(pid %in% .$pid[duplicated(.$pid)]) %>%
+      dplyr::filter(primary.mesenchymal == T),
+    arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.125, "inches"))
+  ) + 
+  youri_gg_theme +
+  labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", col='Subtype by LDA',fill="LDA countour") +
+  scale_color_manual(values=c('Stable'= rgb(0,0.75,0), 'Transition' = 'black','NA'='purple')) +
+  scale_fill_manual(values = subtype_colors)
+
+
+ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_LDA-reclassification_LDA-countours_mesenchymal.png',width=7,height=7.2)
 
 
 
@@ -927,14 +1021,25 @@ plt <- plt.single %>%
   
 
 
-ggplot(plt , aes(
-  #x = reorder(sid, order),
-                        #y = classifier, 
-                        xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax, fill = predicted.class, alpha=subclassifier) )  +
-  #geom_tile(colour="black",size=0.15) +
+ggplot(plt , aes(xmin=xmin, xmax=xmax, ymin=ymin, ymax=ymax, fill = predicted.class, alpha=subclassifier) )  +
   geom_rect(colour="black",size=0.15) +
   scale_fill_manual(values = subtype_colors) + 
-  scale_alpha_manual(values = c('no' = 0.8, 'yes' = 0.4))
+  scale_alpha_manual(values = c('no' = 0.8, 'yes' = 0.4)) +
+  scale_y_continuous(breaks = c((1+4) / 2,(4 + 5) /2, (5 + 6) / 2, (6 + 7) / 2,(7 + 10) / 2,(10 + 13) / 2),
+                     labels=c("NMF clustering","GlioVis: ssGSEA","GlioVis: SVM","GlioVis: KNN",
+                              "GlioVis: marjoity call","NMF -> PCA -> LDA reclass")) + 
+  scale_x_continuous(breaks =NULL ,expand=expansion(add=c(2,5)) ) + 
+  theme(
+    legend.position = 'bottom',
+    panel.background = element_blank(),
+    #axis.title.y = element_text(angle=90,vjust =2),
+    #axis.title.x = element_text(vjust = -0.2),
+    axis.text.x = element_blank(), #element_text(),
+    #axis.line = element_line(colour="black"),
+    panel.grid.major.x = element_blank(),panel.grid.minor.x = element_blank(), panel.grid.major.y = element_blank(), panel.grid.minor.y = element_blank() )
+
+
+ggsave('output/figures/paper_subtypes_classifier_tileplot.png',width=14 * 0.8,height=7.2 * 0.4)
 
 
 
