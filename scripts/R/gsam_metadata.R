@@ -373,18 +373,31 @@ gsam.rna.metadata <- gsam.rna.metadata %>%
 rm(tmp)
 
 
-## NMF per-sample error ----
+## NMF stats ----
 
-
-nmf_per.sample.error <- readRDS("tmp/nmf_per-sample-error.Rds") %>%
-  data.frame(stringsAsFactors = F) %>%
-  `colnames<-`('nmf_per.sample.error') %>%
-  tibble::rownames_to_column('sid')
 
 gsam.rna.metadata <- gsam.rna.metadata %>%
-  dplyr::left_join(nmf_per.sample.error, by = c('sid' = 'sid'))
+  dplyr::left_join(read.table("output/tables/gsam_nmf_lda_data.txt"), by=c('sid' = 'sid'))
 
-rm(nmf_per.sample.error)
+
+
+# this is from a different NMF run - deprecated
+# nmf_per.sample.error <- readRDS("tmp/nmf_per-sample-error.Rds") %>%
+#   data.frame(stringsAsFactors = F) %>%
+#   `colnames<-`('nmf_per.sample.error') %>%
+#   tibble::rownames_to_column('sid')
+# 
+# gsam.rna.metadata <- gsam.rna.metadata %>%
+#   dplyr::left_join(nmf_per.sample.error, by = c('sid' = 'sid'))
+# 
+# rm(nmf_per.sample.error)
+
+
+## Gravendeel class ----
+
+
+gsam.rna.metadata <- gsam.rna.metadata %>%
+  dplyr::left_join(read.table("output/tables/gravendeel_centroid_classification_gsam.txt"), by=c('sid' = 'sid'))
 
 
 
@@ -413,6 +426,8 @@ gsam.rna.metadata <- gsam.rna.metadata %>%
     , by = c('tmp' = 'sid')) %>%
   dplyr::mutate(tmp = NULL) %>%
   dplyr::mutate( pat.with.IDH = as.logical(pat.with.IDH) )
+
+
 
 
 

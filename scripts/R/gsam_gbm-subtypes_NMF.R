@@ -10,6 +10,7 @@ library(scales)
 library(fitdistrplus)
 library(patchwork)
 library(ggplot2)
+library(circlize)
 
 
 # load data ----
@@ -199,6 +200,13 @@ plt.single <- plt.single %>% dplyr::left_join(
     `colnames<-`( gsub('^(.+)$','NMF:123456.PCA.LDA.\\1', colnames(.))  ) %>%
     tibble::rownames_to_column('sid')
   , by=c('sid'='sid') )
+
+
+
+write.table(
+  plt.single %>%
+    dplyr::select(c("sid", "NMF:123456.membership", "NMF:123456.PC1", "NMF:123456.PC2", "NMF:123456.PC3", "NMF:123456.PCA.LDA.class", "NMF:123456.PCA.LDA.posterior.Classical", "NMF:123456.PCA.LDA.posterior.Mesenchymal", "NMF:123456.PCA.LDA.posterior.Proneural")),
+  "output/tables/gsam_nmf_lda_data.txt")
 
 
 
@@ -423,23 +431,21 @@ plt.paired <- plt.paired %>%
       dplyr::filter(eucledian.dist <= eucledian.dist.max) %>%
       dplyr::group_by(sid.R1) %>%
       dplyr::summarise(n.eucledian.stable = sum(`NMF:123456.PCA.LDA.class.R1`==`NMF:123456.PCA.LDA.class.R2`),
-                       n.eucledian.transition = sum(`NMF:123456.PCA.LDA.class.R1`!=`NMF:123456.PCA.LDA.class.R2`), .groups='drop'
+                       n.eucledian.transition = sum(`NMF:123456.PCA.LDA.class.R1`!=`NMF:123456.PCA.LDA.class.R2`),
+                       n.eucledian.cl = sum(`NMF:123456.PCA.LDA.class.R2` == 'Classical'),
+                       n.eucledian.mes = sum(`NMF:123456.PCA.LDA.class.R2` == 'Mesenchymal'),
+                       n.eucledian.pn = sum(`NMF:123456.PCA.LDA.class.R2` == 'Proneural'),
+                       .groups='drop'
       ) %>%
       dplyr::ungroup() %>%
       as.data.frame() %>%
       dplyr::mutate(n.eucledian.sum = n.eucledian.stable + n.eucledian.transition) %>%
       dplyr::mutate(p.eucledian.stable = n.eucledian.stable / n.eucledian.sum) %>%
-      dplyr::mutate(p.eucledian.transition = 1 - p.eucledian.stable)
+      dplyr::mutate(p.eucledian.transition = 1 - p.eucledian.stable) %>%
+      dplyr::mutate(p.eucledian.cl = n.eucledian.cl / n.eucledian.sum) %>%
+      dplyr::mutate(p.eucledian.mes = n.eucledian.mes / n.eucledian.sum) %>%
+      dplyr::mutate(p.eucledian.pn = n.eucledian.pn / n.eucledian.sum)
     ,by=c('sid.R1'='sid.R1'))
-
-
-
-
-
-
-
-
-
 
 
 
@@ -786,6 +792,30 @@ ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_GlioVis.png',width=7,hei
 
 
 
+## PCA:1+2(NMF:1+2+3) + GravenDeel labels ----
+
+
+plt.single <- plt.single %>%
+  dplyr::left_join(
+    plt %>%
+      dplyr::select(c('sid','Gravendeel.Centroid.Class')),
+    by = c('sid'='sid')
+  )
+
+
+ggplot(plt.single , aes(x = `NMF:123456.PC1` , y = `NMF:123456.PC2`, col = Gravendeel.Centroid.Class.x) ) +
+  geom_point(size=1.5) +
+  youri_gg_theme +
+  #scale_color_manual(
+    #values = subtype_colors,
+  #  guide = guide_legend(title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75)
+  #) +
+  scale_x_continuous(expand = expansion(mult = c(.05, .05)) ) +
+  scale_y_continuous(expand = expansion(mult = c(.05, .05)) ) +
+  labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", col='Subtype by GlioVis [majority call]')
+
+
+
 ## contour ----
 
 resolution <- 250 # 1000 x 1000 data points
@@ -805,6 +835,238 @@ nmf.pca.lda.countours <- predict(s150.pca.nmf.subtype.classifier.lda, newdata = 
   dplyr::mutate(type="Contour")
 
 rm(resolution, off_x, off_y, range_pc1, range_pc2, range_df)
+
+
+## LDA status circlize [observed] ----
+
+
+grid.col <- c(subtype_colors, subtype_colors, subtype_colors)
+names(grid.col ) <- c(names(subtype_colors) , paste0('R1: ',names(subtype_colors)), paste0('R2: ',names(subtype_colors)))
+
+
+circos.clear()
+par(mar = rep(0, 4), cex=1)
+circos.par(start.degree = 180)
+
+
+pdf("output/figures/paper_subtypes_nmf_S150G_observed_transitions_circos.pdf")
+#circos.initialize(sectors=sectors)
+chordDiagram(x=table(paste0("R1: ",plt.paired$`NMF:123456.PCA.LDA.class.R1`),
+                     paste0("R2: ",plt.paired$`NMF:123456.PCA.LDA.class.R2`)),
+             grid.col = grid.col, 
+             transparency = 0.3,
+             big.gap = 30,
+             small.gap = 3, 
+             annotationTrackHeight = c(0.01, 0.08),
+             annotationTrack = c("axis","grid")#"name",
+             #annotationTrackHeight = convert_height(c(20, 60), "mm")
+             #order = order,
+)
+
+#circos.track( track.index = 1, panel.fun = function(x, y) {
+for(si in get.all.sector.index()) {
+  xlim = get.cell.meta.data("xlim", sector.index = si, track.index = 1)
+  print(xlim)
+  print(ylim)
+  ylim = get.cell.meta.data("ylim", sector.index = si, track.index = 1)
+  circos.text(mean(xlim), mean(ylim),si , sector.index = si, track.index =1 , 
+              facing = "bending.inside", niceFacing = TRUE, col = "white",cex=0.8)
+}
+
+circos.clear()
+dev.off()
+
+
+## LDA status circlize [expected] ----
+
+
+
+#observed <- table(paste0("R1: ",plt.paired$`NMF:123456.PCA.LDA.class.R1`),
+#                  paste0("R2: ",plt.paired$`NMF:123456.PCA.LDA.class.R2`))
+
+expected["R1: Classical","R2: Classical"] <- plt.paired %>% dplyr::filter( `NMF:123456.PCA.LDA.class.R1` == "Classical") %>% dplyr::pull(p.eucledian.cl) %>% sum()
+expected["R1: Classical","R2: Mesenchymal"] <- plt.paired %>% dplyr::filter( `NMF:123456.PCA.LDA.class.R1` == "Classical") %>% dplyr::pull(p.eucledian.mes) %>% sum()
+expected["R1: Classical","R2: Proneural"] <- plt.paired %>% dplyr::filter( `NMF:123456.PCA.LDA.class.R1` == "Classical") %>% dplyr::pull(p.eucledian.pn) %>% sum()
+
+expected["R1: Mesenchymal","R2: Classical"] <- plt.paired %>% dplyr::filter( `NMF:123456.PCA.LDA.class.R1` == "Mesenchymal") %>% dplyr::pull(p.eucledian.cl) %>% sum()
+expected["R1: Mesenchymal","R2: Mesenchymal"] <- plt.paired %>% dplyr::filter( `NMF:123456.PCA.LDA.class.R1` == "Mesenchymal") %>% dplyr::pull(p.eucledian.mes) %>% sum()
+expected["R1: Mesenchymal","R2: Proneural"] <- plt.paired %>% dplyr::filter( `NMF:123456.PCA.LDA.class.R1` == "Mesenchymal") %>% dplyr::pull(p.eucledian.pn) %>% sum()
+
+expected["R1: Proneural","R2: Classical"] <- plt.paired %>% dplyr::filter( `NMF:123456.PCA.LDA.class.R1` == "Proneural") %>% dplyr::pull(p.eucledian.cl) %>% sum() 
+expected["R1: Proneural","R2: Mesenchymal"] <- plt.paired %>% dplyr::filter( `NMF:123456.PCA.LDA.class.R1` == "Proneural") %>% dplyr::pull(p.eucledian.mes) %>% sum() 
+expected["R1: Proneural","R2: Proneural"] <- plt.paired %>% dplyr::filter( `NMF:123456.PCA.LDA.class.R1` == "Proneural") %>% dplyr::pull(p.eucledian.pn) %>% sum() 
+
+
+
+grid.col <- c(subtype_colors, subtype_colors, subtype_colors)
+names(grid.col ) <- c(names(subtype_colors) , paste0('R1: ',names(subtype_colors)), paste0('R2: ',names(subtype_colors)))
+
+
+
+
+circos.clear()
+par(mar = rep(0, 4), cex=1)
+circos.par(start.degree = 180)
+
+
+
+
+
+
+pdf("output/figures/paper_subtypes_nmf_S150G_expected_transitions_circos.pdf")
+#circos.initialize(sectors=sectors)
+chordDiagram(x=expected,
+             grid.col = grid.col, 
+             transparency = 0.3,
+             big.gap = 30,
+             small.gap = 3, 
+             annotationTrackHeight = c(0.01, 0.08),
+             annotationTrack = c("axis","grid")#"name",
+             #annotationTrackHeight = convert_height(c(20, 60), "mm")
+             #order = order,
+)
+
+#circos.track( track.index = 1, panel.fun = function(x, y) {
+for(si in get.all.sector.index()) {
+  xlim = get.cell.meta.data("xlim", sector.index = si, track.index = 1)
+  print(xlim)
+  print(ylim)
+  ylim = get.cell.meta.data("ylim", sector.index = si, track.index = 1)
+  circos.text(mean(xlim), mean(ylim),si , sector.index = si, track.index =1 , 
+              facing = "bending.inside", niceFacing = TRUE, col = "white",cex=0.8)
+}
+
+circos.clear()
+dev.off()
+
+
+
+
+## LDA status circlize [expected] ----
+
+
+
+#observed <- table(paste0("R1: ",plt.paired$`NMF:123456.PCA.LDA.class.R1`),
+#                  paste0("R2: ",plt.paired$`NMF:123456.PCA.LDA.class.R2`))
+
+expected["R1: Classical","R2: Classical"] <- plt.paired %>% dplyr::filter( `NMF:123456.PCA.LDA.class.R1` == "Classical") %>% dplyr::pull(p.eucledian.cl) %>% sum()
+expected["R1: Classical","R2: Mesenchymal"] <- plt.paired %>% dplyr::filter( `NMF:123456.PCA.LDA.class.R1` == "Classical") %>% dplyr::pull(p.eucledian.mes) %>% sum()
+expected["R1: Classical","R2: Proneural"] <- plt.paired %>% dplyr::filter( `NMF:123456.PCA.LDA.class.R1` == "Classical") %>% dplyr::pull(p.eucledian.pn) %>% sum()
+
+expected["R1: Mesenchymal","R2: Classical"] <- plt.paired %>% dplyr::filter( `NMF:123456.PCA.LDA.class.R1` == "Mesenchymal") %>% dplyr::pull(p.eucledian.cl) %>% sum()
+expected["R1: Mesenchymal","R2: Mesenchymal"] <- plt.paired %>% dplyr::filter( `NMF:123456.PCA.LDA.class.R1` == "Mesenchymal") %>% dplyr::pull(p.eucledian.mes) %>% sum()
+expected["R1: Mesenchymal","R2: Proneural"] <- plt.paired %>% dplyr::filter( `NMF:123456.PCA.LDA.class.R1` == "Mesenchymal") %>% dplyr::pull(p.eucledian.pn) %>% sum()
+
+expected["R1: Proneural","R2: Classical"] <- plt.paired %>% dplyr::filter( `NMF:123456.PCA.LDA.class.R1` == "Proneural") %>% dplyr::pull(p.eucledian.cl) %>% sum() 
+expected["R1: Proneural","R2: Mesenchymal"] <- plt.paired %>% dplyr::filter( `NMF:123456.PCA.LDA.class.R1` == "Proneural") %>% dplyr::pull(p.eucledian.mes) %>% sum() 
+expected["R1: Proneural","R2: Proneural"] <- plt.paired %>% dplyr::filter( `NMF:123456.PCA.LDA.class.R1` == "Proneural") %>% dplyr::pull(p.eucledian.pn) %>% sum() 
+
+
+
+grid.col <- c(subtype_colors, subtype_colors, subtype_colors)
+names(grid.col ) <- c(names(subtype_colors) , paste0('R1: ',names(subtype_colors)), paste0('R2: ',names(subtype_colors)))
+
+
+
+
+circos.clear()
+par(mar = rep(0, 4), cex=1)
+circos.par(start.degree = 180)
+
+
+
+
+
+
+pdf("output/figures/paper_subtypes_nmf_S150G_expected_transitions_circos.pdf")
+#circos.initialize(sectors=sectors)
+chordDiagram(x=expected,
+             grid.col = grid.col, 
+             transparency = 0.3,
+             big.gap = 30,
+             small.gap = 3, 
+             annotationTrackHeight = c(0.01, 0.08),
+             annotationTrack = c("axis","grid")#"name",
+             #annotationTrackHeight = convert_height(c(20, 60), "mm")
+             #order = order,
+)
+
+#circos.track( track.index = 1, panel.fun = function(x, y) {
+for(si in get.all.sector.index()) {
+  xlim = get.cell.meta.data("xlim", sector.index = si, track.index = 1)
+  print(xlim)
+  print(ylim)
+  ylim = get.cell.meta.data("ylim", sector.index = si, track.index = 1)
+  circos.text(mean(xlim), mean(ylim),si , sector.index = si, track.index =1 , 
+              facing = "bending.inside", niceFacing = TRUE, col = "white",cex=0.8)
+}
+
+circos.clear()
+dev.off()
+
+
+
+
+## LDA status circlize [lfc observed( / expected)] ----
+
+
+
+#observed <- table(paste0("R1: ",plt.paired$`NMF:123456.PCA.LDA.class.R1`),
+#                  paste0("R2: ",plt.paired$`NMF:123456.PCA.LDA.class.R2`))
+
+expected["R1: Classical","R2: Classical"] <- plt.paired %>% dplyr::filter( `NMF:123456.PCA.LDA.class.R1` == "Classical") %>% dplyr::pull(p.eucledian.cl) %>% sum()
+expected["R1: Classical","R2: Mesenchymal"] <- plt.paired %>% dplyr::filter( `NMF:123456.PCA.LDA.class.R1` == "Classical") %>% dplyr::pull(p.eucledian.mes) %>% sum()
+expected["R1: Classical","R2: Proneural"] <- plt.paired %>% dplyr::filter( `NMF:123456.PCA.LDA.class.R1` == "Classical") %>% dplyr::pull(p.eucledian.pn) %>% sum()
+
+expected["R1: Mesenchymal","R2: Classical"] <- plt.paired %>% dplyr::filter( `NMF:123456.PCA.LDA.class.R1` == "Mesenchymal") %>% dplyr::pull(p.eucledian.cl) %>% sum()
+expected["R1: Mesenchymal","R2: Mesenchymal"] <- plt.paired %>% dplyr::filter( `NMF:123456.PCA.LDA.class.R1` == "Mesenchymal") %>% dplyr::pull(p.eucledian.mes) %>% sum()
+expected["R1: Mesenchymal","R2: Proneural"] <- plt.paired %>% dplyr::filter( `NMF:123456.PCA.LDA.class.R1` == "Mesenchymal") %>% dplyr::pull(p.eucledian.pn) %>% sum()
+
+expected["R1: Proneural","R2: Classical"] <- plt.paired %>% dplyr::filter( `NMF:123456.PCA.LDA.class.R1` == "Proneural") %>% dplyr::pull(p.eucledian.cl) %>% sum() 
+expected["R1: Proneural","R2: Mesenchymal"] <- plt.paired %>% dplyr::filter( `NMF:123456.PCA.LDA.class.R1` == "Proneural") %>% dplyr::pull(p.eucledian.mes) %>% sum() 
+expected["R1: Proneural","R2: Proneural"] <- plt.paired %>% dplyr::filter( `NMF:123456.PCA.LDA.class.R1` == "Proneural") %>% dplyr::pull(p.eucledian.pn) %>% sum() 
+
+
+
+grid.col <- c(subtype_colors, subtype_colors, subtype_colors)
+names(grid.col ) <- c(names(subtype_colors) , paste0('R1: ',names(subtype_colors)), paste0('R2: ',names(subtype_colors)))
+
+
+
+
+circos.clear()
+par(mar = rep(0, 4), cex=1)
+circos.par(start.degree = 180)
+
+pdf("output/figures/paper_subtypes_nmf_S150G_observed_div_expected_transitions_circos.pdf")
+#circos.initialize(sectors=sectors)
+chordDiagram(x=observed / expected,
+             grid.col = grid.col, 
+             transparency = 0.3,
+             big.gap = 30,
+             small.gap = 3, 
+             annotationTrackHeight = c(0.01, 0.08),
+             annotationTrack = c("axis","grid")#"name",
+             #annotationTrackHeight = convert_height(c(20, 60), "mm")
+             #order = order,
+)
+
+#circos.track( track.index = 1, panel.fun = function(x, y) {
+for(si in get.all.sector.index()) {
+  xlim = get.cell.meta.data("xlim", sector.index = si, track.index = 1)
+  print(xlim)
+  print(ylim)
+  ylim = get.cell.meta.data("ylim", sector.index = si, track.index = 1)
+  circos.text(mean(xlim), mean(ylim),si , sector.index = si, track.index =1 , 
+              facing = "bending.inside", niceFacing = TRUE, col = "white",cex=0.8)
+}
+
+circos.clear()
+dev.off()
+
+
+
+
 
 
 
@@ -870,7 +1132,10 @@ plt <- plt.single %>%
   dplyr::mutate(pid = as.factor(pid))
 
 
-ggplot(plt, aes(x = `NMF:123456.PC1`, y = `NMF:123456.PC2`, group=pid, col = `NMF:123456.PCA.LDA.status`)) + 
+#plt <- plt %>% dplyr::filter(pid == "AAT")
+
+
+ggplot(plt, aes(x = `NMF:123456.PC1`, y = `NMF:123456.PC2`, group=pid, col = `NMF:123456.PCA.LDA.status`, label=pid)) + 
   geom_raster(data = nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.LDA.status' = NA) , aes(fill = factor(class)), alpha=0.1) +
   geom_contour(data=  nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.LDA.status' = NA) , aes(z=as.numeric(class)),
                colour="gray40", size=0.25, lty=2,breaks=c(1.5,2.5)) +
@@ -881,13 +1146,15 @@ ggplot(plt, aes(x = `NMF:123456.PC1`, y = `NMF:123456.PC2`, group=pid, col = `NM
       dplyr::filter(primary.classical == T),
     arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.125, "inches"))
   ) + 
+  geom_text_repel(data = plt %>% dplyr::filter(resection == "R2" & `NMF:123456.PCA.LDA.status` != "Stable" & primary.classical == T &
+                           `NMF:123456.PCA.LDA.posterior.Classical` < 0.25), size = 3)  +
   youri_gg_theme +
-  labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", col='Subtype by LDA',fill="LDA countour") +
+  labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", col=NULL,fill="LDA class") +
   scale_color_manual(values=c('Stable'= rgb(0,0.75,0), 'Transition' = 'black','NA'='purple')) +
   scale_fill_manual(values = subtype_colors)
 
 
-ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_LDA-reclassification_LDA-countours_classical.png',width=7,height=7.2)
+ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_LDA-reclassification_LDA-countours_classical.png',width=7,height=5.5)
 
 
 
@@ -899,8 +1166,7 @@ plt <- plt.single %>%
   dplyr::mutate(primary.proneural = pid %in% (plt.single %>% dplyr::filter(`NMF:123456.PCA.LDA.class` == "Proneural" & resection == "R1") %>% dplyr::pull(pid)))
 
 
-
-ggplot(plt, aes(x = `NMF:123456.PC1`, y = `NMF:123456.PC2`, group=pid, col = `NMF:123456.PCA.LDA.status`)) + 
+ggplot(plt, aes(x = `NMF:123456.PC1`, y = `NMF:123456.PC2`, group=pid, col = `NMF:123456.PCA.LDA.status`, label=pid)) + 
   geom_raster(data = nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.LDA.status' = NA) , aes(fill = factor(class)), alpha=0.1) +
   geom_contour(data=  nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.LDA.status' = NA) , aes(z=as.numeric(class)),
                colour="gray40", size=0.25, lty=2,breaks=c(1.5,2.5)) +
@@ -912,14 +1178,15 @@ ggplot(plt, aes(x = `NMF:123456.PC1`, y = `NMF:123456.PC2`, group=pid, col = `NM
       dplyr::filter(primary.proneural == T),
     arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.125, "inches"))
   ) + 
+  geom_text_repel(data = plt %>% dplyr::filter(resection == "R2" & `NMF:123456.PCA.LDA.status` != "Stable" & primary.proneural == T), size = 3)  +
   youri_gg_theme +
-  labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", col='Subtype by LDA',fill="LDA countour") +
+  labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", col=NULL,fill="LDA class") +
   scale_color_manual(values=c('Stable'= rgb(0,0.75,0), 'Transition' = 'black','NA'='purple')) +
   scale_fill_manual(values = subtype_colors)
 
 
 
-ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_LDA-reclassification_LDA-countours_proneural.png',width=7,height=7.2)
+ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_LDA-reclassification_LDA-countours_proneural.png',width=7,height=5.5)
 
 
 ## PCA:1+2(NMF:1+2+3) + LDA countors + LDA labels [mesenchymal] ----
@@ -931,7 +1198,7 @@ plt <- plt.single %>%
 
 
 
-ggplot(plt, aes(x = `NMF:123456.PC1`, y = `NMF:123456.PC2`, group=pid, col = `NMF:123456.PCA.LDA.status`)) + 
+ggplot(plt, aes(x = `NMF:123456.PC1`, y = `NMF:123456.PC2`, group=pid, col = `NMF:123456.PCA.LDA.status`, label=pid)) + 
   geom_raster(data = nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.LDA.status' = NA) , aes(fill = factor(class)), alpha=0.1) +
   geom_contour(data=  nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.LDA.status' = NA) , aes(z=as.numeric(class)),
                colour="gray40", size=0.25, lty=2,breaks=c(1.5,2.5)) +
@@ -942,13 +1209,14 @@ ggplot(plt, aes(x = `NMF:123456.PC1`, y = `NMF:123456.PC2`, group=pid, col = `NM
       dplyr::filter(primary.mesenchymal == T),
     arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.125, "inches"))
   ) + 
+  geom_text_repel(data = plt %>% dplyr::filter(resection == "R2" & `NMF:123456.PCA.LDA.status` != "Stable" & primary.mesenchymal == T), size = 3)  +
   youri_gg_theme +
-  labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", col='Subtype by LDA',fill="LDA countour") +
+  labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", col=NULL,fill="LDA class") +
   scale_color_manual(values=c('Stable'= rgb(0,0.75,0), 'Transition' = 'black','NA'='purple')) +
   scale_fill_manual(values = subtype_colors)
 
 
-ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_LDA-reclassification_LDA-countours_mesenchymal.png',width=7,height=7.2)
+ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_LDA-reclassification_LDA-countours_mesenchymal.png',width=7,height=5.5)
 
 
 
