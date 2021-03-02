@@ -17,6 +17,8 @@ setwd("~/projects/gsam")
 
 # ---- load libs ----
 
+
+library(tidyverse)
 library(ggplot2)
 library(limma)
 
@@ -92,9 +94,10 @@ source("scripts/R/youri_gg_theme.R")
 source("scripts/R/job_gg_theme.R")
 
 
-cnv_segments <- read.delim('data/output/tables/cnv_copynumber-ratio.cns_all.txt', stringsAsFactors = F) %>%
+cnv_segments <- read.delim('data/gsam/output/tables/cnv_copynumber-ratio.cns_all.txt', stringsAsFactors = F) %>%
   dplyr::mutate(gene = NULL) %>%
   dplyr::mutate(segment.length = end - start)
+
 
 
 # ---- test code ----

@@ -36,17 +36,20 @@ stopifnot(sum(is.na(head(cnv_matrix))) == 0) # no NA values may exist
 colnames(cnv_matrix) <- gsub("(.b1|.b2)$","",colnames(cnv_matrix))
 
 # change PD ids (sequencing ids) to study ids
-#source("scripts/R/gsam_metadata.R")
+if(!exists('gsam.cnv.metadata')) {
+  source("scripts/R/gsam_metadata.R")
+}
+
 
 #
-#tmp <- match(colnames(cnv_matrix), gsam.cnv.metadata$PD_ID) # order
-#stopifnot(sum(is.na(tmp)) == 0)
-#colnames(cnv_matrix) <- gsam.cnv.metadata[tmp,]$donor_ID
+tmp <- match(colnames(cnv_matrix), gsam.cnv.metadata$PD_ID) # order
+stopifnot(sum(is.na(tmp)) == 0)
+colnames(cnv_matrix) <- gsam.cnv.metadata[tmp,]$donor_ID
 
 # reorder to match metadata order
-#cnv_matrix <- cnv_matrix[,match(gsam.cnv.metadata$donor_ID , colnames(cnv_matrix))]
+cnv_matrix <- cnv_matrix[,match(gsam.cnv.metadata$donor_ID , colnames(cnv_matrix))]
 
-#rm(tmp, naPerRow, naPerCol, sel)
+rm(tmp, naPerRow, naPerCol, sel)
 
 
 # 〰 © Dr. Youri Hoogstrate 〰 ----
