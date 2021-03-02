@@ -1,9 +1,14 @@
 #!/usr/bin/env R
 
+# ---- 
+
+
 library(dplyr) # for distinct() function
-library("readxl")
+library(readxl)
+
 
 # ---- patient metadata ----
+
 # three CNV samples samples not in metadata: "AMA" "AMA" "BAO" "BAO" "FAF" "FAF"
 #gsam.patient.metadata <- read.csv('data/administratie/dbGSAM_PUBLIC_VERSION.csv',stringsAsFactors=F)
 gsam.patient.metadata <- read.csv('data/gsam/administratie/GSAM_combined_clinical_molecular.csv',stringsAsFactors=F)
@@ -28,6 +33,7 @@ gsam.patient.metadata <- gsam.patient.metadata %>%
 
 #idh.muts <- c("PD29173a","PD29173c","PD29176c","PD29180a2","PD29180c2","PD29199a2","PD29199c2","PD29216a2","PD29216c2","PD29220c","PD29228a","PD29228c","PD29263a","PD29264a2","PD29264c","PD30239c","PD30242a3","PD30242c3","PD36768a","PD36768c","PD36770a","PD36770c","PD36772c","PD36783a","PD36783c")
 
+
 gsam.cnv.metadata <- read.delim("data/gsam/DNA/sample codes sanger gsam.txt",stringsAsFactors=FALSE) %>%
   dplyr::mutate(pid = gsub("[1-2]$","",donor_ID)) %>%
   dplyr::select(c("donor_ID", "pid", "PD_ID", "donor_sex", "donor_age_at_diagnosis","Concentration.at.QC..ng.ul.","Volume.at.QC..ul.","Amount.at.QC..ug.")) %>%
@@ -46,11 +52,7 @@ gsam.cnv.metadata <- read.delim("data/gsam/DNA/sample codes sanger gsam.txt",str
     , by=c('PD_ID' = 'sid'))  %>%
   dplyr::left_join(gsam.patient.metadata , by=c('pid' = 'studyID')) %>%
   dplyr::mutate(donor_sex = NULL) %>%
-  
-  
   dplyr::mutate(IDH.mut = PD_ID %in% idh.muts)
-
-  
 
 
 
