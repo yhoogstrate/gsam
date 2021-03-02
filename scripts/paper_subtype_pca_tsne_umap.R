@@ -12,14 +12,14 @@ source('scripts/R/youri_gg_theme.R')
 # ---- Load data ----
 
 source('scripts/R/gsam_metadata.R')
-source('scripts/R/gsam_expression_matrix.R')
-source('scripts/R/gsam_expression_matrix_VST.R')
+source('scripts/R/gsam_rna-seq_expression.R')
 source('scripts/R/subtype_genes.R')
 
 
 # ---- export subtype data ----
 
-plt.data <- expression_matrix_full_new.vst %>%
+plt.data <- gsam.rnaseq.expression.vst %>%
+  as.data.frame() %>%
   dplyr::filter(rownames(.) %in% c(subtype.mesenchymal$id, subtype.proneural$id, subtype.classical$id)) %>%
   t() %>%
   `colnames<-`(gsub("^.+\\|([^\\|]+)\\|.+$","\\1",colnames(.))) %>%
@@ -35,7 +35,7 @@ plt.data <- expression_matrix_full_new.vst %>%
 
 plt.data[] <- lapply(plt.data, as.character) # quotes..
 
-#write.csv(plt.data,"output/tables/gliovis-subtype-input-table.csv", row.names=F, quote=T)
+write.csv(plt.data,"output/tables/gliovis/gliovis-subtype-input-table.csv", row.names=F, quote=T)
 
 
 

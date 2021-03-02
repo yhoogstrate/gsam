@@ -29,37 +29,31 @@ source("scripts/R/ligands.R")
 source("scripts/R/subtype_genes.R")
 
 source("scripts/R/gsam_metadata.R")
-source("scripts/R/gsam_expression_matrix.R")
-source("scripts/R/dna_idh.R") # IDH mutants must be excluded
-
-source("scripts/R/glass_metadata.R")
+source("scripts/R/gsam_rna-seq_expression.R")
 
 source('scripts/R/wang_glioma_intrinsic_genes.R')
 
+source("scripts/R/glass_expression_matrix.R") # glass & tcga validation set
 
-#source("scripts/R/chrom_sizes.R")
 
 
 # data transformation(s) ----
 
-# - exclude IDH mutants
-# - exclude low tumour percentage
+
+# TODO exclude IDH mutants
+# TODO exclude low tumour percentage
 
 
-# some code? ----
+m <- gsam.rna.metadata %>%
+  dplyr::filter(blacklist.pca == F)
 
 
-# old and new values correlate very high
-#em <- expression_matrix[,20:30]
-#tmp <- expression_matrix_full[,match(colnames(em) , colnames(expression_matrix_full))]
-#colnames(tmp) <- paste0(colnames(tmp), ".f")
-#tmp <- cbind(em,tmp)
-#c <- cor(tmp,method="spearman")
-#corrplot(c)
+m[m$sid %in% colnames(gsam.rnaseq.expression) == F,]
 
+e <- m$sid %in% colnames(gsam.rnaseq.expression)
 
 # resection as condition
-e <- expression_matrix_full
+
 cond <- factor(paste0("r",gsub("^.+([0-9])$","\\1",colnames(e))))
 
 dds <- DESeqDataSetFromMatrix(e, DataFrame(cond), ~cond)

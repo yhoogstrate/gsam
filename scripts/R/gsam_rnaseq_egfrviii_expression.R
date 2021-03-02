@@ -6,7 +6,7 @@ library(tidyverse)
 
 # ---- just counts / sample ----
 
-gsam.viii.rnaseq <- 'output/tables/v3_extract_readcounts.txt' %>%
+gsam.viii.rnaseq <- 'data/gsam/output/tables/v3_extract_readcounts.txt' %>%
   read.table(header=T,stringsAsFactor=F) %>%
   dplyr::mutate(sample = gsub("/.+$","",gsub("^.+/alignments/","", sample) ) ) %>%
   dplyr::mutate(sid = gsub("-replicate", "", sample, fixed=T)) %>%

@@ -3,19 +3,33 @@
 # load  ----
 ## libs ----
 
+
 library(tidyverse)
+
+
+## subtype genes ----
+
+source('scripts/R/subtype_genes.R')
+
 
 ## gencode 22 ----
 
 if(!exists('gencode.22')) {
-  gencode.22 <- read.table("data/tcga/read-counts/gencode.v22.annotation.gtf",sep="\t",comment.char="#",stringsAsFactors = F) %>%
-    dplyr::filter(V3 == "gene") %>%
-    dplyr::mutate(ENSG = gsub("^.+(ENSG[^;]+);.+$","\\1",V9)) %>%
-    dplyr::mutate(GENE = gsub("^.+gene_name ([^;]+);.+$","\\1",V9)) %>%
-    dplyr::mutate(V9 = NULL) %>%
-    dplyr::mutate(ENSG.short = gsub('\\..*?$','',ENSG) )
-  
   rm.gencode <- T
+  
+  if(file.exists('tmp/gencode.22.Rds')) {
+    gencode.22 <- readRDS('tmp/gencode.22.Rds')
+  }
+  else {
+    gencode.22 <- read.table("data/tcga/read-counts/gencode.v22.annotation.gtf",sep="\t",comment.char="#",stringsAsFactors = F) %>%
+      dplyr::filter(V3 == "gene") %>%
+      dplyr::mutate(ENSG = gsub("^.+(ENSG[^;]+);.+$","\\1",V9)) %>%
+      dplyr::mutate(GENE = gsub("^.+gene_name ([^;]+);.+$","\\1",V9)) %>%
+      dplyr::mutate(V9 = NULL) %>%
+      dplyr::mutate(ENSG.short = gsub('\\..*?$','',ENSG) )
+    
+    saveRDS(gencode.22, file='tmp/gencode.22.Rds')
+  }
 } else {
   rm.gencode <- F
 }
@@ -26,12 +40,22 @@ if(!exists('gencode.22')) {
 wang.glioma.intrinsic.genes <- read.table('data/wang/table_s1.txt',
                                           stringsAsFactors = F,
                                           sep="\t",
-                                          header=T)
+                                          header=T) %>%
+  dplyr::mutate(Gene_Symbol = ifelse(Gene_Symbol == "LHFP", "LHFPL6", Gene_Symbol) )%>%
+  dplyr::mutate(Gene_Symbol = ifelse(Gene_Symbol == "C14orf159", "DGLUCY", Gene_Symbol) )%>%
+  dplyr::mutate(Gene_Symbol = ifelse(Gene_Symbol == "KIAA0494", "EFCAB14", Gene_Symbol) )%>%
+  dplyr::mutate(Gene_Symbol = ifelse(Gene_Symbol == "HN1", "JPT1", Gene_Symbol) )%>%
+  dplyr::mutate(Gene_Symbol = ifelse(Gene_Symbol == "HRASLS", "PLAAT1", Gene_Symbol) )%>%
+  dplyr::mutate(Gene_Symbol = ifelse(Gene_Symbol == "PAK7", "PAK5", Gene_Symbol) )%>%
+  dplyr::mutate(Gene_Symbol = ifelse(Gene_Symbol == "ZNF643", "ZFP69B", Gene_Symbol) )
+
+
+
 
 
 isct <- readRDS("tmp/isct.Rds")
 if(!exists('isct')) {
-  
+
   tcga.gtf <- read.table('data/wang/Homo_sapiens.GRCh37.64.gtf', sep="\t", header=F, stringsAsFactors = F) %>% # head() %>%
     dplyr::mutate(ENSG.short = gsub("^.+(ENSG[^;]+);.+$","\\1",V9)) %>%
     dplyr::mutate(GENE = gsub("^.+gene_name ([^;]+);.+$","\\1",V9)) %>%
@@ -102,6 +126,8 @@ if(!exists('isct')) {
     }
     
     rm(m)
+    
+    
   }
   
   stopifnot( nrow(isct) == nrow(wang.glioma.intrinsic.genes))
@@ -113,8 +139,24 @@ if(!exists('isct')) {
 }
 
 
+
+
 wang.glioma.intrinsic.genes <- wang.glioma.intrinsic.genes %>% 
-  dplyr::left_join(isct, by=c('Gene_Symbol' = 'GENE'))
+  dplyr::left_join(isct, by=c('Gene_Symbol' = 'GENE')) %>%
+  dplyr::left_join(
+    gencode.31 %>%
+      dplyr::mutate(ENSG.short.GENCODE.31 = gsub("\\..+$","",ENSG)) %>%
+      dplyr::rename(GENE.GENCODE.31 = GENE) %>%
+      dplyr::rename(ENSG.GENCODE.31 = ENSG) %>%
+      dplyr::select(c('GENE.GENCODE.31', 'ENSG.short.GENCODE.31', 'ENSG.GENCODE.31') ) 
+    , by = c('Gene_Symbol'='GENE.GENCODE.31'))
+
+
+wang.glioma.intrinsic.genes <- wang.glioma.intrinsic.genes %>%
+  dplyr::mutate(ENSG =       ifelse(is.na(ENSG), ENSG.GENCODE.31, ENSG )) %>%
+  dplyr::mutate(ENSG.short = ifelse(is.na(ENSG.short), ENSG.short.GENCODE.31, ENSG.short )) %>%
+  dplyr::mutate(GENE.GENCODE.31 = NULL, ENSG.short.GENCODE.31 = NULL, ENSG.GENCODE.31 = NULL)
+
 
 
 if(rm.gencode) {
@@ -123,6 +165,16 @@ if(rm.gencode) {
 
 
 rm(isct, rm.gencode)
+
+
+
+## from the 150 subtype genes, find w/ missing ens-id ----
+
+
+wang.glioma.intrinsic.genes %>%
+  dplyr::filter(Subtyping_Signature_Gene. != "") %>%
+  dplyr::filter(is.na(ENSG) ) 
+
 
 
 

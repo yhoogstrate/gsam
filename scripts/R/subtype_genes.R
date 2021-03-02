@@ -2,7 +2,7 @@
 
 
 if(!exists('gencode.31')) {
-  source('scripts/R/gsam_expression_matrix.R')
+  source('scripts/R/gsam_rna-seq_expression.R')
 }
 
 
@@ -187,8 +187,8 @@ subtype.classical <-data.frame(symbol=subtype.classical.tt2) %>%
 
 
 
-stopifnot(subtype.mesenchymal$id %in% rownames(expression_matrix_full_new))
-stopifnot(subtype.proneural$id %in% rownames(expression_matrix_full_new))
-stopifnot(subtype.classical$id %in% rownames(expression_matrix_full_new))
+stopifnot(subtype.mesenchymal$id %in% rownames(gsam.rnaseq.expression))
+stopifnot(subtype.proneural$id %in% rownames(gsam.rnaseq.expression))
+stopifnot(subtype.classical$id %in% rownames(gsam.rnaseq.expression))
 
 

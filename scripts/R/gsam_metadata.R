@@ -3,20 +3,28 @@
 # ---- 
 
 
-library(dplyr) # for distinct() function
+library(tidyverse) # for distinct() function
 library(readxl)
+
 
 
 # ---- patient metadata ----
 
+# load libs ----
+
+
+
 # three CNV samples samples not in metadata: "AMA" "AMA" "BAO" "BAO" "FAF" "FAF"
 #gsam.patient.metadata <- read.csv('data/administratie/dbGSAM_PUBLIC_VERSION.csv',stringsAsFactors=F)
-gsam.patient.metadata <- read.csv('data/gsam/administratie/GSAM_combined_clinical_molecular.csv',stringsAsFactors=F)
-gsam.patient.metadata <- gsam.patient.metadata[order(gsam.patient.metadata$studyID),] # reorder
 
-gsam.patient.metadata$gender <- as.factor(gsam.patient.metadata$gender)
+
+gsam.patient.metadata <- read.csv('data/gsam/administratie/GSAM_combined_clinical_molecular.csv',stringsAsFactors=F) %>%
+                          dplyr::arrange(studyID) %>%
+                          dplyr::mutate(gender = as.factor(gender))
+
 
 # there's a number of samples of which the gender does not fit with the omics data - omics data determined genders are the corrected ones
+
 gsam.patient.metadata$gender.corrected <- gsam.patient.metadata$gender
 actual.males <- c('AAT', 'AAM', 'AZH', 'HAI','FAG')
 gsam.patient.metadata[gsam.patient.metadata$studyID %in% actual.males,]$gender.corrected <- 'Male'
@@ -29,9 +37,8 @@ gsam.patient.metadata <- gsam.patient.metadata %>%
   dplyr::mutate(survival.months = survivalDays / 365.0 * 12.0)
 
 
-# ---- exome-seq CNV metadata ----
+# DNA exome-seq ----
 
-#idh.muts <- c("PD29173a","PD29173c","PD29176c","PD29180a2","PD29180c2","PD29199a2","PD29199c2","PD29216a2","PD29216c2","PD29220c","PD29228a","PD29228c","PD29263a","PD29264a2","PD29264c","PD30239c","PD30242a3","PD30242c3","PD36768a","PD36768c","PD36770a","PD36770c","PD36772c","PD36783a","PD36783c")
 
 
 gsam.cnv.metadata <- read.delim("data/gsam/DNA/sample codes sanger gsam.txt",stringsAsFactors=FALSE) %>%
@@ -49,18 +56,37 @@ gsam.cnv.metadata <- read.delim("data/gsam/DNA/sample codes sanger gsam.txt",str
       dplyr::mutate(sid = gsub("\\.b[12]$","",cnv.table.id) ) %>%
       dplyr::mutate(batch =  as.factor(gsub("^[^\\.]+\\.","",cnv.table.id)) )  
     
-    , by=c('PD_ID' = 'sid'))  %>%
+    , by=c('PD_ID' = 'sid')) %>%
   dplyr::left_join(gsam.patient.metadata , by=c('pid' = 'studyID')) %>%
   dplyr::mutate(donor_sex = NULL) %>%
-  dplyr::mutate(IDH.mut = PD_ID %in% idh.muts)
+  dplyr::left_join(
+    read.delim('data/gsam/output/tables/dna/idh_mutations.txt', stringsAsFactors = F, header=F) %>%
+      `colnames<-`(c('PD_ID' , 'IDH.mutation', 'IDH.mutation.call.status', 'IDH.mutation.VAF', 'IDH.mutation.count')),
+  by = c('PD_ID'='PD_ID')) %>%
+  dplyr::select(c('donor_ID', 'pid', 'PD_ID', 'IDH1', 'IDH.mutation', 'IDH.mutation.call.status', 'IDH.mutation.VAF', 'IDH.mutation.count')) %>%
+  dplyr::mutate(tmp = ifelse(is.na(IDH.mutation), 'NA' , IDH.mutation)) %>%
+  dplyr::mutate(tmp = case_when(
+                tmp == "NA" ~ '0',
+                tmp == '-' ~ '1' , 
+                TRUE ~ '2'
+                ))    %>%
+  dplyr::group_by(pid) %>%
+  dplyr::mutate(pat.with.IDH = max(tmp), data = cur_data() )  %>%
+  dplyr::ungroup() %>%
+  dplyr::mutate(tmp = NULL, data=NULL) %>%
+  as.data.frame() %>%
+  dplyr::mutate(pat.with.IDH = ifelse(pat.with.IDH == 0, NA , pat.with.IDH)) %>%
+  dplyr::mutate(pat.with.IDH = ifelse(pat.with.IDH == 1, F , pat.with.IDH)) %>%
+  dplyr::mutate(pat.with.IDH = ifelse(pat.with.IDH == 2, T , pat.with.IDH)) 
+  
+  
 
 
 
+# RNA-seq metadata [full] ----
 
+## STAR alignment statistics + patient / sample identifiers ----
 
-# --- RNA-seq metadata [full] ----
-
-# STAR alignment statistics + patient / sample identifiers
 
 gsam.rna.metadata <- read.delim("data/gsam/output/tables/gsam_featureCounts_readcounts_new.txt.summary",stringsAsFactors = F,comment="#",row.names=1) %>%
   `colnames<-`(gsub("^.+RNA.alignments\\.(.+)\\.Aligned.sortedByCoord.+$","\\1",colnames(.),fixed=F)) %>%
@@ -100,6 +126,7 @@ gsam.rna.metadata <- read.delim("data/gsam/output/tables/gsam_featureCounts_read
   dplyr::mutate(resection_pair=replace(resection_pair,which(batch=="old"|sample%in%c("CAO1.replicate","GAS2.replicate","FAB2","FAH2","EBP1","KAE1.new","KAE1")),NA)) %>%
   dplyr::mutate(sample = NULL)
 
+
 #EBP1, FAH2 and KAE1: no pair
 #FAB2: FAB2.replicate contains more vIII reads 
 #CAO1.replicate, GAS2.replicate: CAO1 and GAS2 contain more vIII reads
@@ -116,6 +143,7 @@ gsam.rna.metadata <- read.delim("data/gsam/output/tables/gsam_featureCounts_read
 # tmp$Bam_file <- NULL
 # gsam.rna.metadata <- merge(gsam.rna.metadata, tmp , by.x = "sid", by.y = "sid")
 
+
 #vIII rna-seq counts
 tmp <- read.table('data/gsam/output/tables/v3_extract_readcounts.txt',header=T,stringsAsFactor=F)
 tmp$sample <- gsub("^.+/alignments/([^/]+)/.+$","\\1",tmp$sample)
@@ -130,7 +158,8 @@ gsam.rna.metadata <- gsam.rna.metadata %>%
   dplyr::left_join(tmp, by=c('sid' = 'sample'))
 
 
-rm(sel)
+rm(sel, tmp)
+
 
 # @TODO vIII qPCR percentage 'TODO!!!!!!
 # tmp <- read.csv('data/RNA/Final_qPCR_EGFR_GSAM.csv',stringsAsFactors = F)
@@ -350,17 +379,60 @@ gsam.rna.metadata <- gsam.rna.metadata %>%
 
 rm(tmp)
 
-# ---- NMF per-sample error ----
 
-nmf_per.sample.error <- readRDS("tmp/nmf_per-sample-error.Rds") %>%
-  data.frame(stringsAsFactors = F) %>%
-  `colnames<-`('nmf_per.sample.error') %>%
-  tibble::rownames_to_column('sid')
+## NMF stats ----
+
 
 gsam.rna.metadata <- gsam.rna.metadata %>%
-  dplyr::left_join(nmf_per.sample.error, by = c('sid' = 'sid'))
+  dplyr::left_join(read.table("output/tables/gsam_nmf_lda_data.txt"), by=c('sid' = 'sid'))
 
-rm(nmf_per.sample.error)
+
+
+# this is from a different NMF run - deprecated
+# nmf_per.sample.error <- readRDS("tmp/nmf_per-sample-error.Rds") %>%
+#   data.frame(stringsAsFactors = F) %>%
+#   `colnames<-`('nmf_per.sample.error') %>%
+#   tibble::rownames_to_column('sid')
+# 
+# gsam.rna.metadata <- gsam.rna.metadata %>%
+#   dplyr::left_join(nmf_per.sample.error, by = c('sid' = 'sid'))
+# 
+# rm(nmf_per.sample.error)
+
+
+## Gravendeel class ----
+
+
+gsam.rna.metadata <- gsam.rna.metadata %>%
+  dplyr::left_join(read.table("output/tables/gravendeel_centroid_classification_gsam.txt"), by=c('sid' = 'sid'))
+
+
+
+## Add IDH status to RNA samples ----
+
+
+gsam.rna.metadata <- gsam.rna.metadata %>%
+  dplyr::mutate(tmp = gsub('-new','', sid, fixed=T) ) %>%
+  dplyr::mutate(tmp = gsub('-replicate','', tmp, fixed=T) ) %>%
+  dplyr::left_join(
+    
+    gsam.cnv.metadata %>%
+      dplyr::select(c('donor_ID' , 'PD_ID', 'pat.with.IDH')) %>%
+      dplyr::rename(sid = donor_ID) %>%
+      dplyr::filter(!is.na(pat.with.IDH)) %>%
+      dplyr::mutate(pat.with.IDH = ifelse(is.na(pat.with.IDH), 0, pat.with.IDH)) %>% # collapse those with replicates
+      dplyr::mutate(pat.with.IDH = ifelse(pat.with.IDH == F, 1, pat.with.IDH)) %>%
+      dplyr::mutate(pat.with.IDH = ifelse(pat.with.IDH == T, 2, pat.with.IDH)) %>%
+      dplyr::group_by(sid) %>%
+      dplyr::summarise(pat.with.IDH = max(pat.with.IDH), .groups = 'drop') %>%
+      as.data.frame() %>%
+      dplyr::mutate(pat.with.IDH = ifelse(pat.with.IDH  == 0, NA, pat.with.IDH)) %>%
+      dplyr::mutate(pat.with.IDH = ifelse(pat.with.IDH  == 1, F, pat.with.IDH)) %>%
+      dplyr::mutate(pat.with.IDH = ifelse(pat.with.IDH  == 2, T, pat.with.IDH))
+    
+    , by = c('tmp' = 'sid')) %>%
+  dplyr::mutate(tmp = NULL) %>%
+  dplyr::mutate( pat.with.IDH = as.logical(pat.with.IDH) )
 
 
 
