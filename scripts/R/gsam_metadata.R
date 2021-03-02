@@ -70,7 +70,9 @@ gsam.cnv.metadata <- read.delim("data/gsam/DNA/sample codes sanger gsam.txt",str
   as.data.frame() %>%
   dplyr::mutate(pat.with.IDH = ifelse(pat.with.IDH == 0, NA , pat.with.IDH)) %>%
   dplyr::mutate(pat.with.IDH = ifelse(pat.with.IDH == 1, F , pat.with.IDH)) %>%
-  dplyr::mutate(pat.with.IDH = ifelse(pat.with.IDH == 2, T , pat.with.IDH)) 
+  dplyr::mutate(pat.with.IDH = ifelse(pat.with.IDH == 2, T , pat.with.IDH))  %>%
+  dplyr::mutate(resection = gsub("^...(.).*$","R\\1", donor_ID) ) %>%
+  dplyr::mutate(resection = ifelse(resection == "RN", NA ,resection) )
   
   
 
@@ -429,5 +431,5 @@ gsam.rna.metadata <- gsam.rna.metadata %>%
 
 
 
-
+# 〰 © Dr. Youri Hoogstrate 〰 ----
 
