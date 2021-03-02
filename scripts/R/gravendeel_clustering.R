@@ -10,6 +10,8 @@ library(ggplot2)
 library(pheatmap)
 library(rgl)
 library(gridExtra)
+library(patchwork)
+
 
 
 source('scripts/R/youri_gg_theme.R')
@@ -82,6 +84,7 @@ match_fun <- function(cent, set2)	{
 	list(cent.O=cent.O, set2.O=set2.O)
 }
 
+head(t(glio_cen[1:7,1:4]))
 
 
 # # load dataset to be clustered [GSE4271] ----
@@ -177,11 +180,12 @@ rm(sd)
 
 # towards same mean and same sd as original array data
 
-fun2 <- match_fun(glio_cs, gsam.vst)
+fun2 <- match_fun(glio_cen, gsam.vst)
 stopifnot(nrow(fun2$cent.O) == nrow(fun2$set2.O))
 
-# Run withoutadditional normalisation
-# cl.assign.1 <- IGP.clusterRepro(fun2$set2.O, fun2$cent.O) %>%
+# #Run withoutadditional normalisation
+# myvars <- c('0','9', '16', '17', '18', '22', '23')
+# cl.assign.1 <- IGP.clusterRepro(fun2$set2.O, fun2$cent.O[,myvars]) %>%
 #   purrr::pluck('Class') %>%
 #   as.data.frame()  %>%
 #   `colnames<-`(c("Result.Class")) %>%
@@ -194,17 +198,11 @@ stopifnot(nrow(fun2$cent.O) == nrow(fun2$set2.O))
 #     Result.Class == 6 ~  'IGS-22',
 #     Result.Class == 7 ~  'IGS-23'
 #   )) %>%
-#   dplyr::mutate(Gravendeel.Centroid.Class = case_when( # c('9', '17', '18', '22')
-#     Result.Class == 1 ~  'IGS-9',
-#     Result.Class == 2 ~  'IGS-17',
-#     Result.Class == 3 ~  'IGS-18',
-#     Result.Class == 4 ~  'IGS-22'
-#   ))  %>%
 #   dplyr::mutate(Gravendeel.Centroid.Class = as.factor(Gravendeel.Centroid.Class))
 # 
 # # make a matrix in which all the clusters are renamed
-# plot(cl.assign.1$Class)
-# rm(cl.assign.1$Gravendeel.Centroid.Class) # NOT NORMALISED against the array data (!)
+# plot(cl.assign.1$Gravendeel.Centroid.Class)
+# rm(cl.assign.1) # NOT NORMALISED against the array data (!)
 
 
 
@@ -278,10 +276,11 @@ cl.assign.normalised.sub <- IGP.clusterRepro(fun3$set2.O, fun3$cent.O[,myvars]) 
 plot(cl.assign.normalised.sub$Gravendeel.Centroid.Class.Subset) # no probabilities; no error values
 
 
-write.table(dplyr::full_join(cl.assign.normalised.full,
-                             cl.assign.normalised.sub,
-                             by = c('sid' = 'sid')),
-            "output/tables/gravendeel_centroid_classification_gsam.txt")
+cl.assign.combined <- dplyr::full_join(cl.assign.normalised.full,
+                 cl.assign.normalised.sub,
+                 by = c('sid' = 'sid'))
+                 
+#write.table(cl.assign.combined, "output/tables/gravendeel_centroid_classification_gsam.txt")
 
 
 
@@ -340,7 +339,7 @@ p3 <- ggplot(plt.mds, aes(x=V1, y=V2, col=gliovis.majority_call)) +
   youri_gg_theme
 
 
-library(patchwork)
+
 p1 + p2
 ggsave("output/figures/Gravendeel_Verhaak_MDS.pdf", width=10.9, height=4.94)
 
@@ -410,5 +409,839 @@ grid.arrange(gp1, gp2, gp3, ncol=1,heights=c(4/5,1/10,1/10))
 
 library(pheatmap)
 pheatmap(fun3$set2.O, show_row_names = FALSE)
+
+
+
+# NMF on ~5K genes [ 2D] ----
+
+source('data/wang/msig.library.12.R') # license is incomplete regarding sharing, can't include it in source tree
+
+if(!file.exists("tmp/gsam_nmf_5kgravendeel.Rds")) {
+  gsam_nmf_5kgravendeel <- NMF(as.matrix(as.data.frame(fun2$set2.O)), 3, seed = 123456)
+  #saveRDS(gsam_nmf_5kgravendeel, "tmp/gsam_nmf_5kgravendeel.Rds")
+} else {
+  gsam_nmf_5kgravendeel <- readRDS("tmp/gsam_nmf_5kgravendeel.Rds")
+}
+
+
+
+plt <-  gsam_nmf_5kgravendeel %>%
+  purrr::pluck('H') %>%
+  t() %>%
+  as.data.frame() %>%
+  `colnames<-`(c('NMF:123456.1','NMF:123456.2','NMF:123456.3')) %>%
+  tibble::rownames_to_column('sid') %>%
+  dplyr::mutate(`NMF:123456.membership` = as.factor (gsam_nmf_5kgravendeel %>% purrr::pluck('membership') %>% gsub('^(.+)$','NMF-cluster:\\1',.) ) ) %>%
+  dplyr::left_join(cl.assign.combined,by=c('sid'='sid'))
+
+
+p <- plt %>%
+  dplyr::select(c('sid',"NMF:123456.1","NMF:123456.2","NMF:123456.3")) %>%
+  tibble::column_to_rownames('sid') %>%
+  prcomp()
+screeplot(p)
+
+
+plt <- plt %>%
+  dplyr::left_join(
+    p %>%
+      purrr::pluck('x') %>%
+      as.data.frame() %>%
+      `colnames<-`(gsub('^PC','NMF:123456.PC',colnames(.))) %>%
+      tibble::rownames_to_column('sid') %>%
+      dplyr::select(c('sid','NMF:123456.PC1','NMF:123456.PC2','NMF:123456.PC3'))
+    , by=c('sid' = 'sid') )
+
+rm(p)
+
+
+plt <- plt %>%
+  dplyr::left_join(gsam.rna.metadata %>%
+                     dplyr::select( c('sid','gliovis.majority_call','NMF.123456.PCA.LDA.class') )
+                   , by=c('sid'='sid'))
+
+
+
+
+p1 <- ggplot(plt, aes(x=`NMF:123456.PC1` ,y=`NMF:123456.PC2` , col=gliovis.majority_call )) +
+  geom_point(size=1.5) +
+  youri_gg_theme
+
+
+p2 <- ggplot(plt, aes(x=`NMF:123456.PC1` ,y=`NMF:123456.PC2` , col=`NMF.123456.PCA.LDA.class` )) +
+  geom_point(size=1.5) +
+  youri_gg_theme
+
+
+
+p3 <- ggplot(plt, aes(x=`NMF:123456.PC1` ,y=`NMF:123456.PC2` , col=Gravendeel.Centroid.Class.Full )) +
+  geom_point(size=1.5) +
+  youri_gg_theme
+
+
+p4 <- ggplot(plt, aes(x=`NMF:123456.PC1` ,y=`NMF:123456.PC2` , col=Gravendeel.Centroid.Class.Subset )) +
+  geom_point(size=1.5) +
+  youri_gg_theme
+
+
+(p1 + p2) / (p3 + p4)
+
+
+
+
+
+# NMF on ~5K genes [ 3D] ----
+
+source('data/wang/msig.library.12.R') # license is incomplete regarding sharing, can't include it in source tree
+
+gsam_nmf_5kgravendeel_3d <- NMF(as.matrix(as.data.frame(fun2$set2.O)), 4, seed = 123456)
+
+
+plt <-  gsam_nmf_5kgravendeel_3d %>%
+  purrr::pluck('H') %>%
+  t() %>%
+  as.data.frame() %>%
+  `colnames<-`(c('NMF:123456.1','NMF:123456.2','NMF:123456.3','NMF:123456.4')) %>%
+  tibble::rownames_to_column('sid') %>%
+  dplyr::mutate(`NMF:123456.membership` = as.factor (gsam_nmf_5kgravendeel_3d %>% purrr::pluck('membership') %>% gsub('^(.+)$','NMF-cluster:\\1',.) ) ) %>%
+  dplyr::left_join(cl.assign.combined,by=c('sid'='sid'))
+
+
+p <- plt %>%
+  dplyr::select(c('sid',"NMF:123456.1","NMF:123456.2","NMF:123456.3","NMF:123456.4")) %>%
+  tibble::column_to_rownames('sid') %>%
+  prcomp()
+screeplot(p)
+
+
+plt <- plt %>%
+  dplyr::left_join(
+    p %>%
+      purrr::pluck('x') %>%
+      as.data.frame() %>%
+      `colnames<-`(gsub('^PC','NMF:123456.PC',colnames(.))) %>%
+      tibble::rownames_to_column('sid') %>%
+      dplyr::select(c('sid','NMF:123456.PC1','NMF:123456.PC2','NMF:123456.PC3','NMF:123456.PC4'))
+    , by=c('sid' = 'sid') )
+
+rm(p)
+
+
+plt <- plt %>%
+  dplyr::left_join(gsam.rna.metadata %>%
+                     dplyr::select( c('sid','gliovis.majority_call','NMF.123456.PCA.LDA.class') )
+                   , by=c('sid'='sid'))
+
+
+
+
+p1 <- ggplot(plt, aes(x=`NMF:123456.PC1` ,y=`NMF:123456.PC2` , col=Gravendeel.Centroid.Class.Subset )) +
+  geom_point(size=1.5) +
+  youri_gg_theme
+
+
+
+p2 <- ggplot(plt, aes(x=`NMF:123456.PC1` ,y=`NMF:123456.PC3` , col=Gravendeel.Centroid.Class.Subset )) +
+  geom_point(size=1.5) +
+  youri_gg_theme
+
+
+
+p3 <- ggplot(plt, aes(x=`NMF:123456.PC2` ,y=`NMF:123456.PC3` , col=Gravendeel.Centroid.Class.Subset )) +
+  geom_point(size=1.5) +
+  youri_gg_theme
+
+
+(p1 + p2 + p3)
+
+
+
+# NMF on ~5K genes [ 4D] ----
+
+source('data/wang/msig.library.12.R') # license is incomplete regarding sharing, can't include it in source tree
+
+gsam_nmf_5kgravendeel_4d <- NMF(as.matrix(as.data.frame(fun2$set2.O)), 5, seed = 123456)
+
+
+plt <-  gsam_nmf_5kgravendeel_4d %>%
+  purrr::pluck('H') %>%
+  t() %>%
+  as.data.frame() %>%
+  `colnames<-`(c('NMF:123456.1','NMF:123456.2','NMF:123456.3','NMF:123456.4','NMF:123456.5')) %>%
+  tibble::rownames_to_column('sid') %>%
+  dplyr::mutate(`NMF:123456.membership` = as.factor (gsam_nmf_5kgravendeel_4d %>% purrr::pluck('membership') %>% gsub('^(.+)$','NMF-cluster:\\1',.) ) ) %>%
+  dplyr::left_join(cl.assign.combined,by=c('sid'='sid'))
+
+
+p <- plt %>%
+  dplyr::select(c('sid',"NMF:123456.1","NMF:123456.2","NMF:123456.3","NMF:123456.4","NMF:123456.5")) %>%
+  tibble::column_to_rownames('sid') %>%
+  prcomp()
+screeplot(p)
+
+
+plt <- plt %>%
+  dplyr::left_join(
+    p %>%
+      purrr::pluck('x') %>%
+      as.data.frame() %>%
+      `colnames<-`(gsub('^PC','NMF:123456.PC',colnames(.))) %>%
+      tibble::rownames_to_column('sid') %>%
+      dplyr::select(c('sid','NMF:123456.PC1','NMF:123456.PC2','NMF:123456.PC3','NMF:123456.PC4','NMF:123456.PC5'))
+    , by=c('sid' = 'sid') )
+
+rm(p)
+
+
+plt <- plt %>%
+  dplyr::left_join(gsam.rna.metadata %>%
+                     dplyr::select( c('sid','gliovis.majority_call','NMF.123456.PCA.LDA.class') )
+                   , by=c('sid'='sid'))
+
+
+
+
+p1 <- ggplot(plt, aes(x=`NMF:123456.PC1` ,y=`NMF:123456.PC2` , col=Gravendeel.Centroid.Class.Subset )) +
+  geom_point(size=1.5) +
+  youri_gg_theme
+
+
+
+p2 <- ggplot(plt, aes(x=`NMF:123456.PC1` ,y=`NMF:123456.PC3` , col=Gravendeel.Centroid.Class.Subset )) +
+  geom_point(size=1.5) +
+  youri_gg_theme
+
+
+
+p3 <- ggplot(plt, aes(x=`NMF:123456.PC1` ,y=`NMF:123456.PC4` , col=Gravendeel.Centroid.Class.Subset )) +
+  geom_point(size=1.5) +
+  youri_gg_theme
+
+
+
+p4 <- ggplot(plt, aes(x=`NMF:123456.PC2` ,y=`NMF:123456.PC3` , col=Gravendeel.Centroid.Class.Subset )) +
+  geom_point(size=1.5) +
+  youri_gg_theme
+
+
+
+p5 <- ggplot(plt, aes(x=`NMF:123456.PC2` ,y=`NMF:123456.PC4` , col=Gravendeel.Centroid.Class.Subset )) +
+  geom_point(size=1.5) +
+  youri_gg_theme
+
+
+
+p6 <- ggplot(plt, aes(x=`NMF:123456.PC3` ,y=`NMF:123456.PC4` , col=Gravendeel.Centroid.Class.Subset )) +
+  geom_point(size=1.5) +
+  youri_gg_theme
+
+
+(p1 + p2 + p3) / (p4 + p5 + p6)
+
+
+
+# per-cluster 50 subtype genes ----
+
+
+## IGS-9 ----
+
+expression <- gsam.rnaseq.expression %>%
+  dplyr::select(metadata$sid) %>%
+  dplyr::filter(rowSums(.) >= 3 * ncol(.))
+
+cond.igs.9 <- metadata %>%
+  dplyr::mutate(cond = Gravendeel.Centroid.Class.Subset == "IGS-9") %>%
+  dplyr::mutate(cond = factor(ifelse(cond, "is.IGS.9", "is.not.IGS.9"), levels=c("is.not.IGS.9", "is.IGS.9"))) %>%
+  dplyr::pull(cond, name=sid)
+
+
+dds.igs.9 <- dplyr::select(expression, all_of(names(cond.igs.9)))  %>%
+  DESeq2::DESeqDataSetFromMatrix(S4Vectors::DataFrame(cond.igs.9), ~cond.igs.9) %>% # "You should always put the condition of interest at the end of the design formula for safety (see vignette)."
+  DESeq2::DESeq(parallel = T) # putting it here allows quicker VST transform?
+
+
+res.igs.9 <- dds.igs.9 %>%
+  DESeq2::results() %>%
+  data.frame(stringsAsFactors = F) %>%
+  dplyr::arrange(padj, pvalue, abs(log2FoldChange))
+
+top.50.igs.9 <- res.igs.9 %>%
+  dplyr::filter(padj < 0.01) %>% # only signi
+  dplyr::top_n(50, - padj) %>%
+  #dplyr::mutate(gid = gsub("^[^~|]+[~|](.+)[~|].+$", "\\1" , rownames(.) ,fixed=F)  ) %>%
+  tibble::rownames_to_column('gid') %>%
+  dplyr::pull(gid)
+
+
+top.50.igs.9.up <- res.igs.9 %>%
+  dplyr::filter(padj < 0.01) %>% # only signi
+  dplyr::filter(log2FoldChange > 0) %>% # only up
+  dplyr::top_n(50, - padj) %>%
+  #dplyr::mutate(gid = gsub("^[^~|]+[~|](.+)[~|].+$", "\\1" , rownames(.) ,fixed=F)  ) %>%
+  tibble::rownames_to_column('gid') %>%
+  dplyr::pull(gid)
+
+
+## IGS-17 ----
+expression <- gsam.rnaseq.expression %>%
+  dplyr::select(metadata$sid) %>%
+  dplyr::filter(rowSums(.) >= 3 * ncol(.))
+
+cond.igs.17 <- metadata %>%
+  dplyr::mutate(cond = Gravendeel.Centroid.Class.Subset == "IGS-17") %>%
+  dplyr::mutate(cond = factor(ifelse(cond, "is.IGS.17", "is.not.IGS.17"), levels=c("is.not.IGS.17", "is.IGS.17"))) %>%
+  dplyr::pull(cond, name=sid)
+
+
+dds.igs.17 <- dplyr::select(expression, all_of(names(cond.igs.17)))  %>%
+  DESeq2::DESeqDataSetFromMatrix(S4Vectors::DataFrame(cond.igs.17), ~cond.igs.17) %>% # "You should always put the condition of interest at the end of the design formula for safety (see vignette)."
+  DESeq2::DESeq(parallel = T) # putting it here allows quicker VST transform?
+
+
+res.igs.17 <- dds.igs.17 %>%
+  DESeq2::results() %>%
+  data.frame(stringsAsFactors = F) %>%
+  dplyr::arrange(padj, pvalue, abs(log2FoldChange))
+
+top.50.igs.17 <- res.igs.17 %>%
+  dplyr::filter(padj < 0.01) %>% # only signi
+  dplyr::top_n(50, - padj) %>%
+  #dplyr::mutate(gid = gsub("^[^~|]+[~|](.+)[~|].+$", "\\1" , rownames(.) ,fixed=F)  ) %>%
+  tibble::rownames_to_column('gid') %>%
+  dplyr::pull(gid)
+
+
+top.50.igs.17.up <- res.igs.17 %>%
+  dplyr::filter(padj < 0.01) %>% # only signi
+  dplyr::filter(log2FoldChange > 0) %>% # only up
+  dplyr::top_n(50, - padj) %>%
+  #dplyr::mutate(gid = gsub("^[^~|]+[~|](.+)[~|].+$", "\\1" , rownames(.) ,fixed=F)  ) %>%
+  tibble::rownames_to_column('gid') %>%
+  dplyr::pull(gid)
+
+## IGS-18 ----
+
+expression <- gsam.rnaseq.expression %>%
+  dplyr::select(metadata$sid) %>%
+  dplyr::filter(rowSums(.) >= 3 * ncol(.))
+
+cond.igs.18 <- metadata %>%
+  dplyr::mutate(cond = Gravendeel.Centroid.Class.Subset == "IGS-18") %>%
+  dplyr::mutate(cond = factor(ifelse(cond, "is.IGS.18", "is.not.IGS.18"), levels=c("is.not.IGS.18", "is.IGS.18"))) %>%
+  dplyr::pull(cond, name=sid)
+
+
+dds.igs.18 <- dplyr::select(expression, all_of(names(cond.igs.18)))  %>%
+  DESeq2::DESeqDataSetFromMatrix(S4Vectors::DataFrame(cond.igs.18), ~cond.igs.18) %>% # "You should always put the condition of interest at the end of the design formula for safety (see vignette)."
+  DESeq2::DESeq(parallel = T) # putting it here allows quicker VST transform?
+
+
+res.igs.18 <- dds.igs.18 %>%
+  DESeq2::results() %>%
+  data.frame(stringsAsFactors = F) %>%
+  dplyr::arrange(padj, pvalue, abs(log2FoldChange))
+
+top.50.igs.18 <- res.igs.18 %>%
+  dplyr::filter(padj < 0.01) %>% # only signi
+  dplyr::top_n(50, - padj) %>%
+  #dplyr::mutate(gid = gsub("^[^~|]+[~|](.+)[~|].+$", "\\1" , rownames(.) ,fixed=F)  ) %>%
+  tibble::rownames_to_column('gid') %>%
+  dplyr::pull(gid)
+
+
+top.50.igs.18.up <- res.igs.18 %>%
+  dplyr::filter(padj < 0.01) %>% # only signi
+  dplyr::filter(log2FoldChange > 0) %>% # only up
+  dplyr::top_n(50, - padj) %>%
+  #dplyr::mutate(gid = gsub("^[^~|]+[~|](.+)[~|].+$", "\\1" , rownames(.) ,fixed=F)  ) %>%
+  tibble::rownames_to_column('gid') %>%
+  dplyr::pull(gid)
+
+
+## IGS-22 ----
+
+expression <- gsam.rnaseq.expression %>%
+  dplyr::select(metadata$sid) %>%
+  dplyr::filter(rowSums(.) >= 3 * ncol(.))
+
+cond.igs.22 <- metadata %>%
+  dplyr::mutate(cond = Gravendeel.Centroid.Class.Subset == "IGS-22") %>%
+  dplyr::mutate(cond = factor(ifelse(cond, "is.IGS.22", "is.not.IGS.22"), levels=c("is.not.IGS.22", "is.IGS.22"))) %>%
+  dplyr::pull(cond, name=sid)
+
+
+dds.igs.22 <- dplyr::select(expression, all_of(names(cond.igs.22)))  %>%
+  DESeq2::DESeqDataSetFromMatrix(S4Vectors::DataFrame(cond.igs.22), ~cond.igs.22) %>% # "You should always put the condition of interest at the end of the design formula for safety (see vignette)."
+  DESeq2::DESeq(parallel = T) # putting it here allows quicker VST transform?
+
+
+res.igs.22 <- dds.igs.22 %>%
+  DESeq2::results() %>%
+  data.frame(stringsAsFactors = F) %>%
+  dplyr::arrange(padj, pvalue, abs(log2FoldChange))
+
+top.50.igs.22 <- res.igs.22 %>%
+  dplyr::filter(padj < 0.01) %>% # only signi
+  dplyr::top_n(50, - padj) %>%
+  #dplyr::mutate(gid = gsub("^[^~|]+[~|](.+)[~|].+$", "\\1" , rownames(.) ,fixed=F)  ) %>%
+  tibble::rownames_to_column('gid') %>%
+  dplyr::pull(gid)
+
+
+top.50.igs.22.up <- res.igs.22 %>%
+  dplyr::filter(padj < 0.01) %>% # only signi
+  dplyr::filter(log2FoldChange > 0) %>% # only up
+  dplyr::top_n(50, - padj) %>%
+  #dplyr::mutate(gid = gsub("^[^~|]+[~|](.+)[~|].+$", "\\1" , rownames(.) ,fixed=F)  ) %>%
+  tibble::rownames_to_column('gid') %>%
+  dplyr::pull(gid)
+
+
+# NMF combined [2D] ----
+
+
+top.200.igs <- c(top.50.igs.9 , top.50.igs.17 , top.50.igs.18 , top.50.igs.22)
+#top.200.igs <- c(top.50.igs.9.up , top.50.igs.17.up , top.50.igs.18.up , top.50.igs.22.up)
+
+
+tmf <- gsam.rnaseq.expression.vst %>%
+  data.frame(stringsAsFactors = F) %>%
+  dplyr::filter(rownames(.) %in% top.200.igs) %>%
+  as.matrix()
+
+
+tmf <- NMF(tmf, 3, seed = 123456)
+colnames(tmf$H) <- gsub(".","-",colnames(tmf$H),fixed=T)
+
+
+plt <-  tmf %>%
+  purrr::pluck('H') %>%
+  t() %>%
+  as.data.frame() %>%
+  `colnames<-`(c('NMF:123456.1','NMF:123456.2','NMF:123456.3')) %>%
+  tibble::rownames_to_column('sid') %>%
+  dplyr::mutate(`NMF:123456.membership` = as.factor (tmf %>% purrr::pluck('membership') %>% gsub('^(.+)$','NMF-cluster:\\1',.) ) ) %>%
+  dplyr::left_join(cl.assign.combined,by=c('sid'='sid'))
+
+
+p <- plt %>%
+  dplyr::select(c('sid',"NMF:123456.1","NMF:123456.2","NMF:123456.3")) %>%
+  tibble::column_to_rownames('sid') %>%
+  prcomp()
+screeplot(p)
+
+
+plt <- plt %>%
+  dplyr::left_join(
+    p %>%
+      purrr::pluck('x') %>%
+      as.data.frame() %>%
+      `colnames<-`(gsub('^PC','NMF:123456.PC',colnames(.))) %>%
+      tibble::rownames_to_column('sid') %>%
+      dplyr::select(c('sid','NMF:123456.PC1','NMF:123456.PC2','NMF:123456.PC3'))
+    , by=c('sid' = 'sid') )
+
+rm(p)
+
+
+plt <- plt %>%
+  dplyr::left_join(gsam.rna.metadata %>%
+                     dplyr::select( c('sid','gliovis.majority_call','NMF.123456.PCA.LDA.class','tumour.percentage.dna') )
+                   , by=c('sid'='sid')) %>%
+  dplyr::mutate(tpc = ifelse(tumour.percentage.dna <= 50,"low-tpc","high-tpc") ) 
+
+
+p1 <- ggplot(plt, aes(x=`NMF:123456.PC1` ,y=`NMF:123456.PC2` , col=`Gravendeel.Centroid.Class.Subset` )) +
+  geom_point(size=1.5) +
+  labs(col="4x50:NMF:PCA") +
+  #scale_shape_manual(values=c(1,19)) +
+  youri_gg_theme
+
+
+p2 <- ggplot(plt, aes(x=`NMF:123456.PC1` ,y=`NMF:123456.PC2` , col=`NMF.123456.PCA.LDA.class` )) +
+  geom_point(size=1.5) +
+  labs(col="Verhaak reclass") +
+  #scale_shape_manual(values=c(1,19)) +
+  youri_gg_theme
+
+p3 <- ggplot(plt, aes(x=`NMF:123456.PC1` ,y=`NMF:123456.PC2` , col=`NMF:123456.membership` )) +
+  geom_point(size=1.5) +
+  labs(col="NMF") +
+  #scale_shape_manual(values=c(1,19)) +
+  youri_gg_theme
+
+
+p1 + p2 + p3
+
+
+ggsave("/tmp/fig_2d_all.png",width=12 * 1.2,height=5.5 * 2/3 * 1.2)
+
+
+
+# NMF combined [2D up] ----
+
+
+#top.200.igs <- c(top.50.igs.9 , top.50.igs.17 , top.50.igs.18 , top.50.igs.22)
+top.200.igs <- c(top.50.igs.9.up , top.50.igs.17.up , top.50.igs.18.up , top.50.igs.22.up)
+
+
+tmf <- gsam.rnaseq.expression.vst %>%
+  data.frame(stringsAsFactors = F) %>%
+  dplyr::filter(rownames(.) %in% top.200.igs) %>%
+  as.matrix()
+
+
+tmf <- NMF(tmf, 3, seed = 123456)
+colnames(tmf$H) <- gsub(".","-",colnames(tmf$H),fixed=T)
+
+
+plt <-  tmf %>%
+  purrr::pluck('H') %>%
+  t() %>%
+  as.data.frame() %>%
+  `colnames<-`(c('NMF:123456.1','NMF:123456.2','NMF:123456.3')) %>%
+  tibble::rownames_to_column('sid') %>%
+  dplyr::mutate(`NMF:123456.membership` = as.factor (tmf %>% purrr::pluck('membership') %>% gsub('^(.+)$','NMF-cluster:\\1',.) ) ) %>%
+  dplyr::left_join(cl.assign.combined,by=c('sid'='sid'))
+
+
+p <- plt %>%
+  dplyr::select(c('sid',"NMF:123456.1","NMF:123456.2","NMF:123456.3")) %>%
+  tibble::column_to_rownames('sid') %>%
+  prcomp()
+screeplot(p)
+
+
+plt <- plt %>%
+  dplyr::left_join(
+    p %>%
+      purrr::pluck('x') %>%
+      as.data.frame() %>%
+      `colnames<-`(gsub('^PC','NMF:123456.PC',colnames(.))) %>%
+      tibble::rownames_to_column('sid') %>%
+      dplyr::select(c('sid','NMF:123456.PC1','NMF:123456.PC2','NMF:123456.PC3'))
+    , by=c('sid' = 'sid') )
+
+rm(p)
+
+
+plt <- plt %>%
+  dplyr::left_join(gsam.rna.metadata %>%
+                     dplyr::select( c('sid','gliovis.majority_call','NMF.123456.PCA.LDA.class') )
+                   , by=c('sid'='sid'))
+
+
+
+
+p1 <- ggplot(plt, aes(x=`NMF:123456.PC1` ,y=`NMF:123456.PC2` , col=`Gravendeel.Centroid.Class.Subset` )) +
+  geom_point(size=1.5) +
+  labs(col="4x50:NMF:PCA") +
+  youri_gg_theme
+
+
+p2 <- ggplot(plt, aes(x=`NMF:123456.PC1` ,y=`NMF:123456.PC2` , col=`NMF.123456.PCA.LDA.class` )) +
+  geom_point(size=1.5) +
+  labs(col="Verhaak reclass") +
+  youri_gg_theme
+
+p3 <- ggplot(plt, aes(x=`NMF:123456.PC1` ,y=`NMF:123456.PC2` , col=`NMF:123456.membership` )) +
+  geom_point(size=1.5) +
+  labs(col="NMF") +
+  youri_gg_theme
+
+
+p1 + p2 + p3
+
+
+
+
+ggsave("/tmp/fig_2d_up.png",width=12 * 1.2,height=5.5 * 2/3 * 1.2)
+
+
+
+# NMF combined [3D] ----
+
+
+top.200.igs <- c(top.50.igs.9 , top.50.igs.17 , top.50.igs.18 , top.50.igs.22)
+#top.200.igs <- c(top.50.igs.9.up , top.50.igs.17.up , top.50.igs.18.up , top.50.igs.22.up)
+
+
+tmf <- gsam.rnaseq.expression.vst %>%
+  data.frame(stringsAsFactors = F) %>%
+  dplyr::filter(rownames(.) %in% top.200.igs) %>%
+  as.matrix()
+
+
+tmf <- NMF(tmf, 4, seed = 123456)
+colnames(tmf$H) <- gsub(".","-",colnames(tmf$H),fixed=T)
+
+
+plt <-  tmf %>%
+  purrr::pluck('H') %>%
+  t() %>%
+  as.data.frame() %>%
+  `colnames<-`(c('NMF:123456.1','NMF:123456.2','NMF:123456.3','NMF:123456.4')) %>%
+  tibble::rownames_to_column('sid') %>%
+  dplyr::mutate(`NMF:123456.membership` = as.factor (tmf %>% purrr::pluck('membership') %>% gsub('^(.+)$','NMF-cluster:\\1',.) ) ) %>%
+  dplyr::left_join(cl.assign.combined,by=c('sid'='sid'))
+
+
+p <- plt %>%
+  dplyr::select(c('sid',"NMF:123456.1","NMF:123456.2","NMF:123456.3","NMF:123456.4")) %>%
+  tibble::column_to_rownames('sid') %>%
+  prcomp()
+screeplot(p)
+
+
+plt <- plt %>%
+  dplyr::left_join(
+    p %>%
+      purrr::pluck('x') %>%
+      as.data.frame() %>%
+      `colnames<-`(gsub('^PC','NMF:123456.PC',colnames(.))) %>%
+      tibble::rownames_to_column('sid') %>%
+      dplyr::select(c('sid','NMF:123456.PC1','NMF:123456.PC2','NMF:123456.PC3','NMF:123456.PC4'))
+    , by=c('sid' = 'sid') )
+
+rm(p)
+
+
+plt <- plt %>%
+  dplyr::left_join(gsam.rna.metadata %>%
+                     dplyr::select( c('sid','gliovis.majority_call','NMF.123456.PCA.LDA.class','tumour.percentage.dna') )
+                   , by=c('sid'='sid')) %>%
+  dplyr::mutate(tpc = ifelse(tumour.percentage.dna <= 50,"low-tpc","high-tpc") ) 
+
+
+
+
+p1 <- ggplot(plt, aes(x=`NMF:123456.PC1` ,y=`NMF:123456.PC2` ,
+                      #col=`NMF:123456.membership`
+                      col=`Gravendeel.Centroid.Class.Subset`
+)) +
+  geom_point(size=1.5) +
+  labs(col="Gravendeel") +
+  youri_gg_theme
+
+p2 <- ggplot(plt, aes(x=`NMF:123456.PC1` ,y=`NMF:123456.PC3` ,
+                      #col=`NMF:123456.membership`
+                      col=`Gravendeel.Centroid.Class.Subset`
+)) +
+  geom_point(size=1.5) +
+  labs(col="Gravendeel") +
+  youri_gg_theme
+
+p3 <- ggplot(plt, aes(x=`NMF:123456.PC2` ,y=`NMF:123456.PC3` , 
+                      #col=`NMF:123456.membership`
+                      col=`Gravendeel.Centroid.Class.Subset`
+)) +
+  geom_point(size=1.5) +
+  labs(col="Gravendeel") +
+  youri_gg_theme
+
+
+p4 <- ggplot(plt, aes(x=`NMF:123456.PC1` ,y=`NMF:123456.PC2` ,
+                      col=`NMF:123456.membership`
+                      #col=`Gravendeel.Centroid.Class.Subset`
+)) +
+  geom_point(size=1.5) +
+  labs(col="NMF") +
+  youri_gg_theme
+
+p5 <- ggplot(plt, aes(x=`NMF:123456.PC1` ,y=`NMF:123456.PC3` ,
+                      col=`NMF:123456.membership`
+                      #col=`Gravendeel.Centroid.Class.Subset`
+)) +
+  geom_point(size=1.5) +
+  labs(col="NMF") +
+  youri_gg_theme
+
+p6 <- ggplot(plt, aes(x=`NMF:123456.PC2` ,y=`NMF:123456.PC3` , 
+                      col=`NMF:123456.membership`
+                      #col=`Gravendeel.Centroid.Class.Subset`
+)) +
+  geom_point(size=1.5) +
+  labs(col="NMF") +
+  youri_gg_theme
+
+
+p7 <- ggplot(plt, aes(x=`NMF:123456.PC1` ,y=`NMF:123456.PC2` ,
+                      col=`NMF.123456.PCA.LDA.class` )) +
+  geom_point(size=1.5) +
+  labs(col="NMF") +
+  youri_gg_theme
+
+p8 <- ggplot(plt, aes(x=`NMF:123456.PC1` ,y=`NMF:123456.PC3` ,
+                      col=`NMF.123456.PCA.LDA.class` )) +
+  geom_point(size=1.5) +
+  labs(col="NMF") +
+  youri_gg_theme
+
+p9 <- ggplot(plt, aes(x=`NMF:123456.PC2` ,y=`NMF:123456.PC3` , 
+                      col=`NMF.123456.PCA.LDA.class` )) +
+  geom_point(size=1.5) +
+  labs(col="NMF") +
+  youri_gg_theme
+
+
+(p1 + p2 + p3) / (p7 + p8 + p9) /  (p4 + p5 + p6) 
+
+
+
+ggsave("/tmp/fig_3d_all.png",width=12,height=5.5 * 2)
+
+
+
+p1 <- ggplot(plt, aes(x=`NMF:123456.PC1` ,y=`NMF:123456.PC2` ,
+                      col=`Gravendeel.Centroid.Class.Subset` , shape = tpc )) +
+  geom_point(size=1.5) +
+  labs(col="Gravendeel") +
+  scale_shape_manual(values=c(1,19)) +
+  youri_gg_theme
+
+p2 <- ggplot(plt, aes(x=`NMF:123456.PC1` ,y=`NMF:123456.PC2` ,
+                      col=`Gravendeel.Centroid.Class.Subset`  )) +
+  geom_point(size=1.5) +
+  labs(col="Gravendeel") +
+  #scale_shape_manual(values=c(1,19)) +
+  youri_gg_theme
+
+
+p2 + p1
+
+
+
+
+# NMF combined [3D up] ----
+
+
+#top.200.igs <- c(top.50.igs.9 , top.50.igs.17 , top.50.igs.18 , top.50.igs.22)
+top.200.igs <- c(top.50.igs.9.up , top.50.igs.17.up , top.50.igs.18.up , top.50.igs.22.up)
+
+
+tmf <- gsam.rnaseq.expression.vst %>%
+  data.frame(stringsAsFactors = F) %>%
+  dplyr::filter(rownames(.) %in% top.200.igs) %>%
+  as.matrix()
+
+
+tmf <- NMF(tmf, 4, seed = 123456)
+colnames(tmf$H) <- gsub(".","-",colnames(tmf$H),fixed=T)
+
+
+plt <-  tmf %>%
+  purrr::pluck('H') %>%
+  t() %>%
+  as.data.frame() %>%
+  `colnames<-`(c('NMF:123456.1','NMF:123456.2','NMF:123456.3','NMF:123456.4')) %>%
+  tibble::rownames_to_column('sid') %>%
+  dplyr::mutate(`NMF:123456.membership` = as.factor (tmf %>% purrr::pluck('membership') %>% gsub('^(.+)$','NMF-cluster:\\1',.) ) ) %>%
+  dplyr::left_join(cl.assign.combined,by=c('sid'='sid'))
+
+
+p <- plt %>%
+  dplyr::select(c('sid',"NMF:123456.1","NMF:123456.2","NMF:123456.3","NMF:123456.4")) %>%
+  tibble::column_to_rownames('sid') %>%
+  prcomp()
+screeplot(p)
+
+
+plt <- plt %>%
+  dplyr::left_join(
+    p %>%
+      purrr::pluck('x') %>%
+      as.data.frame() %>%
+      `colnames<-`(gsub('^PC','NMF:123456.PC',colnames(.))) %>%
+      tibble::rownames_to_column('sid') %>%
+      dplyr::select(c('sid','NMF:123456.PC1','NMF:123456.PC2','NMF:123456.PC3','NMF:123456.PC4'))
+    , by=c('sid' = 'sid') )
+
+rm(p)
+
+
+plt <- plt %>%
+  dplyr::left_join(gsam.rna.metadata %>%
+                     dplyr::select( c('sid','gliovis.majority_call','NMF.123456.PCA.LDA.class','tumour.percentage.dna') )
+                   , by=c('sid'='sid'))
+
+
+
+p1 <- ggplot(plt, aes(x=`NMF:123456.PC1` ,y=`NMF:123456.PC2` ,
+                      col=`Gravendeel.Centroid.Class.Subset`)) +
+  geom_point(size=1.5) +
+  labs(col="Gravendeel") +
+  youri_gg_theme
+
+p2 <- ggplot(plt, aes(x=`NMF:123456.PC1` ,y=`NMF:123456.PC3` ,
+                      col=`Gravendeel.Centroid.Class.Subset` )) +
+  geom_point(size=1.5) +
+  labs(col="Gravendeel") +
+  youri_gg_theme
+
+p3 <- ggplot(plt, aes(x=`NMF:123456.PC2` ,y=`NMF:123456.PC3` , 
+                      col=`Gravendeel.Centroid.Class.Subset` )) +
+  geom_point(size=1.5) +
+  labs(col="Gravendeel") +
+  youri_gg_theme
+
+
+p4 <- ggplot(plt, aes(x=`NMF:123456.PC1` ,y=`NMF:123456.PC2` ,
+                      col=`NMF:123456.membership` )) +
+  geom_point(size=1.5) +
+  labs(col="NMF") +
+  youri_gg_theme
+
+p5 <- ggplot(plt, aes(x=`NMF:123456.PC1` ,y=`NMF:123456.PC3` ,
+                      col=`NMF:123456.membership` )) +
+  geom_point(size=1.5) +
+  labs(col="NMF") +
+  youri_gg_theme
+
+p6 <- ggplot(plt, aes(x=`NMF:123456.PC2` ,y=`NMF:123456.PC3` , 
+                      col=`NMF:123456.membership` )) +
+  geom_point(size=1.5) +
+  labs(col="NMF") +
+  youri_gg_theme
+
+p7 <- ggplot(plt, aes(x=`NMF:123456.PC1` ,y=`NMF:123456.PC2` ,
+                      col=`NMF.123456.PCA.LDA.class` )) +
+  geom_point(size=1.5) +
+  labs(col="NMF") +
+  youri_gg_theme
+
+p8 <- ggplot(plt, aes(x=`NMF:123456.PC1` ,y=`NMF:123456.PC3` ,
+                      col=`NMF.123456.PCA.LDA.class` )) +
+  geom_point(size=1.5) +
+  labs(col="NMF") +
+  youri_gg_theme
+
+p9 <- ggplot(plt, aes(x=`NMF:123456.PC2` ,y=`NMF:123456.PC3` , 
+                      col=`NMF.123456.PCA.LDA.class` )) +
+  geom_point(size=1.5) +
+  labs(col="NMF") +
+  youri_gg_theme
+
+
+(p1 + p2 + p3) / (p7 + p8 + p9) /  (p4 + p5 + p6) 
+
+
+
+ggsave("/tmp/fig_3d_up.png",width=12,height=5.5 * 2)
+
+
+
+
+
+#  tpc ----
+
+
+ggplot(plt, aes(x=Gravendeel.Centroid.Class.Subset, y= tumour.percentage.dna, col=Gravendeel.Centroid.Class.Subset) ) +
+  geom_jitter(width=0.15) + 
+  youri_gg_theme
+
+ggsave("/tmp/tpc.subset.png", width=7, height=6)
+
+
+
 
 
