@@ -11,6 +11,7 @@ library(fitdistrplus)
 library(patchwork)
 library(ggplot2)
 library(circlize)
+library(ggrepel)
 
 
 # load data ----
@@ -75,7 +76,7 @@ stopifnot(colnames(gsam.rnaseq.expression.vst.150) == metadata$sid)
 
 
 plt.single <- metadata %>%
-  dplyr::select(c('sid', 'gliovis.majority_call', 'pat.with.IDH', 'resection', 'gliovis.knn_call', 'gliovis.svm_call', 'gliovis.gsea_call')) %>%
+  dplyr::select(c('sid', 'gliovis.majority_call', 'pat.with.IDH', 'resection', 'gliovis.knn_call', 'gliovis.svm_call', 'gliovis.gsea_call','Gravendeel.Centroid.Class.Full','Gravendeel.Centroid.Class.Subset')) %>%
   dplyr::mutate(resection = gsub('r','R',resection)) %>%
   dplyr::mutate(pid = gsub('^(...).*$','\\1',sid))
 
@@ -203,10 +204,10 @@ plt.single <- plt.single %>% dplyr::left_join(
 
 
 
-write.table(
-  plt.single %>%
-    dplyr::select(c("sid", "NMF:123456.membership", "NMF:123456.PC1", "NMF:123456.PC2", "NMF:123456.PC3", "NMF:123456.PCA.LDA.class", "NMF:123456.PCA.LDA.posterior.Classical", "NMF:123456.PCA.LDA.posterior.Mesenchymal", "NMF:123456.PCA.LDA.posterior.Proneural")),
-  "output/tables/gsam_nmf_lda_data.txt")
+#write.table(
+#  plt.single %>%
+#    dplyr::select(c("sid", "NMF:123456.membership", "NMF:123456.PC1", "NMF:123456.PC2", "NMF:123456.PC3", "NMF:123456.PCA.LDA.class", "NMF:123456.PCA.LDA.posterior.Classical", "NMF:123456.PCA.LDA.posterior.Mesenchymal", "NMF:123456.PCA.LDA.posterior.Proneural")),
+#  "output/tables/gsam_nmf_lda_data.txt")
 
 
 
@@ -303,7 +304,7 @@ plot(gamma.anti.paired.fit)
 
 
 ## Determine transitions by chance ----
-### 1 gamma CDS on eucledian ----
+### + 1 gamma CDS on eucledian ----
 
 
 #plt.paired <- plt.paired %>%
@@ -410,7 +411,7 @@ plot(gamma.anti.paired.fit)
 
 
 
-# ---- 2 non-parameteric & perimeter ----
+# ---- + 2 non-parameteric & perimeter ----
 
 
 plt.paired <- plt.paired %>% 
@@ -795,28 +796,50 @@ ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_GlioVis.png',width=7,hei
 ## PCA:1+2(NMF:1+2+3) + GravenDeel labels ----
 
 
-plt.single <- plt.single %>%
-  dplyr::left_join(
-    plt %>%
-      dplyr::select(c('sid','Gravendeel.Centroid.Class')),
-    by = c('sid'='sid')
-  )
+
+p1 <- ggplot(plt.single , aes(x = `NMF:123456.PC1` , y = `NMF:123456.PC2`, col = gliovis.majority_call) ) +
+  geom_point(size=1.5) +
+  youri_gg_theme +
+  scale_x_continuous(expand = expansion(mult = c(.05, .05)) ) +
+  scale_y_continuous(expand = expansion(mult = c(.05, .05)) ) +
+  labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", col='GlioVis')
+
+p2 <- ggplot(plt.single , aes(x = `NMF:123456.PC1` , y = `NMF:123456.PC2`, col = `NMF:123456.PCA.LDA.class`) ) +
+  geom_point(size=1.5) +
+  youri_gg_theme +
+  scale_x_continuous(expand = expansion(mult = c(.05, .05)) ) +
+  scale_y_continuous(expand = expansion(mult = c(.05, .05)) ) +
+  labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", col='LDA-re-class')
 
 
-ggplot(plt.single , aes(x = `NMF:123456.PC1` , y = `NMF:123456.PC2`, col = Gravendeel.Centroid.Class.x) ) +
+p3 <- ggplot(plt.single , aes(x = `NMF:123456.PC1` , y = `NMF:123456.PC2`, col = Gravendeel.Centroid.Class.Full) ) +
   geom_point(size=1.5) +
   youri_gg_theme +
   #scale_color_manual(
-    #values = subtype_colors,
+  #values = subtype_colors,
   #  guide = guide_legend(title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75)
   #) +
   scale_x_continuous(expand = expansion(mult = c(.05, .05)) ) +
   scale_y_continuous(expand = expansion(mult = c(.05, .05)) ) +
-  labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", col='Subtype by GlioVis [majority call]')
+  labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", col='Gravendeel centr. full')
 
 
+p4 <- ggplot(plt.single , aes(x = `NMF:123456.PC1` , y = `NMF:123456.PC2`, col = Gravendeel.Centroid.Class.Subset) ) +
+  geom_point(size=1.5) +
+  youri_gg_theme +
+  #scale_color_manual(
+  #values = subtype_colors,
+  #  guide = guide_legend(title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75)
+  #) +
+  scale_x_continuous(expand = expansion(mult = c(.05, .05)) ) +
+  scale_y_continuous(expand = expansion(mult = c(.05, .05)) ) +
+  labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", col='Gravendeel centr. sub')
 
-## contour ----
+
+(p1 + p2) / (p3 + p4)
+
+
+## Determine Contour ----
 
 resolution <- 250 # 1000 x 1000 data points
 
@@ -1136,8 +1159,8 @@ plt <- plt.single %>%
 
 
 ggplot(plt, aes(x = `NMF:123456.PC1`, y = `NMF:123456.PC2`, group=pid, col = `NMF:123456.PCA.LDA.status`, label=pid)) + 
-  geom_raster(data = nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.LDA.status' = NA) , aes(fill = factor(class)), alpha=0.1) +
-  geom_contour(data=  nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.LDA.status' = NA) , aes(z=as.numeric(class)),
+  geom_raster(data = nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.LDA.status' = NA, pid=NA) , aes(fill = factor(class)), alpha=0.1) +
+  geom_contour(data=  nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.LDA.status' = NA, pid=NA) , aes(z=as.numeric(class)),
                colour="gray40", size=0.25, lty=2,breaks=c(1.5,2.5)) +
   geom_point(data = plt %>% dplyr::filter(`NMF:123456.PCA.LDA.class` != "Classical" ), size=1.0, col="gray80") +
   geom_point(data = plt %>% dplyr::filter(`NMF:123456.PCA.LDA.class` == "Classical" & resection == "R1"), size=1.5) +
@@ -1145,6 +1168,7 @@ ggplot(plt, aes(x = `NMF:123456.PC1`, y = `NMF:123456.PC2`, group=pid, col = `NM
     data = plt %>% dplyr::filter(pid %in% .$pid[duplicated(.$pid)]) %>%
       dplyr::filter(primary.classical == T),
     arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.125, "inches"))
+    ,alpha = 0.1
   ) + 
   geom_text_repel(data = plt %>% dplyr::filter(resection == "R2" & `NMF:123456.PCA.LDA.status` != "Stable" & primary.classical == T &
                            `NMF:123456.PCA.LDA.posterior.Classical` < 0.25), size = 3)  +
@@ -1217,6 +1241,78 @@ ggplot(plt, aes(x = `NMF:123456.PC1`, y = `NMF:123456.PC2`, group=pid, col = `NM
 
 
 ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_LDA-reclassification_LDA-countours_mesenchymal.png',width=7,height=5.5)
+
+
+## PCA:1+2(NMF:1+2+3) + LDA countors + LDA labels [hypermutated] ----
+
+plt <- plt.single %>%
+  dplyr::left_join(plt.paired %>% dplyr::select(c("pid", `NMF:123456.PCA.LDA.status` )) , by=c('pid'='pid')) %>%
+  dplyr::mutate(pid = as.factor(pid)) %>%
+  dplyr::mutate(hypermutated = pid %in% c('FAN', 'HAC', 'AQA', 'BAB', 'JAG', 'GAR', 'AAT', 'BAK', 'JAC', 'FAG', 'JAF', 'BAD', 'EAZ', 'CAO', 'FAL') )
+
+
+
+ggplot(plt, aes(x = `NMF:123456.PC1`, y = `NMF:123456.PC2`, group=pid, col = `NMF:123456.PCA.LDA.status`, label=pid)) + 
+  geom_raster(data = nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.LDA.status' = NA, pid=NA) , aes(fill = factor(class)), alpha=0.1) +
+  geom_contour(data=  nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.LDA.status' = NA, pid=NA) , aes(z=as.numeric(class)),
+               colour="gray40", size=0.25, lty=2,breaks=c(1.5,2.5)) +
+  geom_point(data = plt %>% dplyr::filter(hypermutated == F), size=1.0, col="gray80") +
+  geom_point(data = plt %>% dplyr::filter(hypermutated == T & resection == "R1"), size=1.5) +
+  geom_path(
+    data = plt %>% dplyr::filter(pid %in% .$pid[duplicated(.$pid)]) %>%
+      dplyr::filter(hypermutated == T),
+    arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.125, "inches"))
+  ) + 
+  geom_text_repel(data = plt %>% dplyr::filter(resection == "R2" & hypermutated == T), size = 3)  +
+  youri_gg_theme +
+  labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", col=NULL,fill="LDA class") +
+  scale_color_manual(values=c('Stable'= rgb(0,0.75,0), 'Transition' = 'black','NA'='purple')) +
+  scale_fill_manual(values = subtype_colors)
+
+
+ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_LDA-reclassification_LDA-countours_hypermutated.png',width=7,height=5.5)
+
+
+## PCA:1+2(NMF:1+2+3) + LDA countors + LDA labels [tumour-%] ----
+
+plt <- plt.single %>%
+  dplyr::left_join(plt.paired %>% dplyr::select(c("pid", `NMF:123456.PCA.LDA.status` )) , by=c('pid'='pid')) %>%
+  dplyr::mutate(pid = as.factor(pid)) %>%
+  dplyr::left_join(gsam.rna.metadata %>% dplyr::select(c('sid', 'tumour.percentage.dna')) ,
+                   by=c('sid'='sid')) %>%
+  dplyr::filter(!is.na(tumour.percentage.dna)) %>%
+  dplyr::mutate(tpc = ifelse(tumour.percentage.dna <= 15 , "TPC <= 15", "TPC > 15") )
+
+tmp <- plt %>%
+  dplyr::filter(grepl("<", tpc)) %>% 
+  dplyr::pull(pid) %>%
+  as.character() %>%
+  unique()
+
+plt <- plt %>%
+  dplyr::mutate(low.tpc.pair = pid %in% tmp)
+
+
+
+ggplot(plt, aes(x = `NMF:123456.PC1`, y = `NMF:123456.PC2`, group=pid, col = `NMF:123456.PCA.LDA.status` , label=pid)) + 
+  geom_raster(data = nmf.pca.lda.countours %>% dplyr::mutate(tpc = NA, pid=NA, `NMF:123456.PCA.LDA.status`=NA) , aes(fill = factor(class)), alpha=0.1) +
+  geom_contour(data=  nmf.pca.lda.countours %>% dplyr::mutate(tpc = NA, pid=NA , `NMF:123456.PCA.LDA.status`=NA) , aes(z=as.numeric(class)),
+               colour="gray40", size=0.25, lty=2,breaks=c(1.5,2.5)) +
+  geom_point(data = plt %>% dplyr::filter(grepl(">",tpc)), size=1.0, col="gray80") +
+  geom_point(data = plt %>% dplyr::filter(grepl("<",tpc ) & resection == "R1" ), size=1.5) +
+  geom_path(
+    data = plt %>% dplyr::filter(pid %in% .$pid[duplicated(.$pid)]) %>%
+      dplyr::filter( low.tpc.pair  ),
+    arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.125, "inches"))
+  ) + 
+  geom_text_repel(data = plt %>% dplyr::filter(resection == "R2" & hypermutated == T), size = 3)  +
+  youri_gg_theme +
+  labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", col=NULL,fill="LDA class") +
+  scale_color_manual(values=c('Stable'= rgb(0,0.75,0), 'Transition' = 'black','NA'='purple')) +
+  scale_fill_manual(values = subtype_colors)
+
+
+ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_LDA-reclassification_LDA-countours_hypermutated.png',width=7,height=5.5)
 
 
 
@@ -1311,4 +1407,241 @@ ggsave('output/figures/paper_subtypes_classifier_tileplot.png',width=14 * 0.8,he
 
 
 
+# CNV diff CL->Mes ----
+
+
+source('scripts/R/cnv_matrix.R')
+source('scripts/R/chrom_sizes.R')
+
+tmp <- c('FAN', 'HAC', 'AQA', 'BAB', 'JAG', 'GAR', 'AAT', 'BAK', 'JAC', 'FAG', 'JAF', 'BAD', 'EAZ', 'CAO', 'FAL')
+plt <- data.frame(pid = tmp) %>%
+  dplyr::left_join(gsam.cnv.metadata %>%
+                     dplyr::filter(resection == "R1") %>%
+                     dplyr::select(c('PD_ID', 'pid')) %>%
+                     dplyr::rename(PD_ID.R1 = PD_ID)
+                   , by=c('pid' = 'pid')) %>%
+  dplyr::left_join(gsam.cnv.metadata %>%
+                     dplyr::filter(resection == "R2") %>%
+                     dplyr::select(c('PD_ID', 'pid')) %>%
+                     dplyr::rename(PD_ID.R2 = PD_ID)
+                   , by=c('pid' = 'pid')) %>%
+  dplyr::mutate(R1.in.CNV = PD_ID.R1 %in% colnames(cnv_matrix)) %>%
+  dplyr::mutate(R2.in.CNV = PD_ID.R2 %in% colnames(cnv_matrix)) %>%
+  dplyr::filter(R1.in.CNV == T & R2.in.CNV == T) %>%
+  dplyr::right_join(data.frame(pid = tmp) , by = c('pid'='pid') )
+
+
+#a = cnv_matrix %>% dplyr::select(plt[1,]$PD_ID.R1)
+
+patient = 1
+plt.2 <- data.frame(r1 = (cnv_matrix %>% dplyr::pull(plt[patient,]$PD_ID.R1)) ,
+                    r2 = (cnv_matrix %>% dplyr::pull(plt[patient,]$PD_ID.R2)),
+                    region = rownames(cnv_matrix)) %>%
+  dplyr::mutate(chr = as.factor(gsub(":.+$","",rownames(cnv_matrix)))) %>%
+  dplyr::mutate(diff = r1 - r2)  %>%
+  dplyr::filter(chr %in% c("chrX", "chrY") == F)
+
+
+
+ggplot(plt.2 , aes(x = r1, y = r2 , col = chr , label = region) ) +
+  geom_point(size=0.1) + 
+  geom_text(data = subset(plt.2, abs(diff) > 3))
+
+
+# TODO: put in separate script
+data <- read.delim('data/gsam/output/tables/cnv_copynumber-ratio.cns_all.txt', stringsAsFactors = F) %>%
+  dplyr::mutate(gene = NULL)
+
+
+overlap_segments <- function(d1, d2) {
+  df <- data.frame()
+  chrs <- unique(c(d1$chromosome , d2$chromosome))
+  
+  for(chr in chrs) {
+    starts <- sort(unique(c(
+      d1 %>% dplyr::filter(chromosome == chr) %>% dplyr::pull(start) ,
+      d2 %>% dplyr::filter(chromosome == chr) %>% dplyr::pull(start)  
+    )))
+    
+    ends <- sort(unique(c(
+      d1 %>% dplyr::filter(chromosome == chr) %>% dplyr::pull(end) ,
+      d2 %>% dplyr::filter(chromosome == chr) %>% dplyr::pull(end)  
+    ))) 
+
+    print(chr)
+    stopifnot(length(starts) == length(ends))
+    
+    v1 <- c()
+    v2 <- c()
+    
+    for ( i in 1:length(starts)) {
+      v1 <- c(v1, d1 %>%
+                dplyr::filter( chromosome == chr ) %>%
+                dplyr::filter( starts[i] >=  start &  ends[i] <= end) %>%
+                dplyr::pull(log2))
+      
+      v2 <- c(v2, d2 %>%
+                dplyr::filter( chromosome == chr ) %>%
+                dplyr::filter( starts[i] >=  start &  ends[i] <= end) %>%
+                dplyr::pull(log2))
+    }
+    
+    df <- rbind(df, 
+                data.frame(
+                  start = starts,
+                  end = ends, 
+                  v1 = v1,
+                  v2 = v2,
+                  chr = paste0("chr",chr)) %>%
+                  dplyr::mutate(dv = v2 - v1)
+              )
+  }
+  return(df)
+}
+
+
+ddf <- data.frame()
+for(i in 1:nrow(plt )) {
+  
+  #i = 6
+  pat <- plt[i,]
+  if(pat$pid %in% c("GAR") == F) {
+    print(pat)
+    
+    d1 <- data %>% 
+      dplyr::filter(sample.id == pat$PD_ID.R1 )
+    
+    d2 <- data %>%
+      dplyr::filter(sample.id == pat$PD_ID.R2)
+    
+    
+    tmp = overlap_segments(d1, d2) %>%
+      dplyr::mutate(chr_offset = chrs_hg19_s[.$chr]) %>%
+      dplyr::mutate(pid = pat$pid)
+    
+    ddf <- rbind(ddf, tmp)
+  }
+}
+
+
+ddf <- ddf %>%
+  dplyr::filter(chr %in% c("chrX" , "chrY") == F) %>%
+  dplyr::mutate(x    = start + chr_offset,
+                xend = end + chr_offset,
+                y = dv,
+                yend = dv)
+
+
+#ggplot(subset(ddf, chr=="chr9"), aes(x = x , xend = xend, y=y, yend =yend, group = pid , col=pid ) ) + 
+ggplot(subset(ddf, T), aes(x = x , xend = xend, y=y, yend =yend, group = pid , col=chr == "chr7" | chr == "chr9" ) ) + 
+  geom_segment(lwd=1.3) +
+  ylim(-2.5, 2.5) + 
+  labs(y = "Copynumber DIFFERENCE R1 ~ R2")
+
+
+plot(c(0 , max (ddf$end) ), c (min(c(ddf$v1, df$v2)) , max(  c(ddf$v1, ddf$v2) ) ) , type="n")
+
+
+
+abline(h=0, lwd=0.5)
+#for(i in 1:nrow(df)) {
+#  lines(c(df$start[i] , df$end[i] ) , c(df$v1[i],df$v1[i]) , col="blue") 
+#}
+#for(i in 1:nrow(df)) {
+#  lines(c(df$start[i] , df$end[i] ) , c(df$v2[i],df$v2[i]) , col="red") 
+#}
+for(i in 1:nrow(df)) {
+  lines(c(df$start[i] , df$end[i] ) , c(df$v2[i] - df$v1[i],df$v2[i] - df$v1[i]) , col="darkgray", lwd=3) 
+}
+
+
+
+d1g <- GenomicRanges::makeGRangesFromDataFrame(
+  d1 %>%
+    dplyr::mutate(chromosome = paste0( "chr", chromosome)) %>%
+    dplyr::mutate(end = end - 1) 
+  , keep.extra.columns = T)
+
+d2g <- GenomicRanges::makeGRangesFromDataFrame(
+  d2 %>%
+    dplyr::mutate(chromosome = paste0( "chr", chromosome)) %>%
+    dplyr::mutate(end = end - 1) 
+  , keep.extra.columns = T)
+
+
+
+
+
+
+asd1 = subsetByOverlaps(d1g, d2g)
+asd2 = setdiff(d1g, d2g)
+
+# setdiff
+
+# co-expr alg ----
+
+
+df<-data.frame(site.x=c("A","A","A","B","B","C"),   
+               site.y=c("B","C","D","C","D","D"),
+               Distance=c(67,57,64,60,67,60))
+n <- max(table(df$site.x)) + 1  # +1,  so we have diagonal of 
+res <- lapply(with(df, split(Distance, df$site.x)), function(x) c(rep(NA, n - length(x)), x))
+res <- do.call("rbind", res)
+res <- rbind(res, rep(NA, n))
+res <- as.dist(t(res))
+
+
+df <- 
+  data.frame(
+  site.x = c(rep('a',7),
+             rep('b',6),
+             rep('c',5),
+             rep('d',4),
+             rep('EGFR',3),
+             rep('f',2),
+             rep('SOCS2',1),
+             rep('h',0))
+,
+  site.y = c(
+    c('b','c','d','EGFR','f','SOCS2','h'),
+    c('c','d','EGFR','f','SOCS2','h'),
+    c('d','EGFR','f','SOCS2','h'),
+    c('EGFR','f','SOCS2','h'),
+    c('f','SOCS2','h'),
+    c('SOCS2','h'),
+    c('h')
+  ),
+Distance = c(
+  rep(2.566018937, 14),
+  2.198769158,
+  2.566018937,
+  2.377492545,
+  rep(2.566018937, 6),
+  1,
+  rep(2.566018937, 4) )
+)
+
+
+n <- max(table(df$site.x)) + 1  # +1,  so we have diagonal of 
+res <- lapply(with(df, split(Distance, df$site.x)), function(x) c(rep(NA, n - length(x)), x))
+res <- do.call("rbind", res)
+res <- rbind(res, rep(NA, n))
+res <- as.dist(t(res))
+
+
+
+
+
+fit <- cmdscale(res, eig=TRUE, k=2)
+plt <- fit$points %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column('gid') %>%
+  dplyr::mutate(gid = ifelse(gid == "", "h", gid))
+
+ggplot(plt, aes(x=V1, y=V2, label=gid)) +
+  geom_point() +
+  ggrepel::geom_text_repel()
+
+
+# 〰 © Dr. Youri Hoogstrate 〰 ----
 
