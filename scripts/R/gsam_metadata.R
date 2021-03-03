@@ -1,17 +1,16 @@
 #!/usr/bin/env R
 
-# ---- 
+# ---- load libs ----
 
 
 library(tidyverse) # for distinct() function
 library(readxl)
 
 
+source('scripts/R/job_gg_theme.R')
+
 
 # ---- patient metadata ----
-
-# load libs ----
-
 
 
 # three CNV samples samples not in metadata: "AMA" "AMA" "BAO" "BAO" "FAF" "FAF"
@@ -37,7 +36,7 @@ gsam.patient.metadata <- gsam.patient.metadata %>%
   dplyr::mutate(survival.months = survivalDays / 365.0 * 12.0)
 
 
-# DNA exome-seq ----
+## ---- DNA exome-seq ----
 
 
 
@@ -85,7 +84,7 @@ gsam.cnv.metadata <- read.delim("data/gsam/DNA/sample codes sanger gsam.txt",str
 
 
 
-# RNA-seq metadata [full] ----
+## ---- RNA-seq metadata [full] ----
 
 ## STAR alignment statistics + patient / sample identifiers ----
 
@@ -315,7 +314,7 @@ rm(tmp)
 
 # ---- Tumor Percentages (DNA) ----
 
-tmp <- read.delim('output/tables/cnv/tumor.percentage.estimate.txt', sep=" ") %>%
+tmp <- read.delim('data/gsam/output/tables/cnv/tumor.percentage.estimate.txt', sep=" ") %>%
   dplyr::mutate(lfc.3p = NULL) %>%
   dplyr::mutate(lfc.4p = NULL) %>%
   dplyr::mutate(lfc.n = NULL) %>%
@@ -439,4 +438,12 @@ gsam.rna.metadata <- gsam.rna.metadata %>%
 
 
 # 〰 © Dr. Youri Hoogstrate 〰 ----
+
+
+ggplot(gsam.rna.metadata , aes(y = tumour.percentage.dna , x = reorder( sid , tumour.percentage.dna) , col=resection)  ) + 
+  geom_hline(yintercept = 15, col="red", lty=2) + 
+  geom_point() +
+  job_gg_theme
+
+
 
