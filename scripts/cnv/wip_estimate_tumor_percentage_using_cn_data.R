@@ -170,14 +170,13 @@ print(pct.2)
 
 
 tpc.estimate = data.frame()
-#for(k in 1:ncol(cnv_matrix)) {
-for(k in 41:ncol(cnv_matrix)) {
+for(k in 1:ncol(cnv_matrix)) {
   print(k)
   #k = 7
   #k = 115 # AAF
   
   
-  k = which(colnames(cnv_matrix) == "KAE1")
+  #k = which(colnames(cnv_matrix) == "KAE1")
   
   if(colnames(cnv_matrix)[k]  %in% cnv_segments$patient.id) {
     
