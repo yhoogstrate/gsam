@@ -17,6 +17,8 @@ setwd("~/projects/gsam")
 
 # ---- load libs ----
 
+
+library(tidyverse)
 library(ggplot2)
 library(limma)
 
@@ -92,13 +94,15 @@ source("scripts/R/youri_gg_theme.R")
 source("scripts/R/job_gg_theme.R")
 
 
-cnv_segments <- read.delim('data/output/tables/cnv_copynumber-ratio.cns_all.txt', stringsAsFactors = F) %>%
+cnv_segments <- read.delim('data/gsam/output/tables/cnv_copynumber-ratio.cns_all.txt', stringsAsFactors = F) %>%
   dplyr::mutate(gene = NULL) %>%
   dplyr::mutate(segment.length = end - start)
 
 
+
 # ---- test code ----
 # 5,6 = pair without further gains and losses
+
 
 i = 1
 j = 2
@@ -169,6 +173,10 @@ tpc.estimate = data.frame()
 for(k in 1:ncol(cnv_matrix)) {
   print(k)
   #k = 7
+  #k = 115 # AAF
+  
+  
+  #k = which(colnames(cnv_matrix) == "KAE1")
   
   if(colnames(cnv_matrix)[k]  %in% cnv_segments$patient.id) {
     
@@ -184,9 +192,8 @@ for(k in 1:ncol(cnv_matrix)) {
       dplyr::rename(log2 = unique(.$cur.sample)) %>%
       dplyr::mutate(type = 'point') %>%
       dplyr::filter(segment.chr %in% c('chrX', 'chrY') == F)
-    
-    
-    
+
+
     tmp <- cnv_segments %>%
       dplyr::mutate(cur.sample = unique(plt$cur.sample)) %>%
       dplyr::filter(patient.id == cur.sample) %>%
@@ -199,12 +206,12 @@ for(k in 1:ncol(cnv_matrix)) {
       dplyr::filter(segment.length >= 5000000) %>%
       dplyr::filter(log2 < 1.1)
 
-    
+
     plt <- rbind(
       plt %>% dplyr::select(c('segment.chr', 'pos', 'log2', 'type', 'pos.end')),
       tmp %>% dplyr::select(c('segment.chr', 'pos', 'log2', 'type', 'pos.end')))
-    
-    
+
+
     out <- data.frame()
     for(frac in  1:100 / 100) {
       fc.p.4 <- ((1 - frac) * 2 + frac * 4) / 2
@@ -219,7 +226,48 @@ for(k in 1:ncol(cnv_matrix)) {
       dists <- c()
       dist <- 0
       for(i in 1:nrow(tmp)) {
-        #i = 19
+        # these sample are typically clonally different at particular chr's
+        if(colnames(cnv_matrix)[k] == "AAF1") { tmp <- tmp %>% dplyr::filter(segment.chr %in% c('chr10', 'chr5', 'chr8','chr18','chr1') == F) }
+        else if(colnames(cnv_matrix)[k] == "EAD2") { tmp <- tmp %>% dplyr::filter(segment.chr %in% c('chr1', 'chr2', 'chr14','chr18','chr22') == F) }
+        else if(colnames(cnv_matrix)[k] == "EAZ1") { tmp <- tmp %>% dplyr::filter(segment.chr %in% c('chr2', 'chr3', 'chr4','chr5','chr6','chr7','chr8','chr10','chr14') == T) }
+        else if(colnames(cnv_matrix)[k] == "EBW1") { tmp <- tmp %>% dplyr::filter(segment.chr %in% c('chr1','chr2', 'chr3', 'chr4','chr7','chr10','chr11','chr13','chr14') == T) }
+        else if(colnames(cnv_matrix)[k] == "AAS2") { tmp <- tmp %>% dplyr::filter(segment.chr %in% c('chr2','chr10', 'chr13','chr14') == T) }
+        else if(colnames(cnv_matrix)[k] == "AAT1") { tmp <- tmp %>% dplyr::filter(segment.chr %in% c('chr2','chr4', 'chr15','chr16') == F) }
+        else if(colnames(cnv_matrix)[k] %in% c("AAU1","AAU2")) { tmp <- tmp %>% dplyr::filter(segment.chr %in% c('chr1', 'chr2','chr3','chr9','chr10','chr11','chr12','chr18','chr19') == T) }
+        else if(colnames(cnv_matrix)[k] == "ABA1") { tmp <- tmp %>% dplyr::filter(segment.chr %in% c('chr2','chr3', 'chr4','chr5', 'chr7','chr10','chr16') == T) }
+        else if(colnames(cnv_matrix)[k] == "ACA1") { tmp <- tmp %>% dplyr::filter(segment.chr %in% c('chr3') == F) }
+        else if(colnames(cnv_matrix)[k] == "AFA1") { tmp <- tmp %>% dplyr::filter(segment.chr %in% c('chr1','chr2','chr3') == T) }
+        else if(colnames(cnv_matrix)[k] == "AZB2") { tmp <- tmp %>% dplyr::filter(segment.chr %in% c('chr2','chr4','chr5','chr6','chr7','chr10','chr13') == T) }
+        else if(colnames(cnv_matrix)[k] == "AZH1") { tmp <- tmp %>% dplyr::filter(segment.chr %in% c('chr6','chr8','chr16','chr17','chr18') == F) }
+        else if(colnames(cnv_matrix)[k] == "BAC1") { tmp <- tmp %>% dplyr::filter(segment.chr %in% c('chr13','chr15','chr19') == F) }
+        else if(colnames(cnv_matrix)[k] == "BAW1") { tmp <- tmp %>% dplyr::filter(segment.chr %in% c('chr1','chr2','chr4','chr10','chr13','chr14','chr15') == T) }
+        else if(colnames(cnv_matrix)[k] == "CBT1") { tmp <- tmp %>% dplyr::filter(segment.chr %in% c('chr2','chr3','chr4','chr5','chr6','chr7','chr8','chr9','chr10') == T) }
+        else if(colnames(cnv_matrix)[k] == "CDA1") { tmp <- tmp %>% dplyr::filter(segment.chr %in% c('chr1','chr3','chr4','chr9','chr17','chr18','chr19') == F) }
+        else if(colnames(cnv_matrix)[k] == "DAB1") { tmp <- tmp %>% dplyr::filter(segment.chr %in% c('chr1','chr7','chr10','chr13') == T) }
+        else if(colnames(cnv_matrix)[k] == "EAO2") { tmp <- tmp %>% dplyr::filter(segment.chr %in% c('chr1','chr7','chr10','chr13') == T) }
+        else if(colnames(cnv_matrix)[k] %in% c("ECA1","ECA2")) { tmp <- tmp %>% dplyr::filter(segment.chr %in% c('chr1','chr2','chr7','chr10','chr22') == T) }
+        else if(colnames(cnv_matrix)[k] == "FAF1") { tmp <- tmp %>% dplyr::filter(segment.chr %in% c('chr3','chr7','chr10','chr13','chr22') == T) }
+        else if(colnames(cnv_matrix)[k] == "FAF2") { tmp <- tmp %>% dplyr::filter(segment.chr %in% c('chr3','chr7','chr10','chr13','chr22') == T) }
+        else if(colnames(cnv_matrix)[k] == "FAJ2") { tmp <- tmp %>% dplyr::filter(segment.chr %in% c('chr2','chr7','chr10','chr13','chr15') == T) }
+        else if(colnames(cnv_matrix)[k] == "FAP1") { tmp <- tmp %>% dplyr::filter(segment.chr %in% c('chr2','chr14','chr15') == T) }
+        else if(colnames(cnv_matrix)[k] == "FAP2") { tmp <- tmp %>% dplyr::filter(segment.chr %in% c('chr2',"chr7",'chr10','chr14','chr15') == T) }
+        else if(colnames(cnv_matrix)[k] == "GAI1") { tmp <- tmp %>% dplyr::filter(segment.chr %in% c('chr2',"chr7",'chr9','chr10') == T) }
+        else if(colnames(cnv_matrix)[k] == "GAI2") { tmp <- tmp %>% dplyr::filter(segment.chr %in% c('chr2',"chr7",'chr9','chr10') == T) }
+        else if(colnames(cnv_matrix)[k] == "HAB2") { tmp <- tmp %>% dplyr::filter(segment.chr %in% c('chr2',"chr3",'chr7','chr10','chr15') == T) }
+        else if(colnames(cnv_matrix)[k] == "HAF1") { tmp <- tmp %>% dplyr::filter(segment.chr %in% c('chr2',"chr3",'chr7','chr10','chr15') == T) }
+        else if(colnames(cnv_matrix)[k] == "HAK1") { tmp <- tmp %>% dplyr::filter(segment.chr %in% c('chr5',"chr10",'chr13','chr17') == T) }
+        else if(colnames(cnv_matrix)[k] == "JAB1") { tmp <- tmp %>% dplyr::filter(segment.chr %in% c('chr3',"chr4",'chr10') == T) }
+        else if(colnames(cnv_matrix)[k] == "JAE2") { tmp <- tmp %>% dplyr::filter(segment.chr %in% c('chr7',"chr12",'chr13') == T) }
+        else if(colnames(cnv_matrix)[k] == "JAI1") { tmp <- tmp %>% dplyr::filter(segment.chr %in% c('chr2','chr7','chr10') == T) }
+        else if(colnames(cnv_matrix)[k] == "JAL2") { tmp <- tmp %>% dplyr::filter(segment.chr %in% c('chr2','chr7','chr8','chr10') == T) }
+        else if(colnames(cnv_matrix)[k] == "JAN1") { tmp <- tmp %>% dplyr::filter(segment.chr %in% c('chr2','chr7','chr10') == T) }
+        else if(colnames(cnv_matrix)[k] == "JAN2") { tmp <- tmp %>% dplyr::filter(segment.chr %in% c('chr2','chr7','chr10') == T) }
+        else if(colnames(cnv_matrix)[k] == "KAB2") { tmp <- tmp %>% dplyr::filter(segment.chr %in% c('chr2','chr7','chr10') == T) }
+        else if(colnames(cnv_matrix)[k] == "KAC2") { tmp <- tmp %>% dplyr::filter(segment.chr %in% c('chr2','chr13','chr22') == T) }
+        else if(colnames(cnv_matrix)[k] == "KAD1") { tmp <- tmp %>% dplyr::filter(segment.chr %in% c('chr1','chr7','chr10') == T) }
+        else if(colnames(cnv_matrix)[k] == "KAE1") { tmp <- tmp %>% dplyr::filter(segment.chr %in% c('chr1','chr7','chr10') == T) }
+        
+        
         
         e <- tmp[i,]
         #if(e$log2 < lfc.p.4 * 1.2) { # extreme outlier; skip
@@ -276,7 +324,7 @@ for(k in 1:ncol(cnv_matrix)) {
     
     
     
-    fn <- paste0("output/figures/cnv/",unique(tmp$cur.sample),".pdf")
+    fn <- paste0("output/figures/cnv/",unique(tmp$cur.sample),".png")
     #print(fn)
     ggsave(fn,width=10,height=6)
     
