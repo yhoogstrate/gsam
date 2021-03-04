@@ -42,7 +42,9 @@ glass.gbm.rnaseq.expression <- 'data/gsam/data/GLASS_GBM_R1-R2/glass_transcript_
   tibble::rownames_to_column('tmp') %>% 
   dplyr::mutate(tmp=NULL) %>%
   tibble::column_to_rownames('gene_id') %>%
-  round()
+  round() %>%
+  `colnames<-`( gsub(".","-",colnames(.), fixed=T) ) %>%
+  `colnames<-`( gsub("_1$","",colnames(.), fixed=F) )
 
 rm(tmp)
 
