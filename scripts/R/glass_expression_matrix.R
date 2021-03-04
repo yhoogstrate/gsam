@@ -51,18 +51,21 @@ rm(tmp)
 # Load metadata ----
 
 
-glass.gbm.rnaseq.metadata <- data.frame(sid = colnames(glass.gbm.rnaseq.expression),
-                                        stringsAsFactors = F) %>%
+glass.gbm.rnaseq.metadata <- data.frame(sid = colnames(glass.gbm.rnaseq.expression),  stringsAsFactors = F) %>%
+  dplyr::mutate(sid = gsub(".","-",sid,fixed=T)) %>% # by convention [https://github.com/fpbarthel/GLASS]
+  dplyr::mutate(sid = gsub("_1$","",sid,fixed=F)) %>% # by convention [https://github.com/fpbarthel/GLASS]
   dplyr::mutate(pid = gsub("^(............).+$","\\1",sid)) %>%
   dplyr::arrange(pid) %>%
   dplyr::mutate(resection = as.factor(gsub("^.............(..).+$","\\1",sid))) %>% # TP is primary tumour? https://github.com/fpbarthel/GLASS
-  dplyr::mutate(dataset =  as.factor(gsub("^(....).+$","\\1",sid)) )
+  dplyr::mutate(dataset =  as.factor(gsub("^(....).+$","\\1",sid)) ) %>%
+  dplyr::left_join(
+    read.table('data/gsam/data/GLASS_GBM_R1-R2/GLASS.GBM.subtypes.from.Synapse.portal.tsv', header=T,stringsAsFactors = F) %>% # https://www.synapse.org/#!Synapse:syn21441635/tables/
+      dplyr::select(c('aliquot_barcode','subtype')) %>%
+      dplyr::mutate(subtype = as.factor(subtype)) %>%
+      dplyr::rename(GBM.transcriptional.subtype.Synapse = subtype)
+    , by     = c('sid' = 'aliquot_barcode' )  )
 
-
-# TODO add GBM tr subtypes
-
-# subtypes were determined:
-# https://www.synapse.org/#!Synapse:syn21441635/tables/
+stopifnot(!is.na(glass.gbm.rnaseq.metadata $GBM.transcriptional.subtype.Synapse))
 
 
 
