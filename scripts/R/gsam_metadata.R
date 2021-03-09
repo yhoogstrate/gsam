@@ -25,7 +25,7 @@ gsam.patient.metadata <- read.csv('data/gsam/administratie/GSAM_combined_clinica
 # there's a number of samples of which the gender does not fit with the omics data - omics data determined genders are the corrected ones
 
 gsam.patient.metadata$gender.corrected <- gsam.patient.metadata$gender
-actual.males <- c('AAT', 'AAM', 'AZH', 'HAI','FAG')
+actual.males <- c('AAT', 'AAM', 'AZH', 'HAI', 'FAG')
 gsam.patient.metadata[gsam.patient.metadata$studyID %in% actual.males,]$gender.corrected <- 'Male'
 rm(actual.males)
 
@@ -33,7 +33,8 @@ gsam.patient.metadata <- gsam.patient.metadata %>%
   dplyr::mutate(survival.event = NA) %>%
   dplyr::mutate(survival.event = ifelse(status == "Deceased", 1, survival.event)) %>%
   dplyr::mutate(survival.event = ifelse(status == "Censored", 0, survival.event)) %>%
-  dplyr::mutate(survival.months = survivalDays / 365.0 * 12.0)
+  dplyr::mutate(survival.months = survivalDays / 365.0 * 12.0) %>%
+  dplyr::mutate(`X.1` = NULL)
 
 
 ## ---- DNA exome-seq ----
@@ -128,6 +129,8 @@ gsam.rna.metadata <- read.delim("data/gsam/output/tables/gsam_featureCounts_read
   dplyr::mutate(sample = NULL)
 
 
+
+
 #EBP1, FAH2 and KAE1: no pair
 #FAB2: FAB2.replicate contains more vIII reads 
 #CAO1.replicate, GAS2.replicate: CAO1 and GAS2 contain more vIII reads
@@ -160,6 +163,10 @@ gsam.rna.metadata <- gsam.rna.metadata %>%
 
 
 rm(sel, tmp)
+
+
+
+
 
 
 # @TODO vIII qPCR percentage 'TODO!!!!!!
@@ -245,6 +252,7 @@ rm(tmp)
 
 # ---- GIGA sequencing facility run statistics----
 
+
 # N sheets: 6
 tmp <- 'data/gsam/documents/PFrench_Summary-sheet_input-DV-qPCR.xlsx'
 tmp <- read_excel(tmp,sheet=1)
@@ -263,7 +271,9 @@ gsam.rna.metadata <- merge(gsam.rna.metadata, tmp, by.x = 'sid', by.y= 'giga.seq
 
 rm(tmp)
 
+
 # ---- DV200 ----
+
 
 tmp <- 'data/gsam/documents/PFrench_Summary-sheet_input-DV-qPCR.xlsx'
 tmp.1 <- read_excel(tmp,sheet=3)
@@ -319,14 +329,17 @@ tmp <- read.delim('data/gsam/output/tables/cnv/tumor.percentage.estimate.txt', s
   dplyr::mutate(lfc.4p = NULL) %>%
   dplyr::mutate(lfc.n = NULL) %>%
   dplyr::mutate(dist = NULL) %>%
-  dplyr::rename(tumour.percentage.dna = pct)
+  dplyr::rename(tumour.percentage.dna = pct) %>%
+  dplyr::filter(!duplicated(sample))
 
 gsam.rna.metadata <- gsam.rna.metadata %>%
-  dplyr::mutate(tmp = gsub('-replicate','',sid, fixed=T)) %>% # dummy
+  dplyr::mutate(tmp = gsub("^(....).*$","\\1", sid) ) %>% # dummy
   dplyr::left_join(tmp, by=c('tmp' = 'sample')) %>%
   dplyr::mutate(tmp = NULL)
 
 rm(tmp)
+
+
 
 
 # ---- gliovis subtypes -----
@@ -439,11 +452,16 @@ gsam.rna.metadata <- gsam.rna.metadata %>%
 
 # 〰 © Dr. Youri Hoogstrate 〰 ----
 
+# ---- summary plots ---- 
 
-ggplot(gsam.rna.metadata , aes(y = tumour.percentage.dna , x = reorder( sid , tumour.percentage.dna) , col=resection)  ) + 
-  geom_hline(yintercept = 15, col="red", lty=2) + 
-  geom_point() +
-  job_gg_theme
+## ---- tumour percentages rna samples ----
+
+#ggplot(gsam.rna.metadata , aes(y = tumour.percentage.dna , x = reorder( sid , tumour.percentage.dna) , col=resection)  ) + 
+#  geom_hline(yintercept = 15, col="red", lty=2) + 
+#  geom_point() +
+#  job_gg_theme
+
+
 
 
 
