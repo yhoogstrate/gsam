@@ -334,19 +334,23 @@ plt.single <- plt.single %>% dplyr::left_join(
 ## Split table into pairs + eucl dist ----
 
 plt.paired <- plt.single %>%
-  dplyr::filter(resection %in% c("R1", "R2") ) %>%
+  #dplyr::filter(resection %in% c("R1", "R2") ) %>%
   dplyr::group_by(pid) %>%
   dplyr::filter(n() == 2) %>%
   dplyr::top_n(1, sid) %>%
   dplyr::select(all_of('pid')) %>%
   as.data.frame() %>%
   dplyr::left_join(plt.single %>% dplyr::filter(resection == 'R1') %>% `colnames<-`( paste0(colnames(.) , ".R1") ) , by=c('pid'='pid.R1') ) %>%
-  dplyr::left_join(plt.single %>% dplyr::filter(resection == 'R2') %>% `colnames<-`( paste0(colnames(.) , ".R2") ) , by=c('pid'='pid.R2') ) %>%
+  dplyr::left_join(plt.single %>% dplyr::filter(resection %in% c('R2', 'R3', 'R4') ) %>% `colnames<-`( paste0(colnames(.) , ".R2") ) , by=c('pid'='pid.R2') ) %>%
   dplyr::mutate(eucledian.dist = sqrt((`NMF:123456.PC1.n.R1` - `NMF:123456.PC1.n.R2`)^2 +
                                         (`NMF:123456.PC2.n.R1` - `NMF:123456.PC2.n.R2`)^2)) %>%
   dplyr::mutate(subtype.public.status = as.factor(ifelse(subtype.public.R1 == subtype.public.R2, "Stable", "Transition"))) %>%
   #dplyr::mutate(`NMF:123456.membership.status` = as.factor(ifelse(`NMF:123456.membership.R1`== `NMF:123456.membership.R2`, "Stable", "Transition"))) %>%
   dplyr::mutate(`NMF:123456.PCA.SVM.status` = as.factor(ifelse(`NMF:123456.PCA.SVM.class.R1` == `NMF:123456.PCA.SVM.class.R2`, "Stable", "Transition")))
+
+
+
+plt.paired %>%   dplyr::filter(pid %in% c('G-SM-R056-2', 'GLSS-HF-3081', 'GLSS-HF-2869')  )
 
 
 plot(density(plt.paired$eucledian.dist))
@@ -448,7 +452,7 @@ ggplot(plt, aes(x = `NMF:123456.PC1`, y = `NMF:123456.PC2`, col = class)) +
                lty=2,breaks=c(1.5,2.5)) +
   geom_point(data = subset(plt, type == "Patient Sample"), size=1.5) +
   youri_gg_theme +
-  labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", col='Subtype by GlioVis [majority call]',fill="LDA countour") +
+  labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", col='Subtype by GlioVis [majority call] / GLASS consortium',fill="LDA countour") +
   scale_color_manual(values = subtype_colors, guide = guide_legend(title = NULL, title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75)) + 
   scale_fill_manual(values = subtype_colors)
 
@@ -463,9 +467,71 @@ ggplot(plt, aes(x = `NMF:123456.PC1`, y = `NMF:123456.PC2`, col = class)) +
 
 plt <- plt.single %>%
   dplyr::left_join(plt.paired %>% dplyr::select(c("pid", `NMF:123456.PCA.SVM.status` )) , by=c('pid'='pid')) %>%
-  dplyr::mutate(primary.proneural = pid %in% (plt.single %>% dplyr::filter(`NMF:123456.PCA.SVM.class` == "Proneural" & resection == "R1") %>% dplyr::pull(pid))) %>%
-  dplyr::filter(resection %in% c('R1','R2')) %>%
+  dplyr::mutate(resection = gsub("R3","R2",resection)) %>% # of these 2 patients [G-SM-R056-2 & GLSS-HF-3081] the 2nd was not available in the seq data []
+  dplyr::mutate(resection = gsub("R4","R2",resection)) %>% # of this patient [GLSS-HF-2869] the 2nd and 3rd were not available in the seq data
+  dplyr::mutate(primary.classical = pid %in% (plt.single %>% dplyr::filter(`NMF:123456.PCA.SVM.class` == "Classical" & resection == "R1") %>% dplyr::pull(pid))) %>%
   dplyr::arrange(pid, resection)
+  # %>%  dplyr::filter(pid %in% c('GLSS-SM-R056', 'GLSS-HF-3081', 'GLSS-HF-2869')  ) << R3 R4
+
+
+plt.gsam <- ggplot(plt %>% dplyr::filter(dataset == "GSAM") , aes(x = `NMF:123456.PC1`, y = -`NMF:123456.PC2`, group=pid, col = `NMF:123456.PCA.SVM.status`, label=pid)) + 
+  geom_raster(data = nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.SVM.status' = NA, pid=NA, GBM.transcriptional.subtype.Synapse.status=NA) , aes(fill = factor(class)), alpha=0.1) +
+  geom_contour(data=  nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.SVM.status' = NA, pid=NA, GBM.transcriptional.subtype.Synapse.status=NA) , aes(z=as.numeric(class)),
+               colour="gray40", size=0.25, lty=2,breaks=c(1.5,2.5)) +
+  geom_point(data = plt %>% dplyr::filter(dataset == "GSAM") %>% dplyr::filter(`NMF:123456.PCA.SVM.class` != "Classical" ), size=1.0, col="gray80") +
+  geom_point(data = plt %>% dplyr::filter(dataset == "GSAM") %>% dplyr::filter(`NMF:123456.PCA.SVM.class` == "Classical" & resection == "R2" & `NMF:123456.PCA.SVM.status` != "stable" ), size=1.0, col="gray80") +
+  geom_point(data = plt %>% dplyr::filter(dataset == "GSAM") %>% dplyr::filter(`NMF:123456.PCA.SVM.class` == "Classical" & resection == "R1"), size=1.5, alpha=0.8) +
+  geom_path(
+    data = plt  %>% dplyr::filter(dataset == "GSAM") %>% dplyr::filter(pid %in% .$pid[duplicated(.$pid)]) %>%
+      dplyr::filter(primary.classical == T),
+    arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.125, "inches")) , alpha = 0.8 ) + 
+  youri_gg_theme +
+  labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", col=NULL,fill="SVM class", title="G-SAM") +
+  scale_color_manual(values=c('Stable'= rgb(0,0.75,0), 'Transition' = 'black','NA'='purple')) +
+  scale_fill_manual(values = subtype_colors)
+
+
+plt.glass <- ggplot(plt  %>% dplyr::filter(dataset != "GSAM"), aes(x = `NMF:123456.PC1`, y = -`NMF:123456.PC2`, group=pid, col = `NMF:123456.PCA.SVM.status`, label=pid)) + 
+  geom_raster(data = nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.SVM.status' = NA, pid=NA, GBM.transcriptional.subtype.Synapse.status=NA) , aes(fill = factor(class)), alpha=0.1) +
+  geom_contour(data=  nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.SVM.status' = NA, pid=NA, GBM.transcriptional.subtype.Synapse.status=NA) , aes(z=as.numeric(class)),
+               colour="gray40", size=0.25, lty=2,breaks=c(1.5,2.5)) +
+  geom_point(data = plt %>% dplyr::filter(dataset != "GSAM") %>% dplyr::filter(`NMF:123456.PCA.SVM.class` != "Classical" ), size=1.0, col="gray80") +
+  geom_point(data = plt %>% dplyr::filter(dataset != "GSAM") %>% dplyr::filter(`NMF:123456.PCA.SVM.class` == "Classical" & resection == "R2" & `NMF:123456.PCA.SVM.status` != "stable" ), size=1.0, col="gray80") +
+  geom_point(data = plt %>% dplyr::filter(dataset != "GSAM") %>% dplyr::filter(`NMF:123456.PCA.SVM.class` == "Classical" & resection == "R1"), size=1.5, alpha=0.8) +
+  geom_path(
+    data = plt  %>% dplyr::filter(dataset != "GSAM")%>% dplyr::filter(pid %in% .$pid[duplicated(.$pid)]) %>%
+      dplyr::filter(primary.classical == T),
+    arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.125, "inches")) , alpha = 0.8 ) + 
+  youri_gg_theme +
+  labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", col=NULL,fill="SVM class", title="GLASS GBM") +
+  scale_color_manual(values=c('Stable'= rgb(0,0.75,0), 'Transition' = 'black','NA'='purple')) +
+  scale_fill_manual(values = subtype_colors)
+
+
+plt.gsam + plt.glass
+
+
+
+
+
+
+ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_SVM-reclassification_SVM-countours_classical.png',width=15,height=6.5)
+
+
+
+
+
+## PCA:1+2(NMF:1+2+3) + LDA countors + LDA labels [proneural] ----
+
+
+
+plt <- plt.single %>%
+  dplyr::left_join(plt.paired %>% dplyr::select(c("pid", `NMF:123456.PCA.SVM.status` )) , by=c('pid'='pid')) %>%
+  dplyr::mutate(resection = gsub("R3","R2",resection)) %>% # of these 2 patients [G-SM-R056-2 & GLSS-HF-3081] the 2nd was not available in the seq data []
+  dplyr::mutate(resection = gsub("R4","R2",resection)) %>% # of this patient [GLSS-HF-2869] the 2nd and 3rd were not available in the seq data
+  dplyr::mutate(primary.proneural = pid %in% (plt.single %>% dplyr::filter(`NMF:123456.PCA.SVM.class` == "Proneural" & resection == "R1") %>% dplyr::pull(pid))) %>%
+  dplyr::arrange(pid, resection)
+  # %>%  dplyr::filter(pid %in% c('GLSS-SM-R056', 'GLSS-HF-3081', 'GLSS-HF-2869')  ) << R3 R4
 
 
 plt.gsam <- ggplot(plt %>% dplyr::filter(dataset == "GSAM") , aes(x = `NMF:123456.PC1`, y = -`NMF:123456.PC2`, group=pid, col = `NMF:123456.PCA.SVM.status`, label=pid)) + 
@@ -506,23 +572,21 @@ plt.gsam + plt.glass
 
 
 
+ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_SVM-reclassification_SVM-countours_proneural.png',width=15,height=6.5)
 
 
 
-ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_SVM-reclassification_SVM-countours_classical.png',width=7,height=5.5)
+## PCA:1+2(NMF:1+2+3) + LDA countors + LDA labels [mesenchymal] ----
 
-
-
-
-
-## PCA:1+2(NMF:1+2+3) + LDA countors + LDA labels [proneural] ----
 
 
 plt <- plt.single %>%
   dplyr::left_join(plt.paired %>% dplyr::select(c("pid", `NMF:123456.PCA.SVM.status` )) , by=c('pid'='pid')) %>%
   dplyr::mutate(primary.mesenchymal = pid %in% (plt.single %>% dplyr::filter(`NMF:123456.PCA.SVM.class` == "Mesenchymal" & resection == "R1") %>% dplyr::pull(pid))) %>%
-  dplyr::filter(resection %in% c('R1','R2')) %>%
+  dplyr::mutate(resection = gsub("R3","R2",resection)) %>% # of these 2 patients [G-SM-R056-2 & GLSS-HF-3081] the 2nd was not available in the seq data []
+  dplyr::mutate(resection = gsub("R4","R2",resection)) %>% # of this patient [GLSS-HF-2869] the 2nd and 3rd were not available in the seq data
   dplyr::arrange(pid, resection)
+  # %>%  dplyr::filter(pid %in% c('GLSS-SM-R056', 'GLSS-HF-3081', 'GLSS-HF-2869')  ) << R3 R4
 
 
 plt.gsam <- ggplot(plt %>% dplyr::filter(dataset == "GSAM") , aes(x = `NMF:123456.PC1`, y = -`NMF:123456.PC2`, group=pid, col = `NMF:123456.PCA.SVM.status`, label=pid)) + 
@@ -562,42 +626,8 @@ plt.glass <- ggplot(plt  %>% dplyr::filter(dataset != "GSAM"), aes(x = `NMF:1234
 plt.gsam + plt.glass
 
 
-ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_LDA-reclassification_LDA-countours_proneural.png',width=7,height=5.5)
 
-
-## PCA:1+2(NMF:1+2+3) + LDA countors + LDA labels [mesenchymal] ----
-
-
-
-plt <- plt.single %>%
-  dplyr::left_join(plt.paired %>% dplyr::select(c("pid", `NMF:123456.PCA.LDA.status`, `GBM.transcriptional.subtype.Synapse.status` )) , by=c('pid'='pid')) %>%
-  dplyr::mutate(pid = as.factor(pid)) %>%
-  dplyr::mutate(primary.mesenchymal = pid %in% (plt.single %>% dplyr::filter(`NMF:123456.PCA.LDA.class` == "Mesenchymal" & resection == "R1") %>% dplyr::pull(pid))) %>%
-  dplyr::filter(resection %in% c('TP','R1')) %>%
-  dplyr::mutate(resection = case_when(resection == "TP" ~ "R1",  resection == "R1" ~ "R2" ) ) %>%
-  dplyr::arrange(sid, resection)
-
-
-#ggplot(plt, aes(x = `NMF:123456.PC1`, y = `NMF:123456.PC2`, group=pid, col = `NMF:123456.PCA.LDA.status`, label=pid)) + 
-ggplot(plt, aes(x = - `NMF:123456.PC1`, y = - `NMF:123456.PC2`, group=pid, col = `NMF:123456.PCA.LDA.status`, label=pid)) + 
-  geom_raster(data = nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.LDA.status' = NA, pid=NA, GBM.transcriptional.subtype.Synapse.status=NA) , aes(fill = factor(class)), alpha=0.1) +
-  geom_contour(data=  nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.LDA.status' = NA, pid=NA, GBM.transcriptional.subtype.Synapse.status=NA) , aes(z=as.numeric(class)), colour="gray40", size=0.25, lty=2,breaks=c(1.5,2.5)) +
-  geom_point(data = plt, size=1.0, col="gray80") +
-  geom_point(data = plt %>% dplyr::filter(`NMF:123456.PCA.LDA.class` == "Mesenchymal" & resection == "R2"), size=1.5) +
-  geom_path(
-    data = plt %>% dplyr::filter(pid %in% .$pid[duplicated(.$pid)]) %>%
-      dplyr::filter(primary.mesenchymal == T),
-    arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.125, "inches"))
-    ,alpha = 0.8
-  ) + 
-  youri_gg_theme +
-  labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", col=NULL,fill="LDA class") +
-  scale_color_manual(values=c('Stable'= rgb(0,0.75,0), 'Transition' = 'black','NA'='purple')) +
-  scale_fill_manual(values = subtype_colors)
-
-
-ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_LDA-reclassification_LDA-countours_mesenchymal.png',width=7,height=5.5)
-
+ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_SVM-reclassification_SVM-countours_mesenchymal.png',width=15,height=6.5)
 
 
 
