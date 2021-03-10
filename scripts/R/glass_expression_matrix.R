@@ -27,7 +27,7 @@ tmp <- 'data/gsam/data/GLASS_GBM_R1-R2/gencode.v19.chr_patch_hapl_scaff.annotati
   read.table(header=F, stringsAsFactors = F) %>%
   dplyr::rename(gene_symbol=V1) %>%
   dplyr::rename(gene_id=V2) %>%
-  dplyr::rename(transcript_id=V3) 
+  dplyr::rename(transcript_id=V3)
 
 
 glass.gbm.rnaseq.expression <- 'data/gsam/data/GLASS_GBM_R1-R2/glass_transcript_counts.txt' %>%
@@ -41,14 +41,45 @@ glass.gbm.rnaseq.expression <- 'data/gsam/data/GLASS_GBM_R1-R2/glass_transcript_
   summarise(across(everything(), list(sum))) %>%
   tibble::rownames_to_column('tmp') %>% 
   dplyr::mutate(tmp=NULL) %>%
+  dplyr::filter(gene_id %in% c("ENSG00000198804", "ENSG00000198886", "ENSG00000198938","ENSG00000198712",
+                               "ENSG00000198727") == F ) %>% # extreme high counts from odd genes
   tibble::column_to_rownames('gene_id') %>%
   round() %>%
   `colnames<-`( gsub(".","-",colnames(.), fixed=T) ) %>%
   `colnames<-`( gsub("_1$","",colnames(.), fixed=F) )
 
+
+
+  # Using the following will pick the max() transcript per gene
+  # I tried this as well in the hope that it would remove the batch
+  # effect but it didn't:'
+  # 
+  # dplyr::arrange(gene_id) %>%
+  # as.data.frame() %>%
+  # mutate(rs = rowSums(dplyr::select( ., !dplyr::contains("gene_id") ))) %>%
+  # tibble::as_tibble() %>%
+  # dplyr::group_by(gene_id) %>%
+  # top_n(n=1, wt = rs) %>%
+  # dplyr::mutate(rs=NULL) %>%
+  # dplyr::arrange(gene_id) %>%
+  # dplyr::filter(duplicated(gene_id) == F) %>% # exclude ties
+  # tibble::rownames_to_column('tmp') %>% 
+  # dplyr::mutate(tmp=NULL) %>%
+  # tibble::column_to_rownames('gene_id') %>%
+  # round() %>%
+  # `colnames<-`( gsub(".","-",colnames(.), fixed=T) ) %>%
+  # `colnames<-`( gsub("_1$","",colnames(.), fixed=F) )
+
+
+  
 rm(tmp)
 
 
+tmp = glass.gbm.rnaseq.expression.vst[rownames(glass.gbm.rnaseq.expression.vst) == "ENSG00000198727",]
+type = as.factor(gsub("^(.).*$","\\1",names(tmp)) )
+o = order(tmp)
+plot(tmp[o], pch=19,cex=0.95,col=as.numeric(type[o]) + 1)
+ 
 
 # Load metadata ----
 
@@ -65,25 +96,25 @@ glass.gbm.rnaseq.metadata <- data.frame(sid = colnames(glass.gbm.rnaseq.expressi
       dplyr::select(c('aliquot_barcode','subtype')) %>%
       dplyr::mutate(subtype = as.factor(subtype)) %>%
       dplyr::rename(GBM.transcriptional.subtype.Synapse = subtype)
-    , by     = c('sid' = 'aliquot_barcode' )  )
+    , by     = c('sid' = 'aliquot_barcode' )  )  %>%
+  dplyr::mutate(sid.label = gsub("^(.)...(-..-....-).(.).*$","\\1\\2\\3",sid) ) %>%
+  dplyr::mutate(dataset = gsub("^(....).*$","\\1",sid) )
 
 stopifnot(!is.na(glass.gbm.rnaseq.metadata $GBM.transcriptional.subtype.Synapse))
 
 
 
 
-# VST transform [n >= 3] ----
+# VST transform ----
 
 
-if(!exists('glass.gbm.rnaseq.expression.vst')) {
-  tmp <- glass.gbm.rnaseq.expression %>%
-    dplyr::filter(rowSums(.) >= (ncol(.) * 1) )
-  
-  cond <- as.factor(paste0('r',sample(c(1,2),ncol(tmp), T)))
-  tmp <- DESeq2::DESeqDataSetFromMatrix(tmp, S4Vectors::DataFrame(cond), ~cond)
-  glass.gbm.rnaseq.expression.vst <- SummarizedExperiment::assay(DESeq2::vst(tmp, blind=T))
-  rm(cond, tmp)
-}
+cond <- as.factor(gsub("^(.).*$","\\1",colnames(glass.gbm.rnaseq.expression)))
+glass.gbm.rnaseq.expression.vst <- DESeq2::DESeqDataSetFromMatrix(glass.gbm.rnaseq.expression, S4Vectors::DataFrame(cond), ~cond)
+glass.gbm.rnaseq.expression.vst <- SummarizedExperiment::assay(DESeq2::vst(glass.gbm.rnaseq.expression.vst, blind=F))
+rm(cond)
+
+
+
 
 
 

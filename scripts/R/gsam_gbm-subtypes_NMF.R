@@ -2,6 +2,7 @@
 
 # load libs ----
 
+
 library(tidyverse)
 library(NMF)
 library(scales)
@@ -108,9 +109,7 @@ rm(p)
 
 if(!file.exists("tmp/gsam_nmf_150.Rds")) {
   gsam_nmf_150 <- {{}}
-  #gsam_nmf_15k <- {{}}
-  #gsam_nmf_7k <- {{}}
-  
+
   seeds <- c(123456 , 12345, 1337, 909) # 123456 is the one used by their paper
   
   for(seed in seeds) {
@@ -119,7 +118,7 @@ if(!file.exists("tmp/gsam_nmf_150.Rds")) {
   
   gsam_nmf_150[["nmf"]] <- nmf(as.data.frame(gsam.rnaseq.expression.vst.150), 3, seed=12345)
   
-  saveRDS(gsam_nmf_150, "tmp/gsam_nmf_150.Rds")
+  #saveRDS(gsam_nmf_150, "tmp/gsam_nmf_150.Rds")
 } else {
   gsam_nmf_150 <- readRDS("tmp/gsam_nmf_150.Rds")
 }
@@ -587,6 +586,7 @@ expected
 
 ## find Proneural transition rate(s)) ----
 
+
 plt.paired %>%
   dplyr::filter(`NMF:123456.PCA.LDA.class.R1` == 'Proneural') %>%
   dplyr::mutate(status.gliovis = as.factor(ifelse(`NMF:123456.PCA.LDA.class.R1` == `NMF:123456.PCA.LDA.class.R2`, "Stable", "Transition"))) %>%
@@ -754,6 +754,7 @@ ggplot(plt.single, aes(x = `NMF:123456.1`, y = `NMF:123456.2`, col = `NMF:123456
 
 
 ggsave('output/figures/paper_subtypes_nmf_S150G_nmf1_nmf2_nmf-membership.png',width=7,height=7.2)
+
 
 
 
@@ -1140,6 +1141,215 @@ ggplot(plt, aes(x = `NMF:123456.PC1`, y = `NMF:123456.PC2`, col = class)) +
   scale_fill_manual(values = subtype_colors)
 
 ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_LDA-reclassification_LDA-countours.png',width=7,height=7.2)
+
+
+## PCA:1+2(NMF:1+2+3) + LDA contours + LDA labels + EGFR ampli ----
+
+
+plt <- rbind(plt.single %>%
+               dplyr::select(c('sid','pid','resection',`NMF:123456.PC1`, `NMF:123456.PC2`, 'NMF:123456.PCA.LDA.class')) %>%
+               dplyr::mutate(type = "Patient Sample") %>%
+               dplyr::rename(class = `NMF:123456.PCA.LDA.class`),
+             nmf.pca.lda.countours %>% 
+               dplyr::mutate(pid=NA, sid=NA,resection=NA)
+) %>%
+  dplyr::left_join(
+    gsam.patient.metadata %>%
+      dplyr::select(c('studyID','EGFR')) %>%
+      dplyr::filter(!is.na(EGFR)) ,
+    by = c('pid'='studyID')
+  )
+
+
+
+#as.factor(gsam.patient.metadata$cnStatusEGFRs)
+
+
+plt.egfr <- gsam.patient.metadata %>%
+  dplyr::select(c('studyID','EGFR')) %>%
+  dplyr::filter(!is.na(EGFR)) %>%
+  dplyr::mutate(EGFR.R1 = case_when(
+    EGFR == "Gained" ~ "Wildtype",
+    EGFR == "Lost"  ~ "Mutated",
+    EGFR == "Stable" ~ "Mutated",
+    EGFR == "Wildtype" ~ "Wildtype" )) %>%
+  dplyr::mutate(EGFR.R2 = case_when(
+    EGFR == "Gained" ~ "Mutated",
+    EGFR == "Lost"  ~ "Wildtype",
+    EGFR == "Stable" ~ "Mutated",
+    EGFR == "Wildtype" ~ "Wildtype" )) %>%
+  dplyr::mutate(EGFR = NULL)
+
+
+
+plt <- plt %>%
+  dplyr::mutate(tmp = ifelse(resection == "R1", pid , NA) ) %>%
+  dplyr::left_join( plt.egfr %>%
+                      dplyr::select(c('studyID', 'EGFR.R1')) ,
+                    by=c('tmp'='studyID')) %>%
+  dplyr::mutate(tmp = ifelse(resection == "R2", pid , NA) ) %>%
+  dplyr::left_join(  plt.egfr %>%
+                       dplyr::select(c('studyID', 'EGFR.R2')) ,
+                     by=c('tmp'='studyID')) %>%
+  dplyr::mutate(tmp = NULL) %>%
+  dplyr::mutate(EGFR = ifelse(is.na(EGFR.R1), EGFR.R2, EGFR.R1) ) %>%
+  dplyr::mutate(EGFR.R1 = NULL, EGFR.R2 = NULL)
+
+
+
+
+
+ggplot(plt, aes(x = `NMF:123456.PC1`, y = `NMF:123456.PC2`, col = EGFR)) + 
+  geom_raster(data = subset(plt, type == "Contour"), aes(fill = factor(class)), alpha=0.1) +
+  geom_contour(data= subset(plt, type == "Contour"), aes(z=as.numeric(class)),
+               colour="gray40",
+               size=0.25,
+               lty=2,breaks=c(1.5,2.5)) +
+  geom_point(data = subset(plt, type == "Patient Sample"), size=1.5) +
+  youri_gg_theme +
+  labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", col='Subtype by GlioVis [majority call]',fill="LDA countour") +
+  scale_color_manual(values = subtype_colors, guide = guide_legend(title = NULL, title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75)) + 
+  scale_fill_manual(values = subtype_colors)
+
+
+ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_LDA-reclass_EGFRampl.png',width=7,height=7.2)
+
+
+
+## PCA:1+2(NMF:1+2+3) + LDA contours + LDA labels + TP53 ----
+
+
+plt <- rbind(plt.single %>%
+               dplyr::select(c('sid','pid','resection',`NMF:123456.PC1`, `NMF:123456.PC2`, 'NMF:123456.PCA.LDA.class')) %>%
+               dplyr::mutate(type = "Patient Sample") %>%
+               dplyr::rename(class = `NMF:123456.PCA.LDA.class`),
+             nmf.pca.lda.countours %>% 
+               dplyr::mutate(pid=NA, sid=NA,resection=NA)
+) %>%
+  dplyr::left_join(
+    gsam.patient.metadata %>%
+      dplyr::select(c('studyID','TP53')) %>%
+      dplyr::filter(!is.na(TP53)) ,
+    by = c('pid'='studyID')
+  )
+
+
+plt.TP53 <- gsam.patient.metadata %>%
+  dplyr::select(c('studyID','TP53')) %>%
+  dplyr::filter(!is.na(TP53)) %>%
+  dplyr::mutate(TP53.R1 = case_when(
+    TP53 == "Gained" ~ "Wildtype",
+    TP53 == "Lost"  ~ "Mutated",
+    TP53 == "Stable" ~ "Mutated",
+    TP53 == "Wildtype" ~ "Wildtype" )) %>%
+  dplyr::mutate(TP53.R2 = case_when(
+    TP53 == "Gained" ~ "Mutated",
+    TP53 == "Lost"  ~ "Wildtype",
+    TP53 == "Stable" ~ "Mutated",
+    TP53 == "Wildtype" ~ "Wildtype" )) %>%
+  dplyr::mutate(TP53 = NULL)
+
+
+
+plt <- plt %>%
+  dplyr::mutate(tmp = ifelse(resection == "R1", pid , NA) ) %>%
+  dplyr::left_join( plt.TP53 %>%
+                      dplyr::select(c('studyID', 'TP53.R1')) ,
+                    by=c('tmp'='studyID')) %>%
+  dplyr::mutate(tmp = ifelse(resection == "R2", pid , NA) ) %>%
+  dplyr::left_join(  plt.TP53 %>%
+                       dplyr::select(c('studyID', 'TP53.R2')) ,
+                     by=c('tmp'='studyID')) %>%
+  dplyr::mutate(tmp = NULL) %>%
+  dplyr::mutate(TP53 = ifelse(is.na(TP53.R1), TP53.R2, TP53.R1) ) %>%
+  dplyr::mutate(TP53.R1 = NULL, TP53.R2 = NULL)
+
+rm(plt.TP)
+
+
+
+
+ggplot(plt, aes(x = `NMF:123456.PC1`, y = `NMF:123456.PC2`, col = TP53)) + 
+  geom_raster(data = subset(plt, type == "Contour"), aes(fill = factor(class)), alpha=0.1) +
+  geom_contour(data= subset(plt, type == "Contour"), aes(z=as.numeric(class)),
+               colour="gray40",
+               size=0.25,
+               lty=2,breaks=c(1.5,2.5)) +
+  geom_point(data = subset(plt, type == "Patient Sample"), size=1.5) +
+  youri_gg_theme +
+  labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", col='Subtype by GlioVis [majority call]',fill="LDA countour") +
+  #scale_color_manual(values = subtype_colors, guide = guide_legend(title = NULL, title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75)) + 
+  scale_fill_manual(values = subtype_colors)
+
+
+
+## PCA:1+2(NMF:1+2+3) + LDA contours + LDA labels + NF1 ----
+
+
+plt <- rbind(plt.single %>%
+               dplyr::select(c('sid','pid','resection',`NMF:123456.PC1`, `NMF:123456.PC2`, 'NMF:123456.PCA.LDA.class')) %>%
+               dplyr::mutate(type = "Patient Sample") %>%
+               dplyr::rename(class = `NMF:123456.PCA.LDA.class`),
+             nmf.pca.lda.countours %>% 
+               dplyr::mutate(pid=NA, sid=NA,resection=NA)
+) %>%
+  dplyr::left_join(
+    gsam.patient.metadata %>%
+      dplyr::select(c('studyID','NF1')) %>%
+      dplyr::filter(!is.na(NF1)) ,
+    by = c('pid'='studyID')
+  )
+
+
+plt.NF1 <- gsam.patient.metadata %>%
+  dplyr::select(c('studyID','NF1','cnStatusNF1s')) %>%
+  
+  dplyr::mutate(NF1 = NULL ) %>%
+  dplyr::rename(NF1 = cnStatusNF1s) %>%
+  
+  dplyr::filter(!is.na(NF1)) %>%
+  dplyr::mutate(NF1.R1 = case_when(
+    NF1 == "Gained" ~ "Wildtype",
+    NF1 == "Lost"  ~ "Mutated",
+    NF1 == "Stable" ~ "Mutated",
+    NF1 == "Wildtype" ~ "Wildtype" )) %>%
+  dplyr::mutate(NF1.R2 = case_when(
+    NF1 == "Gained" ~ "Mutated",
+    NF1 == "Lost"  ~ "Wildtype",
+    NF1 == "Stable" ~ "Mutated",
+    NF1 == "Wildtype" ~ "Wildtype" )) %>%
+  dplyr::mutate(NF1 = NULL)
+
+
+
+plt <- plt %>%
+  dplyr::mutate(tmp = ifelse(resection == "R1", pid , NA) ) %>%
+  dplyr::left_join( plt.NF1 %>%
+                      dplyr::select(c('studyID', 'NF1.R1')) ,
+                    by=c('tmp'='studyID')) %>%
+  dplyr::mutate(tmp = ifelse(resection == "R2", pid , NA) ) %>%
+  dplyr::left_join(  plt.NF1 %>%
+                       dplyr::select(c('studyID', 'NF1.R2')) ,
+                     by=c('tmp'='studyID')) %>%
+  dplyr::mutate(tmp = NULL) %>%
+  dplyr::mutate(NF1 = ifelse(is.na(NF1.R1), NF1.R2, NF1.R1) ) %>%
+  dplyr::mutate(NF1.R1 = NULL, NF1.R2 = NULL)
+
+rm(plt.NF1)
+
+
+
+
+ggplot(plt, aes(x = `NMF:123456.PC1`, y = `NMF:123456.PC2`, col = NF1)) + 
+  geom_raster(data = subset(plt, type == "Contour"), aes(fill = factor(class)), alpha=0.1) +
+  geom_contour(data= subset(plt, type == "Contour"), aes(z=as.numeric(class)),
+               colour="gray40",
+               size=0.25,
+               lty=2,breaks=c(1.5,2.5)) +
+  geom_point(data = subset(plt, type == "Patient Sample"), size=1.5) +
+  youri_gg_theme +
+  labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", col='Subtype by GlioVis [majority call]',fill="LDA countour") +
+  scale_fill_manual(values = subtype_colors)
 
 
 
