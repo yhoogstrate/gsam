@@ -1,11 +1,11 @@
 # Set wd
 
-# load ----
-## libs ----
+# load libs ----
 
 library(tidyverse)
+library(DESeq2)
 
-#library(DESeq2)
+
 #library(ggplot2)
 #library(ggrepel)
 #library(pheatmap)
@@ -13,7 +13,7 @@ library(tidyverse)
 #library(limma)
 #library(EnhancedVolcano)
 
-## functions & templates ----
+# load data ----
 
 #source("scripts/R/ensembl_to_geneid.R") # obsolete? can be replaced with the get_ensembl function
 #ensembl_genes <- get_ensembl_hsapiens_gene_ids()
@@ -21,9 +21,6 @@ library(tidyverse)
 source("scripts/R/job_gg_theme.R")
 source("scripts/R/youri_gg_theme.R")
 
-
-## data ----
-# Load the data (expression values; metadata) into data frames
 
 source("scripts/R/ligands.R")
 source("scripts/R/subtype_genes.R")
@@ -36,21 +33,37 @@ source('scripts/R/wang_glioma_intrinsic_genes.R')
 source("scripts/R/glass_expression_matrix.R") # glass & tcga validation set
 
 
-
-# data transformation(s) ----
-
+# DE unppaired BFGs
 
 # TODO exclude IDH mutants
-# TODO exclude low tumour percentage
+# TODO x-check replicates/duplicates? << taken out using 'gsam.rnaseq.expression'
+# TODO exclude low tumour percentage ? << not if BFGs are explitily used?
 
 
-m <- gsam.rna.metadata %>%
-  dplyr::filter(blacklist.pca == F)
+
+metadata <- gsam.rna.metadata %>%
+  dplyr::filter(blacklist.pca == F) %>%
+  dplyr::filter(pat.with.IDH == F) %>%
+  dplyr::filter(sid %in% c('BAI2', 'CAO1-replicate', 'FAB2', 'GAS2-replicate') == F )
 
 
-m[m$sid %in% colnames(gsam.rnaseq.expression) == F,]
+expression <- gsam.rnaseq.expression %>%
+  tibble::rownames_to_column('gid') %>%
+  dplyr::mutate(ensembl_id = gsub('\\..+\\|.+$','',gid) ) %>%
+  dplyr::mutate(hugo_symbol = gsub("^.+\\|([^\\]+)\\|.+$","\\1",gid) ) %>%
+  dplyr::filter( # bona fide glioma genes (BFGs)
+    (ensembl_id  %in% wang.glioma.intrinsic.genes$ENSG.short) |
+    (hugo_symbol %in% wang.glioma.intrinsic.genes$Gene_Symbol)
+  ) %>%
+  dplyr::select(metadata$sid)
 
-e <- m$sid %in% colnames(gsam.rnaseq.expression)
+stopifnot(colnames(expression) == metadata$sid)
+
+
+
+
+
+
 
 # resection as condition
 
@@ -108,8 +121,6 @@ plot(pcn[,c(pc1,pc2)],  cex=0.7,pch=19,
      main=paste0("G-SAM RNA PCA (pc",pc1," & pc",pc2,")"),col=as.numeric(cond)+1)
 
 
-# DE ----
-## TP ~ R1 (~15k genes) ----
 
 
 # load VST data
