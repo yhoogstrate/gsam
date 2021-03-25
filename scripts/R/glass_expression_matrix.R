@@ -22,8 +22,7 @@ library(DESeq2)
 # gencode.v19.chr_patch_hapl_scaff.annotation.gtf << almost no mismatches [1193]
 
 
-
-tmp <- 'data/gsam/data/GLASS_GBM_R1-R2/gencode.v19.chr_patch_hapl_scaff.annotation.translate-table.txt' %>%
+glass.gencode.v19 <- 'data/gsam/data/GLASS_GBM_R1-R2/gencode.v19.chr_patch_hapl_scaff.annotation.translate-table.txt' %>%
   read.table(header=F, stringsAsFactors = F) %>%
   dplyr::rename(gene_symbol=V1) %>%
   dplyr::rename(gene_id=V2) %>%
@@ -33,7 +32,7 @@ tmp <- 'data/gsam/data/GLASS_GBM_R1-R2/gencode.v19.chr_patch_hapl_scaff.annotati
 glass.gbm.rnaseq.expression <- 'data/gsam/data/GLASS_GBM_R1-R2/glass_transcript_counts.txt' %>%
   read.delim(stringsAsFactors = F) %>%
   dplyr::mutate(length = NULL) %>% # not needed
-  dplyr::left_join(tmp, by=c('target_id' = 'transcript_id')) %>%
+  dplyr::left_join(glass.gencode.v19, by=c('target_id' = 'transcript_id')) %>%
   dplyr::filter(!is.na(gene_symbol) ) %>% # 1193 transcript id's not matching gtf Ensembl 64
   dplyr::mutate(target_id = NULL) %>% # aggregate @ gene_id level
   dplyr::mutate(gene_symbol = NULL) %>%
@@ -46,7 +45,13 @@ glass.gbm.rnaseq.expression <- 'data/gsam/data/GLASS_GBM_R1-R2/glass_transcript_
   tibble::column_to_rownames('gene_id') %>%
   round() %>%
   `colnames<-`( gsub(".","-",colnames(.), fixed=T) ) %>%
-  `colnames<-`( gsub("_1$","",colnames(.), fixed=F) )
+  `colnames<-`( gsub("_1$","",colnames(.), fixed=F) ) %>%
+  dplyr::select( # extremely strong outlier samples !!
+    -c("GLSS-SM-R068-TP-01R-RNA-0UPMYO", "GLSS-SM-R068-R1-01R-RNA-7I5H9P",
+       "GLSS-SM-R071-TP-01R-RNA-OAXGI8", "GLSS-SM-R071-R1-01R-RNA-7AZ6G2",
+       "GLSS-SM-R099-R1-01R-RNA-MNTPMI", #"GLSS-SM-R099-TP-01R-RNA-YGXA72",
+       "GLSS-SM-R100-TP-01R-RNA-EUI7AZ", "GLSS-SM-R100-R1-01R-RNA-46UW5U"
+    ))
 
 
 
@@ -72,14 +77,14 @@ glass.gbm.rnaseq.expression <- 'data/gsam/data/GLASS_GBM_R1-R2/glass_transcript_
 
 
   
-rm(tmp)
 
 
-tmp = glass.gbm.rnaseq.expression.vst[rownames(glass.gbm.rnaseq.expression.vst) == "ENSG00000198727",]
-type = as.factor(gsub("^(.).*$","\\1",names(tmp)) )
-o = order(tmp)
-plot(tmp[o], pch=19,cex=0.95,col=as.numeric(type[o]) + 1)
- 
+#tmp = glass.gbm.rnaseq.expression.vst[rownames(glass.gbm.rnaseq.expression.vst) == "ENSG00000198727",]
+#type = as.factor(gsub("^(.).*$","\\1",names(tmp)) )
+#o = order(tmp)
+#plot(tmp[o], pch=19,cex=0.95,col=as.numeric(type[o]) + 1)
+#rm(tmp, type, o)
+
 
 # Load metadata ----
 
@@ -109,7 +114,7 @@ stopifnot(!is.na(glass.gbm.rnaseq.metadata $GBM.transcriptional.subtype.Synapse)
 
 
 cond <- as.factor(gsub("^(.).*$","\\1",colnames(glass.gbm.rnaseq.expression)))
-glass.gbm.rnaseq.expression.vst <- DESeq2::DESeqDataSetFromMatrix(glass.gbm.rnaseq.expression, S4Vectors::DataFrame(cond), ~cond)
+glass.gbm.rnaseq.expression.vst <- DESeq2::DESeqDataSetFromMatrix(glass.gbm.rnaseq.expression, data.frame(cond), ~cond)
 glass.gbm.rnaseq.expression.vst <- SummarizedExperiment::assay(DESeq2::vst(glass.gbm.rnaseq.expression.vst, blind=F))
 rm(cond)
 
