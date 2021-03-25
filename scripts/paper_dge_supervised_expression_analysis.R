@@ -526,7 +526,7 @@ results.out <- results.out %>%
 
 # plots ----
 
-## FC un-corrected x correlation TPC G-SAM ----
+## FC (res + tpc.res) x correlation TPC G-SAM ----
 
 
 
@@ -541,10 +541,13 @@ p1 <- ggplot(plt, aes(x = log2FoldChange.res , y = statistic.cor.tpc, pch=is.lim
                       size = is.limited   ) ) +
 #p1 <- ggplot(plt, aes(x = stat.res , y = statistic.cor.tpc  ) ) +
   geom_point(pch=19,cex=0.05) +
-  geom_smooth(data = subset(plt, padj.tpc.res > 0.05),method="lm",  se = FALSE,  formula=y ~ x, orientation="y", col="red" , size=1) +
+  geom_smooth(data = subset(plt, padj.tpc.res > 0.05),method="lm",
+              se = FALSE,  formula=y ~ x, orientation="y", col="red" , size=0.8) +
   scale_shape_manual(values = c('TRUE'=4, 'FALSE' = 19)    ) +
   scale_size_manual(values = c('TRUE'=0.75, 'FALSE' = 0.05)    ) +
-  youri_gg_theme
+  youri_gg_theme + 
+  labs(x = "log2FC R1 vs. R2 (unpaired)",
+       y="Correlation t-statistic with tumour percentage")
 
 
 
@@ -560,10 +563,12 @@ p2 <- ggplot(plt, aes(x = log2FoldChange.tpc.res ,
                       size = is.limited ) ) +
 #p2 <- ggplot(plt, aes(x = stat.tpc.res , y =  statistic.cor.tpc ) ) +
   geom_point() +
-  geom_smooth(data = subset(plt, padj.tpc.res > 0.01),method="lm",  se = FALSE, formula=y ~ x, orientation="y", col="red" , size=1) +
+  geom_smooth(data = subset(plt, padj.tpc.res > 0.01),method="lm", se = FALSE, formula=y ~ x, orientation="y", col="red" , size=0.8) +
   scale_shape_manual(values = c('TRUE'=4, 'FALSE' = 19)    ) +
   scale_size_manual(values = c('TRUE'=0.75, 'FALSE' = 0.05)    ) +
-  youri_gg_theme
+  youri_gg_theme + 
+  labs(x = "log2FC R1 vs. R2 [t%-corrected] (unpaired)",
+       y="Correlation t-statistic with tumour percentage")
 
 p1 + p2
 
@@ -571,70 +576,36 @@ p1 + p2
 
 
 
-## FC corrected x correlation TPC ----
-
-plt <- gsam.gene.res.combined %>%
-  dplyr::mutate(log2FoldChange.tpc.res = ifelse(log2FoldChange.tpc.res > 3, 3 ,log2FoldChange.tpc.res)) %>%
-  dplyr::mutate(show.label = log2FoldChange.tpc.res > 0 & padj.tpc.res < 0.000383)
-
-a = plt %>% dplyr::filter(show.label) %>% dplyr::pull(ensembl_id)
+## FC corrected x correlation TPC detailed ----
 
 
-ggplot(plt, aes(x=log2FoldChange.tpc.res ,  y=statistic, 
-                col=show.label
-) ) + 
-  geom_point(data=subset( plt, show.label == F ),pch=19,cex=0.05) +
-  geom_point(data=subset( plt, show.label == T ),pch=19,cex=0.7) +
+plt <- results.out %>%
+  dplyr::mutate(is.limited = as.character(log2FoldChange.tpc.res > 3)) %>% # change pch to something that is limited
+  dplyr::mutate(log2FoldChange.tpc.res = ifelse(log2FoldChange.tpc.res > 3, 3 , log2FoldChange.tpc.res)) %>%
+  dplyr::mutate(show.label = (log2FoldChange.tpc.res > 0 & padj.tpc.res < 0.000383) | 
+                             (log2FoldChange.tpc.res < 0 & padj.tpc.res < 0.0089) )
+
+
+ggplot(plt, aes(x=log2FoldChange.tpc.res ,
+                y=statistic.cor.tpc, 
+                col=show.label,
+                shape = is.limited)) + 
+  geom_point(data=subset( plt, show.label == F ),cex=0.05) +
+  geom_point(data=subset( plt, show.label == T & is.limited == F),cex=0.85, col="black") +
+  geom_point(data=subset( plt, show.label == T & is.limited == F),cex=0.7) +
+  geom_point(data=subset( plt, show.label == T & is.limited == T),cex=1.35, col="black") +
+  geom_point(data=subset( plt, show.label == T & is.limited == T),cex=1.2) +
+  geom_smooth(data = subset(plt, padj.tpc.res > 0.01),method="lm", se = FALSE, formula=y ~ x, orientation="y", col=rgb(1,1,1,0.5), size=1) +
+  geom_smooth(data = subset(plt, padj.tpc.res > 0.01),method="lm", se = FALSE, formula=y ~ x, orientation="y", col=rgb(0.2,0.2,1), size=0.5) +
   scale_color_manual(values = c('TRUE'='red', 'FALSE' = 'black') ) +
   labs(x = "log2FC R1 vs. R2 (unpaired)",
        y="Correlation t-statistic with tumour percentage",
-       col="Top 500 over-expressed"
-  ) +
+       col="Top 500 over-expressed" ) +
+  scale_shape_manual(values = c('TRUE'=4, 'FALSE' = 19)    ) +
   youri_gg_theme
 
 
 
-plt <- gsam.gene.res.combined %>%
-  dplyr::mutate(log2FoldChange.tpc.res = ifelse(log2FoldChange.tpc.res > 3, 3 ,log2FoldChange.tpc.res)) %>%
-  dplyr::mutate(show.label = log2FoldChange.tpc.res < 0 & padj.tpc.res < 0.0089)
-
-a = plt %>% dplyr::filter(show.label) %>% dplyr::pull(ensembl_id) 
-
-
-
-ggplot(plt, aes(x=log2FoldChange.tpc.res ,  y=statistic, 
-                col=show.label
-) ) + 
-  geom_point(data=subset( plt, show.label == F ),pch=19,cex=0.05) +
-  geom_point(data=subset( plt, show.label == T ),pch=19,cex=0.7) +
-  scale_color_manual(values = c('TRUE'='red', 'FALSE' = 'black') ) +
-  labs(x = "log2FC R1 vs. R2 (unpaired)",
-       y="Correlation t-statistic with tumour percentage",
-       col="Top 500 under-expressed"
-  ) +
-  youri_gg_theme
-
-
-
-
-
-p2 <- ggplot(gsam.gene.res.combined, aes(x=log2FoldChange.res ,
-                                         y=statistic,
-                                         #col=significant.res,
-                                         col = is.bfg,
-                                         label=hugo_symbol.tpc.res
-) ) + 
-  geom_point(data=subset(gsam.gene.res.combined, is.bfg == T ),pch=19,cex=0.05) +
-  #geom_point(data=subset(gsam.gene.res.combined, significant.res == T ),pch=19,cex=0.5) +
-  scale_color_manual(values = c('TRUE'='red', 'FALSE' = 'black') ) +
-  #geom_text_repel(data = subset(gsam.gene.res.combined, significant.res == T & abs(log2FoldChange.res) > 1.5), size = 2.4 )  +
-  labs(x = "log2FC R1 vs. R2 (unpaired)",
-       y="Correlation t-statistic with tumour percentage",
-       col="Difference significant (R1 ~ R2)"
-  ) +
-  youri_gg_theme
-
-p1 + p2
 
 
 ## plot Fc corrected x correlation TPC +chr7 + chr10 ----
