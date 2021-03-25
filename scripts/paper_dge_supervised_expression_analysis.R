@@ -526,7 +526,52 @@ results.out <- results.out %>%
 
 # plots ----
 
-## plot Fc corrected x correlation TPC ----
+## FC un-corrected x correlation TPC G-SAM ----
+
+
+
+plt <- results.out %>%
+  dplyr::filter(!is.na(log2FoldChange.res) & !is.na(statistic.cor.tpc)) %>%
+  dplyr::mutate(is.limited = as.character(log2FoldChange.res > 3)) %>% # change pch to something that is limited
+  dplyr::mutate(log2FoldChange.res = ifelse(log2FoldChange.res > 3, 3 , log2FoldChange.res))
+
+
+p1 <- ggplot(plt, aes(x = log2FoldChange.res , y = statistic.cor.tpc, pch=is.limited,
+                      shape = is.limited,
+                      size = is.limited   ) ) +
+#p1 <- ggplot(plt, aes(x = stat.res , y = statistic.cor.tpc  ) ) +
+  geom_point(pch=19,cex=0.05) +
+  geom_smooth(data = subset(plt, padj.tpc.res > 0.05),method="lm",  se = FALSE,  formula=y ~ x, orientation="y", col="red" , size=1) +
+  scale_shape_manual(values = c('TRUE'=4, 'FALSE' = 19)    ) +
+  scale_size_manual(values = c('TRUE'=0.75, 'FALSE' = 0.05)    ) +
+  youri_gg_theme
+
+
+
+plt <- results.out %>%
+  dplyr::filter(!is.na(log2FoldChange.res) & !is.na(statistic.cor.tpc)) %>%
+  dplyr::mutate(is.limited = as.character(log2FoldChange.tpc.res > 3)) %>% # change pch to something that is limited
+  dplyr::mutate(log2FoldChange.tpc.res = ifelse(log2FoldChange.tpc.res > 3, 3 , log2FoldChange.tpc.res))
+
+
+p2 <- ggplot(plt, aes(x = log2FoldChange.tpc.res ,
+                      y =  statistic.cor.tpc,
+                      shape = is.limited,
+                      size = is.limited ) ) +
+#p2 <- ggplot(plt, aes(x = stat.tpc.res , y =  statistic.cor.tpc ) ) +
+  geom_point() +
+  geom_smooth(data = subset(plt, padj.tpc.res > 0.01),method="lm",  se = FALSE, formula=y ~ x, orientation="y", col="red" , size=1) +
+  scale_shape_manual(values = c('TRUE'=4, 'FALSE' = 19)    ) +
+  scale_size_manual(values = c('TRUE'=0.75, 'FALSE' = 0.05)    ) +
+  youri_gg_theme
+
+p1 + p2
+
+
+
+
+
+## FC corrected x correlation TPC ----
 
 plt <- gsam.gene.res.combined %>%
   dplyr::mutate(log2FoldChange.tpc.res = ifelse(log2FoldChange.tpc.res > 3, 3 ,log2FoldChange.tpc.res)) %>%
