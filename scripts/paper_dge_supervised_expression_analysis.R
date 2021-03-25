@@ -567,7 +567,7 @@ p2 <- ggplot(plt, aes(x = log2FoldChange.tpc.res ,
   scale_shape_manual(values = c('TRUE'=4, 'FALSE' = 19)    ) +
   scale_size_manual(values = c('TRUE'=0.75, 'FALSE' = 0.05)    ) +
   youri_gg_theme + 
-  labs(x = "log2FC R1 vs. R2 [t%-corrected] (unpaired)",
+  labs(x = "log2FC R1 vs. R2 (t%-corrected; unpaired)", 
        y="Correlation t-statistic with tumour percentage")
 
 p1 + p2
@@ -598,7 +598,7 @@ ggplot(plt, aes(x=log2FoldChange.tpc.res ,
   geom_smooth(data = subset(plt, padj.tpc.res > 0.01),method="lm", se = FALSE, formula=y ~ x, orientation="y", col=rgb(1,1,1,0.5), size=1) +
   geom_smooth(data = subset(plt, padj.tpc.res > 0.01),method="lm", se = FALSE, formula=y ~ x, orientation="y", col=rgb(0.2,0.2,1), size=0.5) +
   scale_color_manual(values = c('TRUE'='red', 'FALSE' = 'black') ) +
-  labs(x = "log2FC R1 vs. R2 (unpaired)",
+  labs(x = "log2FC R1 vs. R2 (t%-corrected; unpaired)", 
        y="Correlation t-statistic with tumour percentage",
        col="Top 500 over-expressed" ) +
   scale_shape_manual(values = c('TRUE'=4, 'FALSE' = 19)    ) +
