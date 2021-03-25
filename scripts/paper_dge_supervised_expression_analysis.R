@@ -532,13 +532,16 @@ results.out <- results.out %>%
 
 plt <- results.out %>%
   dplyr::filter(!is.na(log2FoldChange.res) & !is.na(statistic.cor.tpc)) %>%
-  dplyr::mutate(is.limited = as.character(log2FoldChange.res > 3)) %>% # change pch to something that is limited
-  dplyr::mutate(log2FoldChange.res = ifelse(log2FoldChange.res > 3, 3 , log2FoldChange.res))
+  dplyr::mutate(is.limited.res = as.character(log2FoldChange.res > 3)) %>% # change pch to something that is limited
+  dplyr::mutate(log2FoldChange.res = ifelse(log2FoldChange.res > 3, 3 , log2FoldChange.res)) %>%
+  dplyr::mutate(is.limited.tpc.res = as.character(log2FoldChange.tpc.res > 3)) %>% # change pch to something that is limited
+  dplyr::mutate(log2FoldChange.tpc.res = ifelse(log2FoldChange.tpc.res > 3, 3 , log2FoldChange.tpc.res))
 
 
-p1 <- ggplot(plt, aes(x = log2FoldChange.res , y = statistic.cor.tpc, pch=is.limited,
-                      shape = is.limited,
-                      size = is.limited   ) ) +
+
+p1 <- ggplot(plt, aes(x = log2FoldChange.res , y = statistic.cor.tpc, 
+                      shape = is.limited.res ,
+                      size = is.limited.res   ) ) +
 #p1 <- ggplot(plt, aes(x = stat.res , y = statistic.cor.tpc  ) ) +
   geom_point(pch=19,cex=0.05) +
   geom_smooth(data = subset(plt, padj.tpc.res > 0.05),method="lm",
@@ -551,19 +554,14 @@ p1 <- ggplot(plt, aes(x = log2FoldChange.res , y = statistic.cor.tpc, pch=is.lim
 
 
 
-plt <- results.out %>%
-  dplyr::filter(!is.na(log2FoldChange.res) & !is.na(statistic.cor.tpc)) %>%
-  dplyr::mutate(is.limited = as.character(log2FoldChange.tpc.res > 3)) %>% # change pch to something that is limited
-  dplyr::mutate(log2FoldChange.tpc.res = ifelse(log2FoldChange.tpc.res > 3, 3 , log2FoldChange.tpc.res))
-
-
 p2 <- ggplot(plt, aes(x = log2FoldChange.tpc.res ,
                       y =  statistic.cor.tpc,
-                      shape = is.limited,
-                      size = is.limited ) ) +
+                      shape = is.limited.tpc.res ,
+                      size = is.limited.tpc.res ) ) +
 #p2 <- ggplot(plt, aes(x = stat.tpc.res , y =  statistic.cor.tpc ) ) +
   geom_point() +
-  geom_smooth(data = subset(plt, padj.tpc.res > 0.01),method="lm", se = FALSE, formula=y ~ x, orientation="y", col="red" , size=0.8) +
+  geom_smooth(data = subset(plt, padj.tpc.res > 0.01),method="lm", 
+              se = FALSE, formula=y ~ x, orientation="y", col="red" , size=0.8) +
   scale_shape_manual(values = c('TRUE'=4, 'FALSE' = 19)    ) +
   scale_size_manual(values = c('TRUE'=0.75, 'FALSE' = 0.05)    ) +
   youri_gg_theme + 
@@ -580,7 +578,9 @@ p1 + p2
 
 
 plt <- results.out %>%
-  dplyr::mutate(is.limited = as.character(log2FoldChange.tpc.res > 3)) %>% # change pch to something that is limited
+  dplyr::mutate(is.limited.res = as.character(log2FoldChange.res > 3)) %>% # change pch to something that is limited
+  dplyr::mutate(log2FoldChange.res = ifelse(log2FoldChange.res > 3, 3 , log2FoldChange.res)) %>%
+  dplyr::mutate(is.limited.tpc.res = as.character(log2FoldChange.tpc.res > 3)) %>% # change pch to something that is limited
   dplyr::mutate(log2FoldChange.tpc.res = ifelse(log2FoldChange.tpc.res > 3, 3 , log2FoldChange.tpc.res)) %>%
   dplyr::mutate(show.label = (log2FoldChange.tpc.res > 0 & padj.tpc.res < 0.000383) | 
                              (log2FoldChange.tpc.res < 0 & padj.tpc.res < 0.0089) )
@@ -589,12 +589,12 @@ plt <- results.out %>%
 ggplot(plt, aes(x=log2FoldChange.tpc.res ,
                 y=statistic.cor.tpc, 
                 col=show.label,
-                shape = is.limited)) + 
+                shape = is.limited.tpc.res)) + 
   geom_point(data=subset( plt, show.label == F ),cex=0.05) +
-  geom_point(data=subset( plt, show.label == T & is.limited == F),cex=0.85, col="black") +
-  geom_point(data=subset( plt, show.label == T & is.limited == F),cex=0.7) +
-  geom_point(data=subset( plt, show.label == T & is.limited == T),cex=1.35, col="black") +
-  geom_point(data=subset( plt, show.label == T & is.limited == T),cex=1.2) +
+  geom_point(data=subset( plt, show.label == T & is.limited.tpc.res == F),cex=0.85, col="black") +
+  geom_point(data=subset( plt, show.label == T & is.limited.tpc.res == F),cex=0.7) +
+  geom_point(data=subset( plt, show.label == T & is.limited.tpc.res == T),cex=1.35, col="black") +
+  geom_point(data=subset( plt, show.label == T & is.limited.tpc.res == T),cex=1.2) +
   geom_smooth(data = subset(plt, padj.tpc.res > 0.01),method="lm", se = FALSE, formula=y ~ x, orientation="y", col=rgb(1,1,1,0.5), size=1) +
   geom_smooth(data = subset(plt, padj.tpc.res > 0.01),method="lm", se = FALSE, formula=y ~ x, orientation="y", col=rgb(0.2,0.2,1), size=0.5) +
   scale_color_manual(values = c('TRUE'='red', 'FALSE' = 'black') ) +
@@ -611,49 +611,45 @@ ggplot(plt, aes(x=log2FoldChange.tpc.res ,
 ## plot Fc corrected x correlation TPC +chr7 + chr10 ----
 
 
-plt <- gsam.gene.res.combined %>%
-  dplyr::mutate(log2FoldChange.res = ifelse(log2FoldChange.res > 2.5, 2.5, log2FoldChange.res))%>%
-  dplyr::mutate(log2FoldChange.tpc.res = ifelse(log2FoldChange.tpc.res > 3, 3, log2FoldChange.tpc.res))
+plt <- results.out %>%
+  dplyr::mutate(is.limited.res = as.character(log2FoldChange.res > 3)) %>% # change pch to something that is limited
+  dplyr::mutate(log2FoldChange.res = ifelse(log2FoldChange.res > 3, 3 , log2FoldChange.res)) %>%
+  dplyr::mutate(is.limited.tpc.res = as.character(log2FoldChange.tpc.res > 3)) %>% # change pch to something that is limited
+  dplyr::mutate(log2FoldChange.tpc.res = ifelse(log2FoldChange.tpc.res > 3, 3 , log2FoldChange.tpc.res)) %>%
+  dplyr::mutate(label.chr7 = case_when(chr == "chr7" ~ "chr7", TRUE ~ "remaining", )) %>%
+  dplyr::mutate(label.chr10 = case_when(chr == "chr10" ~ "chr10", TRUE ~ "remaining", ))
 
-p1 <- ggplot(plt, aes(x=log2FoldChange.tpc.res , y=statistic, label=hugo_symbol.tpc.res ) ) + 
-  geom_point( pch=19,cex=0.05) +
-  scale_color_manual(values = c('TRUE'='red', 'FALSE' = 'black') ) +
-  #geom_point(data=subset(gsam.gene.res.combined, significant.res == T ),pch=19,cex=0.5) +
-  #geom_text_repel(data = subset(gsam.gene.res.combined, significant.res == T & abs(log2FoldChange.res) > 1.5), size = 2.4 )  +
+
+p1 <- ggplot(plt, aes(x=log2FoldChange.tpc.res ,
+                      y=statistic.cor.tpc, 
+                      col = label.chr7) ) + 
+  geom_point(data=subset(plt, label.chr7 != "chr7"), pch=19,cex=0.05) +
+  geom_point(data=subset(plt, label.chr7 != "remaining"), pch=19,cex=0.5, col="black") +
+  geom_point(data=subset(plt, label.chr7 != "remaining"), pch=19,cex=0.35) +
+  scale_color_manual(values = c('remaining'='black','chr7'='red') ) +
   labs(x = "log2FC R1 vs. R2 (unpaired; tpc corrected)",
        y="Correlation t-statistic with tumour percentage"
        #,col="Difference significant (R1 ~ R2)"
   ) +
-  #geom_smooth(method="lm") + 
   youri_gg_theme
 
-p2 <- ggplot(plt, aes(x=log2FoldChange.res , y=statistic, col=chr == "chr7", label=hugo_symbol.tpc.res ) ) + 
-  geom_point(data=subset(plt, chr != "chr7"), pch=19,cex=0.05) +
-  geom_point(data=subset(plt, chr == "chr7"), pch=19,cex=0.65) +
-  scale_color_manual(values = c('TRUE'='red', 'FALSE' = 'black') ) +
-  #geom_point(data=subset(gsam.gene.res.combined, significant.res == T ),pch=19,cex=0.5) +
-  #geom_text_repel(data = subset(gsam.gene.res.combined, significant.res == T & abs(log2FoldChange.res) > 1.5), size = 2.4 )  +
-  labs(x = "log2FC R1 vs. R2 (unpaired; uncorrected)",
-       y="Correlation t-statistic with tumour percentage",
-       col="Is at chr7"
+
+p2 <- ggplot(plt, aes(x=log2FoldChange.tpc.res ,
+                      y=statistic.cor.tpc, 
+                      col = label.chr10) ) + 
+  geom_point(data=subset(plt, label.chr10 != "chr10"), pch=19,cex=0.05) +
+  geom_point(data=subset(plt, label.chr10 != "remaining"), pch=19,cex=0.5, col="black") +
+  geom_point(data=subset(plt, label.chr10 != "remaining"), pch=19,cex=0.35) +
+  scale_color_manual(values = c('remaining'='black','chr10'='red') ) +
+  labs(x = "log2FC R1 vs. R2 (unpaired; tpc corrected)",
+       y="Correlation t-statistic with tumour percentage"
+       #,col="Difference significant (R1 ~ R2)"
   ) +
-  #geom_smooth(method="lm") + 
   youri_gg_theme
 
-p3 <- ggplot(plt, aes(x=log2FoldChange.res , y=statistic, col=chr == "chr10", label=hugo_symbol.tpc.res ) ) + 
-  geom_point(data=subset(plt, chr != "chr10"), pch=19,cex=0.05) +
-  geom_point(data=subset(plt, chr == "chr10"), pch=19,cex=0.65) +
-  scale_color_manual(values = c('TRUE'='red', 'FALSE' = 'black') ) +
-  #geom_point(data=subset(gsam.gene.res.combined, significant.res == T ),pch=19,cex=0.5) +
-  #geom_text_repel(data = subset(gsam.gene.res.combined, significant.res == T & abs(log2FoldChange.res) > 1.5), size = 2.4 )  +
-  labs(x = "log2FC R1 vs. R2 (unpaired; uncorrected)",
-       y="Correlation t-statistic with tumour percentage",
-       col="Is at chr10"
-  ) +
-  #geom_smooth(method="lm") + 
-  youri_gg_theme
 
-p1 + p2 + p3
+p1 + p2
+
 
 
 
