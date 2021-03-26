@@ -59,12 +59,14 @@ gsam.rnaseq.expression <- "data/gsam/output/tables/gsam_featureCounts_readcounts
     ')' ) ) %>%
   dplyr::mutate(Chr=NULL, Start = NULL, End = NULL, Strand = NULL, Length=NULL, Geneid=NULL, GENE=NULL) %>%
   dplyr::select(-all_of(paste0("V",1:8))) %>%
+  dplyr::filter(grepl("_PAR_Y",rn) == F) %>% # 42 duplicate ENSEMBL IDs that are located on both X and Y
   tibble::column_to_rownames("rn") %>%
-  dplyr::select( -all_of(blacklist) )
+  dplyr::select( -all_of(blacklist))
 
 
 
-colnames(gsam.rnaseq.expression) %in% gsam.viii.rnaseq$sample
+stopifnot(colnames(gsam.rnaseq.expression) %in% gsam.viii.rnaseq$sample)
+stopifnot(sum(duplicated(gsub("^([A-Z0-9]+).+$","\\1",rownames(gsam.rnaseq.expression)))) == 0) # no duplicate ens ids
 
 rm(blacklist)
 

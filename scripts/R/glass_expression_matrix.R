@@ -105,7 +105,7 @@ glass.gbm.rnaseq.metadata <- data.frame(sid = colnames(glass.gbm.rnaseq.expressi
   dplyr::mutate(sid.label = gsub("^(.)...(-..-....-).(.).*$","\\1\\2\\3",sid) ) %>%
   dplyr::mutate(dataset = gsub("^(....).*$","\\1",sid) )
 
-stopifnot(!is.na(glass.gbm.rnaseq.metadata $GBM.transcriptional.subtype.Synapse))
+stopifnot(!is.na(glass.gbm.rnaseq.metadata$GBM.transcriptional.subtype.Synapse))
 
 
 

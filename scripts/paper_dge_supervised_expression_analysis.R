@@ -1,4 +1,4 @@
-# Set wd
+#!/usr/bin/env R
 
 # load libs ----
 
@@ -8,6 +8,7 @@ library(DESeq2)
 
 library(ggplot2)
 library(ggrepel)
+
 #library(pheatmap)
 #library(fgsea)
 #library(limma)
@@ -52,6 +53,22 @@ gsam.metadata.all <- gsam.rna.metadata %>%
   dplyr::filter(tumour.percentage.dna >= 15) %>%
   dplyr::mutate(tpc = 1 - (tumour.percentage.dna / 100))
 
+
+gsam.metadata.all.paired <- gsam.metadata.all %>%
+  dplyr::filter(pid %in% 
+                  (gsam.metadata.all %>%
+                     dplyr::group_by(pid) %>%
+                     dplyr::tally() %>%
+                     dplyr::filter(n == 2) %>% 
+                     dplyr::ungroup() %>%
+                     dplyr::filter(!duplicated(pid)) %>%
+                     dplyr::pull(pid))
+                  ) %>%
+  dplyr::mutate(pid = as.factor(as.character(pid))) # re-factor?
+
+
+
+
 gsam.metadata.r1 <- gsam.metadata.all %>%
   dplyr::filter(resection == "r1")
 
@@ -75,23 +92,27 @@ wilcox.test(gsam.metadata.all %>%
 
 gsam.gene.expression.all <- gsam.rnaseq.expression %>%
   dplyr::select(gsam.metadata.all$sid)
-
-
 stopifnot(colnames(gsam.gene.expression.all) == gsam.metadata.all$sid)
 
 
-gsam.bfg.expression.all <- gsam.rnaseq.expression %>%
-  tibble::rownames_to_column('gid') %>%
-  dplyr::mutate(ensembl_id = gsub('\\..+\\|.+$','',gid) ) %>%
-  dplyr::mutate(hugo_symbol = gsub("^.+\\|([^\\]+)\\|.+$","\\1",gid) ) %>%
-  dplyr::filter( # bona fide glioma genes (BFGs)
-    (ensembl_id  %in% wang.glioma.intrinsic.genes$ENSG.short) |
-      (hugo_symbol %in% wang.glioma.intrinsic.genes$Gene_Symbol)
-  ) %>%
-  tibble::column_to_rownames('gid') %>%
-  dplyr::select(gsam.metadata.all$sid)
+gsam.gene.expression.all.paired <- gsam.gene.expression.all %>%
+  dplyr::select(gsam.metadata.all.paired$sid)
+stopifnot(colnames(gsam.gene.expression.all.paired) == gsam.metadata.all.paired$sid)
 
-stopifnot(colnames(gsam.bfg.expression.all) == gsam.metadata.all$sid)
+
+
+# gsam.bfg.expression.all <- gsam.rnaseq.expression %>%
+#   tibble::rownames_to_column('gid') %>%
+#   dplyr::mutate(ensembl_id = gsub('\\..+\\|.+$','',gid) ) %>%
+#   dplyr::mutate(hugo_symbol = gsub("^.+\\|([^\\]+)\\|.+$","\\1",gid) ) %>%
+#   dplyr::filter( # bona fide glioma genes (BFGs)
+#     (ensembl_id  %in% wang.glioma.intrinsic.genes$ENSG.short) |
+#       (hugo_symbol %in% wang.glioma.intrinsic.genes$Gene_Symbol)
+#   ) %>%
+#   tibble::column_to_rownames('gid') %>%
+#   dplyr::select(gsam.metadata.all$sid)
+# 
+# stopifnot(colnames(gsam.bfg.expression.all) == gsam.metadata.all$sid)
 
 
 # gsam.gene.expression.all.vst
@@ -459,7 +480,7 @@ results.out <- results.out %>%
 # # 
 
 
-# DE unpaired all [GSAM] ----
+# DE unpaired all [G-SAM] ----
 
 
 
@@ -479,7 +500,8 @@ gsam.gene.res.res <- DESeqDataSetFromMatrix(gsam.gene.expression.all %>%
 
 
 gsam.gene.res.tpc.res <- DESeqDataSetFromMatrix(gsam.gene.expression.all %>%
-                                                  dplyr::filter(rowSums(.) > ncol(.) * 3), gsam.metadata.all, ~tpc + resection ) %>% # + resection; corrected for tpc
+                                                  dplyr::filter(rowSums(.) > ncol(.) * 3),
+                                                gsam.metadata.all, ~tpc + resection ) %>% # + resection; corrected for tpc
   DESeq(parallel = T) %>%
   results() %>% 
   as.data.frame() %>%
@@ -522,6 +544,70 @@ results.out <- results.out %>%
   dplyr::left_join(glass.gene.res.res, by = c('ensembl_id' = 'ensembl_id'))
 
 
+
+
+
+# DE paired all [G-SAM] ----
+
+
+# https://support.bioconductor.org/p/59481/
+# fitType='local' or 'mean' 
+
+if(!file.exists('tmp/gsam.gene.res.res.paired.Rds')) {
+  gsam.gene.res.res.paired <- DESeqDataSetFromMatrix(gsam.gene.expression.all.paired %>%
+                                                dplyr::filter(rowSums(.) > ncol(.) * 3)
+                                              , gsam.metadata.all.paired , ~pid + resection ) %>% # + resection
+    DESeq(parallel = T, fitType="local") %>%
+    results() %>% 
+    as.data.frame()
+  
+    #%>%
+    #dplyr::mutate(significant = padj <= 0.01 & abs(log2FoldChange) > 0.5 ) %>%
+    #dplyr::arrange(padj) %>%
+    #tibble::rownames_to_column('gid') %>%
+    #`colnames<-`(paste0(colnames(.),".res.paired")) %>%
+    #dplyr::rename(gid = gid.res)
+  
+  saveRDS(gsam.gene.res.res.paired, file = "tmp/gsam.gene.res.res.paired.Rds")
+} else {
+  gsam.gene.res.res.paired <- readRDS("tmp/gsam.gene.res.res.paired.Rds")
+}
+
+
+#results.out <- results.out %>%
+#  dplyr::left_join(gsam.gene.res.res.paired, by = c('gid' = 'gid'))
+
+
+
+stopifnot(F)
+
+
+
+
+plt <- results.out
+
+#%>%
+#  dplyr::filter(!is.na(log2FoldChange.res) & !is.na(statistic.cor.tpc)) %>%
+  #dplyr::mutate(is.limited.res = as.character(log2FoldChange.res > 3)) %>% # change pch to something that is limited
+  #dplyr::mutate(log2FoldChange.res = ifelse(log2FoldChange.res > 3, 3 , log2FoldChange.res)) %>%
+  #dplyr::mutate(is.limited.tpc.res = as.character(log2FoldChange.tpc.res > 3)) %>% # change pch to something that is limited
+  #dplyr::mutate(log2FoldChange.tpc.res = ifelse(log2FoldChange.tpc.res > 3, 3 , log2FoldChange.tpc.res))
+
+
+
+p1 <- ggplot(plt, aes(x = log2FoldChange.res.paired , y = statistic.cor.tpc, 
+                      #shape = is.limited.res ,
+                      #size = is.limited.res 
+                      ) ) +
+  #p1 <- ggplot(plt, aes(x = stat.res , y = statistic.cor.tpc  ) ) +
+  geom_point(pch=19,cex=0.05) +
+  #geom_smooth(data = subset(plt, padj.tpc.res > 0.05),method="lm",
+  #            se = FALSE,  formula=y ~ x, orientation="y", col="red" , size=0.8) +
+  #scale_shape_manual(values = c('TRUE'=4, 'FALSE' = 19)    ) +
+  #scale_size_manual(values = c('TRUE'=0.75, 'FALSE' = 0.05)    ) +
+  youri_gg_theme + 
+  labs(x = "log2FC R1 vs. R2 (paired)",
+       y="Correlation t-statistic with tumour percentage")
 
 
 # plots ----
@@ -608,7 +694,7 @@ ggplot(plt, aes(x=log2FoldChange.tpc.res ,
 
 
 
-## plot Fc corrected x correlation TPC +chr7 + chr10 ----
+## Fc corrected x correlation TPC +chr7 + chr10 ----
 
 
 plt <- results.out %>%
@@ -1378,9 +1464,4 @@ ggplot(plt, aes(x= log2FoldChange.glass.res,
        col="Difference significant (R1 ~ R2)"
   ) +
   youri_gg_theme
-
-
-
-# PAIRED analysis ----
-
 

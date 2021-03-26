@@ -171,10 +171,4 @@ rm(isct, rm.gencode)
 ## from the 150 subtype genes, find w/ missing ens-id ----
 
 
-wang.glioma.intrinsic.genes %>%
-  dplyr::filter(Subtyping_Signature_Gene. != "") %>%
-  dplyr::filter(is.na(ENSG) ) 
-
-
-
 

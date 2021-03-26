@@ -15,6 +15,9 @@ library(circlize)
 library(ggrepel)
 library(e1071)
 
+library(splancs) # https://stackoverflow.com/questions/17571602/r-filter-coordinates
+library(combinat)
+
 
 # load data ----
 
@@ -24,7 +27,7 @@ source('scripts/R/gsam_rna-seq_expression.R') # recursively calls metadata
 source('scripts/R/glass_expression_matrix.R')
 
 
-source('data/wang/msig.library.12.R') # license is incomplete regarding sharing, can't include it in source tree
+source('data/wang/msig.library.12.R')  # no license w/ code provided, can't include it in source tree
 
 source('scripts/R/subtype_genes.R')
 source('scripts/R/wang_glioma_intrinsic_genes.R')
@@ -43,12 +46,6 @@ source('scripts/R/palette.R')
 
 glass.gbm.rnaseq.expression.vst.150 <- glass.gbm.rnaseq.expression.vst %>% 
   as.data.frame() %>%
-  dplyr::select( # extremely poor performing samples !!
-    -c("GLSS-SM-R068-TP-01R-RNA-0UPMYO", "GLSS-SM-R068-R1-01R-RNA-7I5H9P",
-       "GLSS-SM-R071-TP-01R-RNA-OAXGI8", "GLSS-SM-R071-R1-01R-RNA-7AZ6G2",
-       "GLSS-SM-R099-R1-01R-RNA-MNTPMI", #"GLSS-SM-R099-TP-01R-RNA-YGXA72",
-       "GLSS-SM-R100-TP-01R-RNA-EUI7AZ", "GLSS-SM-R100-R1-01R-RNA-46UW5U"
-    )) %>% 
   tibble::rownames_to_column('gid') %>%
   dplyr::filter(gid %in%  (wang.glioma.intrinsic.genes %>%
                              dplyr::filter(Subtyping_Signature_Gene. != "") %>%
@@ -376,7 +373,7 @@ range_pc2 = seq(from = min(plt.single$`NMF:123456.PC2`) - off_y, to = max(plt.si
 
 range_df = expand.grid('NMF:123456.PC1' = range_pc1, 'NMF:123456.PC2' = range_pc2)
 #nmf.pca.lda.countours <- predict(s150.pca.nmf.subtype.classifier.lda, newdata = range_df) %>%
-nmf.pca.lda.countours <- predict(svm.model, newdata = range_df) %>% data.frame(class = .) %>%
+nmf.pca.lda.countours <- predict(s150.pca.nmf.subtype.classifier.svm , newdata = range_df) %>% data.frame(class = .) %>%
   #as.data.frame() %>%
   cbind(range_df) %>%
   dplyr::select(c('class', 'NMF:123456.PC1', 'NMF:123456.PC2')) %>%
@@ -631,7 +628,272 @@ ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_SVM-reclassification_SVM
 
 
 
+# KNN Bootstrapping ~ estimate by chance ----
+
+k = 20
+df = data.frame()
+for(p in 1:nrow(plt.paired) ) {
+  #p = 21
+
+  # for pair
+  target = plt.paired[p,]
+  
+  
+  # find k closest R1's
+  knn <- plt.paired[- p,] %>%
+    dplyr::mutate(ed =  sqrt(  (`NMF:123456.PC1.n.R1` - target$`NMF:123456.PC1.n.R1`)^2 +
+                               (`NMF:123456.PC2.n.R1` - target$`NMF:123456.PC2.n.R1`)^2 ) ) %>%
+    dplyr::arrange(ed) %>%
+    top_n(k, -ed)
+  
+  
+  #plot(plt.single$`NMF:123456.PC1` , plt.single$`NMF:123456.PC2`, pch=19 , col = as.numeric(plt.single $`NMF:123456.PCA.SVM.class`) + 1 , cex=0.5)
+  
+  
+  #nodes <- data.frame(`NMF:123456.PC1` = target$`NMF:123456.PC1.R1`,
+  #                    `NMF:123456.PC2` = target$`NMF:123456.PC2.R1`,
+  #                    type="start", check.names=F)
+  nodes <- data.frame()
+  for(i in 1:k) {
+    neighbour <- knn[i,] 
+    
+    #lines(c(neighbour$`NMF:123456.PC1.R1`,neighbour$`NMF:123456.PC1.R2`), c(neighbour$`NMF:123456.PC2.R1` , neighbour$`NMF:123456.PC2.R2`)  )
+    #points(neighbour$`NMF:123456.PC1.R2` , neighbour$`NMF:123456.PC2.R2` , pch=8,cex=0.6  )
+    
+    delta_PC1 = target$`NMF:123456.PC1.R1` - neighbour$`NMF:123456.PC1.R1`
+    delta_PC2 = target$`NMF:123456.PC2.R1` - neighbour$`NMF:123456.PC2.R1`
+    
+    
+    nodes <- rbind(nodes,
+              data.frame(`NMF:123456.PC1` = neighbour$`NMF:123456.PC1.R2` + delta_PC1 ,
+                         `NMF:123456.PC2` = neighbour$`NMF:123456.PC2.R2` + delta_PC2 ,
+                         type = "node", check.names=F))
+
+
+  }
+
+  nodes <- nodes %>%
+    dplyr::mutate(class.svm = predict(s150.pca.nmf.subtype.classifier.svm , newdata = nodes %>% dplyr::mutate(type=NULL)) )
+  
+  df <- rbind(df, 
+              data.frame(n.cl  = nodes %>% dplyr::filter(class.svm == "Classical") %>% nrow(),
+                   n.mes = nodes %>% dplyr::filter(class.svm == "Mesenchymal") %>% nrow(),
+                   n.pn  = nodes %>% dplyr::filter(class.svm == "Proneural") %>% nrow() ) %>%
+    dplyr::mutate(p.cl = n.cl /  rowSums(.),
+                  p.mes = n.mes /  rowSums(.),
+                  p.pn = n.pn /  rowSums(.) ) %>%
+    dplyr::mutate(pid = target$pid)
+  )
+  
+}
+
+
+df <- df %>%
+  #group_by(pid) %>% 
+  #dplyr::summarise( p.cl = mean(n.cl),     p.mes = mean(n.mes), p.pn = mean(n.pn) ) %>%
+  dplyr::left_join(plt.paired %>%
+                     dplyr::select(c('pid','dataset.R1','NMF:123456.PCA.SVM.status','NMF:123456.PCA.SVM.class.R1','NMF:123456.PCA.SVM.class.R2') )
+                   , by=c('pid'='pid'))
+
+
+
+df %>% filter(`NMF:123456.PCA.SVM.class.R1` == "Classical" & dataset.R1 == 'GSAM') %>% dplyr::pull(p.cl) %>% sum()
+df %>% filter(`NMF:123456.PCA.SVM.class.R1` == "Mesenchymal" & dataset.R1 == 'GSAM') %>% dplyr::pull(p.mes) %>% sum()
+df %>% filter(`NMF:123456.PCA.SVM.class.R1` == "Proneural" & dataset.R1 == 'GSAM') %>% dplyr::pull(p.pn) %>% sum()
+
+
+
+#df.2 %>% filter(`NMF:123456.PCA.SVM.class.R1` == "Classical" & dataset.R1 == 'GSAM') %>% dplyr::pull(p.cl) %>% sum()
+#df.2 %>% filter(`NMF:123456.PCA.SVM.class.R1` == "Classical" & dataset.R1 == 'GSAM') %>% dplyr::pull(p.mes) %>% sum()
+#df.2 %>% filter(`NMF:123456.PCA.SVM.class.R1` == "Classical" & dataset.R1 == 'GSAM') %>% dplyr::pull(p.pn) %>% sum()
+
+
+df.2 %>% filter(`NMF:123456.PCA.SVM.class.R1` == "Mesenchymal" & dataset.R1 == 'GSAM') %>% dplyr::pull(p.mes) %>% sum()
+df.2 %>% filter(`NMF:123456.PCA.SVM.class.R1` == "Mesenchymal" & dataset.R1 == 'GSAM') %>% dplyr::pull(p.cl) %>% sum()
+df.2 %>% filter(`NMF:123456.PCA.SVM.class.R1` == "Mesenchymal" & dataset.R1 == 'GSAM') %>% dplyr::pull(p.pn) %>% sum()
+
+
+
+#df.2 %>% filter( dataset.R1 == 'GSAM' & `NMF:123456.PCA.SVM.status`  == "Stable") %>% nrow()
+
+
+
+# plot per-group eucledian distance between pairs?
+
+
+# KNN Bootstrapping 2 ~ estimate by chance ----
+
+# Bij deze bootstrapping zoeken we van de KNN de richtingen/angles
+# En gebruiken bootstrappen we de eucledian distances van alle samples
+
+
+# hoe berekenen we van 2 nodes de angle en verlengen/verkorten we deze
+# R1 = ( 1,  1)
+# R2 = (-2, -3)
+
+change_length_line <- function(x1, y1, x2, y2, length_new) {
+  # From the  line between points (x1, y1) , (x2 ,y2),
+  # we want to create a new line with an identical angle
+  # but of length `length_new`.
+  
+  dy <- y2 - y1
+  dx <- x2 - x1
+  
+  #slope <- dy / dx
+  angle <- atan2(dy , dx) # in rads
+  
+  length_x_new <- cos(angle) * length_new
+  length_y_new <- sin(angle) * length_new
+  
+  x2_new <- x1 + length_x_new
+  y2_new <- y1 + length_y_new
+ 
+  return (data.frame(x = c(x1, x2_new) ,
+             y = c(y1, y2_new) ,
+             point = as.factor(c("initial start", "new end"))))
+}
+
+
+# plot(c(-4,4), c(-4,4), type="n")
+# 
+# points(1,1, pch=19)
+# points(-2,-3, pch=19)
+# lines(c(-2,1), c(-3,1))
+# 
+# df <- change_length_line(1,1,-2,-3, 1)
+# points(df[2,1] , df[2,2], pch=19,col="red")
+
+
+
+
+nn = 15
+bootstrap_n = 25 # bootstrap iterations per sample-pair
+df = data.frame()
+for(p in 1:nrow(plt.paired) ) { # for pair
+  #p = 21 
+  target = plt.paired[p,]
+  
+  
+  # find k closest R1's for angles in close proximity
+  knn <- plt.paired[- p,] %>%
+    dplyr::mutate(ed =  sqrt(  (`NMF:123456.PC1.n.R1` - target$`NMF:123456.PC1.n.R1`)^2 +
+                                 (`NMF:123456.PC2.n.R1` - target$`NMF:123456.PC2.n.R1`)^2 ) ) %>%
+    dplyr::arrange(ed) %>%
+    top_n(nn, -ed)
+  
+
+  #plot(plt.single$`NMF:123456.PC1` , plt.single$`NMF:123456.PC2`, pch=19 , col = as.numeric(plt.single $`NMF:123456.PCA.SVM.class`) + 1 , cex=0.5)
+  #lines(c(target$`NMF:123456.PC1.R1`,target$`NMF:123456.PC1.R2`), c(target$`NMF:123456.PC2.R1` , target$`NMF:123456.PC2.R2`) , lwd=1.5 )
+  #points(target$`NMF:123456.PC1.R1` , target$`NMF:123456.PC2.R1` , pch=4,cex=0.6   )
+  #points(target$`NMF:123456.PC1.R2` , target$`NMF:123456.PC2.R2` , pch=4,cex=0.6   )
+  
+  
+  for(i in 1:bootstrap_n) {
+    
+    # Take the angle from local subsampling
+    neighbour <- knn %>% # RANDOM SHUFFLE `MET TERUGLEGGEN` want bootstrappen!!!
+      dplyr::slice(sample(1 : dplyr::n() ) [1] )
+
+    # take length from overall subsamples
+    random_length <- plt.paired %>%
+      dplyr::slice(sample(1 : dplyr::n() )) %>%
+      dplyr::pull(eucledian.dist) %>%
+      purrr::pluck(1)
+
+    # calc new line length
+    bootstrapped_line <- change_length_line(neighbour$`NMF:123456.PC1.n.R1`,
+                                            neighbour$`NMF:123456.PC2.n.R1`,
+                                            
+                                            neighbour$`NMF:123456.PC1.n.R2`,
+                                            neighbour$`NMF:123456.PC2.n.R2`,
+                                            
+                                            random_length)
+
+    
+    # fit to target's R1
+    bootstrapped_line$x = bootstrapped_line$x + (target$`NMF:123456.PC1.n.R1` - neighbour$`NMF:123456.PC1.n.R1`)
+    bootstrapped_line$y = bootstrapped_line$y + (target$`NMF:123456.PC2.n.R1` - neighbour$`NMF:123456.PC2.n.R1`)
+    
+
+    class <- predict(s150.pca.nmf.subtype.classifier.svm , newdata = bootstrapped_line %>%
+              dplyr::filter(point == "new end") %>%
+              dplyr::mutate(point = NULL) %>%
+              dplyr::rename(`NMF:123456.PC1` = x) %>%
+              dplyr::rename(`NMF:123456.PC2` = y) )
+    
+    df <- rbind(df, data.frame(x = bootstrapped_line$x[2],
+               y = bootstrapped_line$y[2],
+               pid = target$pid,
+               neighbour = neighbour$pid,
+               class = class ))
+    
+    
+    # plot(plt.single$`NMF:123456.PC1.n` , plt.single$`NMF:123456.PC2.n`, pch=19 , col = as.numeric(plt.single $`NMF:123456.PCA.SVM.class`) + 1 , cex=0.5)
+    # 
+    # lines(
+    #   c(target$`NMF:123456.PC1.n.R1` , target$`NMF:123456.PC1.n.R2`),
+    #   c(target$`NMF:123456.PC2.n.R1` , target$`NMF:123456.PC2.n.R2`) , lwd=1.5 )
+    # 
+    # lines(c(neighbour$`NMF:123456.PC1.n.R1` , neighbour$`NMF:123456.PC1.n.R2`),
+    #       c(neighbour$`NMF:123456.PC2.n.R1` , neighbour$`NMF:123456.PC2.n.R2`) , lwd=2  )
+    # 
+    # lines(c(bootstrapped_line[1,1], bootstrapped_line[2,1]),
+    #       c(bootstrapped_line[1,2], bootstrapped_line[2,2]) , lwd=2  )
+  }
+}
+
+
+
+
+df <- df %>%
+  dplyr::group_by(pid) %>% 
+  dplyr::summarise(n.cl  = sum(class == "Classical"),
+                   n.mes = sum(class == "Mesenchymal"),
+                   n.pn  = sum(class == "Proneural")) %>%
+  dplyr::mutate(p.cl  = n.cl  / (n.cl + n.mes + n.pn) ,
+                p.mes = n.mes / (n.cl + n.mes + n.pn) ,
+                p.pn  = n.pn  / (n.cl + n.mes + n.pn) ) %>%
+  dplyr::left_join(plt.paired %>%
+                     dplyr::select(c('pid','dataset.R1','NMF:123456.PCA.SVM.status','NMF:123456.PCA.SVM.class.R1','NMF:123456.PCA.SVM.class.R2') )
+                   , by=c('pid'='pid'))
+
+
+
+df %>% filter(`NMF:123456.PCA.SVM.class.R1` == "Classical" & dataset.R1 == 'GSAM') %>% dplyr::pull(p.cl) %>% sum()
+df %>% filter(`NMF:123456.PCA.SVM.class.R1` == "Mesenchymal" & dataset.R1 == 'GSAM') %>% dplyr::pull(p.mes) %>% sum()
+df %>% filter(`NMF:123456.PCA.SVM.class.R1` == "Proneural" & dataset.R1 == 'GSAM') %>% dplyr::pull(p.pn) %>% sum()
+
+
+
+
+
+#df.2 %>% filter(`NMF:123456.PCA.SVM.class.R1` == "Classical" & dataset.R1 == 'GSAM') %>% dplyr::pull(p.cl) %>% sum()
+#df.2 %>% filter(`NMF:123456.PCA.SVM.class.R1` == "Classical" & dataset.R1 == 'GSAM') %>% dplyr::pull(p.mes) %>% sum()
+#df.2 %>% filter(`NMF:123456.PCA.SVM.class.R1` == "Classical" & dataset.R1 == 'GSAM') %>% dplyr::pull(p.pn) %>% sum()
+
+
+df.2 %>% filter(`NMF:123456.PCA.SVM.class.R1` == "Mesenchymal" & dataset.R1 == 'GSAM') %>% dplyr::pull(p.mes) %>% sum()
+df.2 %>% filter(`NMF:123456.PCA.SVM.class.R1` == "Mesenchymal" & dataset.R1 == 'GSAM') %>% dplyr::pull(p.cl) %>% sum()
+df.2 %>% filter(`NMF:123456.PCA.SVM.class.R1` == "Mesenchymal" & dataset.R1 == 'GSAM') %>% dplyr::pull(p.pn) %>% sum()
+
+
+
+
+
+
 
 
 # 〰 © Dr. Youri Hoogstrate 〰 ----
+
+
+
+
+
+
+
+
+
+
+
+
 
