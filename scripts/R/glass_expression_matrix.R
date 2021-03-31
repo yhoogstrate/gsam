@@ -103,9 +103,58 @@ glass.gbm.rnaseq.metadata <- data.frame(sid = colnames(glass.gbm.rnaseq.expressi
       dplyr::rename(GBM.transcriptional.subtype.Synapse = subtype)
     , by     = c('sid' = 'aliquot_barcode' )  )  %>%
   dplyr::mutate(sid.label = gsub("^(.)...(-..-....-).(.).*$","\\1\\2\\3",sid) ) %>%
-  dplyr::mutate(dataset = gsub("^(....).*$","\\1",sid) )
+  dplyr::mutate(dataset = gsub("^(....).*$","\\1",sid) ) %>%
+  dplyr::mutate(IDH.status = case_when(
+    pid %in% c("TCGA-FG-5965", "TCGA-TM-A7CF", "TCGA-TQ-A7RV") ~ "IDH1",
+    pid %in% c() ~ "IDH2", # none?!
+    TRUE ~ "-"
+  )
+                )
 
 stopifnot(!is.na(glass.gbm.rnaseq.metadata$GBM.transcriptional.subtype.Synapse))
+
+
+
+
+# exclude IDH mutants ----
+
+glass.gbm.rnaseq.expression <- glass.gbm.rnaseq.expression %>%
+  dplyr::select(glass.gbm.rnaseq.metadata %>% dplyr::filter(IDH.status == "-") %>% pull(sid))
+
+
+
+
+
+## add mutations ----
+
+# file from Synapse portal
+# tmp <- read.csv('data/variants_passgeno_20190327.csv',stringsAsFactors = F) %>%
+#   dplyr::mutate(pid = gsub("^([^\\-]+.[^\\-]+.[^\\-]+).+$","\\1",aliquot_barcode)) 
+# 
+# #idh1:chr2:209,098,951-209,121,867
+# 
+# tmp.idh1 <- tmp %>%
+#   dplyr::filter(chrom == "2" & start >=  209098951 & end <= 209121867 ) %>%
+#   dplyr::filter(ad_alt != 0) %>%
+#   dplyr::filter(pid %in% glass.gbm.rnaseq.metadata$pid) %>%
+#   dplyr::filter(ssm2_pass_call == 't') %>%
+#   dplyr::arrange(start, aliquot_barcode)
+#   
+#   # %>% dplyr::filter(start == 209113112) %>% pull(pid) %>% unique()
+# 
+# 
+# 
+# 
+# 
+# #idh2:chr15:90,623,937-90,648,932
+# 
+# tmp.idh2 <- tmp %>%
+#   dplyr::filter(chrom == "15" & start >=  90623937 & end <= 90648932 ) %>%
+#   dplyr::filter(ad_alt != 0) %>%
+#   dplyr::filter(pid %in% glass.gbm.rnaseq.metadata$pid) %>%
+#   dplyr::filter(ssm2_pass_call == 't') %>%
+#   dplyr::arrange(start, aliquot_barcode)
+
 
 
 

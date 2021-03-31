@@ -24,6 +24,9 @@ source("scripts/R/glass_expression_matrix.R") # glass & tcga validation set
 
 # we hebben max 122 pairs?
 
+#plt.expanded %>% dplyr::filter(pid == "GAO")
+#GAO = duplicated !?
+
 plt.ids <- gsam.rna.metadata %>%
     dplyr::filter(blacklist.pca == F) %>%
     #dplyr::filter(pat.with.IDH == F) %>%
@@ -36,29 +39,35 @@ plt.ids <- gsam.rna.metadata %>%
 # maak eerst losse colommen en rbind die daarna
 
 plt.expanded <- data.frame(pid = unique(plt.ids$pid) ) %>%
-  dplyr::left_join(gsam.patient.metadata %>% dplyr::select(c('studyID','treatedWithTMZ')) , by = c('pid' = 'studyID'))%>%
+  dplyr::left_join(gsam.patient.metadata %>% dplyr::select(c('studyID','treatedWithTMZ')) , by = c('pid' = 'studyID')) %>%
   dplyr::left_join(gsam.patient.metadata %>% dplyr::select(c('studyID','treatedWithRT')) , by = c('pid' = 'studyID')) %>%
   dplyr::left_join(plt.ids %>% dplyr::filter(resection == "R1") %>% dplyr::rename(R1 = sid) %>% dplyr::select(c('pid', 'R1')) , by = c('pid' = 'pid') ) %>%
   dplyr::left_join(plt.ids %>% dplyr::filter(resection == "R2") %>% dplyr::rename(R2 = sid) %>% dplyr::select(c('pid', 'R2')) , by = c('pid' = 'pid') ) %>%
   dplyr::mutate(R1.status =  ifelse(is.na(R1), "NA", "+") ) %>%
   dplyr::mutate(R2.status =  ifelse(is.na(R2), "NA", "+") ) %>%
   dplyr::mutate(R1.R2.status = case_when( is.na(R1) ~ 'R2', is.na(R2) ~ 'R1',     TRUE ~ 'both'   ) ) %>%
-  dplyr::left_join(gsam.rna.metadata %>% dplyr::filter(resection == "r1") %>% dplyr::select(c('pid','NMF.123456.PCA.LDA.class')) %>% dplyr::rename(R1.rna.subtype = NMF.123456.PCA.LDA.class ),  by = c('pid' = 'pid') ) %>%
-  dplyr::left_join(gsam.rna.metadata %>% dplyr::filter(resection == "r2") %>% dplyr::select(c('pid','NMF.123456.PCA.LDA.class')) %>% dplyr::rename(R2.rna.subtype = NMF.123456.PCA.LDA.class ),  by = c('pid' = 'pid') ) %>%
-  dplyr::left_join(gsam.rna.metadata %>% dplyr::filter(resection == "r1") %>% dplyr::select(c('pid','pat.with.IDH')) %>% dplyr::rename(patient.idh.status = pat.with.IDH ),  by = c('pid' = 'pid') ) %>%
+  dplyr::left_join(gsam.rna.metadata %>% dplyr::filter(sid %in% plt.ids$sid & resection == "r1") %>% dplyr::select(c('pid','NMF.123456.PCA.LDA.class')) %>% dplyr::rename(R1.rna.subtype = NMF.123456.PCA.LDA.class ),  by = c('pid' = 'pid') ) %>%
+  dplyr::left_join(gsam.rna.metadata %>% dplyr::filter(sid %in% plt.ids$sid & resection == "r2") %>% dplyr::select(c('pid','NMF.123456.PCA.LDA.class')) %>% dplyr::rename(R2.rna.subtype = NMF.123456.PCA.LDA.class ),  by = c('pid' = 'pid') ) %>%
+  dplyr::left_join(gsam.rna.metadata %>% dplyr::filter(sid %in% plt.ids$sid & resection == "r1") %>% dplyr::select(c('pid','pat.with.IDH')) %>% dplyr::rename(patient.idh.status = pat.with.IDH ),  by = c('pid' = 'pid') ) %>%
   dplyr::mutate(patient.idh.status = ifelse(patient.idh.status == "TRUE", "+", "-") ) %>%
-  dplyr::left_join(gsam.rna.metadata %>% dplyr::filter(resection == "r1") %>% dplyr::select(c('pid','tumour.percentage.dna')) %>% dplyr::rename(R1.tumour.percentage.dna = tumour.percentage.dna )
+  dplyr::left_join(gsam.rna.metadata %>% dplyr::filter(sid %in% plt.ids$sid &resection == "r1") %>% dplyr::select(c('pid','tumour.percentage.dna')) %>% dplyr::rename(R1.tumour.percentage.dna = tumour.percentage.dna )
     ,  by = c('pid' = 'pid')) %>%
   dplyr::left_join(
-    gsam.rna.metadata %>% dplyr::filter(resection == "r2") %>% dplyr::select(c('pid','tumour.percentage.dna')) %>% dplyr::rename(R2.tumour.percentage.dna = tumour.percentage.dna )
+    gsam.rna.metadata %>% dplyr::filter(sid %in% plt.ids$sid &resection == "r2") %>% dplyr::select(c('pid','tumour.percentage.dna')) %>% dplyr::rename(R2.tumour.percentage.dna = tumour.percentage.dna )
     ,  by = c('pid' = 'pid')) %>%
   dplyr::mutate(R1.tumour.percentage.status = ifelse(R1.tumour.percentage.dna >= 15,'+','-') ) %>%
   dplyr::mutate(R2.tumour.percentage.status = ifelse(R2.tumour.percentage.dna >= 15,'+','-') ) %>%
+  dplyr::mutate(R1.tumour.percentage.status.order = ifelse(R1.tumour.percentage.dna >= 15,1,2) ) %>%
+  dplyr::mutate(R2.tumour.percentage.status.order = ifelse(R2.tumour.percentage.dna >= 15,1,2) ) %>%
   dplyr::mutate(treatedWithTMZ = ifelse(treatedWithTMZ == "Yes",'+','-') ) %>%
   dplyr::mutate(treatedWithRT = ifelse(treatedWithRT == "Yes",'+','-') ) %>%
-  dplyr::arrange(patient.idh.status, R1.R2.status) %>%
+  dplyr::arrange(patient.idh.status, R1.R2.status, R2.tumour.percentage.status.order,  R1.tumour.percentage.status.order, R1.rna.subtype, R2.rna.subtype) %>%
+  #dplyr::arrange(patient.idh.status, R1.R2.status, R2.tumour.percentage.status.order,  R1.tumour.percentage.status.order) %>%
   dplyr::mutate(order = 1:nrow(.) )
+stopifnot(nrow(plt.expanded) == 185) # ensure what gets in comes out
 
+
+#plt.expanded %>% dplyr::filter(pid == "GAO")
 
 
 
@@ -66,7 +75,7 @@ plt <- bind_rows(
     plt.expanded %>% dplyr::select(c('pid', 'R1.status')) %>% dplyr::rename(col = R1.status) %>% dplyr::mutate(y = "RNA-Seq sample R1") ,
     plt.expanded %>% dplyr::select(c('pid', 'R2.status')) %>% dplyr::rename(col = R2.status) %>% dplyr::mutate(y = "RNA-Seq sample R2") ,
     plt.expanded %>% dplyr::select(c('pid', 'R1.rna.subtype')) %>% dplyr::rename(col = R1.rna.subtype) %>% dplyr::mutate(y = "Transcriptional subtype R1") ,
-    plt.expanded %>% dplyr::select(c('pid', 'R2.rna.subtype')) %>% dplyr::rename(col = R2.rna.subtype) %>% dplyr::mutate(y = "ranscriptional subtype R2") ,
+    plt.expanded %>% dplyr::select(c('pid', 'R2.rna.subtype')) %>% dplyr::rename(col = R2.rna.subtype) %>% dplyr::mutate(y = "Transcriptional subtype R2") ,
     plt.expanded %>% dplyr::select(c('pid', 'patient.idh.status')) %>% dplyr::rename(col = patient.idh.status) %>% dplyr::mutate(y = "Patient IDH status") ,
     plt.expanded %>% dplyr::select(c('pid', 'R1.tumour.percentage.status')) %>% dplyr::rename(col = R1.tumour.percentage.status) %>% dplyr::mutate(y = "Tumor cells >= 15% (WES) R1") ,
     plt.expanded %>% dplyr::select(c('pid', 'R2.tumour.percentage.status')) %>% dplyr::rename(col = R2.tumour.percentage.status) %>% dplyr::mutate(y = "Tumor cells >= 15% (WES) R2") ,
