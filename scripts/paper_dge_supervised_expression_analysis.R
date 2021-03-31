@@ -958,19 +958,21 @@ ggsave('output/figures/tpc_estimate_wes.png', width = 5.7, height = 4.3)
 
 
 
-## 2.3 :: FC res x corr TPC G-SAM ----
+## 2.3 :: FC res x corr TPC G-SAM  [diag; chr7 ; chr10 ] ----
 
 
 plt <- results.out %>%
   dplyr::filter(!is.na(log2FoldChange.res) & !is.na(statistic.cor.tpc)) %>%
   dplyr::mutate(is.limited.res = as.character(log2FoldChange.res > 2)) %>% # change pch to something that is limited
-  dplyr::mutate(log2FoldChange.res = ifelse(log2FoldChange.res > 2, 2 , log2FoldChange.res))
-
-ggplot(plt, aes(x = log2FoldChange.res ,
+  dplyr::mutate(log2FoldChange.res = ifelse(log2FoldChange.res > 2, 2 , log2FoldChange.res)) %>%
+  dplyr::mutate(col.chr7 = case_when(is.limited.res == T ~ "truncated" , chr == "chr7" ~ "at chr7", chr != "chr7" ~ "not at chr7")) %>%
+  dplyr::mutate(col.chr10 = case_when(is.limited.res == T ~ "truncated" , chr == "chr10" ~ "at chr10", chr != "chr10" ~ "not at chr10")) 
+  
+p1 <- ggplot(plt, aes(x = log2FoldChange.res ,
                       y = statistic.cor.tpc, 
                       shape = is.limited.res ,
-                size = is.limited.res  ,
-                col = is.limited.res   ) ) +
+                      size = is.limited.res  ,
+                      col = is.limited.res   ) ) +
   geom_hline(yintercept = 0, col="gray60",lwd=0.5) +
   geom_vline(xintercept = 0, col="gray60",lwd=0.5) +
   geom_point() +
@@ -988,8 +990,58 @@ ggplot(plt, aes(x = log2FoldChange.res ,
   xlim(-2,2) +
   ylim(-16.5,16.5)
 
+p2 <- ggplot(plt, aes(x = log2FoldChange.res ,
+                      y = statistic.cor.tpc, 
+                      shape = col.chr7,
+                      size = col.chr7  ,
+                      col = col.chr7  ,
+                      fill =  col.chr7  
+                      ) ) +
+  geom_hline(yintercept = 0, col="gray60",lwd=0.5) +
+  geom_vline(xintercept = 0, col="gray60",lwd=0.5) +
+  geom_point(data = subset(plt, chr != "chr7")) +
+  geom_point(data = subset(plt, chr == "chr7", stroke=0.001)) +
+  scale_shape_manual(values = c('truncated'= 4, 'not at chr7' = 19 , 'at chr7'= 21 )    ) +
+  scale_size_manual(values = c('truncated'= 0.85, 'not at chr7' = 0.1 , 'at chr7'= 0.8 )    ) +
+  scale_color_manual(values = c('truncated'= 'black', 'not at chr7' = rgb(0,0,0,0.35), 'at chr7'= rgb(0,0,0,0.5)  )    ) +
+  scale_fill_manual(values = c('truncated'= 'black', 'not at chr7' = rgb(0,0,0,0.35), 'at chr7'= rgb(1,0,0,1)  )    ) +
+  youri_gg_theme + 
+  labs(x = "log2FC R1 vs. R2 (unpaired)",
+       y="Correlation t-statistic with tumour percentage",
+       shape = "Truncated at x-axis",
+       size="Truncated at x-axis",
+       col="Truncated at x-axis") +
+  xlim(-2,2) +
+  ylim(-16.5,16.5)
 
-ggsave('output/figures/paper_dge_log2FoldChange.res_x_statistic.cor.tpc.png', width = 5.7 * 1.4, height = 4 * 1.4)
+p3 <- ggplot(plt, aes(x = log2FoldChange.res ,
+                     y = statistic.cor.tpc, 
+                     shape = col.chr10,
+                     size = col.chr10  ,
+                     col = col.chr10  ,
+                     fill =  col.chr10  
+) ) +
+  geom_hline(yintercept = 0, col="gray60",lwd=0.5) +
+  geom_vline(xintercept = 0, col="gray60",lwd=0.5) +
+  geom_point(data = subset(plt, chr != "chr10")) +
+  geom_point(data = subset(plt, chr == "chr10", stroke=0.001)) +
+  scale_shape_manual(values = c('truncated'= 4, 'not at chr10' = 19 , 'at chr10'= 21 )    ) +
+  scale_size_manual(values = c('truncated'= 0.85, 'not at chr10' = 0.1 , 'at chr10'= 0.8 )    ) +
+  scale_color_manual(values = c('truncated'= 'black', 'not at chr10' = rgb(0,0,0,0.35), 'at chr10'= rgb(0,0,0,0.5)  )    ) +
+  scale_fill_manual(values = c('truncated'= 'black', 'not at chr10' = rgb(0,0,0,0.35), 'at chr10'= rgb(1,0,0,1)  )    ) +
+  youri_gg_theme + 
+  labs(x = "log2FC R1 vs. R2 (unpaired)",
+       y="Correlation t-statistic with tumour percentage",
+       shape = "Truncated at x-axis",
+       size="Truncated at x-axis",
+       col="Truncated at x-axis") +
+  xlim(-2,2) +
+  ylim(-16.5,16.5)
+
+p1 / p2 / p3
+
+
+ggsave('output/figures/paper_dge_log2FoldChange.res_x_statistic.cor.tpc.png', width = 5.7 * 1.4 , height = 4 * 1.4 * 3)
 
 
 
