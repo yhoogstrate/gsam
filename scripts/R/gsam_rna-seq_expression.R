@@ -31,7 +31,7 @@ if(!file.exists('tmp/gencode.31.Rds')) {
 # full dataset ----
 
 blacklist <- gsam.rna.metadata %>%
-  dplyr::filter(blacklist.pca == T) %>%
+  dplyr::filter(blacklist.pca == T | pat.with.IDH == T) %>%
   dplyr::pull('sid') %>%
   c("CAO1-replicate", "GAS2-replicate","FAB2") %>% # replicates
   c("KAC2-new") %>% # dna contaminiation
@@ -85,7 +85,7 @@ rm(blacklist)
 # KAE1-new: ja - zat ook in Santoesha's classi
 # "KAE1-new" %in% colnames(gsam.rnaseq.expression.vst)
 
-## vst ----
+# VST transform ----
 
 
 
@@ -117,7 +117,7 @@ if(!exists('gsam.rnaseq.expression.vst')) {
 
 
 
-# ## egfr high/low ----
+# ## egfr high/low 
 # 
 # tmp <- sort(gsam.rnaseq.expression.vst[gsub("\\..+$","",rownames(gsam.rnaseq.expression.vst)) == "ENSG00000146648",])
 # 
@@ -137,7 +137,7 @@ if(!exists('gsam.rnaseq.expression.vst')) {
 # rm(cutoff, tmp, splt)
 # 
 # 
-# ## MDM2 high/low ----
+# ## MDM2 high/low 
 # # ENSG00000135679
 # 
 # tmp <- sort(gsam.rnaseq.expression.vst[gsub("\\..+$","",rownames(gsam.rnaseq.expression.vst)) == "ENSG00000135679",])
@@ -161,7 +161,7 @@ if(!exists('gsam.rnaseq.expression.vst')) {
 # 
 # 
 # 
-# ## ---- CDK4 high/low ----
+# ## ---- CDK4 high/low 
 # 
 # ## ENSG00000135446
 # 
