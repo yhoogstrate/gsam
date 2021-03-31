@@ -1,10 +1,10 @@
 #!/usr/bin/env R
 
 "
-Goal of this script is to determine the tumour percentage somehow
+Goal of this script is to determine the tumour percentage
 
-This is technically possible with CNVKit + bam files + loads of other analysis, but may most likely take weeks
-
+This is technically possible with CNVKit + bam files + loads of other analysis,
+but may most likely take weeks
 
 
 https://cnvkit.readthedocs.io/en/stable/heterogeneity.html
@@ -15,7 +15,7 @@ Requires VCF Files, which require running mutect, which require the bam files, o
 
 setwd("~/projects/gsam")
 
-# ---- load libs ----
+# load libs & funcs ----
 
 
 library(tidyverse)
@@ -23,10 +23,7 @@ library(ggplot2)
 library(limma)
 
 
-# ---- load functions ----
-
-
-# ---- load data----
+# load data----
 
 
 chrs_hg19 <- {{}}
@@ -86,7 +83,7 @@ chrs_hg19_c['chrY'] <- chrs_hg19['chr1'] + chrs_hg19['chr2'] + chrs_hg19['chr3']
 
 
 
-# ---
+# load data ----
 
 #source("scripts/R/gsam_metadata.R") - auto loaded in script below
 source("scripts/R/cnv_matrix.R")
@@ -100,7 +97,7 @@ cnv_segments <- read.delim('data/gsam/output/tables/cnv_copynumber-ratio.cns_all
 
 
 
-# ---- test code ----
+# some test code ----
 # 5,6 = pair without further gains and losses
 
 
@@ -116,7 +113,7 @@ points(s1, s2, pch=19,cex=0.2,col=rgb(0,0,0,0.05))
 
 
 
-# ---- per sample example ----
+# per sample example ----
 
 ## IMPORTANT - FROM CNVKit:
 ## The log2 ratio values of CNAs in a tumor sample correspond to
@@ -385,67 +382,71 @@ for(i in 1:nrow(tmp)) {
 
 
 
+# there are insufficient snp calls for snp based
+
+# (re-)estimate using RNA-seq
+
+tpc.estimate <- read.table("output/tables/cnv/tumor.percentage.estimate.txt")
+
+source('scripts/R/gsam_rna-seq_expression.R')
+source('data/wang/msig.library.12.R') # no license w/ code provided, can't include it in source tree
+
+
+expression <- gsam.rnaseq.expression.vst %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column('gid') %>%
+  dplyr::filter(gid %in% (gsam.rnaseq.expression %>%
+                            dplyr::filter(rowSums(.) >= ncol(.) * 10) %>%
+                            tibble::rownames_to_column('gid') %>%
+                            dplyr::pull(gid))) %>%
+  tibble::column_to_rownames('gid') %>%
+  as.matrix()
 
 
 
-# ---- snp based ----
-
-
-#sum(snps$Sample == "PD29191a")
-
-snps <- read.delim("data/DNA/GBM_allSamples_PassVariants_1736_GBM_TERT_05Jan2018_flags_VAFs.txt",stringsAsFactors = F) %>%
-  dplyr::mutate(Sample = as.factor(Sample))
-
-
-t1 <- snps %>%
-  dplyr::filter(Sample == "PD29191a")
-
-#t1$VAF.Tum
-t1$ShriramVAF
-
-#test = t1[t1$Effect == "missense" & t1$normals == 0,]# & t1$ShriramVAF > 0.05 & t1$ShriramVAF < 0.75,]
-test = t1[ t1$normals == 0,]# & t1$ShriramVAF > 0.05 & t1$ShriramVAF < 0.75,]
-
-
-t2 <- read.delim("/tmp/a.vcf", comment.char = "#", stringsAsFactors = F,header=F) %>%
-  dplyr::filter(V7 =="PASS") %>%
-  dplyr::mutate(vaf = as.numeric(gsub("^.+:","",V11)))
+expression.pca <- expression %>%
+  prcomp() %>%
+  purrr::pluck('rotation') %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column('sid') %>%
+  dplyr::mutate(pid = gsub("^(....).*$","\\1",sid) ) %>%
+  dplyr::left_join(tpc.estimate , by=c('pid'='sample') ) %>%
+  dplyr::mutate(dr_ratio = pct / PC3) %>%
+  dplyr::mutate(outlier = abs(dr_ratio) > 2000) %>%
+  dplyr::mutate(resection = gsub("^...(.).*$","R\\1",pid))
 
 
 
-# sample EAT, 7 of 8 protein coding muts in prim
-# PD29191a  PD29191a.b1    b1     EAT1                     48                         1.6             24.24              0.04 235 235   Male 48.7 Deceased
-# PD29191c  PD29191c.b1 
+ggplot(expression.pca, aes(x = pct, y= PC3, col = resection , label = sid , group=1 ) )  + 
+  geom_smooth(method='lm', col="gray60",se = FALSE, lty=2,lwd=0.65) +
+  geom_point(cex = 0.8) +
+  xlim(0,100) +
+  youri_gg_theme +
+  labs(x = "WES estimated tumour percentage", y = "RNA-seq PC-3")
+
+ggsave("output/figures/cnv/tumour_cell_percentage_RNA_PC-3.png")
 
 
 
-# ---- plot p resection ----
-
-plt <- tpc.estimate %>%
-  dplyr::mutate(pid = gsub("^(...).*$","\\1",sample)) %>%
-  dplyr::mutate(res = gsub("^...(.).*$","R\\1", sample))
+fit <- lm(PC3 ~ pct, data = expression.pca)
 
 
-per.pat <- data.frame(pid = unique(plt$pid),p1 = NA, p2 = NA,stringsAsFactors = F)
-for(i in 1:nrow(per.pat)) {
-  e <- per.pat[i,]
+expression.pca <- expression.pca %>%
+  dplyr::mutate(PC3.scaled = (PC3 - fit$coefficients[1]) /  fit$coefficients[2] ) %>%
+  dplyr::mutate(outlier = abs(PC3.scaled - pct) > 28) %>%
+  tibble::rownames_to_column('sid')
+
+
+lm(PC3.scaled ~ pct, data = expression.pca)
+
+
+
+ggplot(expression.pca, aes(x = pct, y= PC3.scaled, col = outlier , label = sid  ) ) + 
+  geom_point(cex = 0.6) +
+  geom_text_repel(data = subset(expression.pca, outlier == T) )
   
-  e1 <- plt %>% dplyr::filter(pid == e$pid & res == "R1")
-  e2 <- plt %>% dplyr::filter(pid == e$pid & res == "R2")
-  
-  if(nrow(e1) == 1 & nrow(e2) == 1) {
-    per.pat[i,]$p1 <- e1$pct
-    per.pat[i,]$p2 <- e2$pct
-  }
-}
-
-per.pat <- per.pat %>%
-  dplyr::mutate(dpct = p2 - p1)
 
 
-ggplot(per.pat, aes(x = reorder(pid, dpct), y = dpct)) +
-  geom_hline(yintercept = 0, col="red", lwd=0.5, lty=2) +
-  geom_point()
-
+# does not seem to reveal clear improvements?
 
 
