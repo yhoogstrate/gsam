@@ -20,12 +20,15 @@ if(!file.exists('tmp/gencode.31.Rds')) {
     dplyr::filter(V3 == "gene") %>%
     dplyr::mutate(ENSG = gsub("^.+(ENSG[^;]+);.+$","\\1",V9)) %>%
     dplyr::mutate(GENE = gsub("^.+gene_name ([^;]+);.+$","\\1",V9)) %>%
+    dplyr::mutate(gene_type = gsub("^.+gene_type ([^;]+);.+$","\\1",V9)) %>%
     dplyr::mutate(V9 = NULL)
   
   saveRDS(gencode.31, 'tmp/gencode.31.Rds')
 } else {
   gencode.31 <- readRDS('tmp/gencode.31.Rds')
 }
+
+
 
 
 # full dataset ----
@@ -44,6 +47,9 @@ gsam.rnaseq.expression <- "data/gsam/output/tables/gsam_featureCounts_readcounts
   `colnames<-`(gsub("^.+RNA.alignments\\.(.+)\\.Aligned.sortedByCoord.+$","\\1", colnames(.) ,fixed=F)) %>%
   `colnames<-`(gsub(".","-", colnames(.) ,fixed=T)) %>%
   dplyr::left_join(gencode.31, by=c('Geneid' = 'ENSG') ) %>%
+  dplyr::filter(gene_type %in% c('protein_coding')) %>%  # ,'lncRNA'
+  dplyr::filter(V1 != "chrM") %>%
+  dplyr::mutate(gene_type = NULL) %>%
   dplyr::mutate(rn = paste0 ( 
     Geneid,
     "|",
