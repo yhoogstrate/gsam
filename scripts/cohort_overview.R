@@ -127,10 +127,10 @@ plt.expanded <- data.frame(pid = unique(plt.ids$pid) ) %>%
   dplyr::left_join(plt.ids %>% dplyr::filter(resection == "R2") %>% dplyr::rename(R2 = sid) %>% dplyr::select(c('pid', 'R2')) , by = c('pid' = 'pid') ) %>%
   dplyr::left_join(plt.ids %>% dplyr::filter(resection == "R3") %>% dplyr::rename(R3 = sid) %>% dplyr::select(c('pid', 'R3')) , by = c('pid' = 'pid') ) %>%
   
-  dplyr::mutate(TP.status =  case_when(is.na(TP) ~ 'NA', TP %in% excluded ~ "-" , TRUE ~ "+") ) %>%
-  dplyr::mutate(R1.status =  case_when(is.na(R1) ~ 'NA', R1 %in% excluded ~ "-" , TRUE ~ "+") ) %>%
-  dplyr::mutate(R2.status =  case_when(is.na(R2) ~ 'NA', R2 %in% excluded ~ "-" , TRUE ~ "+") ) %>%
-  dplyr::mutate(R3.status =  case_when(is.na(R3) ~ 'NA', R3 %in% excluded ~ "-" , TRUE ~ "+") ) %>%
+  dplyr::mutate(TP.status =  case_when(is.na(TP) ~ 'NA', TP %in% colnames(glass.gbm.rnaseq.expression) ~ "+" , TRUE ~ "-") ) %>%
+  dplyr::mutate(R1.status =  case_when(is.na(R1) ~ 'NA', R1 %in% colnames(glass.gbm.rnaseq.expression) ~ "+" , TRUE ~ "-") ) %>%
+  dplyr::mutate(R2.status =  case_when(is.na(R2) ~ 'NA', R2 %in% colnames(glass.gbm.rnaseq.expression) ~ "+" , TRUE ~ "-") ) %>%
+  dplyr::mutate(R3.status =  case_when(is.na(R3) ~ 'NA', R3 %in% colnames(glass.gbm.rnaseq.expression) ~ "+" , TRUE ~ "-") ) %>%
   dplyr::mutate(np = (TP.status == '+') + (R1.status == '+') + (R2.status == '+') + (R3.status == '+') ) %>%
   dplyr::mutate(IDHwt = pid %in% (glass.gbm.rnaseq.metadata %>% dplyr::filter(idh_status == "IDHwt") %>% dplyr::pull(pid)) ) %>%
   dplyr::mutate(IDHwt.order = ifelse(IDHwt, 1, 2)) %>%

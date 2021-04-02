@@ -40,8 +40,8 @@ glass.gbm.rnaseq.expression <- 'data/gsam/data/GLASS_GBM_R1-R2/glass_transcript_
   summarise(across(everything(), list(sum))) %>%
   tibble::rownames_to_column('tmp') %>% 
   dplyr::mutate(tmp=NULL) %>%
-  dplyr::filter(gene_id %in% c("ENSG00000198804", "ENSG00000198886", "ENSG00000198938","ENSG00000198712",
-                               "ENSG00000198727") == F ) %>% # extreme high counts from odd genes
+  #dplyr::filter(gene_id %in% c("ENSG00000198804", "ENSG00000198886", "ENSG00000198938","ENSG00000198712", # exclude from normalisation?
+  #                             "ENSG00000198727") == F ) %>% # extreme high counts from odd genes
   tibble::column_to_rownames('gene_id') %>%
   round() %>%
   `colnames<-`( gsub(".","-",colnames(.), fixed=T) ) %>%
@@ -92,6 +92,7 @@ glass.gbm.rnaseq.expression <- 'data/gsam/data/GLASS_GBM_R1-R2/glass_transcript_
 glass.gbm.rnaseq.metadata <- data.frame(sid = colnames(glass.gbm.rnaseq.expression),  stringsAsFactors = F) %>%
   dplyr::mutate(sid = gsub(".","-",sid,fixed=T)) %>% # by convention [https://github.com/fpbarthel/GLASS]
   dplyr::mutate(sid = gsub("_1$","",sid,fixed=F)) %>% # by convention [https://github.com/fpbarthel/GLASS]
+  dplyr::mutate(sample_barcode = gsub("^([^\\-]+-[^\\-]+-[^\\-]+-[^\\-]+)-.+$","\\1",sid)) %>%
   dplyr::mutate(pid = gsub("^(............).+$","\\1",sid)) %>%
   dplyr::arrange(pid) %>%
   dplyr::mutate(resection = as.factor(gsub("^.............(..).+$","\\1",sid))) %>% # TP is primary tumour? https://github.com/fpbarthel/GLASS
@@ -104,14 +105,44 @@ glass.gbm.rnaseq.metadata <- data.frame(sid = colnames(glass.gbm.rnaseq.expressi
     , by     = c('sid' = 'aliquot_barcode' )  )  %>%
   dplyr::mutate(sid.label = gsub("^(.)...(-..-....-).(.).*$","\\1\\2\\3",sid) ) %>%
   dplyr::mutate(dataset = gsub("^(....).*$","\\1",sid) ) %>%
-  dplyr::mutate(IDH.status = case_when(
-    pid %in% c("TCGA-FG-5965", "TCGA-TM-A7CF", "TCGA-TQ-A7RV") ~ "IDH1",
-    pid %in% c() ~ "IDH2", # none?!
-    TRUE ~ "-"
-  )
-                )
+  dplyr::left_join(
+    read.table('data/glass_clinical_surgeries.txt',sep="\t",header=T,stringsAsFactors = F) %>%
+      dplyr::mutate(ROW_ID=NULL, ROW_VERSION=NULL)
+      ,
+    by=c('sample_barcode'='sample_barcode'))
+
+
+
 
 stopifnot(!is.na(glass.gbm.rnaseq.metadata$GBM.transcriptional.subtype.Synapse))
+
+
+
+
+
+## according to TCGA [data/tcga/tables/rna-seq/gdc_sample_sheet.2019-01-28.tsv] these should be recurrent GBMs:
+# TCGA-06-0125	TCGA-06-0125-02A  v
+# TCGA-06-0152	TCGA-06-0152-02A  [no matching primary pair]
+# TCGA-06-0171	TCGA-06-0171-02A  [no matching primary pair]
+# TCGA-06-0190	TCGA-06-0190-02A  v
+# TCGA-06-0210	TCGA-06-0210-02A  v
+# TCGA-06-0211	TCGA-06-0211-02A  v
+# TCGA-06-0221	TCGA-06-0221-02A  [no matching primary pair]
+# TCGA-14-0736	TCGA-14-0736-02A  [no matching primary pair]
+# TCGA-14-1034	TCGA-14-1034-02B  v
+# TCGA-14-1402	TCGA-14-1402-02A  [no matching primary pair]
+# TCGA-19-0957	TCGA-19-0957-02A  [no matching primary pair]
+# TCGA-19-1389	TCGA-19-1389-02A  [no matching primary pair]
+# TCGA-19-4065	TCGA-19-4065-02A  WEL in TCGA, WEL in GLASS data sheet, NIET in expressie tabel [glass_transcript_counts.txt] ?
+
+# present in GLASS:
+# TCGA-06-0125-R1      IDHwt Glioblastoma, IDH-wildtype
+# TCGA-06-0190-R1      IDHwt Glioblastoma, IDH-wildtype
+# TCGA-06-0210-R1      IDHwt Glioblastoma, IDH-wildtype
+# TCGA-06-0211-R1      IDHwt Glioblastoma, IDH-wildtype
+# TCGA-14-1034-R1      IDHwt Glioblastoma, IDH-wildtype
+# TCGA-FG-5963-R1      IDHwt Glioblastoma, IDH-wildtype    not matching TCGA?
+
 
 
 
@@ -119,9 +150,8 @@ stopifnot(!is.na(glass.gbm.rnaseq.metadata$GBM.transcriptional.subtype.Synapse))
 # exclude IDH mutants ----
 
 glass.gbm.rnaseq.expression <- glass.gbm.rnaseq.expression %>%
-  dplyr::select(glass.gbm.rnaseq.metadata %>% dplyr::filter(IDH.status == "-") %>% pull(sid))
-
-
+  dplyr::select( glass.gbm.rnaseq.metadata %>% dplyr::filter( pid %in% 
+                                                                (glass.gbm.rnaseq.metadata %>% dplyr::filter(who_classification != "Glioblastoma, IDH-wildtype") %>% pull(pid)) == F) %>% pull(sid) )
 
 
 
