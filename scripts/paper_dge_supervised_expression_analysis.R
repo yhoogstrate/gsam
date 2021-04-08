@@ -11,7 +11,7 @@ library(ggplot2)
 library(ggrepel)
 
 #library(pheatmap)
-#library(fgsea)
+library(fgsea)
 #library(limma)
 
 library(EnhancedVolcano)
@@ -340,6 +340,405 @@ glass.gene.res.res <- DESeqDataSetFromMatrix(glass.gene.expression.all %>%
 results.out <- results.out %>%
   dplyr::left_join(glass.gene.res.res, by = c('ensembl_id' = 'ensembl_id'))
 
+
+# hypeR enrichment ---- 
+
+# ensembl to entrez?
+# data(examplePathways)
+# data(exampleRanks)
+# # https://bioconductor.org/packages/release/bioc/vignettes/fgsea/inst/doc/fgsea-tutorial.html
+
+
+## https://www.gsea-msigdb.org/gsea/msigdb/collections.jsp
+
+genesets <- list()
+
+y <- results.out %>% 
+  dplyr::filter(!is.na(stat.gsam.tpc.res)) %>%
+  dplyr::filter(!is.na(hugo_symbol)) %>%
+  dplyr::filter(lfcSE.gsam.tpc.res < 0.3) %>%
+  #dplyr::filter(baseMean >= 10) %>% 
+  dplyr::distinct() %>% 
+  dplyr::group_by(hugo_symbol) %>% 
+  dplyr::summarize(stat.gsam.tpc.res=mean(stat.gsam.tpc.res))
+
+y.ordered <- (y %>% dplyr::select(hugo_symbol, stat.gsam.tpc.res) %>% dplyr::arrange(stat.gsam.tpc.res)) %>% tibble::deframe()
+y.ordered.abs <- (y %>% dplyr::select(hugo_symbol, stat.gsam.tpc.res) %>% dplyr::arrange(abs(stat.gsam.tpc.res))) %>% tibble::deframe()
+
+
+for(a in names(genesets)) {
+  for(b in names(genesets[[a]])) {
+    if(grepl("blood vessel",b,ignore.case = T) |   grepl("adasd vascul",b,ignore.case = T) ) {
+      print(a)
+      print(b)
+      print("")
+    }
+  }
+}
+
+
+grepl("asd","AsD",ignore.case = T)
+
+
+## Hallmark genes ----
+
+genesets$HALLMARK     <- hypeR::msigdb_gsets("Homo sapiens", "H", "", clean = T)$genesets
+
+z <- hypeR::hypeR(genesets = genesets$HALLMARK, signature = y.ordered, background = nrow(y), test = 'kstest', absolute = F, quiet = T, plotting = T)
+hyp_dots(z)
+tibble::as_tibble(z$as.data.frame()) %>%
+  filter(score < 0)
+
+z$plots[1]
+z$plots[2]
+z$plots[3]
+
+
+z$plots[[which(rownames(z$as.data.frame()) == "Coagulation")]]
+
+
+## Positional ----
+
+# TODO: chr19 GLASS?
+
+genesets$POSITIONAL   <- hypeR::msigdb_gsets("Homo sapiens", "C1", "", clean = T)$genesets
+
+z <- hypeR::hypeR(genesets = genesets$POSITIONAL, signature = y.ordered, background = nrow(y), test = 'kstest', absolute = F, quiet = T, plotting = T)
+hyp_dots(z)
+
+tibble::as_tibble(z$as.data.frame())
+
+tibble::as_tibble(z$as.data.frame()) %>%
+  filter(score < 0)
+
+
+z$plots[[which(rownames(z$as.data.frame()) == "Chr19q13")]]#genesets$POSITIONAL$Chr19q13
+z$plots[[which(rownames(z$as.data.frame()) == "Chr19p13")]]
+z$plots[[which(rownames(z$as.data.frame()) == "Chr1p36")]]#genesets$POSITIONAL$Chr1p36
+z$plots[[which(rownames(z$as.data.frame()) == "Chr7q22")]]#genesets$POSITIONAL$Chr7q22
+
+
+
+z$plots[[which(rownames(z$as.data.frame()) == "Chr7p21")]] # ETV1, TWIST1, MEOX2?
+#z$plots[[which(rownames(z$as.data.frame()) == "Chrxq13")]]
+
+
+## CGP: chemical and genetic perturbations ----
+
+genesets$CGP          <- hypeR::msigdb_gsets(species='Homo sapiens', category='C2', subcategory='CGP', clean = T)$genesets
+
+#z <- hypeR::hypeR(genesets = genesets$CGP, signature = y.ordered, background = nrow(y), test = 'hypergeometric', absolute = F, quiet = T, plotting = T)
+z <- hypeR::hypeR(genesets = genesets$CGP, signature = y.ordered, background = nrow(y), test = 'kstest', absolute = F, quiet = T, plotting = T)
+hyp_dots(z)
+
+
+tibble::as_tibble(z$as.data.frame())
+
+
+z$plots[[which(rownames(z$as.data.frame()) == "Gobert Oligodendrocyte Differentiation Up")]]
+z$plots[[which(rownames(z$as.data.frame()) == "Kobayashi Egfr Signaling 24hr Dn")]]#genesets$CGP$`Kobayashi Egfr Signaling 24hr Dn`
+
+
+
+tibble::as_tibble(z$as.data.frame()) %>%
+  filter(score < 0)
+
+
+
+# Pca2 - sterk
+z$plots[[which(rownames(z$as.data.frame()) == "Nakayama Soft Tissue Tumors Pca2 Up")]] 
+z$plots[[which(rownames(z$as.data.frame()) == "Creighton Endocrine Therapy Resistance 2")]]
+
+
+
+
+## [x] Curated canonical: Biocarta ----
+## TOO small gene sets?! ~20 genes each
+# genesets$BIOCARTA     <- hypeR::msigdb_gsets(species='Homo sapiens', category='C2', subcategory='CP:BIOCARTA', clean = T)$genesets
+# 
+# z <- hypeR::hypeR(genesets = genesets$BIOCARTA, signature = y.ordered, background = nrow(y), test = 'kstest', absolute = F, quiet = T, plotting = T)
+# hyp_dots(z)
+# 
+# 
+# 
+# tibble::as_tibble(z$as.data.frame())
+# 
+# z$plots[[which(rownames(z$as.data.frame()) == "Rb Pathway")]] #genesets$BIOCARTA$`Rb Pathway`
+# 
+# 
+# tibble::as_tibble(z$as.data.frame()) %>%
+#   filter(score < 0)
+
+
+## Curated canonical: Reactome ----
+
+genesets$REACTOME     <- hypeR::msigdb_gsets(species='Homo sapiens', category='C2', subcategory='CP:REACTOME', clean = T)$genesets
+
+z <- hypeR::hypeR(genesets = genesets$REACTOME, signature = y.ordered, background = nrow(y), test = 'kstest', absolute = F, quiet = T, plotting = F)
+hyp_dots(z)
+
+tibble::as_tibble(z$as.data.frame())
+
+tibble::as_tibble(z$as.data.frame()) %>%
+  filter(score < 0)
+
+## Curated canonical: Kegg ----
+
+
+genesets$KEGG         <- hypeR::msigdb_gsets(species='Homo sapiens', category='C2', subcategory='CP:KEGG', clean = T)$genesets
+
+z <- hypeR::hypeR(genesets = genesets$KEGG, signature = y.ordered, background = nrow(y), test = 'kstest', absolute = F, quiet = T, plotting = F)
+hyp_dots(z)
+
+
+tibble::as_tibble(z$as.data.frame())
+
+tibble::as_tibble(z$as.data.frame()) %>%
+  filter(score < 0)
+
+
+
+## Curated canonical: Wiki pathways ----
+
+
+genesets$WIKIPATHWAYS <- hypeR::msigdb_gsets(species='Homo sapiens', category='C2', subcategory='CP:WIKIPATHWAYS', clean = T)$genesets
+
+z <- hypeR::hypeR(genesets = genesets$WIKIPATHWAYS, signature = y.ordered, background = nrow(y), test = 'kstest', absolute = F, quiet = T, plotting = F)
+hyp_dots(z)
+
+
+tibble::as_tibble(z$as.data.frame())
+
+tibble::as_tibble(z$as.data.frame()) %>%
+  filter(score < 0)
+
+
+
+# compare w/:
+# "Erbb Signaling Pathway"
+# "Egfegfr Signaling Pathway"
+# "Egfr Tyrosine Kinase Inhibitor Resistance"
+# "Erbb Signaling Pathway"
+
+# for(n in names(genesets$WIKIPATHWAYS)) {
+#   p = genesets$WIKIPATHWAYS[[n]]
+#   if("EGFR" %in% p) {
+#     print(n)
+#   }
+# }
+
+
+## TFT: transcription factor targets ----
+
+genesets$TFT <- hypeR::msigdb_gsets(species='Homo sapiens', category='C3',  subcategory='TFT:GTRD', clean = T)$genesets
+
+z <- hypeR::hypeR(genesets = genesets$TFT, signature = y.ordered, background = nrow(y), test = 'kstest', absolute = F, quiet = T, plotting = T)
+hyp_dots(z)
+
+# https://pubmed.ncbi.nlm.nih.gov/18852215/
+# Hsd17b8
+# Cebpz: CCAAT
+
+
+tibble::as_tibble(z$as.data.frame())
+
+tibble::as_tibble(z$as.data.frame()) %>%
+  filter(score < 0)
+
+
+z$plots[[which(rownames(z$as.data.frame()) == "Nfkbia Target Genes")]]#genesets$TFT$`Nfkbia Target Genes`
+
+
+
+## Computed: Cancer modules ----
+
+
+genesets$COMP <- hypeR::msigdb_gsets(species='Homo sapiens', category='C4',  subcategory='CM', clean = T)$genesets
+
+z <- hypeR::hypeR(genesets = genesets$COMP, signature = y.ordered, background = nrow(y), test = 'kstest', absolute = F, quiet = T, plotting = T)
+hyp_dots(z)
+
+# module 54: Cell cycle (expression cluster) - https://www.gsea-msigdb.org/gsea/msigdb/cards/MODULE_54.html - http://robotics.stanford.edu/~erans/cancer/modules/module_54
+
+
+tibble::as_tibble(z$as.data.frame())
+
+tibble::as_tibble(z$as.data.frame()) %>%
+  filter(score < 0)
+
+
+z$plots[[which(rownames(z$as.data.frame()) == "54")]]
+
+
+
+
+## GO:BP (Biological Process) [g:profiler?] ----
+
+genesets$GO_BP        <- hypeR::msigdb_gsets(species='Homo sapiens', category='C5', subcategory='GO:BP', clean = T)$genesets
+
+z <- hypeR::hypeR(genesets = genesets$GO_BP, signature = y.ordered, background = nrow(y), test = 'kstest', absolute = F, quiet = T, plotting = T)
+hyp_dots(z)
+
+
+
+
+tibble::as_tibble(z$as.data.frame())
+
+
+z$plots[[which(rownames(z$as.data.frame()) == "Dna Replication")]]
+z$plots[[which(rownames(z$as.data.frame()) == "Dna Dependent Dna Replication")]]#genesets$GO_BP$`Dna Dependent Dna Replication`
+
+
+tibble::as_tibble(z$as.data.frame()) %>%
+  filter(score < 0)
+
+
+
+
+## oncogenic signature gene sets ----
+
+# heel grote db? heel traag(!)
+
+# nice that up and down are separated
+
+genesets$ONCOSIG      <- hypeR::msigdb_gsets(species='Homo sapiens', category='C6',   clean = T)$genesets
+
+z <- hypeR::hypeR(genesets = genesets$ONCOSIG, signature = y.ordered, background = nrow(y), test = 'kstest', absolute = F, quiet = T, plotting = T)
+hyp_dots(z)
+#hyp_emap(z)
+
+# CSR = fibroblast? - https://www.gsea-msigdb.org/gsea/msigdb/cards/CSR_LATE_UP.V1_UP.html
+# PRC2 = fibroblast? - https://www.gsea-msigdb.org/gsea/msigdb/cards/PRC2_EED_UP.V1_DN.html
+
+
+# doen niks: !!
+# EGFR_UP.V1_DN
+# EGFR_UP.V1_UP
+# ERBB2_UP.V1_DN
+# ERBB2_UP.V1_UP
+# PTEN_DN.V1_DN
+# PTEN_DN.V1_UP
+# PTEN_DN.V2_DN
+# PTEN_DN.V2_UP
+# GLI1_UP.V1_DN
+# GLI1_UP.V1_UP
+# z$plots[[1]]
+# z$plots[[2]]
+# 
+# z$plots[[3]]
+# z$plots[[6]]
+# 
+# z$plots[[9]]
+# 
+# 
+# z$plots[[which(rownames(z$as.data.frame()) == "Gli1 Up.v1 Dn")]]
+
+
+tibble::as_tibble(z$as.data.frame())
+
+z$plots[[which(rownames(z$as.data.frame()) == "Csr Late Up.v1 Up")]]#genesets$ONCOSIG$`Csr Late Up.v1 Up`
+z$plots[[which(rownames(z$as.data.frame()) == "Prc2 Eed Up.v1 Dn")]]#genesets$ONCOSIG$`Prc2 Eed Up.v1 Dn`
+z$plots[[which(rownames(z$as.data.frame()) == "Rb P130 Dn.v1 Up")]]#genesets$ONCOSIG$`Rb P130 Dn.v1 Up`
+
+
+
+tibble::as_tibble(z$as.data.frame()) %>%
+  filter(score < 0)
+
+
+z$plots[[which(rownames(z$as.data.frame()) == "Prc2 Ezh2 Up.v1 Dn")]]#genesets$ONCOSIG$`Prc2 Ezh2 Up.v1 Dn`
+z$plots[[which(rownames(z$as.data.frame()) == "Pten Dn.v2 Dn")]]#genesets$ONCOSIG$`Pten Dn.v2 Dn`
+
+
+
+## immunologic signature gene sets  ----
+
+genesets$IMMUSIG      <- hypeR::msigdb_gsets(species='Homo sapiens', category='C7',   clean = T)$genesets
+
+z <- hypeR::hypeR(genesets = genesets$IMMUSIG, signature = y.ordered, background = nrow(y), test = 'kstest', absolute = F, quiet = T, plotting = T)
+hyp_dots(z)
+
+
+
+
+tibble::as_tibble(z$as.data.frame())
+
+# TODO:
+#z$plots[[which(rownames(z$as.data.frame()) == "Day6 Vs Day10 Traf6ko Eff Cd8 Tcell Up")]]#genesets$IMMUSIG$`Day6 Vs Day10 Traf6ko Eff Cd8 Tcell Up`
+#z$plots[[which(rownames(z$as.data.frame()) == "Gse14415 Natural Treg Vs Tconv Dn")]]#genesets$IMMUSIG$`Gse14415 Natural Treg Vs Tconv Dn`
+
+
+
+tibble::as_tibble(z$as.data.frame()) %>%
+  filter(score < 0)
+
+# TODO:
+#z$plots[[which(rownames(z$as.data.frame()) == "Gse45365 Wt Vs Ifnar Ko Bcell Dn")]]
+
+
+
+## cell type signature gene sets ----
+
+genesets$CELLTYPE      <- hypeR::msigdb_gsets(species='Homo sapiens', category='C8',   clean = T)$genesets
+
+z <- hypeR::hypeR(genesets = genesets$CELLTYPE, signature = y.ordered, background = nrow(y), test = 'kstest', absolute = F, quiet = T, plotting = T)
+hyp_dots(z)
+hyp_emap(z)
+
+
+tibble::as_tibble(z$as.data.frame())
+
+
+tibble::as_tibble(z$as.data.frame()) %>%
+  filter(score < 0)
+
+
+
+###
+
+
+
+
+
+# z <- hypeR::hypeR(genesets = genesets$BIOCARTA, signature = y.ordered, background = nrow(y), test = 'kstest', absolute = F, quiet = T, plotting = F)
+# zz <- tibble::as_tibble(z$as.data.frame())
+# 
+
+z <- hypeR::hypeR(genesets = genesets$REACTOME, signature = y.ordered, background = nrow(y), test = 'kstest', absolute = F, quiet = T, plotting = F)
+zz <- tibble::as_tibble(z$as.data.frame())
+hyp_emap(z)
+hyp_dots(z)
+
+
+
+z <- hypeR::hypeR(genesets = genesets$KEGG, signature = y.ordered, background = nrow(y), test = 'kstest', absolute = F, quiet = T, plotting = T)
+zz <- tibble::as_tibble(z$as.data.frame())
+
+
+# hyp_show(z)
+# hyp_dots(z)
+# hyp_emap(z)
+# hyp_hmap(z)
+
+z$plots[[1]]
+z$plots[[2]]
+z$plots[[4]]
+
+
+
+z <- hypeR::hypeR(genesets = genesets$GO_BP, signature = y.ordered, background = nrow(y), test = 'kstest', absolute = F, quiet = T, plotting = F)
+zz <- tibble::as_tibble(z$as.data.frame())
+hyp_dots(z)
+
+
+
+z <- hypeR::hypeR(genesets = genesets$GO_BP[c("Chemical Synaptic Transmission Postsynaptic", names(genesets$GO_BP)[1:25])]
+                    , signature = y.ordered, background = nrow(y), test = 'kstest', absolute = F, quiet = T, plotting = T)
+zz <- tibble::as_tibble(z$as.data.frame())
+hyp_dots(z)
+z$plots[[which(zz$label == "Chemical Synaptic Transmission Postsynaptic")]]
+
+z$plots[[3]]
 
 
 
@@ -1068,6 +1467,7 @@ ggsave('output/figures/paper_dge_log2FoldChange.res_x_statistic.cor.tpc.png', wi
 
 ### a :: GLASS res x G-SAM TPC corr ----
 
+
 plt <- results.out %>%
   dplyr::filter(!is.na(log2FoldChange.glass.res) & !is.na(statistic.gsam.cor.tpc)) %>%
   dplyr::mutate(is.limited.glass.res = as.character(abs(log2FoldChange.glass.res) > 2.5)) %>% # change pch to something that is limited
@@ -1253,6 +1653,9 @@ p2 <- ggplot(plt, aes(x = log2FoldChange.gsam.res ,
 
 p1 + p2
 
+
+
+
 ggsave('output/figures/paper_dge_glass_x_gsam_chr19.png', width = 5.7 * 1.1 * 2 , height = 4 * 1.6 )
 
 
@@ -1303,7 +1706,6 @@ p2 <- ggplot(plt, aes(x=log2FoldChange.gsam.res ,
   geom_point(cex=0.35) +
   geom_smooth(data = subset(plt, padj.gsam.res > 0.05 &  is.limited.gsam.res == "FALSE"),method="lm",
               se = FALSE,  formula=y ~ x, orientation="y", col="red" , size=0.8) +
-  
   scale_color_manual(values = c('remaining'='black','chr7'='red') ) +
   labs(x = "log2FC R1 vs. R2",
        y="Correlation t-statistic with tumour percentage"
@@ -1320,40 +1722,127 @@ ggsave('output/figures/paper_dge_gsam_corrected_uncorrected.png', width = 5.7 * 
 
 
 
-
-
-## 2.10 Corrected LFC + labels ----
-
-# signi in both corrected and uncorrected, but lfcSE outlier in corrected
-# "TTLL10"     
-# "MYO3A"     
-# "AC090791.1" "AC090124.2" "AC090643.1" "AC009041.1" "LINC00514"  "KRT9"       "CKM"        "PI3"    
+## 2.9 Corrected LFC + GAB(R)A labels ----
 
 
 plt <- results.out %>%
-  dplyr::filter(is.na(padj.glass.res) | (!is.na(padj.glass.res) & padj.glass.res  < 0.01) ) %>%
+  #dplyr::filter(is.na(padj.glass.res) | (!is.na(padj.glass.res) & padj.glass.res  < 0.01) ) %>%
   dplyr::filter(!is.na(log2FoldChange.gsam.res) & !is.na(log2FoldChange.gsam.tpc.res)  & !is.na(statistic.gsam.cor.tpc) ) %>%
   dplyr::mutate(is.limited.gsam.tpc.res = as.character(abs(log2FoldChange.gsam.tpc.res) > 3)) %>% # change pch to something that is limited
   dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res > 3, 3 , log2FoldChange.gsam.tpc.res)) %>%
   dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res < -3, -3 , log2FoldChange.gsam.tpc.res)) %>%
-  dplyr::mutate(significant = padj.gsam.tpc.res < 0.01 & lfcSE.gsam.tpc.res < 0.3 ) %>%
-  #dplyr::mutate(show.label = significant & abs(log2FoldChange.gsam.tpc.res) > 1.5) 
-  dplyr::mutate(show.label = hugo_symbol %in% c('CDK4','MDM2','GLI1','GLIS1','EGFR','MHMT','CD4', "CD55" ))
-  #dplyr::mutate(significant = padj.gsam.tpc.res < 0.01 & lfcSE.gsam.tpc.res > 0.3 & log2FoldChange.gsam.res < 0.01 )
-  #dplyr::mutate(show.label = significant & abs(log2FoldChange.gsam.tpc.res) > 1.5)
+  dplyr::mutate(significant = padj.gsam.tpc.res < 0.01 & lfcSE.gsam.tpc.res < 0.3 & abs(log2FoldChange.gsam.tpc.res) > 0.5 ) %>%
+  #dplyr::mutate(show.label = significant & abs(log2FoldChange.gsam.tpc.res) > 1.5) %>%
+  dplyr::mutate(show.label.neuronal.label = hugo_symbol %in% c("RBFOX3", "SATB2", "SLC17A7", "RORB", "GAD1", "GAD2", "SST", "LHX6","ADARB2","VIP")) %>%
+  dplyr::mutate(show.label.neuronal = hugo_symbol %in% c("RELN","VIP","GAD2","SYNPR","GAD1","CNR1","SYT1","SCG2","TAC3","GABRG2","GABRA1","STMN2","DLX1","KCNC2","TMEM130","RAB3C","SST","VSTM2A","SNAP25","ROBO2","CALB2","KIT","CNTNAP2","GABRB2","FSTL5","NRXN3","SYT4","GRIA1","VSNL1","INA","NPY","GRIN2A","IGF1","PENK","ELAVL2","MYT1L","KCNQ5","MEG3","NRIP3","CHGB","CLSTN2","SCN2A","RAB3B","ZMAT4","NELL1","PNOC","ERBB4","SPHKAP","C11ORF87","ADARB2","SLC4A10","KIAA1324","GRIN2B","BCL11A","CELF4","PNMA2","DISP2","NYAP2","SV2B","SERPINI1","SLC2A13","RGS8","RTN1","NAP1L2","CCK","C8ORF34","DYNC1I1","SRRM4","RBFOX1","SLC12A5","NDRG4","ZNF804A","LPPR4","SLITRK4","GPR158","NDNF","KCNJ3","PCSK2","CADPS","OLFM3","GABBR2","SULT4A1","GLRA2","SYT13","CACNA2D1","GDA","SYNGR3","MAL2","PGM2L1","SLC7A14","GPR83","FRMPD4","NELL2","RGS4","CSRNP3","DCX","ATP1A3","ST8SIA3","UCHL1","GAP43")) %>%
+  dplyr::mutate(show.label.gaba = hugo_symbol %in% c("GABBR2","GABRA1","GABRA2","GABRA3","GABRA4","GABRA5","GABRA6","GABRB1","GABRB2","GABRB3","GABRD","GABRE","GABRG1","GABRG2","GABRG3","GABRP","GABRQ","GABRR1","GABRR2","GABRR3")) %>%
+  dplyr::mutate(show.label = as.factor ( case_when(
+    show.label.gaba == T ~ 'GABA',
+    show.label.neuronal == T & show.label.gaba == F ~ 'neuronal',
+    significant == T ~ 'significant',
+    T ~ 'not significant')))
 
-
-
-ggplot(plt, aes(x=log2FoldChange.gsam.tpc.res ,
+p1 <- ggplot(plt, aes(x=log2FoldChange.gsam.tpc.res ,
                 y=statistic.gsam.cor.tpc ,
-                col=significant,
+                col=show.label ,
+                size = show.label,
                 label = hugo_symbol )) + 
-  geom_point(data=subset(plt, significant != T),cex=0.35) +
-  geom_point(data=subset(plt, significant == T),cex=0.35) +
-  geom_text_repel(data=subset(plt, show.label == T), col="blue", size=2.5 ,
-                  nudge_x = 3.1, direction = "y", hjust = "left" #, lwd=0.5
+  geom_point(data=subset(plt, show.label == 'not significant')) +
+  geom_point(data=subset(plt, show.label == 'significant')) +
+  geom_point(data=subset(plt, show.label == 'neuronal')) +
+  geom_point(data=subset(plt, show.label == 'GABA')) +
+  scale_size_manual(values = c('not significant'=0.85, 'significant'=0.85, 'GABA'=1.75, 'neuronal'=1.75 )) +
+  scale_color_manual(values = c('not significant'= rgb(0,0,0,0.15),'significant'= rgb(0,0,0,0.15),'GABA'='red','neuronal'=rgb(0.2,0.2,1.0))) +
+  geom_text_repel(data=subset(plt, (show.label == 'GABA' | show.label.neuronal.label ) & log2FoldChange.gsam.tpc.res > 0), size=2.5 , segment.size = 0.25, segment.linetype = 1,
+                  nudge_x = 3.1, direction = "y", hjust = "left" ) +
+  geom_text_repel(data=subset(plt, (show.label == 'GABA' | show.label.neuronal.label ) & log2FoldChange.gsam.tpc.res < 0), size=2.5 , segment.size = 0.25, segment.linetype = 1,
+                  nudge_x = -3.1, direction = "y", hjust = "right" ) +
+  labs(x = "log2FC R1 vs. R2 G-SAM (tumor cell-% corrected)",
+       y="Correlation t-statistic with tumour percentage"
+       ,col="Difference significant (R1 ~ R2)"
+  ) +
+  youri_gg_theme + xlim(-3.5, 3.5)
+
+
+
+
+
+# orientation
+plt <- results.out %>%
+  dplyr::filter(!is.na(log2FoldChange.glass.res) & !is.na(log2FoldChange.glass.res)  & !is.na(statistic.gsam.cor.tpc) ) %>%
+  dplyr::mutate(is.limited.glass.res = as.character(abs(log2FoldChange.glass.res) > 3)) %>% # change pch to something that is limited
+  dplyr::mutate(log2FoldChange.glass.res = ifelse(log2FoldChange.glass.res > 3, 3 , log2FoldChange.glass.res)) %>%
+  dplyr::mutate(log2FoldChange.glass.res = ifelse(log2FoldChange.glass.res < -3, -3 , log2FoldChange.glass.res)) %>%
+  dplyr::mutate(significant = padj.glass.res < 0.01 & lfcSE.glass.res < 0.78 & abs(log2FoldChange.glass.res) > 0.5 ) %>%
+  #dplyr::mutate(significant = padj.glass.res < 0.01 ) %>%
+  dplyr::mutate(show.label.neuronal.label = hugo_symbol %in% c("RBFOX3", "SATB2", "SLC17A7", "RORB", "GAD1", "GAD2", "SST", "LHX6","ADARB2","VIP")) %>%
+  dplyr::mutate(show.label.neuronal = hugo_symbol %in% c("RELN","VIP","GAD2","SYNPR","GAD1","CNR1","SYT1","SCG2","TAC3","GABRG2","GABRA1","STMN2","DLX1","KCNC2","TMEM130","RAB3C","SST","VSTM2A","SNAP25","ROBO2","CALB2","KIT","CNTNAP2","GABRB2","FSTL5","NRXN3","SYT4","GRIA1","VSNL1","INA","NPY","GRIN2A","IGF1","PENK","ELAVL2","MYT1L","KCNQ5","MEG3","NRIP3","CHGB","CLSTN2","SCN2A","RAB3B","ZMAT4","NELL1","PNOC","ERBB4","SPHKAP","C11ORF87","ADARB2","SLC4A10","KIAA1324","GRIN2B","BCL11A","CELF4","PNMA2","DISP2","NYAP2","SV2B","SERPINI1","SLC2A13","RGS8","RTN1","NAP1L2","CCK","C8ORF34","DYNC1I1","SRRM4","RBFOX1","SLC12A5","NDRG4","ZNF804A","LPPR4","SLITRK4","GPR158","NDNF","KCNJ3","PCSK2","CADPS","OLFM3","GABBR2","SULT4A1","GLRA2","SYT13","CACNA2D1","GDA","SYNGR3","MAL2","PGM2L1","SLC7A14","GPR83","FRMPD4","NELL2","RGS4","CSRNP3","DCX","ATP1A3","ST8SIA3","UCHL1","GAP43")) %>%
+  dplyr::mutate(show.label.gaba = hugo_symbol %in% c("GABBR2","GABRA1","GABRA2","GABRA3","GABRA4","GABRA5","GABRA6","GABRB1","GABRB2","GABRB3","GABRD","GABRE","GABRG1","GABRG2","GABRG3","GABRP","GABRQ","GABRR1","GABRR2","GABRR3")) %>%
+  dplyr::mutate(show.label = as.factor ( case_when(
+    show.label.gaba == T ~ 'GABA',
+    show.label.neuronal == T & show.label.gaba == F ~ 'neuronal',
+    significant == T ~ 'significant',
+    T ~ 'not significant')))
+
+
+p2 <- ggplot(plt, aes(x=log2FoldChange.glass.res ,
+                      y=statistic.gsam.cor.tpc ,
+                      col=show.label,
+                      size=show.label,
+                      label = hugo_symbol)) + 
+  geom_point(data=subset(plt, show.label == 'not significant')) +
+  geom_point(data=subset(plt, show.label == 'significant')) +
+  geom_point(data=subset(plt, show.label == 'neuronal')) +
+  geom_point(data=subset(plt, show.label == 'GABA')) +
+  scale_size_manual(values = c('not significant'=0.85, 'significant'=0.85, 'GABA'=1.75, 'neuronal'=1.75 )) +
+  scale_color_manual(values = c('not significant'= rgb(0,0,0,0.15),'significant'= rgb(0,0,0,0.15),'GABA'='red','neuronal'=rgb(0.2,0.2,1.0))) +
+  geom_text_repel(data=subset(plt, (show.label == 'GABA' | show.label.neuronal.label ) == T & log2FoldChange.glass.res > 0), size=2.5 ,
+                  nudge_x = 3.1, direction = "y", hjust = "left" , segment.size = 0.25, segment.linetype = 1
                   ) +
-  scale_color_manual(values = c('TRUE'='red','FALSE'=rgb(0,0,0,0.35))) +
+  geom_text_repel(data=subset(plt, (show.label == 'GABA' | show.label.neuronal.label ) == T & log2FoldChange.glass.res < 0), size=2.5 ,
+                  nudge_x = -3.1, direction = "y", hjust = "right" , segment.size = 0.25 , segment.linetype = 1) +
+  labs(x = "log2FC R1 vs. R2 GLASS",
+       y="Correlation t-statistic with tumour percentage (in G-SAM!)"
+       ,col="Difference significant (R1 ~ R2)" ) +
+  youri_gg_theme + 
+  xlim(-3.5, 3.5)
+
+
+
+p1 + p2
+
+
+
+ggsave("output/figures/paper_dge_GABA-genes.png",height=5.7 * 1.1,width=4 * 1.6 * 2)
+
+
+
+## 2.10 Corrected LFC [TNNT] ----
+
+
+plt <- results.out %>%
+  dplyr::filter(!is.na(log2FoldChange.gsam.res) & !is.na(log2FoldChange.gsam.tpc.res)  & !is.na(statistic.gsam.cor.tpc) ) %>%
+  dplyr::mutate(is.limited.gsam.tpc.res = as.character(abs(log2FoldChange.gsam.tpc.res) > 3)) %>% # change pch to something that is limited
+  dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res > 3, 3 , log2FoldChange.gsam.tpc.res)) %>%
+  dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res < -3, -3 , log2FoldChange.gsam.tpc.res)) %>%
+  dplyr::mutate(significant = padj.gsam.tpc.res < 0.01 & lfcSE.gsam.tpc.res < 0.3 & abs(log2FoldChange.gsam.tpc.res) > 0.5 ) %>%
+  #dplyr::mutate(show.label = significant & abs(log2FoldChange.gsam.tpc.res) > 1.5) 
+  dplyr::mutate(show.label = hugo_symbol %in% c(#'CDK4','MDM2','GLI1','GLIS1',
+    "TNNI3K","TNN","TNNT2","TNNI1","TNNC1","TNNI2","TNNT3","TNNT1","TNNC2"
+  ))
+
+p1 <- ggplot(plt, aes(x=log2FoldChange.gsam.tpc.res ,
+                      y=statistic.gsam.cor.tpc ,
+                      col=significant,
+                      label = hugo_symbol )) + 
+  geom_point(data=subset(plt, significant != T),cex=0.35) +
+  geom_point(data=subset(plt, significant == T),cex=0.45) +
+  geom_point(data=subset(plt, show.label == T),col="red",cex=0.65) +
+  geom_text_repel(data=subset(plt, show.label == T & log2FoldChange.gsam.tpc.res > 0), col="blue", size=2.5 ,
+                  nudge_x = 2.9, direction = "y", hjust = "left") + #, lwd=0.5
+  geom_text_repel(data=subset(plt, show.label == T & log2FoldChange.gsam.tpc.res < 0), col="blue", size=2.5 ,
+                  nudge_x = -2.9, direction = "y", hjust = "right")+ #, lwd=0.5
+  scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
   labs(x = "log2FC R1 vs. R2 (Tumor cell percentage corrected)",
        y="Correlation t-statistic with tumour percentage"
        ,col="Difference significant (R1 ~ R2)"
@@ -1363,38 +1852,676 @@ ggplot(plt, aes(x=log2FoldChange.gsam.tpc.res ,
 
 
 
-plot(density(results.out %>% filter(!is.na(lfcSE.gsam.tpc.res) ) %>% pull(lfcSE.gsam.tpc.res)))
+
+plt <- results.out %>%
+  #dplyr::filter(is.na(padj.glass.res) | (!is.na(padj.glass.res) & padj.glass.res  < 0.01) ) %>%
+  dplyr::filter(!is.na(log2FoldChange.gsam.res) & !is.na(log2FoldChange.gsam.tpc.res)  & !is.na(statistic.gsam.cor.tpc) ) %>%
+  dplyr::mutate(is.limited.gsam.tpc.res = as.character(abs(log2FoldChange.gsam.tpc.res) > 3)) %>% # change pch to something that is limited
+  dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res > 3, 3 , log2FoldChange.gsam.tpc.res)) %>%
+  dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res < -3, -3 , log2FoldChange.gsam.tpc.res)) %>%
+  dplyr::mutate(significant = padj.glass.res < 0.01 & lfcSE.glass.res < 0.6 & abs(log2FoldChange.glass.res) > 0.5 ) %>%
+  #dplyr::mutate(show.label = significant & abs(log2FoldChange.gsam.tpc.res) > 1.5) 
+  dplyr::mutate(show.label = hugo_symbol %in% c(
+    "TNNI3K","TNN","TNNT2","TNNI1","TNNC1","TNNI2","TNNT3","TNNT1","TNNC2"
+  ))
 
 
-## supervised clustering / reconstruction ----
-# kijk of R1 & R2 scheiden; en de invloed van tpc
+p2 <- ggplot(plt, aes(x=log2FoldChange.glass.res ,
+                      y=statistic.gsam.cor.tpc  ,
+                      col=significant,
+                      label = hugo_symbol )) + 
+  geom_point(data=subset(plt, significant != T),cex=0.35) +
+  geom_point(data=subset(plt, significant == T),cex=0.45) +
+  geom_point(data=subset(plt, show.label == T),col="red",cex=0.65) +
+  geom_text_repel(data=subset(plt, show.label == T & log2FoldChange.gsam.tpc.res > 0), col="blue", size=2.5 ,
+                  nudge_x = 3.1, direction = "y", hjust = "left" #, lwd=0.5
+  ) +
+  geom_text_repel(data=subset(plt, show.label == T & log2FoldChange.gsam.tpc.res < 0), col="blue", size=2.5 ,
+                  nudge_x = -3.1, direction = "y", hjust = "right" #, lwd=0.5
+  ) +
+  scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
+  labs(x = "log2FC R1 vs. R2 GLASS",
+       y="Correlation t-statistic with tumour percentage"
+       ,col="Difference significant (R1 ~ R2)"
+  ) +
+  youri_gg_theme + 
+  xlim(-3, 3)
+
+
+
+p1 + p2
+
+
+
+ggsave("/tmp/gabra.png",height=10 * 1.3,width=4.5 * 1.3)
 
 
 
 
+## 2.11 Corrected LFC + vascular/angio ----
+
+
+
+# signi in both corrected and uncorrected, but lfcSE outlier in corrected
+# "TTLL10"     
+# "MYO3A"     
+# "AC090791.1" "AC090124.2" "AC090643.1" "AC009041.1" "LINC00514"  "KRT9"       "CKM"        "PI3"   
+#'EGFR','MHMT','CD4', "CXCL12", "BLNK", "DDB2","RBP1", "PLXNB1",
+#"SOX2", "NANOG",
+#"CDKN2A", "CDKN2B", "APEX1", "NF1", "TP53", "CD40",
+#"GSTM1", "SOCS2", "BTC", "FGFR3", 
+#"OCT4", "NOS1",
+#"POU5F1"
+
+# presynapse 
+synapse <- read.csv('/tmp/gProfiler_hsapiens_4-2-2021_4-39-17 PM.csv')
+
+
+
+plt <- results.out %>%
+  dplyr::filter(!is.na(log2FoldChange.gsam.res) & !is.na(log2FoldChange.gsam.tpc.res)  & !is.na(statistic.gsam.cor.tpc) ) %>%
+  dplyr::mutate(is.limited.gsam.tpc.res = as.character(abs(log2FoldChange.gsam.tpc.res) > 3)) %>% # change pch to something that is limited
+  dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res > 3, 3 , log2FoldChange.gsam.tpc.res)) %>%
+  dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res < -3, -3 , log2FoldChange.gsam.tpc.res)) %>%
+  dplyr::mutate(significant = padj.gsam.tpc.res < 0.01 & lfcSE.gsam.tpc.res < 0.3 & abs(log2FoldChange.gsam.tpc.res) > 0.5 ) %>%
+  #dplyr::mutate(show.label = significant & abs(log2FoldChange.gsam.tpc.res) > 1.5) 
+  dplyr::mutate(show.label = hugo_symbol %in% c(#'CDK4','MDM2','GLI1','GLIS1',
+    #"CPEB1",
+    #"GABARAP","GABBR2","GABRA1","GABRA2","GABRA3","GABRA4","GABRA5","GABRA6","GABRB1","GABRB2","GABRB3","GABRD","GABRE","GABRG1","GABRG2","GABRG3","GABRP","GABRQ","GABRR1","GABRR2","GABRR3"
+    #"GRIN1","GRIN2A","GRIN2B","GRIN2C","GRIN2D","GRIN3A","GRIN3B","GRM1","GRM2","GRM3","GRM4","GRM5","GRM6","GRM7"
+    #"HTR1A","HTR1B","HTR1D","HTR1E","HTR1F","HTR2A","HTR2B","HTR2C","HTR3A","HTR3B","HTR3C","HTR3D","HTR3E","HTR4","HTR5A","HTR6","HTR7","HTT"
+    #"PCDH15","PCDH17","PCDH8","PCDHB10","PCDHB11","PCDHB13","PCDHB14","PCDHB16","PCDHB2","PCDHB3","PCDHB4","PCDHB5","PCDHB6","PCDHB9"
+    #"SLC12A4","SLC12A5","SLC12A6","SLC12A7","SLC16A1","SLC16A3","SLC17A5","SLC17A6","SLC17A7","SLC17A8","SLC18A1","SLC18A2","SLC18A3","SLC1A1","SLC1A2","SLC1A3","SLC1A4","SLC1A6","SLC1A7","SLC22A1","SLC22A2","SLC22A3","SLC29A1","SLC29A2","SLC29A4","SLC2A1","SLC2A4","SLC2A8","SLC30A1","SLC30A3","SLC32A1","SLC3A2","SLC40A1","SLC4A10","SLC4A7","SLC4A8","SLC5A7","SLC6A1","SLC6A11","SLC6A17","SLC6A2","SLC6A3","SLC6A4","SLC6A5","SLC6A6","SLC6A9","SLC8A1","SLC8A2","SLC8A3","SLC9A6","SLC9B2"
+    #"ANKRD1","ANKRD18A","ANKRD18B","ANKRD29","ANKRD30B"
+    #"SYTL1","SYT6","SYT11","SYT2","SYT14","SYTL3","SYT8","SYT9","SYT13","SYT7","SYT12","SYTL2","SYT10","SYT1","SYT16","SYT17","SYT4","SYT3","SYT5","SYTL5","SYTL4"
+    # TNNT1:HP:0000707	Abnormality of the nervous system
+    #genesets$CELLTYPE$"Fan Embryonic Ctx Microglia 1"
+    #genesets$CELLTYPE$`Fan Embryonic Ctx Big Groups Microglia`
+    #genesets$CELLTYPE$`Fan Embryonic Ctx Big Groups Brain Immune`
+    #genesets$CELLTYPE$`Fan Embryonic Ctx Opc` # Oligodendrocyte progenitor cells
+    #genesets$CGP$`Nakayama Soft Tissue Tumors Pca2 U`
+    #genesets$CGP$`Kobayashi Egfr Signaling 24hr Dn`
+    #genesets$COMP$`54` # RB/EGFR overlap?
+    #genesets$ONCOSIG$`Csr Late Up.v1 Up` # rb cell cycle overlap?
+    #genesets$ONCOSIG$`Prc2 Ezh2 Up.v1 Dn`
+    #genesets$IMMUSIG$`Day6 Vs Day10 Traf6ko Eff Cd8 Tcell Up`
+    #genesets$IMMUSIG$`Gse14415 Natural Treg Vs Tconv Dn`
+    
+    genesets$GO_BP$`Vasculature Development`
+    #genesets$GO_BP$`Blood Vessel Morphogenesis` 
+    
+  ))
+
+
+genesets$GO_BP$`Vasculature Development` %>% length()
+genesets$GO_BP$`Blood Vessel Development` %>% length()
+genesets$GO_BP$`Blood Vessel Morphogenesis` %>% length()
+
+ggplot(plt, aes(x=log2FoldChange.gsam.tpc.res ,
+                y=statistic.gsam.cor.tpc ,
+                col=significant,
+                label = hugo_symbol )) + 
+  geom_point(data=subset(plt, significant != T),cex=0.35) +
+  #geom_point(data=subset(plt, significant == T),cex=0.45) +
+  #geom_point(data=subset(plt, significant != T),cex=0.35) +
+  #geom_point(data=subset(plt, significant == T),cex=0.45) +
+  #geom_point(data=subset(plt, show.label == T & log2FoldChange.gsam.tpc.res < -0.25),col="red",cex=0.65) +
+  geom_point(data=subset(plt, show.label == T ),col="black",cex=0.65) +
+  #geom_text_repel(data=subset(plt, show.label == T & log2FoldChange.gsam.tpc.res > 0), col="blue", size=2.5 ,
+  #                nudge_x = 3.1, direction = "y", hjust = "left") + #, lwd=0.5
+  #geom_text_repel(data=subset(plt, show.label == T & log2FoldChange.gsam.tpc.res < 0), col="blue", size=2.5 ,
+  #                nudge_x = 3.1, direction = "y", hjust = "left")+ #, lwd=0.5
+  scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
+  labs(x = "log2FC R1 vs. R2 (Tumor cell percentage corrected)",
+       y="Correlation t-statistic with tumour percentage"
+       ,col="Difference significant (R1 ~ R2)"
+  ) +
+  youri_gg_theme + 
+  xlim(-3, 3)
+
+
+
+
+plt <- results.out %>%
+  #dplyr::filter(is.na(padj.glass.res) | (!is.na(padj.glass.res) & padj.glass.res  < 0.01) ) %>%
+  dplyr::filter(!is.na(log2FoldChange.gsam.res) & !is.na(log2FoldChange.gsam.tpc.res)  & !is.na(statistic.gsam.cor.tpc) ) %>%
+  dplyr::mutate(is.limited.gsam.tpc.res = as.character(abs(log2FoldChange.gsam.tpc.res) > 3)) %>% # change pch to something that is limited
+  dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res > 3, 3 , log2FoldChange.gsam.tpc.res)) %>%
+  dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res < -3, -3 , log2FoldChange.gsam.tpc.res)) %>%
+  dplyr::mutate(significant = padj.glass.res < 0.01 & lfcSE.glass.res < 0.6 & abs(log2FoldChange.glass.res) > 0.5 ) %>%
+  #dplyr::mutate(show.label = significant & abs(log2FoldChange.gsam.tpc.res) > 1.5) 
+  dplyr::mutate(show.label = hugo_symbol %in% c(
+    "TNNI3K","TNN","TNNT2","TNNI1","TNNC1","TNNI2","TNNT3","TNNT1","TNNC2"
+  ))
+
+
+p2 <- ggplot(plt, aes(x=log2FoldChange.glass.res ,
+                      y=statistic.gsam.cor.tpc  ,
+                      col=significant,
+                      label = hugo_symbol )) + 
+  geom_point(data=subset(plt, significant != T),cex=0.35) +
+  geom_point(data=subset(plt, significant == T),cex=0.45) +
+  geom_point(data=subset(plt, show.label == T),col="red",cex=0.65) +
+  geom_text_repel(data=subset(plt, show.label == T & log2FoldChange.gsam.tpc.res > 0), col="blue", size=2.5 ,
+                  nudge_x = 3.1, direction = "y", hjust = "left" #, lwd=0.5
+  ) +
+  geom_text_repel(data=subset(plt, show.label == T & log2FoldChange.gsam.tpc.res < 0), col="blue", size=2.5 ,
+                  nudge_x = -3.1, direction = "y", hjust = "right" #, lwd=0.5
+  ) +
+  scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
+  labs(x = "log2FC R1 vs. R2 GLASS",
+       y="Correlation t-statistic with tumour percentage"
+       ,col="Difference significant (R1 ~ R2)"
+  ) +
+  youri_gg_theme + 
+  xlim(-3, 3)
+
+
+
+p1 + p2
+
+
+
+ggsave("/tmp/gabra.png",height=10 * 1.3,width=4.5 * 1.3)
+
+
+
+
+## 2.12 Corrected LFC + oncogenes ----
+
+
+
+
+plt <- results.out %>%
+  dplyr::filter(!is.na(log2FoldChange.gsam.res) & !is.na(log2FoldChange.gsam.tpc.res)  & !is.na(statistic.gsam.cor.tpc) ) %>%
+  dplyr::mutate(is.limited.gsam.tpc.res = as.character(abs(log2FoldChange.gsam.tpc.res) > 3)) %>% # change pch to something that is limited
+  dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res > 3, 3 , log2FoldChange.gsam.tpc.res)) %>%
+  dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res < -3, -3 , log2FoldChange.gsam.tpc.res)) %>%
+  dplyr::mutate(significant = padj.gsam.tpc.res < 0.01 & lfcSE.gsam.tpc.res < 0.3 & abs(log2FoldChange.gsam.tpc.res) > 0.5 ) %>%
+  dplyr::mutate(show.label.gains = hugo_symbol %in% c(
+    # "MGMT",
+    # "HER2","RAS","PTEN","MTOR","TP53","GFAP","TAP1","TGFB1","RB1","NF1","ATRX",
+    # "CDK2","PIK3CA", "BRAF","PIK3R1","TERT","TERC",
+    # "MCM","MCM2", "MCM4",
+    # "SOX2", "SOX9", "FGFR3","CCNE1", "AKT3","LSAMP","CCND1","CCND2", "PIK3C2B","CDK6","CDK4","MDM2","MDM4",
+    "AKT1","AKT3","EGFR", "PDGFRA","MET", "PIK3C2B", "MDM2","MDM4", "CDK4","CDK6","SOX2","FGFR3","MYCN","MYC","CCND1","CCND2","BMI1" # gains
+  )) %>%
+  dplyr::mutate(show.label.other = hugo_symbol %in% c( 
+    "TP53", "PIK3CA","PIK3R1","RB1","NF1","SPTA1","GABRA6","ABCC6","CXCL12",
+    #CXCL12=https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5193023/ = strongly associated w/ non tumour cells
+    # 'CDK4','MDM2',"EGFR","PDGFRA","OCT4","MGMT"# "MET","HER2","RAS","PTEN","MTOR","TP53","GFAP","TAP1","TGFB1","RB1","NF1","ATRX",
+    # "CDK2","PIK3CA", "BRAF","PIK3R1","TERT","TERC",
+    # "MCM","MCM2", "MCM4",
+    "LTBP4", "TGFB1","PREX1","MSH6", "MSH2", "MLH1","VEGFA", "PTPN11","STAT3","DCC"
+    # "MSH6" =- Recurrent Glioblastoma: From Molecular Landscape to New Treatment Perspectives
+    # DCC = progression marker? - https://www.intechopen.com/books/neurooncology-newer-developments/genetic-alterations-of-glioblastoma + DOI:10.1371/journal.pone.0025408
+  )) %>%
+  dplyr::mutate(show.label.losses = hugo_symbol %in% c(
+    "CDKN2A","CDKN2B","PTEN","RB1","NF1","QKI","CDKN2C","TP53","MTAP","ELAVL2","PARK2"
+    # https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3194060/
+  ))
+
+
+p1a <- ggplot(plt, aes(x=log2FoldChange.gsam.tpc.res , y=statistic.gsam.cor.tpc , col=significant, label = hugo_symbol )) + 
+  geom_point(data=subset(plt, significant != T),cex=0.35) +
+  geom_point(data=subset(plt, significant == T),cex=0.45) +
+  geom_point(data=subset(plt, show.label.other == T ),col="black",cex=0.65) +
+  geom_text_repel(data=subset(plt, show.label.other == T & log2FoldChange.gsam.tpc.res > 0), col="blue", size=2.5 ,nudge_x = 3.1, direction = "y", hjust = "left", segment.size=0.35) + 
+  geom_text_repel(data=subset(plt, show.label.other == T & log2FoldChange.gsam.tpc.res < 0), col="blue", size=2.5 , nudge_x = -3.1, direction = "y", hjust = "right", segment.size=0.35) + 
+  scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
+  labs(x = "log2FC R1 vs. R2 (Tumor cell percentage corrected)",
+       y="Correlation t-statistic with tumour percentage"
+       ,col="Difference significant (R1 ~ R2)") +
+  youri_gg_theme + xlim(-3, 3)
+
+
+p2a <- ggplot(plt, aes(x=log2FoldChange.gsam.tpc.res , y=statistic.gsam.cor.tpc , col=significant, label = hugo_symbol )) + 
+  geom_point(data=subset(plt, significant != T),cex=0.35) +
+  geom_point(data=subset(plt, significant == T),cex=0.45) +
+  geom_point(data=subset(plt, show.label.gains == T ),col="black",cex=0.65) +
+  geom_text_repel(data=subset(plt, show.label.gains == T & log2FoldChange.gsam.tpc.res > 0), col="blue", size=2.5 ,nudge_x = 3.1, direction = "y", hjust = "left", segment.size=0.35) + 
+  geom_text_repel(data=subset(plt, show.label.gains == T & log2FoldChange.gsam.tpc.res < 0), col="blue", size=2.5 , nudge_x = -3.1, direction = "y", hjust = "right", segment.size=0.35) + 
+  scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
+  labs(x = "log2FC R1 vs. R2 (Tumor cell percentage corrected)",
+       y="Correlation t-statistic with tumour percentage"
+       ,col="Difference significant (R1 ~ R2)") +
+  youri_gg_theme + xlim(-3, 3)
+
+
+p3a <- ggplot(plt, aes(x=log2FoldChange.gsam.tpc.res , y=statistic.gsam.cor.tpc , col=significant, label = hugo_symbol )) + 
+  geom_point(data=subset(plt, significant != T),cex=0.35) +
+  geom_point(data=subset(plt, significant == T),cex=0.45) +
+  geom_point(data=subset(plt, show.label.losses == T ),col="black",cex=0.65) +
+  geom_text_repel(data=subset(plt, show.label.losses == T & log2FoldChange.gsam.tpc.res > 0), col="blue", size=2.5 ,nudge_x = 3.1, direction = "y", hjust = "left", segment.size=0.35) + 
+  geom_text_repel(data=subset(plt, show.label.losses == T & log2FoldChange.gsam.tpc.res < 0), col="blue", size=2.5 , nudge_x = -3.1, direction = "y", hjust = "right", segment.size=0.35) + 
+  scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
+  labs(x = "log2FC R1 vs. R2 (Tumor cell percentage corrected)",
+       y="Correlation t-statistic with tumour percentage"
+       ,col="Difference significant (R1 ~ R2)") +
+  youri_gg_theme + xlim(-3, 3)
+
+p2a + p1a + p3a
+
+
+
+plt <- results.out %>%
+  dplyr::filter(!is.na(log2FoldChange.gsam.res) & !is.na(log2FoldChange.gsam.tpc.res)  & !is.na(statistic.gsam.cor.tpc) ) %>%
+  dplyr::mutate(is.limited.gsam.tpc.res = as.character(abs(log2FoldChange.gsam.tpc.res) > 3)) %>% # change pch to something that is limited
+  dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res > 3, 3 , log2FoldChange.gsam.tpc.res)) %>%
+  dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res < -3, -3 , log2FoldChange.gsam.tpc.res)) %>%
+  dplyr::mutate(significant = padj.gsam.tpc.res < 0.01 & lfcSE.gsam.tpc.res < 0.3 & abs(log2FoldChange.gsam.tpc.res) > 0.5 ) %>%
+  #dplyr::mutate(show.label = significant & abs(log2FoldChange.gsam.tpc.res) > 1.5) 
+  dplyr::mutate(show.label = hugo_symbol %in% c(
+    #'GLIS1',"CPEB1",'GLI1',
+    #'
+    # 'CDK4','MDM2',"EGFR","PDGFRA","OCT4","MGMT","CDKN2A","CDKN2B",
+    # "MET","HER2","RAS","PTEN","MTOR","TP53","GFAP","TAP1","TGFB1","RB1","NF1","ATRX",
+    # "CDK2","PIK3CA", "BRAF","PIK3R1","TERT","TERC",
+    # "MCM","MCM2", "MCM4",
+    # "SOX2", "SOX9", "FGFR3","CCNE1", "AKT3","LSAMP","CCND1","CCND2", "PIK3C2B","CDK6","CDK4","MDM2","MDM4",
+    # "EGFR", "PDGFRA","MET", "PIK3C2B", "MDM2","MDM4", "CDK4","CDK6","SOX2","FGFR3" # gains
+    
+    # T-cells: "ITGA5", "ITGB1", "MSN", "FAS", "FLNA", "CD44", "RUNX1", "RUNX2"
+    # TAMs: "NRP1", "SPP1", "LYN", "LIMS1", "C5AR1", "PLAUR", "CEBPB"
+    # 'key immune markers': "CD3", "CD68", "CD163"
+    # angiogenesis: 'FLT1', 'MMP14', 'ENG', 'SERPINE1'
+
+    # neurons
+    #"RELN","VIP","GAD2","SYNPR","GAD1","CNR1","SYT1","SCG2","TAC3","GABRG2","GABRA1","STMN2","DLX1","KCNC2","TMEM130","RAB3C","SST","VSTM2A","SNAP25","ROBO2","CALB2","KIT","CNTNAP2","GABRB2","FSTL5","NRXN3","SYT4","GRIA1","VSNL1","INA","NPY","GRIN2A","IGF1","PENK","ELAVL2","MYT1L","KCNQ5","MEG3","NRIP3","CHGB","CLSTN2","SCN2A","RAB3B","ZMAT4","NELL1","PNOC","ERBB4","SPHKAP","C11ORF87","ADARB2","SLC4A10","KIAA1324","GRIN2B","BCL11A","CELF4","PNMA2","DISP2","NYAP2","SV2B","SERPINI1","SLC2A13","RGS8","RTN1","NAP1L2","CCK","C8ORF34","DYNC1I1","SRRM4","RBFOX1","SLC12A5","NDRG4","ZNF804A","LPPR4","SLITRK4","GPR158","NDNF","KCNJ3","PCSK2","CADPS","OLFM3","GABBR2","SULT4A1","GLRA2","SYT13","CACNA2D1","GDA","SYNGR3","MAL2","PGM2L1","SLC7A14","GPR83","FRMPD4","NELL2","RGS4","CSRNP3","DCX","ATP1A3","ST8SIA3","UCHL1","GAP43"
+    
+    # endothelial:    
+    #"APOLD1","FLT1","RGS5","PTPRB","TM4SF1","ABCB1","ITM2A","SDPR","SLCO1A2","FN1","EMCN","ESAM","NOSTRIN","CD34","SLC38A5","CYYR1","PODXL","CDH5","VWF","MECOM","CD93","ABCG2","TEK","PALMD","ERG","CLDN5","PECAM1","KDR","ITGA1","ICAM2","ATP10A","ANXA3","CA4","MYCT1","GIMAP6","ANXA1","PTRF","KIAA1462","EBF1","HMCN1","ENG","IGFBP7","ARHGAP29","ANXA2","OCLN","HIGD1B","SLC2A1","GNG11","SLC19A3","EPAS1","TBX3","SRGN","SOX7","SLC16A4","CAV1","CLIC5","VIM","HEG1","CCDC141","C10ORF10","EDN1","ROBO4","TMEM204","PROM1","IFITM1","LEF1","COBLL1","WWTR1","HBB","ETS1","SLC39A8","COL4A1","OSMR","ADCY4","TIE1","EDN3","THBD","BSG","AHNAK","MYO1B","IL1R1","CXCL12","CLEC14A","GATA2","SGPP2","SHE","PLTP","SPARC","ACVRL1","MMRN2","NID1","TNFSF10","FOXC1","UACA","CGNL1","MFSD2A","NET1","ABCC9","FLI1","C1ORF54"
+    
+    # microglia
+    #"CCL4","CCL3","CSF1R","CX3CR1","P2RY12","C1QB","RGS1","GPR183","GPR34","CTSS","LAPTM5","CD53","IL1A","C3AR1","PLEK","FCGR2A","CD83","ITGAM","P2RY13","CD86","TREM2","TYROBP","FCER1G","NCKAP1L","SELPLG","SLC2A5","CD14","C1QC","C1QA","MPEG1","HAVCR2","PTAFR","LY86","AIF1","ALOX5AP","LPCAT2","SLA","PTPRC","FCGR1A","CCL2","BLNK","IL10RA","BCL2A1","C5AR1","RHOH","CD84","CSF3R","TLR7","TLR2","HPGDS","LCP1","CD300A","FYB","MRC1","FAM105A","IRF8","LCP2","RGS10","CD74","PTPN6","TBXAS1","LYZ","DOCK2","TMEM119","NLRP3","ARHGDIB","CCRL2","IKZF1","ARHGAP25","DOCK8","HEXB","THEMIS2","SAMSN1","HK2","PLD4","APBB1IP","ITGB2","RUNX1","SLCO2B1","TLR1","FGD2","HCLS1","GPR84","OLFML3","MAFB","PIK3CG","SIGLEC7","IL1B","PIK3R5","IL6R","CXCL16","CLEC4A","PTGS1","SUSD3","LYN","VAV1","SLC11A1","RBM47","SYK","C10ORF128"
+    
+    # oligodendrocytes
+    #"PLP1","MOBP","CLDN11","MBP","UGT8","ERMN","MOG","MAG","OPALIN","CNP","MAL","GPR37","TF","MYRF","GJB1","ASPA","ENPP2","BCAS1","LPAR1","FA2H","ENPP6","APOD","CNTN2","CRYAB","KLK6","ERBB3","ANLN","SEPT4","PLEKHB1","TMEFF2","ST18","PTGDS","PEX5L","SLAIN1","QDPR","PLLP","TMEM125","HHIP","LGI3","TUBB4A","PLEKHH1","S1PR5","MAP6D1","GSN","EVI2A","EDIL3","CMTM5","GJC3","CA14","NFASC","TPPP","TMEM88B","TRIM59","CDH19","APLP1","NIPAL4","ADAMTS4","STMN4","S100B","CA2","PRR18","OLIG1","FOLH1","NINJ2","NDRG1","SLC24A2","SGK2","GALNT6","KCNA1","SH3TC2","TTLL7","SH3GL3","DOCK5","SCD","FEZ1","SLC44A1","RHOU","PPP1R16B","TSPAN2","C10ORF90","TNFAIP6","NKAIN2","MOB3B","PRKCQ","PPP1R14A","PLA2G16","DBNDD2","CDK18","PCDH9","ANO4","AGPAT4","OMG","FGFR2","TMEM63A","GLTP","CCP110","PLEKHG3","RAB33A","PSAT1","ZNF536"
+    
+    # Oligodendrocyte progenitor cells (opc) - grote overlap met tumor cellen
+    #"PDGFRA","TNR","PCDH15","SHC4","VCAN","LHFPL3","NEU4","GPR17","PTPRZ1","OLIG1","MMP16","DSCAM","C8ORF46","SEMA5A","MATN4","UGT8","GRIA3","CNTN1","BCAS1","SULF2","LUZP2","GJC3","NXPH1","APOD","MEGF11","LRRTM3","BRINP3","GALNT13","GRIA4","MYT1","SUSD5","LRRN1","SOX10","PRKCQ","SOX6","ITGB8","TMEM255A","GFRA1","RLBP1","PNLIP","XYLT1","GPSM2","TMEM255B","SEZ6L","STK32A","C14ORF37","LPPR5","SEMA3D","CSPG4","CSMD3","TMEM132B","SCRG1","KCNH8","CACNG4","UGDH","DPP6","BCAT1","PLLP","ERBB3","RNF43","S100B","SORCS1","OLIG2","CHRNA4","KCNJ16","PPAPDC1A","CSMD1","OPCML","PRKG2","COBL","FIGN","ACAN","TGFA","NLGN1","SLC6A13","EMID1","CHST6","TMEM100","GAL3ST1","EDIL3","KCNJ10","SLITRK3","SNTG1","CSPG5","ERBB4","SLC35F1","B3GAT2","C1QL1","SERINC5","CKAP2","LRRTM4","DPYD","SLITRK1","NCALD","CALCRL","SPP1","ZNF488","ADAM12","SULF1","HAS2"
+    
+    # astrocytes
+    #"AQP4","GJA1","GJB6","SLC4A4","SLC1A2","F3","BMPR1B","FGFR3","SLC39A12","CLDN10","DIO2","ALDOC","ALDH1L1","SLC1A3","CLU","ATP13A4","SLCO1C1","SLC14A1","CHRDL1","GPR37L1","ACSBG1","ATP1A2","SLC25A18","EDNRB","PPAP2B","GFAP","SOX9","SDC4","PPP1R3C","NCAN","MLC1","GLI3","SLC7A11","ACSL6","RFX4","ID4","AGT","SFXN5","GABRG1","PAX6","RORB","GRM3","PTPRZ1","PSD2","SLC6A11","ATP1B2","NTSR2","S1PR1","SLC15A2","ELOVL2","TRIL","SCARA3","MGST1","KIAA1161","FAM107A","BCAN","SPARCL1","NWD1","NTRK2","SLC7A10","SCG3","ACOT11","KCNN3","MFGE8","RANBP3L","GPC5","EZR","ADHFE1","GABRB1","TMEM47","PAMR1","CPE","FABP7","LIX1","SLC13A5","IL33","SLC7A2","EGFR","PREX2","NDRG2","DTNA","ABCD2","HEPACAM","RGS20","ARHGEF26","GPAM","CHI3L1","ADCYAP1R1","GDPD2","SLC1A4","POU3F2","ETNPPL","MEGF10","MT3","TTYH1","PRODH","PLCD4","DDAH1","LGR4","HTRA1"
+    
+    # immune cells
+    #"CD163"
+    
+    # random
+    #"BCAT1"
+  ))
+
+
+ggplot(plt, aes(x=log2FoldChange.gsam.res , y=statistic.gsam.cor.tpc , col=show.label, label = hugo_symbol )) + 
+  geom_point(data=subset(plt, significant != T),cex=0.35) +
+  geom_point(data=subset(plt, significant == T),cex=0.35) +
+  geom_point(data=subset(plt, show.label == T ),col="black",cex=0.65) +
+  #geom_text_repel(data=subset(plt, show.label == T & log2FoldChange.gsam.tpc.res > 0), col="blue", size=2.5 ,nudge_x = 3.1, direction = "y", hjust = "left", segment.size=0.35) + 
+  #geom_text_repel(data=subset(plt, show.label == T & log2FoldChange.gsam.tpc.res < 0), col="blue", size=2.5 , nudge_x = -3.1, direction = "y", hjust = "right", segment.size=0.35) + 
+  scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
+  labs(x = "log2FC R1 vs. R2 (Tumor cell percentage corrected)",
+       y="Correlation t-statistic with tumour percentage"
+       ,col="Difference significant (R1 ~ R2)") +
+  youri_gg_theme + xlim(-3, 3)
+
+
+
+
+plt <- results.out %>%
+  #dplyr::filter(is.na(padj.glass.res) | (!is.na(padj.glass.res) & padj.glass.res  < 0.01) ) %>%
+  dplyr::filter(!is.na(log2FoldChange.gsam.res) & !is.na(log2FoldChange.gsam.tpc.res)  & !is.na(statistic.gsam.cor.tpc) ) %>%
+  dplyr::mutate(is.limited.gsam.tpc.res = as.character(abs(log2FoldChange.gsam.tpc.res) > 3)) %>% # change pch to something that is limited
+  dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res > 3, 3 , log2FoldChange.gsam.tpc.res)) %>%
+  dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res < -3, -3 , log2FoldChange.gsam.tpc.res)) %>%
+  dplyr::mutate(significant = padj.glass.res < 0.01 & lfcSE.glass.res < 0.6 & abs(log2FoldChange.glass.res) > 0.5 ) %>%
+  #dplyr::mutate(show.label = significant & abs(log2FoldChange.gsam.tpc.res) > 1.5) 
+  dplyr::mutate(show.label = hugo_symbol %in% c(
+    "TNNI3K","TNN","TNNT2","TNNI1","TNNC1","TNNI2","TNNT3","TNNT1","TNNC2"
+  ))
+
+
+p2 <- ggplot(plt, aes(x=log2FoldChange.glass.res ,
+                      y=statistic.gsam.cor.tpc  ,
+                      col=significant,
+                      label = hugo_symbol )) + 
+  geom_point(data=subset(plt, significant != T),cex=0.35) +
+  geom_point(data=subset(plt, significant == T),cex=0.45) +
+  geom_point(data=subset(plt, show.label == T),col="red",cex=0.65) +
+  geom_text_repel(data=subset(plt, show.label == T & log2FoldChange.gsam.tpc.res > 0), col="blue", size=2.5 ,
+                  nudge_x = 3.1, direction = "y", hjust = "left" #, lwd=0.5
+  ) +
+  geom_text_repel(data=subset(plt, show.label == T & log2FoldChange.gsam.tpc.res < 0), col="blue", size=2.5 ,
+                  nudge_x = -3.1, direction = "y", hjust = "right" #, lwd=0.5
+  ) +
+  scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
+  labs(x = "log2FC R1 vs. R2 GLASS",
+       y="Correlation t-statistic with tumour percentage"
+       ,col="Difference significant (R1 ~ R2)"
+  ) +
+  youri_gg_theme + 
+  xlim(-3, 3)
+
+
+
+p1 + p2
+
+
+## 2.13 Uncorrected LFC + cell types ----
+
+
+plt <- results.out %>%
+  dplyr::filter(!is.na(log2FoldChange.gsam.res) & !is.na(log2FoldChange.glass.res)  & !is.na(statistic.gsam.cor.tpc) ) %>%
+  dplyr::mutate(is.limited.gsam.res = as.character(abs(log2FoldChange.gsam.res) > 2)) %>% # change pch to something that is limited
+  dplyr::mutate(log2FoldChange.gsam.res = ifelse(log2FoldChange.gsam.res > 2, 2 , log2FoldChange.gsam.res)) %>%
+  dplyr::mutate(log2FoldChange.gsam.res = ifelse(log2FoldChange.gsam.res < -2, -2 , log2FoldChange.gsam.res)) %>%
+  dplyr::mutate(is.limited.glass.res = as.character(abs(log2FoldChange.glass.res) > 3)) %>% # change pch to something that is limited
+  dplyr::mutate(log2FoldChange.glass.res = ifelse(log2FoldChange.glass.res > 3, 3 , log2FoldChange.glass.res)) %>%
+  dplyr::mutate(log2FoldChange.glass.res = ifelse(log2FoldChange.glass.res < -3, -3 , log2FoldChange.glass.res)) %>%
+  dplyr::mutate(show.label.neurons = hugo_symbol %in% c("RELN","VIP","GAD2","SYNPR","GAD1","CNR1","SYT1","SCG2","TAC3","GABRG2","GABRA1","STMN2","DLX1","KCNC2","TMEM130","RAB3C","SST","VSTM2A","SNAP25","ROBO2","CALB2","KIT","CNTNAP2","GABRB2","FSTL5","NRXN3","SYT4","GRIA1","VSNL1","INA","NPY","GRIN2A","IGF1","PENK","ELAVL2","MYT1L","KCNQ5","MEG3","NRIP3","CHGB","CLSTN2","SCN2A","RAB3B","ZMAT4","NELL1","PNOC","ERBB4","SPHKAP","C11ORF87","ADARB2","SLC4A10","KIAA1324","GRIN2B","BCL11A","CELF4","PNMA2","DISP2","NYAP2","SV2B","SERPINI1","SLC2A13","RGS8","RTN1","NAP1L2","CCK","C8ORF34","DYNC1I1","SRRM4","RBFOX1","SLC12A5","NDRG4","ZNF804A","LPPR4","SLITRK4","GPR158","NDNF","KCNJ3","PCSK2","CADPS","OLFM3","GABBR2","SULT4A1","GLRA2","SYT13","CACNA2D1","GDA","SYNGR3","MAL2","PGM2L1","SLC7A14","GPR83","FRMPD4","NELL2","RGS4","CSRNP3","DCX","ATP1A3","ST8SIA3","UCHL1","GAP43")) %>%
+  dplyr::mutate(show.label.endothelial = hugo_symbol %in% c("APOLD1","FLT1","RGS5","PTPRB","TM4SF1","ABCB1","ITM2A","SDPR","SLCO1A2","FN1","EMCN","ESAM","NOSTRIN","CD34","SLC38A5","CYYR1","PODXL","CDH5","VWF","MECOM","CD93","ABCG2","TEK","PALMD","ERG","CLDN5","PECAM1","KDR","ITGA1","ICAM2","ATP10A","ANXA3","CA4","MYCT1","GIMAP6","ANXA1","PTRF","KIAA1462","EBF1","HMCN1","ENG","IGFBP7","ARHGAP29","ANXA2","OCLN","HIGD1B","SLC2A1","GNG11","SLC19A3","EPAS1","TBX3","SRGN","SOX7","SLC16A4","CAV1","CLIC5","VIM","HEG1","CCDC141","C10ORF10","EDN1","ROBO4","TMEM204","PROM1","IFITM1","LEF1","COBLL1","WWTR1","HBB","ETS1","SLC39A8","COL4A1","OSMR","ADCY4","TIE1","EDN3","THBD","BSG","AHNAK","MYO1B","IL1R1","CXCL12","CLEC14A","GATA2","SGPP2","SHE","PLTP","SPARC","ACVRL1","MMRN2","NID1","TNFSF10","FOXC1","UACA","CGNL1","MFSD2A","NET1","ABCC9","FLI1","C1ORF54")) %>%
+  dplyr::mutate(show.label.microglia = hugo_symbol %in% c("CCL4","CCL3","CSF1R","CX3CR1","P2RY12","C1QB","RGS1","GPR183","GPR34","CTSS","LAPTM5","CD53","IL1A","C3AR1","PLEK","FCGR2A","CD83","ITGAM","P2RY13","CD86","TREM2","TYROBP","FCER1G","NCKAP1L","SELPLG","SLC2A5","CD14","C1QC","C1QA","MPEG1","HAVCR2","PTAFR","LY86","AIF1","ALOX5AP","LPCAT2","SLA","PTPRC","FCGR1A","CCL2","BLNK","IL10RA","BCL2A1","C5AR1","RHOH","CD84","CSF3R","TLR7","TLR2","HPGDS","LCP1","CD300A","FYB","MRC1","FAM105A","IRF8","LCP2","RGS10","CD74","PTPN6","TBXAS1","LYZ","DOCK2","TMEM119","NLRP3","ARHGDIB","CCRL2","IKZF1","ARHGAP25","DOCK8","HEXB","THEMIS2","SAMSN1","HK2","PLD4","APBB1IP","ITGB2","RUNX1","SLCO2B1","TLR1","FGD2","HCLS1","GPR84","OLFML3","MAFB","PIK3CG","SIGLEC7","IL1B","PIK3R5","IL6R","CXCL16","CLEC4A","PTGS1","SUSD3","LYN","VAV1","SLC11A1","RBM47","SYK","C10ORF128")) %>%
+  dplyr::mutate(show.label.oligodendrocytes = hugo_symbol %in% c("PLP1","MOBP","CLDN11","MBP","UGT8","ERMN","MOG","MAG","OPALIN","CNP","MAL","GPR37","TF","MYRF","GJB1","ASPA","ENPP2","BCAS1","LPAR1","FA2H","ENPP6","APOD","CNTN2","CRYAB","KLK6","ERBB3","ANLN","SEPT4","PLEKHB1","TMEFF2","ST18","PTGDS","PEX5L","SLAIN1","QDPR","PLLP","TMEM125","HHIP","LGI3","TUBB4A","PLEKHH1","S1PR5","MAP6D1","GSN","EVI2A","EDIL3","CMTM5","GJC3","CA14","NFASC","TPPP","TMEM88B","TRIM59","CDH19","APLP1","NIPAL4","ADAMTS4","STMN4","S100B","CA2","PRR18","OLIG1","FOLH1","NINJ2","NDRG1","SLC24A2","SGK2","GALNT6","KCNA1","SH3TC2","TTLL7","SH3GL3","DOCK5","SCD","FEZ1","SLC44A1","RHOU","PPP1R16B","TSPAN2","C10ORF90","TNFAIP6","NKAIN2","MOB3B","PRKCQ","PPP1R14A","PLA2G16","DBNDD2","CDK18","PCDH9","ANO4","AGPAT4","OMG","FGFR2","TMEM63A","GLTP","CCP110","PLEKHG3","RAB33A","PSAT1","ZNF536")) %>%
+  dplyr::mutate(show.label.oligodendrocyte.progenitor.cells = hugo_symbol %in% c("PDGFRA","TNR","PCDH15","SHC4","VCAN","LHFPL3","NEU4","GPR17","PTPRZ1","OLIG1","MMP16","DSCAM","C8ORF46","SEMA5A","MATN4","UGT8","GRIA3","CNTN1","BCAS1","SULF2","LUZP2","GJC3","NXPH1","APOD","MEGF11","LRRTM3","BRINP3","GALNT13","GRIA4","MYT1","SUSD5","LRRN1","SOX10","PRKCQ","SOX6","ITGB8","TMEM255A","GFRA1","RLBP1","PNLIP","XYLT1","GPSM2","TMEM255B","SEZ6L","STK32A","C14ORF37","LPPR5","SEMA3D","CSPG4","CSMD3","TMEM132B","SCRG1","KCNH8","CACNG4","UGDH","DPP6","BCAT1","PLLP","ERBB3","RNF43","S100B","SORCS1","OLIG2","CHRNA4","KCNJ16","PPAPDC1A","CSMD1","OPCML","PRKG2","COBL","FIGN","ACAN","TGFA","NLGN1","SLC6A13","EMID1","CHST6","TMEM100","GAL3ST1","EDIL3","KCNJ10","SLITRK3","SNTG1","CSPG5","ERBB4","SLC35F1","B3GAT2","C1QL1","SERINC5","CKAP2","LRRTM4","DPYD","SLITRK1","NCALD","CALCRL","SPP1","ZNF488","ADAM12","SULF1","HAS2")) %>% # grote overlap met tumor cel / gbm subtype genen?
+  dplyr::mutate(show.label.astrocytes = hugo_symbol %in% c("AQP4","GJA1","GJB6","SLC4A4","SLC1A2","F3","BMPR1B","FGFR3","SLC39A12","CLDN10","DIO2","ALDOC","ALDH1L1","SLC1A3","CLU","ATP13A4","SLCO1C1","SLC14A1","CHRDL1","GPR37L1","ACSBG1","ATP1A2","SLC25A18","EDNRB","PPAP2B","GFAP","SOX9","SDC4","PPP1R3C","NCAN","MLC1","GLI3","SLC7A11","ACSL6","RFX4","ID4","AGT","SFXN5","GABRG1","PAX6","RORB","GRM3","PTPRZ1","PSD2","SLC6A11","ATP1B2","NTSR2","S1PR1","SLC15A2","ELOVL2","TRIL","SCARA3","MGST1","KIAA1161","FAM107A","BCAN","SPARCL1","NWD1","NTRK2","SLC7A10","SCG3","ACOT11","KCNN3","MFGE8","RANBP3L","GPC5","EZR","ADHFE1","GABRB1","TMEM47","PAMR1","CPE","FABP7","LIX1","SLC13A5","IL33","SLC7A2","EGFR","PREX2","NDRG2","DTNA","ABCD2","HEPACAM","RGS20","ARHGEF26","GPAM","CHI3L1","ADCYAP1R1","GDPD2","SLC1A4","POU3F2","ETNPPL","MEGF10","MT3","TTYH1","PRODH","PLCD4","DDAH1","LGR4","HTRA1"))
+
+  # immune cells
+  #"CD163"
+    
+  # T-cells: "ITGA5", "ITGB1", "MSN", "FAS", "FLNA", "CD44", "RUNX1", "RUNX2"
+  # TAMs: "NRP1", "SPP1", "LYN", "LIMS1", "C5AR1", "PLAUR", "CEBPB"
+  # 'key immune markers': "CD3", "CD68", "CD163"
+  # angiogenesis: 'FLT1', 'MMP14', 'ENG', 'SERPINE1'
+
+plt <- plt %>% dplyr::mutate(show.label = show.label.neurons)
+p1a <- ggplot(plt, aes(x=log2FoldChange.gsam.res , y=statistic.gsam.cor.tpc , col=show.label, label = hugo_symbol )) + 
+  geom_point(data=subset(plt, show.label == F),cex=0.35) +
+  geom_smooth(data = subset(plt, padj.gsam.res > 0.05 &  is.limited.gsam.res == "FALSE"),method="lm", se = FALSE,  formula=y ~ x, orientation="y", col="blue" , size=0.4) +
+  geom_point(data=subset(plt, show.label == T ),col="black",cex=0.65) +
+  scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
+  labs(x = "log2FC R1 vs. R2 [G-SAM]",
+       y="Corr t-stat tumour-%"
+       ,col="Neuron marker genes") +
+  youri_gg_theme + xlim(-2, 2)
+p1b <- ggplot(plt, aes(x=log2FoldChange.glass.res , y=statistic.gsam.cor.tpc , col=show.label, label = hugo_symbol )) + 
+  geom_point(data=subset(plt, show.label == F),cex=0.35) +
+  geom_smooth(data = subset(plt, padj.glass.res > 0.05 &  is.limited.gsam.res == "FALSE"),method="lm", se = FALSE,  formula=y ~ x, orientation="y", col="blue" , size=0.4) +
+  geom_point(data=subset(plt, show.label == T ),col="black",cex=0.65) +
+  scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
+  labs(x = "log2FC R1 vs. R2/3/4 [GLASS]",
+       y="Corr t-stat tumour-%"
+       ,col="Neuron marker genes") +
+  youri_gg_theme + xlim(-3, 3)
+
+
+
+plt <- plt %>% dplyr::mutate(show.label = show.label.endothelial)
+p2a <- ggplot(plt, aes(x=log2FoldChange.gsam.res , y=statistic.gsam.cor.tpc , col=show.label, label = hugo_symbol )) + 
+  geom_point(data=subset(plt, show.label == F),cex=0.35) +
+  geom_smooth(data = subset(plt, padj.glass.res > 0.05 &  is.limited.gsam.res == "FALSE"),method="lm", se = FALSE,  formula=y ~ x, orientation="y", col="blue" , size=0.4) +
+  geom_point(data=subset(plt, show.label == T ),col="black",cex=0.65) +
+  scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
+  labs(x = "log2FC R1 vs. R2 [G-SAM]",
+       y="Corr t-stat tumour-%"
+       ,col="Endothelial marker genes") +
+  youri_gg_theme + xlim(-2, 2)
+p2b <- ggplot(plt, aes(x=log2FoldChange.glass.res , y=statistic.gsam.cor.tpc , col=show.label, label = hugo_symbol )) + 
+  geom_point(data=subset(plt, show.label == F),cex=0.35) +
+  geom_smooth(data = subset(plt, padj.glass.res > 0.05 &  is.limited.gsam.res == "FALSE"),method="lm", se = FALSE,  formula=y ~ x, orientation="y", col="blue" , size=0.4) +
+  geom_point(data=subset(plt, show.label == T ),col="black",cex=0.65) +
+  scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
+  labs(x = "log2FC R1 vs. R2/3/4 [GLASS]",
+       y="Corr t-stat tumour-%"
+       ,col="Endothelial marker genes") +
+  youri_gg_theme + xlim(-3, 3)
+
+
+
+plt <- plt %>% dplyr::mutate(show.label = show.label.microglia)
+p3a <- ggplot(plt, aes(x=log2FoldChange.gsam.res , y=statistic.gsam.cor.tpc , col=show.label, label = hugo_symbol )) + 
+  geom_point(data=subset(plt, show.label == F),cex=0.35) +
+  geom_smooth(data = subset(plt, padj.glass.res > 0.05 &  is.limited.gsam.res == "FALSE"),method="lm", se = FALSE,  formula=y ~ x, orientation="y", col="blue" , size=0.4) +
+  geom_point(data=subset(plt, show.label == T ),col="black",cex=0.65) +
+  scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
+  labs(x = "log2FC R1 vs. R2 [G-SAM]",
+       y="Corr t-stat tumour-%"
+       ,col="Microglia marker genes") +
+  youri_gg_theme + xlim(-2, 2)
+p3b <- ggplot(plt, aes(x=log2FoldChange.glass.res , y=statistic.gsam.cor.tpc , col=show.label, label = hugo_symbol )) + 
+  geom_point(data=subset(plt, show.label == F),cex=0.35) +
+  geom_smooth(data = subset(plt, padj.glass.res > 0.05 &  is.limited.gsam.res == "FALSE"),method="lm", se = FALSE,  formula=y ~ x, orientation="y", col="blue" , size=0.4) +
+  geom_point(data=subset(plt, show.label == T ),col="black",cex=0.65) +
+  scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
+  labs(x = "log2FC R1 vs. R2/3/4 [GLASS]",
+       y="Corr t-stat tumour-%"
+       ,col="Microglia marker genes") +
+  youri_gg_theme + xlim(-3, 3)
+
+
+
+plt <- plt %>% dplyr::mutate(show.label = show.label.oligodendrocytes)
+p4a <- ggplot(plt, aes(x=log2FoldChange.gsam.res , y=statistic.gsam.cor.tpc , col=show.label, label = hugo_symbol )) + 
+  geom_point(data=subset(plt, show.label == F),cex=0.35) +
+  geom_smooth(data = subset(plt, padj.glass.res > 0.05 &  is.limited.gsam.res == "FALSE"),method="lm", se = FALSE,  formula=y ~ x, orientation="y", col="blue" , size=0.4) +
+  geom_point(data=subset(plt, show.label == T ),col="black",cex=0.65) +
+  scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
+  labs(x = "log2FC R1 vs. R2 [G-SAM]",
+       y="Corr t-stat tumour-%"
+       ,col="Oligodendrocyte marker genes") +
+  youri_gg_theme + xlim(-2, 2)
+p4b <- ggplot(plt, aes(x=log2FoldChange.glass.res , y=statistic.gsam.cor.tpc , col=show.label, label = hugo_symbol )) + 
+  geom_point(data=subset(plt, show.label == F),cex=0.35) +
+  geom_smooth(data = subset(plt, padj.glass.res > 0.05 &  is.limited.gsam.res == "FALSE"),method="lm", se = FALSE,  formula=y ~ x, orientation="y", col="blue" , size=0.4) +
+  geom_point(data=subset(plt, show.label == T ),col="black",cex=0.65) +
+  scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
+  labs(x = "log2FC R1 vs. R2/3/4 [GLASS]",
+       y="Corr t-stat tumour-%"
+       ,col="Oligodendrocyte marker genes") +
+  youri_gg_theme + xlim(-3, 3)
+
+
+
+plt <- plt %>% dplyr::mutate(show.label = show.label.oligodendrocyte.progenitor.cells)
+p5a <- ggplot(plt, aes(x=log2FoldChange.gsam.res , y=statistic.gsam.cor.tpc , col=show.label, label = hugo_symbol )) + 
+  geom_point(data=subset(plt, show.label == F),cex=0.35) +
+  geom_smooth(data = subset(plt, padj.glass.res > 0.05 &  is.limited.gsam.res == "FALSE"),method="lm", se = FALSE,  formula=y ~ x, orientation="y", col="blue" , size=0.4) +
+  geom_point(data=subset(plt, show.label == T ),col="black",cex=0.65) +
+  scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
+  labs(x = "log2FC R1 vs. R2 [G-SAM]",
+       y="Corr t-stat tumour-%"
+       ,col="Oligod. Prog. marker genes") +
+  youri_gg_theme + xlim(-2, 2)
+p5b <- ggplot(plt, aes(x=log2FoldChange.glass.res , y=statistic.gsam.cor.tpc , col=show.label, label = hugo_symbol )) + 
+  geom_point(data=subset(plt, show.label == F),cex=0.35) +
+  geom_smooth(data = subset(plt, padj.glass.res > 0.05 &  is.limited.gsam.res == "FALSE"),method="lm", se = FALSE,  formula=y ~ x, orientation="y", col="blue" , size=0.4) +
+  geom_point(data=subset(plt, show.label == T ),col="black",cex=0.65) +
+  scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
+  labs(x = "log2FC R1 vs. R2/3/4 [GLASS]",
+       y="Corr t-stat tumour-%"
+       ,col="Oligod. Prog. marker genes") +
+  youri_gg_theme + xlim(-3, 3)
+
+
+
+plt <- plt %>% dplyr::mutate(show.label = show.label.astrocytes)
+p6a <- ggplot(plt, aes(x=log2FoldChange.gsam.res , y=statistic.gsam.cor.tpc , col=show.label, label = hugo_symbol )) + 
+  geom_point(data=subset(plt, show.label == F),cex=0.35) +
+  geom_smooth(data = subset(plt, padj.glass.res > 0.05 &  is.limited.gsam.res == "FALSE"),method="lm", se = FALSE,  formula=y ~ x, orientation="y", col="blue" , size=0.4) +
+  geom_point(data=subset(plt, show.label == T ),col="black",cex=0.65) +
+  scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
+  labs(x = "log2FC R1 vs. R2 [G-SAM]",
+       y="Corr t-stat tumour-%"
+       ,col="Astrocyte marker genes") +
+  youri_gg_theme + xlim(-2, 2)
+p6b <- ggplot(plt, aes(x=log2FoldChange.glass.res , y=statistic.gsam.cor.tpc , col=show.label, label = hugo_symbol )) + 
+  geom_point(data=subset(plt, show.label == F),cex=0.35) +
+  geom_smooth(data = subset(plt, padj.glass.res > 0.05 &  is.limited.gsam.res == "FALSE"),method="lm", se = FALSE,  formula=y ~ x, orientation="y", col="blue" , size=0.4) +
+  geom_point(data=subset(plt, show.label == T ),col="black",cex=0.65) +
+  scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
+  labs(x = "log2FC R1 vs. R2/3/4 [GLASS]",
+       y="Corr t-stat tumour-%"
+       ,col="Astrocyte marker genes") +
+  youri_gg_theme + xlim(-3, 3)
+
+
+(p1a + p1b) /
+(p2a + p2b) / 
+(p3a + p3b) / 
+(p4a + p4b) / 
+(p5a + p5b) / 
+(p6a + p6b) 
+
+
+ggsave("output/figures/paper_dge_cell-type_genes.png",width=2*6, height=6*6)
+
+
+## 2.14 Corrected LFC + individual tophits ----
+
+
+
+# signi in both corrected and uncorrected, but lfcSE outlier in corrected
+# "TTLL10"     
+# "MYO3A"     
+# "AC090791.1" "AC090124.2" "AC090643.1" "AC009041.1" "LINC00514"  "KRT9"       "CKM"        "PI3"   
+#'EGFR','MHMT','CD4', "CXCL12", "BLNK", "DDB2","RBP1", "PLXNB1",
+#"SOX2", "NANOG",
+#"CDKN2A", "CDKN2B", "APEX1", "NF1", "TP53", "CD40",
+#"GSTM1", "SOCS2", "BTC", "FGFR3", 
+#"OCT4", "NOS1",
+#"POU5F1"
+
+# presynapse 
+synapse <- read.csv('/tmp/gProfiler_hsapiens_4-2-2021_4-39-17 PM.csv')
+
+
+
+plt <- results.out %>%
+  dplyr::filter(!is.na(log2FoldChange.gsam.res) & !is.na(log2FoldChange.gsam.tpc.res)  & !is.na(statistic.gsam.cor.tpc) ) %>%
+  dplyr::mutate(is.limited.gsam.tpc.res = as.character(abs(log2FoldChange.gsam.tpc.res) > 3)) %>% # change pch to something that is limited
+  dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res > 3, 3 , log2FoldChange.gsam.tpc.res)) %>%
+  dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res < -3, -3 , log2FoldChange.gsam.tpc.res)) %>%
+  dplyr::mutate(significant = padj.gsam.tpc.res < 0.01 & lfcSE.gsam.tpc.res < 0.3 & abs(log2FoldChange.gsam.tpc.res) > 0.5 ) %>%
+  #dplyr::mutate(show.label = significant & abs(log2FoldChange.gsam.tpc.res) > 1.5) 
+  dplyr::mutate(show.label = hugo_symbol %in% c(
+    #'GLIS1',"CPEB1",'GLI1',
+    #'
+    # 'CDK4','MDM2',"EGFR","PDGFRA","OCT4","MGMT","CDKN2A","CDKN2B",
+    # "MET","HER2","RAS","PTEN","MTOR","TP53","GFAP","TAP1","TGFB1","RB1","NF1","ATRX",
+    # "CDK2","PIK3CA", "BRAF","PIK3R1","TERT","TERC",
+    # "MCM","MCM2", "MCM4",
+    # "SOX2", "SOX9", "FGFR3","CCNE1", "AKT3","LSAMP","CCND1","CCND2", "PIK3C2B","CDK6","CDK4","MDM2","MDM4",
+    # "EGFR", "PDGFRA","MET", "PIK3C2B", "MDM2","MDM4", "CDK4","CDK6","SOX2","FGFR3" # gains
+    
+    # T-cells: "ITGA5", "ITGB1", "MSN", "FAS", "FLNA", "CD44", "RUNX1", "RUNX2"
+    # TAMs: "NRP1", "SPP1", "LYN", "LIMS1", "C5AR1", "PLAUR", "CEBPB"
+    # 'key immune markers': "CD3", "CD68", "CD163"
+    # angiogenesis: 'FLT1', 'MMP14', 'ENG', 'SERPINE1'
+
+    # neurons
+    #"RELN","VIP","GAD2","SYNPR","GAD1","CNR1","SYT1","SCG2","TAC3","GABRG2","GABRA1","STMN2","DLX1","KCNC2","TMEM130","RAB3C","SST","VSTM2A","SNAP25","ROBO2","CALB2","KIT","CNTNAP2","GABRB2","FSTL5","NRXN3","SYT4","GRIA1","VSNL1","INA","NPY","GRIN2A","IGF1","PENK","ELAVL2","MYT1L","KCNQ5","MEG3","NRIP3","CHGB","CLSTN2","SCN2A","RAB3B","ZMAT4","NELL1","PNOC","ERBB4","SPHKAP","C11ORF87","ADARB2","SLC4A10","KIAA1324","GRIN2B","BCL11A","CELF4","PNMA2","DISP2","NYAP2","SV2B","SERPINI1","SLC2A13","RGS8","RTN1","NAP1L2","CCK","C8ORF34","DYNC1I1","SRRM4","RBFOX1","SLC12A5","NDRG4","ZNF804A","LPPR4","SLITRK4","GPR158","NDNF","KCNJ3","PCSK2","CADPS","OLFM3","GABBR2","SULT4A1","GLRA2","SYT13","CACNA2D1","GDA","SYNGR3","MAL2","PGM2L1","SLC7A14","GPR83","FRMPD4","NELL2","RGS4","CSRNP3","DCX","ATP1A3","ST8SIA3","UCHL1","GAP43"
+    
+    # endothelial:    
+    #"APOLD1","FLT1","RGS5","PTPRB","TM4SF1","ABCB1","ITM2A","SDPR","SLCO1A2","FN1","EMCN","ESAM","NOSTRIN","CD34","SLC38A5","CYYR1","PODXL","CDH5","VWF","MECOM","CD93","ABCG2","TEK","PALMD","ERG","CLDN5","PECAM1","KDR","ITGA1","ICAM2","ATP10A","ANXA3","CA4","MYCT1","GIMAP6","ANXA1","PTRF","KIAA1462","EBF1","HMCN1","ENG","IGFBP7","ARHGAP29","ANXA2","OCLN","HIGD1B","SLC2A1","GNG11","SLC19A3","EPAS1","TBX3","SRGN","SOX7","SLC16A4","CAV1","CLIC5","VIM","HEG1","CCDC141","C10ORF10","EDN1","ROBO4","TMEM204","PROM1","IFITM1","LEF1","COBLL1","WWTR1","HBB","ETS1","SLC39A8","COL4A1","OSMR","ADCY4","TIE1","EDN3","THBD","BSG","AHNAK","MYO1B","IL1R1","CXCL12","CLEC14A","GATA2","SGPP2","SHE","PLTP","SPARC","ACVRL1","MMRN2","NID1","TNFSF10","FOXC1","UACA","CGNL1","MFSD2A","NET1","ABCC9","FLI1","C1ORF54"
+    
+    # microglia
+    #"CCL4","CCL3","CSF1R","CX3CR1","P2RY12","C1QB","RGS1","GPR183","GPR34","CTSS","LAPTM5","CD53","IL1A","C3AR1","PLEK","FCGR2A","CD83","ITGAM","P2RY13","CD86","TREM2","TYROBP","FCER1G","NCKAP1L","SELPLG","SLC2A5","CD14","C1QC","C1QA","MPEG1","HAVCR2","PTAFR","LY86","AIF1","ALOX5AP","LPCAT2","SLA","PTPRC","FCGR1A","CCL2","BLNK","IL10RA","BCL2A1","C5AR1","RHOH","CD84","CSF3R","TLR7","TLR2","HPGDS","LCP1","CD300A","FYB","MRC1","FAM105A","IRF8","LCP2","RGS10","CD74","PTPN6","TBXAS1","LYZ","DOCK2","TMEM119","NLRP3","ARHGDIB","CCRL2","IKZF1","ARHGAP25","DOCK8","HEXB","THEMIS2","SAMSN1","HK2","PLD4","APBB1IP","ITGB2","RUNX1","SLCO2B1","TLR1","FGD2","HCLS1","GPR84","OLFML3","MAFB","PIK3CG","SIGLEC7","IL1B","PIK3R5","IL6R","CXCL16","CLEC4A","PTGS1","SUSD3","LYN","VAV1","SLC11A1","RBM47","SYK","C10ORF128"
+    
+    # oligodendrocytes
+    #"PLP1","MOBP","CLDN11","MBP","UGT8","ERMN","MOG","MAG","OPALIN","CNP","MAL","GPR37","TF","MYRF","GJB1","ASPA","ENPP2","BCAS1","LPAR1","FA2H","ENPP6","APOD","CNTN2","CRYAB","KLK6","ERBB3","ANLN","SEPT4","PLEKHB1","TMEFF2","ST18","PTGDS","PEX5L","SLAIN1","QDPR","PLLP","TMEM125","HHIP","LGI3","TUBB4A","PLEKHH1","S1PR5","MAP6D1","GSN","EVI2A","EDIL3","CMTM5","GJC3","CA14","NFASC","TPPP","TMEM88B","TRIM59","CDH19","APLP1","NIPAL4","ADAMTS4","STMN4","S100B","CA2","PRR18","OLIG1","FOLH1","NINJ2","NDRG1","SLC24A2","SGK2","GALNT6","KCNA1","SH3TC2","TTLL7","SH3GL3","DOCK5","SCD","FEZ1","SLC44A1","RHOU","PPP1R16B","TSPAN2","C10ORF90","TNFAIP6","NKAIN2","MOB3B","PRKCQ","PPP1R14A","PLA2G16","DBNDD2","CDK18","PCDH9","ANO4","AGPAT4","OMG","FGFR2","TMEM63A","GLTP","CCP110","PLEKHG3","RAB33A","PSAT1","ZNF536"
+    
+    # Oligodendrocyte progenitor cells (opc) - grote overlap met tumor cellen
+    #"PDGFRA","TNR","PCDH15","SHC4","VCAN","LHFPL3","NEU4","GPR17","PTPRZ1","OLIG1","MMP16","DSCAM","C8ORF46","SEMA5A","MATN4","UGT8","GRIA3","CNTN1","BCAS1","SULF2","LUZP2","GJC3","NXPH1","APOD","MEGF11","LRRTM3","BRINP3","GALNT13","GRIA4","MYT1","SUSD5","LRRN1","SOX10","PRKCQ","SOX6","ITGB8","TMEM255A","GFRA1","RLBP1","PNLIP","XYLT1","GPSM2","TMEM255B","SEZ6L","STK32A","C14ORF37","LPPR5","SEMA3D","CSPG4","CSMD3","TMEM132B","SCRG1","KCNH8","CACNG4","UGDH","DPP6","BCAT1","PLLP","ERBB3","RNF43","S100B","SORCS1","OLIG2","CHRNA4","KCNJ16","PPAPDC1A","CSMD1","OPCML","PRKG2","COBL","FIGN","ACAN","TGFA","NLGN1","SLC6A13","EMID1","CHST6","TMEM100","GAL3ST1","EDIL3","KCNJ10","SLITRK3","SNTG1","CSPG5","ERBB4","SLC35F1","B3GAT2","C1QL1","SERINC5","CKAP2","LRRTM4","DPYD","SLITRK1","NCALD","CALCRL","SPP1","ZNF488","ADAM12","SULF1","HAS2"
+    
+    # astrocytes
+    #"AQP4","GJA1","GJB6","SLC4A4","SLC1A2","F3","BMPR1B","FGFR3","SLC39A12","CLDN10","DIO2","ALDOC","ALDH1L1","SLC1A3","CLU","ATP13A4","SLCO1C1","SLC14A1","CHRDL1","GPR37L1","ACSBG1","ATP1A2","SLC25A18","EDNRB","PPAP2B","GFAP","SOX9","SDC4","PPP1R3C","NCAN","MLC1","GLI3","SLC7A11","ACSL6","RFX4","ID4","AGT","SFXN5","GABRG1","PAX6","RORB","GRM3","PTPRZ1","PSD2","SLC6A11","ATP1B2","NTSR2","S1PR1","SLC15A2","ELOVL2","TRIL","SCARA3","MGST1","KIAA1161","FAM107A","BCAN","SPARCL1","NWD1","NTRK2","SLC7A10","SCG3","ACOT11","KCNN3","MFGE8","RANBP3L","GPC5","EZR","ADHFE1","GABRB1","TMEM47","PAMR1","CPE","FABP7","LIX1","SLC13A5","IL33","SLC7A2","EGFR","PREX2","NDRG2","DTNA","ABCD2","HEPACAM","RGS20","ARHGEF26","GPAM","CHI3L1","ADCYAP1R1","GDPD2","SLC1A4","POU3F2","ETNPPL","MEGF10","MT3","TTYH1","PRODH","PLCD4","DDAH1","LGR4","HTRA1"
+    
+    # immune cells
+    #"CD163"
+    
+    # random
+    #"BCAT1"
+  ))
+
+
+ggplot(plt, aes(x=log2FoldChange.gsam.res , y=statistic.gsam.cor.tpc , col=show.label, label = hugo_symbol )) + 
+  geom_point(data=subset(plt, significant != T),cex=0.35) +
+  geom_point(data=subset(plt, significant == T),cex=0.35) +
+  geom_point(data=subset(plt, show.label == T ),col="black",cex=0.65) +
+  #geom_text_repel(data=subset(plt, show.label == T & log2FoldChange.gsam.tpc.res > 0), col="blue", size=2.5 ,nudge_x = 3.1, direction = "y", hjust = "left", segment.size=0.35) + 
+  #geom_text_repel(data=subset(plt, show.label == T & log2FoldChange.gsam.tpc.res < 0), col="blue", size=2.5 , nudge_x = -3.1, direction = "y", hjust = "right", segment.size=0.35) + 
+  scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
+  labs(x = "log2FC R1 vs. R2 (Tumor cell percentage corrected)",
+       y="Correlation t-statistic with tumour percentage"
+       ,col="Difference significant (R1 ~ R2)") +
+  youri_gg_theme + xlim(-3, 3)
+
+
+
+
+plt <- results.out %>%
+  #dplyr::filter(is.na(padj.glass.res) | (!is.na(padj.glass.res) & padj.glass.res  < 0.01) ) %>%
+  dplyr::filter(!is.na(log2FoldChange.gsam.res) & !is.na(log2FoldChange.gsam.tpc.res)  & !is.na(statistic.gsam.cor.tpc) ) %>%
+  dplyr::mutate(is.limited.gsam.tpc.res = as.character(abs(log2FoldChange.gsam.tpc.res) > 3)) %>% # change pch to something that is limited
+  dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res > 3, 3 , log2FoldChange.gsam.tpc.res)) %>%
+  dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res < -3, -3 , log2FoldChange.gsam.tpc.res)) %>%
+  dplyr::mutate(significant = padj.glass.res < 0.01 & lfcSE.glass.res < 0.6 & abs(log2FoldChange.glass.res) > 0.5 ) %>%
+  #dplyr::mutate(show.label = significant & abs(log2FoldChange.gsam.tpc.res) > 1.5) 
+  dplyr::mutate(show.label = hugo_symbol %in% c(
+    "TNNI3K","TNN","TNNT2","TNNI1","TNNC1","TNNI2","TNNT3","TNNT1","TNNC2"
+  ))
+
+
+p2 <- ggplot(plt, aes(x=log2FoldChange.glass.res ,
+                      y=statistic.gsam.cor.tpc  ,
+                      col=significant,
+                      label = hugo_symbol )) + 
+  geom_point(data=subset(plt, significant != T),cex=0.35) +
+  geom_point(data=subset(plt, significant == T),cex=0.45) +
+  geom_point(data=subset(plt, show.label == T),col="red",cex=0.65) +
+  geom_text_repel(data=subset(plt, show.label == T & log2FoldChange.gsam.tpc.res > 0), col="blue", size=2.5 ,
+                  nudge_x = 3.1, direction = "y", hjust = "left" #, lwd=0.5
+  ) +
+  geom_text_repel(data=subset(plt, show.label == T & log2FoldChange.gsam.tpc.res < 0), col="blue", size=2.5 ,
+                  nudge_x = -3.1, direction = "y", hjust = "right" #, lwd=0.5
+  ) +
+  scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
+  labs(x = "log2FC R1 vs. R2 GLASS",
+       y="Correlation t-statistic with tumour percentage"
+       ,col="Difference significant (R1 ~ R2)"
+  ) +
+  youri_gg_theme + 
+  xlim(-3, 3)
+
+
+
+p1 + p2
 
 
 
 
 ## g:profiler upregulated ----
 
-# significantly DOWN regulated genes are related to blood vessels / angiogenesis
-gsam.gene.res.combined %>%
-  dplyr::filter(log2FoldChange.tpc.res < 0) %>%
-  dplyr::filter(padj.tpc.res < 0.01) %>%
+# significantly UO regulated genes are related to synaptic signalling and neurons / neuronal development / cell junctions
+results.out %>%
+  dplyr::filter(log2FoldChange.gsam.tpc.res  >= 0.5 ) %>%
+  dplyr::filter(padj.gsam.tpc.res < 0.01 & lfcSE.gsam.tpc.res < 0.3) %>%
   #dplyr::top_n(500, -padj.tpc.res) %>%
-  dplyr::pull(hugo_symbol.tpc.res)
+  dplyr::pull(hugo_symbol) 
+
+#%>%   length()
 
 
 ## g:profiler downregulated top1000 ----
 
-# significantly UP regulated genes are related to synaptic signalling and neurons / neuronal development / cell junctions
-gsam.gene.res.combined %>%
-  dplyr::filter(log2FoldChange.tpc.res > 0) %>%
-  dplyr::filter(padj.tpc.res < 0.01) %>%
-  dplyr::top_n(1000, -padj.tpc.res) %>%
-  #dplyr::arrange(padj.tpc.res) %>%
-  dplyr::pull(hugo_symbol.tpc.res)
+# removing LFC cut-off makes signal stronger
+
+# significantly DOWN regulated genes are related to blood vessels / angiogenesis
+results.out %>%
+  dplyr::filter(log2FoldChange.gsam.tpc.res <= -0.5) %>%
+  dplyr::filter(padj.gsam.tpc.res < 0.01 & lfcSE.gsam.tpc.res < 0.3) %>%
+  #dplyr::top_n(1000, -padj.gsam.tpc.res) %>%
+  dplyr::arrange(padj.gsam.tpc.res) %>%
+  dplyr::pull(hugo_symbol)
+
 
 
 ## g:profiler all top1000 ----
