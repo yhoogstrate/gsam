@@ -276,7 +276,11 @@ tmp <- read_xlsx("data/McKenzie et al. Gene expression different cell types.xlsx
     "TBX3","ERG", "FLT1","RERGL","VCAM1" , # endothelial
     "CD74", "CD14", "CD84", "CD53", "CD163", # TAM/Microglia
     "OPALIN","PLP1","CNDP1","CNTN2","TMEM144", # oligodendrocyte
-    "BCAS1","ERBB3","FGFR3","GFAP","GABRA1","GABRB2","RBFOX3","SOX9","TGFA","VIP") , T , F) ) %>%
+    "PAX6","ELOVL2","FGFR3","SOX9", "IL33","GLI3", "SLC4A4", # astrocyte
+    
+    "BCAS1","ERBB3","GFAP","GABRA1","GABRB2","RBFOX3","TGFA","VIP"
+    
+    ) , T , F) ) %>%
   dplyr::rename(McKenzie_celltype_top_human_specificity = Celltype) %>%
   dplyr::mutate(grand_mean = NULL)
 #dim(tmp)
@@ -284,7 +288,8 @@ tmp <- read_xlsx("data/McKenzie et al. Gene expression different cell types.xlsx
 results.out$McKenzie_celltype_top_human_specificity <- NULL
 results.out$show.marker <- NULL
 results.out <- results.out %>%
-  dplyr::left_join(tmp, by=c('hugo_symbol'='gene'))
+  dplyr::left_join(tmp, by=c('hugo_symbol'='gene')) %>%
+  dplyr::mutate(show.marker.chr7 = ifelse(hugo_symbol %in% c("PDGFA","GNA12","ETV1","CBX3","CREB5","TRIL","GLI3","COA1","EGFR","PTPN12","CDK6","DOCK4","PTPRZ1","TRIM24"), T , F) )
 rm(tmp)
 dim(results.out)
 
@@ -2284,24 +2289,24 @@ p1a <- ggplot(plt, aes(x=log2FoldChange.gsam.res , y=statistic.gsam.cor.tpc , co
   geom_point(data=subset(plt, show.label == F),cex=0.35) +
   geom_smooth(data = subset(plt, padj.gsam.tpc.res > 0.1 &  is.limited.gsam.res == "FALSE"),method="lm", se = FALSE,  formula=y ~ x, orientation="y", col=rgb(1,0,0,0.5) , size=0.4) +
   geom_point(data=subset(plt, show.label == T ),col="black",cex=0.65) +
-  geom_text_repel(data=subset(plt, show.label == T & show.marker == T & log2FoldChange.gsam.res > 0), col="blue", size=2.5 ,nudge_x = 3.1, direction = "y", hjust = "left", segment.size=0.35) + 
-  geom_text_repel(data=subset(plt, show.label == T & show.marker == T & log2FoldChange.gsam.res < 0), col="blue", size=2.5 , nudge_x = -3.1, direction = "y", hjust = "right", segment.size=0.35) + 
+  geom_label_repel(data=subset(plt, show.label == T & show.marker == T & log2FoldChange.gsam.res > 0), col="blue", size=2.5 ,nudge_x = 3.1, direction = "y", hjust = "left", segment.size=0.35, fill="white",label.size = 0) + 
+  geom_label_repel(data=subset(plt, show.label == T & show.marker == T & log2FoldChange.gsam.res < 0), col="blue", size=2.5 , nudge_x = -3.1, direction = "y", hjust = "right", segment.size=0.35, fill="white",label.size = 0) + 
   scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
   labs(x = "log2FC R1 vs. R2 [G-SAM]",
        y="Corr t-stat tumour-%"
        ,col="Neuron marker genes") +
-  youri_gg_theme + xlim(-2, 2)
+  youri_gg_theme + xlim(-2.5, 2.5)
 p1b <- ggplot(plt, aes(x=log2FoldChange.glass.res , y=statistic.gsam.cor.tpc , col=show.label, label = hugo_symbol )) + 
   geom_point(data=subset(plt, show.label == F),cex=0.35) +
   geom_smooth(data = subset(plt, padj.glass.res > 0.1 &  is.limited.gsam.res == "FALSE"), method="lm", se = FALSE,  formula=y ~ x, orientation="y", col=rgb(1,0,0,0.5)  , size=0.4) +
   geom_point(data=subset(plt, show.label == T ),col="black",cex=0.65) +
-  geom_text_repel(data=subset(plt, show.label == T & show.marker == T & log2FoldChange.gsam.tpc.res > 0), col="blue", size=2.5 ,nudge_x = 3.1, direction = "y", hjust = "left", segment.size=0.35) + 
-  geom_text_repel(data=subset(plt, show.label == T & show.marker == T & log2FoldChange.gsam.tpc.res < 0), col="blue", size=2.5 , nudge_x = -3.1, direction = "y", hjust = "right", segment.size=0.35) + 
+  geom_label_repel(data=subset(plt, show.label == T & show.marker == T & log2FoldChange.gsam.tpc.res > 0), col="blue", size=2.5 ,nudge_x = 3.1, direction = "y", hjust = "left", segment.size=0.35, fill="white",label.size = 0) + 
+  geom_label_repel(data=subset(plt, show.label == T & show.marker == T & log2FoldChange.gsam.tpc.res < 0), col="blue", size=2.5 , nudge_x = -3.1, direction = "y", hjust = "right", segment.size=0.35, fill="white",label.size = 0) + 
   scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
   labs(x = "log2FC R1 vs. R2/3/4 [GLASS]",
        y="Corr t-stat tumour-%"
        ,col="Neuron marker genes") +
-  youri_gg_theme + xlim(-3, 3)
+  youri_gg_theme + xlim(-3.5, 3.5)
 
 
 
@@ -2310,24 +2315,24 @@ p2a <- ggplot(plt, aes(x=log2FoldChange.gsam.res , y=statistic.gsam.cor.tpc , co
   geom_point(data=subset(plt, show.label == F),cex=0.35) +
   geom_smooth(data = subset(plt, padj.gsam.tpc.res > 0.1 &  is.limited.gsam.res == "FALSE"),method="lm", se = FALSE,  formula=y ~ x, orientation="y", col=rgb(1,0,0,0.5) , size=0.4) +
   geom_point(data=subset(plt, show.label == T ),col="black",cex=0.65) +
-  geom_text_repel(data=subset(plt, show.label == T & show.marker == T & log2FoldChange.gsam.res > 0), col="blue", size=2.5 ,nudge_x = 3.1, direction = "y", hjust = "left", segment.size=0.35) + 
-  geom_text_repel(data=subset(plt, show.label == T & show.marker == T & log2FoldChange.gsam.res < 0), col="blue", size=2.5 , nudge_x = -3.1, direction = "y", hjust = "right", segment.size=0.35) + 
+  geom_label_repel(data=subset(plt, show.label == T & show.marker == T & log2FoldChange.gsam.res > 0), col="blue", size=2.5 ,nudge_x = 3.1, direction = "y", hjust = "left", segment.size=0.35, fill="white",label.size = 0) + 
+  geom_label_repel(data=subset(plt, show.label == T & show.marker == T & log2FoldChange.gsam.res < 0), col="blue", size=2.5 , nudge_x = -3.1, direction = "y", hjust = "right", segment.size=0.35, fill="white",label.size = 0) + 
   scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
   labs(x = "log2FC R1 vs. R2 [G-SAM]",
        y="Corr t-stat tumour-%"
        ,col="Endothelial marker genes") +
-  youri_gg_theme + xlim(-2, 2)
+  youri_gg_theme + xlim(-2.5 ,2.5)
 p2b <- ggplot(plt, aes(x=log2FoldChange.glass.res , y=statistic.gsam.cor.tpc , col=show.label, label = hugo_symbol )) + 
   geom_point(data=subset(plt, show.label == F),cex=0.35) +
   geom_smooth(data = subset(plt, padj.glass.res > 0.1 &  is.limited.gsam.res == "FALSE"), method="lm", se = FALSE,  formula=y ~ x, orientation="y", col=rgb(1,0,0,0.5)  , size=0.4) +
   geom_point(data=subset(plt, show.label == T ),col="black",cex=0.65) +
-  geom_text_repel(data=subset(plt, show.label == T & show.marker == T & log2FoldChange.glass.res > 0), col="blue", size=2.5 ,nudge_x = 3.1, direction = "y", hjust = "left", segment.size=0.35) + 
-  geom_text_repel(data=subset(plt, show.label == T & show.marker == T & log2FoldChange.glass.res < 0), col="blue", size=2.5 , nudge_x = -3.1, direction = "y", hjust = "right", segment.size=0.35) + 
+  geom_label_repel(data=subset(plt, show.label == T & show.marker == T & log2FoldChange.glass.res > 0), col="blue", size=2.5 ,nudge_x = 3.1, direction = "y", hjust = "left", segment.size=0.35, fill="white",label.size = 0) + 
+  geom_label_repel(data=subset(plt, show.label == T & show.marker == T & log2FoldChange.glass.res < 0), col="blue", size=2.5 , nudge_x = -3.1, direction = "y", hjust = "right", segment.size=0.35, fill="white",label.size = 0) + 
   scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
   labs(x = "log2FC R1 vs. R2/3/4 [GLASS]",
        y="Corr t-stat tumour-%"
        ,col="Endothelial marker genes") +
-  youri_gg_theme + xlim(-3, 3)
+  youri_gg_theme + xlim(-3.5, 3.5)
 
 
 
@@ -2336,24 +2341,24 @@ p3a <- ggplot(plt, aes(x=log2FoldChange.gsam.res , y=statistic.gsam.cor.tpc , co
   geom_point(data=subset(plt, show.label == F),cex=0.35) +
   geom_smooth(data = subset(plt, padj.gsam.tpc.res > 0.1 &  is.limited.gsam.res == "FALSE"),method="lm", se = FALSE,  formula=y ~ x, orientation="y", col=rgb(1,0,0,0.5) , size=0.4) +
   geom_point(data=subset(plt, show.label == T ),col="black",cex=0.65) +
+  geom_label_repel(data=subset(plt, show.label == T & show.marker == T & log2FoldChange.gsam.res > 0), col="blue", size=2.5 ,nudge_x = 3.1, direction = "y", hjust = "left", segment.size=0.35, fill="white",label.size = 0) + 
+  geom_label_repel(data=subset(plt, show.label == T & show.marker == T & log2FoldChange.gsam.res < 0), col="blue", size=2.5 , nudge_x = -3.1, direction = "y", hjust = "right", segment.size=0.35, fill="white",label.size = 0) + 
   scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
-  geom_text_repel(data=subset(plt, show.label == T & show.marker == T & log2FoldChange.gsam.res > 0), col="blue", size=2.5 ,nudge_x = 3.1, direction = "y", hjust = "left", segment.size=0.35) + 
-  geom_text_repel(data=subset(plt, show.label == T & show.marker == T & log2FoldChange.gsam.res < 0), col="blue", size=2.5 , nudge_x = -3.1, direction = "y", hjust = "right", segment.size=0.35) + 
   labs(x = "log2FC R1 vs. R2 [G-SAM]",
        y="Corr t-stat tumour-%"
        ,col="TAM/Microglia marker genes") +
-  youri_gg_theme + xlim(-2, 2)
+  youri_gg_theme + xlim(-2.5, 2.5)
 p3b <- ggplot(plt, aes(x=log2FoldChange.glass.res , y=statistic.gsam.cor.tpc , col=show.label, label = hugo_symbol )) + 
   geom_point(data=subset(plt, show.label == F),cex=0.35) +
   geom_smooth(data = subset(plt, padj.glass.res > 0.1 &  is.limited.gsam.res == "FALSE"), method="lm", se = FALSE,  formula=y ~ x, orientation="y", col=rgb(1,0,0,0.5)  , size=0.4) +
   geom_point(data=subset(plt, show.label == T ),col="black",cex=0.65) +
-  geom_text_repel(data=subset(plt, show.label == T & show.marker == T & log2FoldChange.gsam.res > 0), col="blue", size=2.5 ,nudge_x = 3.1, direction = "y", hjust = "left", segment.size=0.35) + 
-  geom_text_repel(data=subset(plt, show.label == T & show.marker == T & log2FoldChange.gsam.res < 0), col="blue", size=2.5 , nudge_x = -3.1, direction = "y", hjust = "right", segment.size=0.35) + 
+  geom_label_repel(data=subset(plt, show.label == T & show.marker == T & log2FoldChange.gsam.res > 0), col="blue", size=2.5 ,nudge_x = 3.1, direction = "y", hjust = "left", segment.size=0.35, fill="white",label.size = 0) + 
+  geom_label_repel(data=subset(plt, show.label == T & show.marker == T & log2FoldChange.gsam.res < 0), col="blue", size=2.5 , nudge_x = -3.1, direction = "y", hjust = "right", segment.size=0.35, fill="white",label.size = 0) + 
   scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
   labs(x = "log2FC R1 vs. R2/3/4 [GLASS]",
        y="Corr t-stat tumour-%"
        ,col="TAM/Microglia marker genes") +
-  youri_gg_theme + xlim(-3, 3)
+  youri_gg_theme + xlim(-3.5, 3.5)
 
 
 
@@ -2362,24 +2367,24 @@ p4a <- ggplot(plt, aes(x=log2FoldChange.gsam.res , y=statistic.gsam.cor.tpc , co
   geom_point(data=subset(plt, show.label == F),cex=0.35) +
   geom_smooth(data = subset(plt, padj.gsam.tpc.res > 0.1 &  is.limited.gsam.res == "FALSE"),method="lm", se = FALSE,  formula=y ~ x, orientation="y", col=rgb(1,0,0,0.5) , size=0.4) +
   geom_point(data=subset(plt, show.label == T ),col="black",cex=0.65) +
-  geom_text_repel(data=subset(plt, show.label == T & show.marker == T & log2FoldChange.gsam.res > 0), col="blue", size=2.5 ,nudge_x = 3.1, direction = "y", hjust = "left", segment.size=0.35) + 
-  geom_text_repel(data=subset(plt, show.label == T & show.marker == T & log2FoldChange.gsam.res < 0), col="blue", size=2.5 , nudge_x = -3.1, direction = "y", hjust = "right", segment.size=0.35) + 
+  geom_label_repel(data=subset(plt, show.label == T & show.marker == T & log2FoldChange.gsam.res > 0), col="blue", size=2.5 ,nudge_x = 3.1, direction = "y", hjust = "left", segment.size=0.35, fill="white",label.size = 0) + 
+  geom_label_repel(data=subset(plt, show.label == T & show.marker == T & log2FoldChange.gsam.res < 0), col="blue", size=2.5 , nudge_x = -3.1, direction = "y", hjust = "right", segment.size=0.35, fill="white",label.size = 0) + 
   scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
   labs(x = "log2FC R1 vs. R2 [G-SAM]",
        y="Corr t-stat tumour-%"
        ,col="Oligodendrocyte marker genes") +
-  youri_gg_theme + xlim(-2, 2)
+  youri_gg_theme + xlim(-2.5, 2.5)
 p4b <- ggplot(plt, aes(x=log2FoldChange.glass.res , y=statistic.gsam.cor.tpc , col=show.label, label = hugo_symbol )) + 
   geom_point(data=subset(plt, show.label == F),cex=0.35) +
   geom_smooth(data = subset(plt, padj.glass.res > 0.1 &  is.limited.gsam.res == "FALSE"), method="lm", se = FALSE,  formula=y ~ x, orientation="y", col=rgb(1,0,0,0.5)  , size=0.4) +
   geom_point(data=subset(plt, show.label == T ),col="black",cex=0.65) +
-  geom_text_repel(data=subset(plt, show.label == T & show.marker == T & log2FoldChange.gsam.res > 0), col="blue", size=2.5 ,nudge_x = 3.1, direction = "y", hjust = "left", segment.size=0.35) + 
-  geom_text_repel(data=subset(plt, show.label == T & show.marker == T & log2FoldChange.gsam.res < 0), col="blue", size=2.5 , nudge_x = -3.1, direction = "y", hjust = "right", segment.size=0.35) + 
+  geom_label_repel(data=subset(plt, show.label == T & show.marker == T & log2FoldChange.gsam.res > 0), col="blue", size=2.5 ,nudge_x = 3.1, direction = "y", hjust = "left", segment.size=0.35, fill="white",label.size = 0) + 
+  geom_label_repel(data=subset(plt, show.label == T & show.marker == T & log2FoldChange.gsam.res < 0), col="blue", size=2.5 , nudge_x = -3.1, direction = "y", hjust = "right", segment.size=0.35, fill="white",label.size = 0) + 
   scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
   labs(x = "log2FC R1 vs. R2/3/4 [GLASS]",
        y="Corr t-stat tumour-%"
        ,col="Oligodendrocyte marker genes") +
-  youri_gg_theme + xlim(-3, 3)
+  youri_gg_theme + xlim(-3.5, 3.5)
 
 
 plt <- plt %>% dplyr::mutate(show.label = show.label.astrocytes)
@@ -2387,22 +2392,56 @@ p5a <- ggplot(plt, aes(x=log2FoldChange.gsam.res , y=statistic.gsam.cor.tpc , co
   geom_point(data=subset(plt, show.label == F),cex=0.35) +
   geom_smooth(data = subset(plt, padj.gsam.tpc.res > 0.1 &  is.limited.gsam.res == "FALSE"),method="lm", se = FALSE,  formula=y ~ x, orientation="y", col=rgb(1,0,0,0.5) , size=0.4) +
   geom_point(data=subset(plt, show.label == T ),col="black",cex=0.65) +
-  geom_text_repel(data=subset(plt, show.label == T & show.marker == T & log2FoldChange.gsam.res > 0), col="blue", size=2.5 ,nudge_x = 3.1, direction = "y", hjust = "left", segment.size=0.35) + 
-  geom_text_repel(data=subset(plt, show.label == T & show.marker == T & log2FoldChange.gsam.res < 0), col="blue", size=2.5 , nudge_x = -3.1, direction = "y", hjust = "right", segment.size=0.35) + 
+  geom_label_repel(data=subset(plt, show.label == T & show.marker == T & log2FoldChange.gsam.res > 0), col="blue", size=2.5 ,nudge_x = 3.1, direction = "y", hjust = "left", segment.size=0.35, fill="white",label.size = 0) + 
+  geom_label_repel(data=subset(plt, show.label == T & show.marker == T & log2FoldChange.gsam.res < 0), col="blue", size=2.5 , nudge_x = -3.1, direction = "y", hjust = "right", segment.size=0.35, fill="white",label.size = 0) + 
   scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
   labs(x = "log2FC R1 vs. R2 [G-SAM]",
        y="Corr t-stat tumour-%"
        ,col="Astrocyte marker genes") +
-  youri_gg_theme + xlim(-2, 2)
+  youri_gg_theme + xlim(-2.5, 2.5)
 p5b <- ggplot(plt, aes(x=log2FoldChange.glass.res , y=statistic.gsam.cor.tpc , col=show.label, label = hugo_symbol )) + 
   geom_point(data=subset(plt, show.label == F),cex=0.35) +
   geom_smooth(data = subset(plt, padj.glass.res > 0.1 &  is.limited.gsam.res == "FALSE"), method="lm", se = FALSE,  formula=y ~ x, orientation="y", col=rgb(1,0,0,0.5)  , size=0.4) +
   geom_point(data=subset(plt, show.label == T ),col="black",cex=0.65) +
+  geom_label_repel(data=subset(plt, show.label == T & show.marker == T & log2FoldChange.glass.res > 0), col="blue", size=2.5 ,nudge_x = 3.1, direction = "y", hjust = "left", segment.size=0.35, fill="white",label.size = 0) + 
+  geom_label_repel(data=subset(plt, show.label == T & show.marker == T & log2FoldChange.glass.res < 0), col="blue", size=2.5 , nudge_x = -3.1, direction = "y", hjust = "right", segment.size=0.35, fill="white",label.size = 0) + 
   scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
   labs(x = "log2FC R1 vs. R2/3/4 [GLASS]",
        y="Corr t-stat tumour-%"
        ,col="Astrocyte marker genes") +
-  youri_gg_theme + xlim(-3, 3)
+  youri_gg_theme + xlim(-3.5, 3.5)
+
+
+
+
+plt <- plt %>% dplyr::mutate(show.label = chr == "chr7" & baseMean.gsam.res > 300 & baseMean.glass.res > 300)
+p6a <- ggplot(plt, aes(x=log2FoldChange.gsam.res , y=statistic.gsam.cor.tpc , col=show.label, label = hugo_symbol )) + 
+  geom_point(data=subset(plt, show.label == F),cex=0.35) +
+  geom_smooth(data = subset(plt, padj.gsam.tpc.res > 0.1 &  is.limited.gsam.res == "FALSE"),method="lm", se = FALSE,  formula=y ~ x, orientation="y", col=rgb(1,0,0,0.5) , size=0.4) +
+  geom_point(data=subset(plt, show.label == T ),col="black",cex=0.65) +
+  geom_label_repel(data=subset(plt, show.label == T & show.marker.chr7 == T & log2FoldChange.gsam.res > 0), col="blue", size=2.5 ,nudge_x = 3.1, direction = "y", hjust = "left", segment.size=0.35, fill="white",label.size = 0) + 
+  geom_label_repel(data=subset(plt, show.label == T & show.marker.chr7 == T & log2FoldChange.gsam.res < 0), col="blue", size=2.5 , nudge_x = -3.1, direction = "y", hjust = "right", segment.size=0.35, fill="white",label.size = 0) + 
+
+  #geom_label_repel(data=subset(plt, statistic.gsam.cor.tpc > 7 &  chr == "chr7" & log2FoldChange.gsam.res > 0), col="blue", size=2.5 ,nudge_x = 3.1, direction = "y", hjust = "left", segment.size=0.35, fill="white",label.size = 0) + 
+  #geom_label_repel(data=subset(plt, statistic.gsam.cor.tpc > 7 &  chr == "chr7" & log2FoldChange.gsam.res < 0), col="blue", size=2.5 , nudge_x = -3.1, direction = "y", hjust = "right", segment.size=0.35, fill="white",label.size = 0) + 
+  
+  scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
+  labs(x = "log2FC R1 vs. R2 [G-SAM]",
+       y="Corr t-stat tumour-%"
+       ,col="chr7 genes (chr7 amplification marker; baseMean > 300)") +
+  youri_gg_theme + xlim(-2.5, 2.5)
+p6b <- ggplot(plt, aes(x=log2FoldChange.glass.res , y=statistic.gsam.cor.tpc , col=show.label, label = hugo_symbol )) + 
+  geom_point(data=subset(plt, show.label == F),cex=0.35) +
+  geom_smooth(data = subset(plt, padj.glass.res > 0.1 &  is.limited.gsam.res == "FALSE"), method="lm", se = FALSE,  formula=y ~ x, orientation="y", col=rgb(1,0,0,0.5)  , size=0.4) +
+  geom_point(data=subset(plt, show.label == T ),col="black",cex=0.65) +
+  geom_label_repel(data=subset(plt, show.label == T & show.marker.chr7 == T & log2FoldChange.glass.res > 0), col="blue", size=2.5 , nudge_x = 3.1, direction = "y", hjust = "left", segment.size=0.35, fill="white",label.size = 0) + 
+  geom_label_repel(data=subset(plt, show.label == T & show.marker.chr7 == T & log2FoldChange.glass.res < 0), col="blue", size=2.5 , nudge_x = 3.1, direction = "y", hjust = "left", segment.size=0.35, fill="white",label.size = 0) + 
+  scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
+  labs(x = "log2FC R1 vs. R2/3/4 [GLASS]",
+       y="Corr t-stat tumour-%"
+       ,col="chr7 genes (chr7 amplification marker; baseMean > 300)") +
+  youri_gg_theme + xlim(-3.5, 3.5)
+
 
 
 
@@ -2431,15 +2470,102 @@ p5b <- ggplot(plt, aes(x=log2FoldChange.glass.res , y=statistic.gsam.cor.tpc , c
 (p2a + p2b) / 
 (p3a + p3b) / 
 (p4a + p4b) / 
-(p5a + p5b)
-
+(p5a + p5b) / 
+(p6a + p6b)
 
 ggsave("output/figures/paper_dge_cell-type_genes.png",width=2*6, height=6*6)
 
 
+## 2.14 corrplot ----
 
 
-## 2.14 Corrected LFC + individual tophits ----
+plt <- data.frame(
+  hugo_symbol = c(
+    "CREB5",	"TRIM24",	"ETV1", "COA1", # tum
+    
+    "CACHD1","AHCYL1","GPR37L1","BMPR1B", # astroctyes
+    "RBFOX3", "GABRB2", "SLC17A7","SST", # neuron
+    
+    "PLP1", "OPALIN", "TMEM144","CLCA4", # oligodendrocyte
+    
+    "TIE1","PEAR1","RGS5","NOSTRIN",  # endothelial
+    "CD163",  "CD14", "C1QA","THEMIS2" # TAM/MG
+  )) %>%
+  dplyr::left_join(results.out %>% 
+      dplyr::select(c('gid','hugo_symbol','McKenzie_celltype_top_human_specificity','show.marker.chr7')) %>%
+      dplyr::rename(type=McKenzie_celltype_top_human_specificity) ,
+    by=c('hugo_symbol'='hugo_symbol'))  %>%
+  dplyr::mutate(type = ifelse(hugo_symbol %in% c('SLC17A7','SST'), 'neuron', type) ) %>%
+  dplyr::mutate(type = ifelse(is.na(type), 'NA', type) ) %>%
+  dplyr::mutate(type = ifelse(show.marker.chr7 & type != 'astrocyte' , 'chr7/gain' , type)) %>%
+  dplyr::mutate(show.marker.chr7 = NULL)
+
+
+
+tmp <- gsam.gene.expression.all.vst %>% 
+  as.data.frame() %>%
+  dplyr::select(colnames(gsam.gene.expression.all.paired)) %>% # <3
+  tibble::rownames_to_column('gid') %>%
+  dplyr::filter(gid %in% plt$gid) %>%
+  tibble::column_to_rownames('gid')
+
+odd <- 1:ncol(tmp) %>% purrr::keep(~ . %% 2 == 1)
+even <- 1:ncol(tmp) %>% purrr::keep(~ . %% 2 == 0)
+
+tmp.r1 <- tmp[,odd] 
+tmp.r2 <- tmp[,even]
+stopifnot ( gsub("^(...).*$","\\1",colnames(tmp.r1)) == gsub("^(...).*$","\\1",colnames(tmp.r2)) )
+rm(tmp)
+
+
+tmp <- plt %>% dplyr::left_join(
+  log2(tmp.r1 %>% `colnames<-`(gsub("^(...).*$","\\1",colnames(.))) /
+       tmp.r2 %>% `colnames<-`(gsub("^(...).*$","\\1",colnames(.))) ) %>%
+    `rownames<-`(gsub("^ENSG.+\\|(.+)\\|chr.+$","\\1",rownames(.))) %>%
+    tibble::rownames_to_column('hugo_symbol')
+  , by = c('hugo_symbol'='hugo_symbol')) %>%
+  dplyr::mutate(type = case_when(
+    type == "chr7/gain" ~ "chr7", 
+    type == "astrocyte" ~ "astr",
+    type == "neuron" ~ "neur",
+    type == "endothelial" ~ "endo",
+    type == "microglia/TAM" ~ "TAM",
+    type == "oligodendrocyte" ~ "olig",
+    T ~ "?" )) %>%
+  dplyr::mutate(hugo_symbol = paste0(hugo_symbol , " [" , type, "]") ) %>%
+  tibble::column_to_rownames('hugo_symbol') %>%
+  dplyr::mutate(   gid    = NULL,  type=NULL)
+
+
+tmp.2 <- dplyr::full_join(
+  data.frame(sid = colnames(tmp.r1)) %>%
+    dplyr::left_join(gsam.metadata.all.paired %>% select(c('sid','tumour.percentage.dna')), by=c('sid'='sid')) %>%
+    dplyr::mutate(pid = gsub("^(...).*$","\\1",sid)) %>%
+    dplyr::rename(tumour.percentage.dna.R1 = tumour.percentage.dna) %>%
+    dplyr::mutate(sid = NULL) ,
+  data.frame(sid = colnames(tmp.r2)) %>%
+    dplyr::left_join(gsam.metadata.all.paired %>% select(c('sid','tumour.percentage.dna')), by=c('sid'='sid')) %>%
+    dplyr::mutate(pid = gsub("^(...).*$","\\1",sid))%>%
+  dplyr::rename(tumour.percentage.dna.R2 = tumour.percentage.dna) %>%
+  dplyr::mutate(sid = NULL) , by = c('pid'='pid'))  %>%
+  dplyr::mutate(`tumor-% DNA` = log2(tumour.percentage.dna.R1 / tumour.percentage.dna.R2)) %>%
+  dplyr::mutate(tumour.percentage.dna.R1 = NULL, tumour.percentage.dna.R2 = NULL) %>%
+  tibble::column_to_rownames('pid') %>%
+  t()
+
+
+stopifnot(colnames(tmp) == colnames(tmp.2))
+tmp <- rbind(tmp.2, tmp)
+
+
+
+png(file = "output/figures/paper_dge_corrplot_logFc_gene_per_patient.png", width = 1200 * 0.8, height = 900 *0.8 )
+corrplot::corrplot(cor(t(tmp), method="pearson"), method = "circle")
+dev.off()
+
+
+
+## 2.16 Corrected LFC + individual tophits ----
 
 
 
