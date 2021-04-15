@@ -275,7 +275,8 @@ tmp <- read_xlsx("data/McKenzie et al. Gene expression different cell types.xlsx
   dplyr::mutate(show.marker = ifelse(gene %in% c(
     "TBX3","ERG", "FLT1","RERGL","VCAM1" , # endothelial
     "CD74", "CD14", "CD84", "CD53", "CD163", # TAM/Microglia
-    "BCAS1","ERBB3","FGFR3","GFAP","GABRA1","GABRB2","OPALIN","PLP1","RBFOX3","SOX8","SOX9","TGFA","VIP") , T , F) ) %>%
+    "OPALIN","PLP1","CNDP1","CNTN2","TMEM144", # oligodendrocyte
+    "BCAS1","ERBB3","FGFR3","GFAP","GABRA1","GABRB2","RBFOX3","SOX9","TGFA","VIP") , T , F) ) %>%
   dplyr::rename(McKenzie_celltype_top_human_specificity = Celltype) %>%
   dplyr::mutate(grand_mean = NULL)
 #dim(tmp)
@@ -2372,6 +2373,8 @@ p4b <- ggplot(plt, aes(x=log2FoldChange.glass.res , y=statistic.gsam.cor.tpc , c
   geom_point(data=subset(plt, show.label == F),cex=0.35) +
   geom_smooth(data = subset(plt, padj.glass.res > 0.1 &  is.limited.gsam.res == "FALSE"), method="lm", se = FALSE,  formula=y ~ x, orientation="y", col=rgb(1,0,0,0.5)  , size=0.4) +
   geom_point(data=subset(plt, show.label == T ),col="black",cex=0.65) +
+  geom_text_repel(data=subset(plt, show.label == T & show.marker == T & log2FoldChange.gsam.res > 0), col="blue", size=2.5 ,nudge_x = 3.1, direction = "y", hjust = "left", segment.size=0.35) + 
+  geom_text_repel(data=subset(plt, show.label == T & show.marker == T & log2FoldChange.gsam.res < 0), col="blue", size=2.5 , nudge_x = -3.1, direction = "y", hjust = "right", segment.size=0.35) + 
   scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
   labs(x = "log2FC R1 vs. R2/3/4 [GLASS]",
        y="Corr t-stat tumour-%"
