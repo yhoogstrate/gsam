@@ -140,6 +140,12 @@ plt.expanded <- data.frame(pid = unique(plt.ids$pid) ) %>%
   dplyr::mutate(Grade.IV = pid %in% (glass.gbm.rnaseq.metadata %>% dplyr::filter(grade == "IV") %>% dplyr::pull(pid)) ) %>%
   dplyr::mutate(R1.R2.Grade.IV = ifelse(Grade.IV & !Grade.III & !Grade.II,"+","-")) %>%
   dplyr::mutate(R1.R2.Grade.IV.order = ifelse(Grade.IV & !Grade.III & !Grade.II,1,2)) %>%
+  dplyr::left_join(glass.metadata.all %>%
+      dplyr::filter(treatment_tmz %in% c('t','f') ) %>%
+      dplyr::select(c("case_barcode","treatment_tmz")) %>%
+      dplyr::distinct() ,  by=c('pid'='case_barcode')) %>%
+  dplyr::mutate(treatment_tmz = ifelse(treatment_tmz == "t", '+', treatment_tmz) ) %>%
+  dplyr::mutate(treatment_tmz = ifelse(treatment_tmz == "f", '-', treatment_tmz) ) %>%
   dplyr::arrange(dataset, IDHwt.order, R1.R2.Grade.IV.order, -np, R3.status, R2.status, R1.status) %>%
   dplyr::mutate(order = 1:nrow(.))
 
@@ -158,7 +164,8 @@ plt <- bind_rows(
     plt.expanded %>% dplyr::select(c('pid', 'R3.status')) %>% dplyr::rename(col = R3.status) %>% dplyr::mutate(y = "RNA-Seq sample R4") ,
     plt.expanded %>% dplyr::select(c('pid', 'dataset')) %>% dplyr::rename(col = dataset) %>% dplyr::mutate(y = "GLASS Project barcode") ,
     plt.expanded %>% dplyr::select(c('pid', 'IDHwt')) %>% dplyr::rename(col = IDHwt) %>% dplyr::mutate(y = "IDH wildtype") ,
-    plt.expanded %>% dplyr::select(c('pid', 'R1.R2.Grade.IV')) %>% dplyr::rename(col = R1.R2.Grade.IV) %>% dplyr::mutate(y = "R1 (TP) & R2 Grade IV (GBM)") 
+    plt.expanded %>% dplyr::select(c('pid', 'R1.R2.Grade.IV')) %>% dplyr::rename(col = R1.R2.Grade.IV) %>% dplyr::mutate(y = "R1 (TP) & R2 Grade IV (GBM)"),
+    plt.expanded %>% dplyr::select(c('pid', 'treatment_tmz')) %>% dplyr::rename(col = treatment_tmz) %>% dplyr::mutate(y = "TMZ Treatment")
   ) %>%
   dplyr::mutate(col = ifelse(is.na(col),'NA',col)) %>%
   dplyr::left_join(plt.expanded %>% dplyr::select('pid','order'), by=c('pid'='pid')) 
