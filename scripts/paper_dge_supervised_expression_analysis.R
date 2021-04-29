@@ -157,6 +157,10 @@ stopifnot(colnames(glass.gene.expression.all) == glass.metadata.all$sid)
 
 ## per-gene results table ----
 
+# how can these appear:
+#31        TGFA      ENSG00000163235.16_5|TGFA|chr2:70674416-70781325(-) oligodendrocyte
+#32        TGFA                                                     <NA> oligodendrocyte
+# 2 distinct ENS id's
 
 results.out <- dplyr::full_join(
     gsam.gene.expression.all %>%
@@ -2004,7 +2008,7 @@ p1 + p2
 
 
 
-ggsave("/tmp/gabra.png",height=10 * 1.3,width=4.5 * 1.3)
+#ggsave("/tmp/gabra.png",height=10 * 1.3,width=4.5 * 1.3)
 
 
 
@@ -2476,20 +2480,28 @@ p6b <- ggplot(plt, aes(x=log2FoldChange.glass.res , y=statistic.gsam.cor.tpc , c
 ggsave("output/figures/paper_dge_cell-type_genes.png",width=2*6, height=6*6)
 
 
-## 2.14 corrplot ----
-
+## 2.14 Corrplot marker genes ----
 
 plt <- data.frame(
   hugo_symbol = c(
-    "CREB5",	"TRIM24",	"ETV1", "COA1", # tum
+    "CREB5",	"TRIM24",	"ETV1", "COA1", # tumor
     
     "CACHD1","AHCYL1","GPR37L1","BMPR1B", # astroctyes
     "RBFOX3", "GABRB2", "SLC17A7","SST", # neuron
+
+    #"SSTR1","SSTR2","SSTR3","SSTR5", # Antibodies
+    #"GABRA1","GABRA2","GABRB1","GABRB2",
+    #"TNNT1", "TNNT2", "TNNT3",
     
     "PLP1", "OPALIN", "TMEM144","CLCA4", # oligodendrocyte
+    #"PDGFA", "PDGFRA", "OLIG1", "OLIG2", "OLIG3",
     
     "TIE1","PEAR1","RGS5","NOSTRIN",  # endothelial
     "CD163",  "CD14", "C1QA","THEMIS2" # TAM/MG
+    
+    ###, "MME", "ERG", "FCER2", "EPCAM", "EREG" << !!
+    #,"EGFR"
+    #,"EREG","AREG", "BTC","HBEGF","NGF","TGFA","EGF","EPGN"
   )) %>%
   dplyr::left_join(results.out %>% 
       dplyr::select(c('gid','hugo_symbol','McKenzie_celltype_top_human_specificity','show.marker.chr7')) %>%
@@ -2498,7 +2510,8 @@ plt <- data.frame(
   dplyr::mutate(type = ifelse(hugo_symbol %in% c('SLC17A7','SST'), 'neuron', type) ) %>%
   dplyr::mutate(type = ifelse(is.na(type), 'NA', type) ) %>%
   dplyr::mutate(type = ifelse(show.marker.chr7 & type != 'astrocyte' , 'chr7/gain' , type)) %>%
-  dplyr::mutate(show.marker.chr7 = NULL)
+  dplyr::mutate(show.marker.chr7 = NULL) %>%
+  dplyr::filter(!is.na(gid)) 
 
 
 
@@ -2557,31 +2570,28 @@ tmp.2 <- dplyr::full_join(
 stopifnot(colnames(tmp) == colnames(tmp.2))
 tmp <- rbind(tmp.2, tmp)
 
+# #"ward.D", "single", "complete", "average", "mcquitty",  "median", "centroid", "ward.D2"
+# # volgorde voor plotten:
+# #h = hclust(as.dist(1 - abs(cor(t(tmp)))),method = "ward.D")
+# h = hclust(as.dist(1 - cor(t(tmp))))
+# plot(h)
+# o = h$labels[h$order]
+# 
+# tmp <- t(tmp) %>% as.data.frame %>% select(o) %>% t()
 
 
 png(file = "output/figures/paper_dge_corrplot_logFc_gene_per_patient.png", width = 1200 * 0.8, height = 900 *0.8 )
-corrplot::corrplot(cor(t(tmp), method="pearson"), method = "circle")
+corrplot::corrplot(cor(t(tmp), method="pearson"), method = "circle",tl.cex=1)
 dev.off()
+
+
+pheatmap::pheatmap(tmp,scale="row", clustering_distance_rows = "correlation")
+
+
 
 
 
 ## 2.16 Corrected LFC + individual tophits ----
-
-
-
-# signi in both corrected and uncorrected, but lfcSE outlier in corrected
-# "TTLL10"     
-# "MYO3A"     
-# "AC090791.1" "AC090124.2" "AC090643.1" "AC009041.1" "LINC00514"  "KRT9"       "CKM"        "PI3"   
-#'EGFR','MHMT','CD4', "CXCL12", "BLNK", "DDB2","RBP1", "PLXNB1",
-#"SOX2", "NANOG",
-#"CDKN2A", "CDKN2B", "APEX1", "NF1", "TP53", "CD40",
-#"GSTM1", "SOCS2", "BTC", "FGFR3", 
-#"OCT4", "NOS1",
-#"POU5F1"
-
-# presynapse 
-synapse <- read.csv('/tmp/gProfiler_hsapiens_4-2-2021_4-39-17 PM.csv')
 
 
 
@@ -2597,29 +2607,17 @@ plt <- results.out %>%
   dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res < -3, -3 , log2FoldChange.gsam.tpc.res)) %>%
 
   dplyr::mutate(significant = padj.gsam.tpc.res < 0.01 & lfcSE.gsam.tpc.res < 0.3 & abs(log2FoldChange.gsam.tpc.res) > 0.5 ) %>%
-  dplyr::mutate(show.label = hugo_symbol %in% c(
-    #'GLIS1',"CPEB1",'GLI1',
-    
-    #  plt  %>% arrange(pvalue.glass.res  * pvalue.gsam.tpc.res) %>% filter (significant) %>% head(n=25) %>% pull(hugo_symbol)
-    
-    #"MME","CORO6","CCBE1","SCUBE3","MMP11","CYSLTR2","RBP4","HS3ST2","TNNT2","SYN1","LARP6","CERCAM","PPP4R4","AK5","SLIT3","CABP1","RYR2","CAMKK1","SNCG","ATP8A2","REPS2","RSPO3","PTGFR","GPR83","PHYHIP"
-    
-    # SYN1 = synaptic vesicle & neurotransmitter (serotonin) [related to DSCAM DCC and EGFR?][Multiple epidermal growth factor-like domains protein 5]
-    # MME = in pathway met VIP (sterke neuron marker)
-    # SLIT3 = axon guidance    
-    # HS3ST2, brain specific, cancer and invasion related
-    # CERCAM = cerebral endothelial cell adhesion molecule << while endothelial markers go down?
-    
-    #"CD3D", "CD3E", "CD3G", "CD163"
-    #"CD274", "PDCD1LG2", "HLA-C", "B2M" # PDL1, PDL2, MHC, B2M
-    
-    #"PLP1", "CLDN11", "CNTN2", "CTNNA3", ""
-    #"CCL4", "CCL33", "CX3CD1", "CD53", "RUNX1","IL1B","IL6R","PTPRC","BLNK"
-    "CCL4L1"
-  ))
+  dplyr::mutate(show.label = 
+    #padj.gsam.tpc.res < 0.00001 &
+    #  lfcSE.gsam.tpc.res < 0.3 &
+    #  is.na(McKenzie_celltype_top_human_specificity)
+      hugo_symbol %in% c('LIF', 'IL6')
+                                         ) # hugo_symbol %in% c(
+
+plt %>% filter(show.label) %>% pull(hugo_symbol)
 
 
-ggplot(plt, aes(x=log2FoldChange.gsam.res , y=statistic.gsam.cor.tpc , col=show.label, label = hugo_symbol )) + 
+p1 <- ggplot(plt, aes(x=log2FoldChange.gsam.tpc.res , y=statistic.gsam.cor.tpc , col=show.label, label = hugo_symbol )) + 
   geom_point(data=subset(plt, show.label == F),cex=0.35) +
   geom_point(data=subset(plt, show.label == T ),col="black",cex=0.65) +
   geom_text_repel(data=subset(plt, show.label == T & log2FoldChange.gsam.tpc.res > 0), col="blue", size=2.5 ,nudge_x = 3.1, direction = "y", hjust = "left", segment.size=0.35) + 
@@ -2630,20 +2628,14 @@ ggplot(plt, aes(x=log2FoldChange.gsam.res , y=statistic.gsam.cor.tpc , col=show.
        ,col="Difference significant (R1 ~ R2)") +
   youri_gg_theme + xlim(-3, 3)
 
-
-
-ggplot(plt, aes(x=log2FoldChange.glass.res ,
+p2 <- ggplot(plt, aes(x=log2FoldChange.glass.res ,
                       y=statistic.gsam.cor.tpc  ,
                       col=show.label,
                       label = hugo_symbol )) + 
   geom_point(data=subset(plt,  show.label == F),cex=0.35) +
   geom_point(data=subset(plt, show.label == T),col="red",cex=0.65) +
-  geom_text_repel(data=subset(plt, show.label == T & log2FoldChange.gsam.tpc.res > 0), col="blue", size=2.5 ,
-                  nudge_x = 3.1, direction = "y", hjust = "left" #, lwd=0.5
-  ) +
-  geom_text_repel(data=subset(plt, show.label == T & log2FoldChange.gsam.tpc.res < 0), col="blue", size=2.5 ,
-                  nudge_x = -3.1, direction = "y", hjust = "right" #, lwd=0.5
-  ) +
+  geom_text_repel(data=subset(plt, show.label == T & log2FoldChange.gsam.tpc.res > 0), col="blue", size=2.5 ,                   nudge_x = 3.1, direction = "y", hjust = "left" ) +
+  geom_text_repel(data=subset(plt, show.label == T & log2FoldChange.gsam.tpc.res < 0), col="blue", size=2.5 ,                  nudge_x = -3.1, direction = "y", hjust = "right"  ) +
   scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
   labs(x = "log2FC R1 vs. R2 GLASS",
        y="Correlation t-statistic with tumour percentage"
@@ -2652,9 +2644,177 @@ ggplot(plt, aes(x=log2FoldChange.glass.res ,
   youri_gg_theme + 
   xlim(-3, 3)
 
-
-
 p1 + p2
+
+
+
+## 2.17 Corrplot DE + marker genes ----
+
+
+
+
+plt <- data.frame(
+  hugo_symbol = c(
+    "CREB5",	"TRIM24",	"ETV1", "COA1", # tumor
+    
+    "CACHD1","AHCYL1","GPR37L1","BMPR1B", # astroctyes
+    #"RBFOX3", "GABRB2", "SLC17A7", # neuron; significant anyway
+    "SST", # neuron
+    
+    #"SSTR1","SSTR2","SSTR3","SSTR5", # Antibodies
+    #"GABRA1","GABRA2","GABRB1","GABRB2",
+    #"TNNT1", "TNNT2", "TNNT3",
+    
+    "PLP1", "OPALIN", "TMEM144","CLCA4", # oligodendrocyte
+    #"PDGFA", "PDGFRA", "OLIG1", "OLIG2", "OLIG3",
+    
+    "TIE1","PEAR1","RGS5","NOSTRIN",  # endothelial
+    "CD163",  "CD14", "C1QA","THEMIS2" # TAM/MG
+    
+    ###, "MME", "ERG", "FCER2", "EPCAM", "EREG" << !!
+    #,"EGFR"
+    #,"EREG","AREG", "BTC","HBEGF","NGF","TGFA","EGF","EPGN"
+    
+    ,(results.out %>%
+      dplyr::filter(!is.na(padj.gsam.res) &  padj.gsam.res < 0.01 &
+                      !is.na(padj.glass.res) & padj.glass.res < 0.01 ) %>%
+      pull(hugo_symbol))
+    
+    
+    # tophits
+    #,"AGRN","KANK4","AK5","IVNS1ABP","NEK7","TNNT2","OTOF","CLIP4","MAL","THSD7B","DES","SYN2","SLC6A6","ANKRD28","SPINK8","MME","IQCJ","SPOCK3","TPPP","GDNF","EDIL3","SLIT3","FLT4","SCUBE3","COL12A1","RSPO3","FAM180A","PHYHIP","MAMDC2","SLC31A2","LAMC3","NODAL","PALD1","ANKRD1","PDZD7","MXI1","LHPP","JAKMIP3","TNNT3","YPEL4","NPAS4","KCNE3","WNT11","TRPC6","NRGN","KRT80","GLI1","CABP1","ATP8A2","KCTD4","ITGBL1","ABHD12B","PPP4R4","FGF7","LARP6","CPEB1","PCSK6","TARSL2","HS3ST2","NFATC2IP","LRRC36","RTN4RL1","CAMKK1","GRAP","CORO6","RAB11FIP4","PLXDC1","RAB40B","CCBE1","PLPP2","HCN2","ICAM5","RAB3A","IFNAR2","MMP11","REPS2","SYN1","ATP2B3"
+    #,"AGRN","TPRG1L","FBXO2","KANK4","DNAJC6","AK5","ANKRD34A","CDC42SE1","IVNS1ABP","NEK7","TNNT2","SYT2","MFSD4A","KCNK1","SLC35F3","OTOF","TRIM54","CLIP4","EGR4","MAL","THSD7B","DES","SYN2","SLC6A6","ANKRD28","HHATL","SPINK8","MME","IQCJ","SERPINI1","MMRN1","TRIM2","SPOCK3","ASB5","TPPP","GDNF","RASGRF2","EDIL3","ARHGEF37","SLIT3","AC139491.7","SNCB","FAM153CP","FLT4","NOTCH4","PACSIN1","SCUBE3","COL12A1","FAM162B","RSPO3","MAP7","DYNC1I1","GRM8","FAM180A","ANGPT2","PHYHIP","NEFM","DOCK5","NECAB1","PTP4A3","MAMDC2","SLC31A2","BSPRY","LAMC3","OLFM1","CLIC3","ABCA2","GRIN1","OPTN","MYPN","NODAL","PALD1","PRF1","SNCG","ANKRD1","PDZD7","MXI1","LHPP","TCERG1L","JAKMIP3","TNNI2","TNNT3","YPEL4","NPAS4","PDE2A","KCNE3","ARRB1","WNT11","TRPC6","NRGN","NOP2","KCNJ8","KRT80","GLI1","ARHGAP9","ANO4","WASHC3","CABP1","ATP8A2","KCTD4","ITGBL1","ADPRHL1","RNASE1","SSTR1","ABHD12B","PPP4R4","INAFM2","DLL4","FBN1","FGF7","LARP6","RASGRF1","CPEB1","BNC1","PCSK6","TARSL2","KCTD5","MMP25","SEC14L5","HS3ST2","NFATC2IP","FUS","CES4A","LRRC36","RTN4RL1","CAMKK1","BCL6B","PIK3R6","GRAP","CORO6","EVI2A","RAB11FIP4","MYO1D","PLXDC1","RAB40B","CCBE1","PLPP2","HCN2","ICAM5","MAST3","RAB3A","GPR4","TNNC2","LIME1","IFNAR2","MMP11","SHISAL1","REPS2","SYN1","FOXO4","ATP2B3"
+    
+  )) %>%
+  dplyr::left_join(results.out %>% 
+                     dplyr::select(c('gid','hugo_symbol','McKenzie_celltype_top_human_specificity','show.marker.chr7')) %>%
+                     dplyr::rename(type=McKenzie_celltype_top_human_specificity) ,
+                   by=c('hugo_symbol'='hugo_symbol'))  %>%
+  dplyr::mutate(type = ifelse(hugo_symbol %in% c('SLC17A7','SST'), 'neuron', type) ) %>%
+  dplyr::mutate(type = ifelse(is.na(type), 'NA', type) ) %>%
+  dplyr::mutate(type = ifelse(show.marker.chr7 & type != 'astrocyte' , 'chr7/gain' , type)) %>%
+  dplyr::mutate(show.marker.chr7 = NULL) %>%
+  dplyr::filter(!is.na(gid)) 
+
+
+
+tmp <- gsam.gene.expression.all.vst %>% 
+  as.data.frame() %>%
+  dplyr::select(colnames(gsam.gene.expression.all.paired)) %>% # <3
+  tibble::rownames_to_column('gid') %>%
+  dplyr::filter(gid %in% plt$gid) %>%
+  tibble::column_to_rownames('gid')
+
+odd <- 1:ncol(tmp) %>% purrr::keep(~ . %% 2 == 1)
+even <- 1:ncol(tmp) %>% purrr::keep(~ . %% 2 == 0)
+
+tmp.r1 <- tmp[,odd] 
+tmp.r2 <- tmp[,even]
+stopifnot ( gsub("^(...).*$","\\1",colnames(tmp.r1)) == gsub("^(...).*$","\\1",colnames(tmp.r2)) )
+rm(tmp)
+
+
+tmp <- plt %>% dplyr::left_join(
+  log2(tmp.r1 %>% `colnames<-`(gsub("^(...).*$","\\1",colnames(.))) /
+         tmp.r2 %>% `colnames<-`(gsub("^(...).*$","\\1",colnames(.))) ) %>%
+    `rownames<-`(gsub("^ENSG.+\\|(.+)\\|chr.+$","\\1",rownames(.))) %>%
+    tibble::rownames_to_column('hugo_symbol')
+  , by = c('hugo_symbol'='hugo_symbol')) %>%
+  dplyr::mutate(type = case_when(
+    type == "chr7/gain" ~ "chr7", 
+    type == "astrocyte" ~ "astr",
+    type == "neuron" ~ "neur",
+    type == "endothelial" ~ "endo",
+    type == "microglia/TAM" ~ "TAM",
+    type == "oligodendrocyte" ~ "olig",
+    T ~ "?" )) %>%
+  dplyr::mutate(hugo_symbol = paste0(hugo_symbol , " [" , type, "]") ) %>%
+  tibble::column_to_rownames('hugo_symbol') %>%
+  dplyr::mutate(   gid    = NULL,  type=NULL)
+
+
+tmp.2 <- dplyr::full_join(
+  data.frame(sid = colnames(tmp.r1)) %>%
+    dplyr::left_join(gsam.metadata.all.paired %>% select(c('sid','tumour.percentage.dna')), by=c('sid'='sid')) %>%
+    dplyr::mutate(pid = gsub("^(...).*$","\\1",sid)) %>%
+    dplyr::rename(tumour.percentage.dna.R1 = tumour.percentage.dna) %>%
+    dplyr::mutate(sid = NULL) ,
+  data.frame(sid = colnames(tmp.r2)) %>%
+    dplyr::left_join(gsam.metadata.all.paired %>% select(c('sid','tumour.percentage.dna')), by=c('sid'='sid')) %>%
+    dplyr::mutate(pid = gsub("^(...).*$","\\1",sid))%>%
+    dplyr::rename(tumour.percentage.dna.R2 = tumour.percentage.dna) %>%
+    dplyr::mutate(sid = NULL) , by = c('pid'='pid'))  %>%
+  dplyr::mutate(`tumor-% DNA` = log2(tumour.percentage.dna.R1 / tumour.percentage.dna.R2)) %>%
+  dplyr::mutate(tumour.percentage.dna.R1 = NULL, tumour.percentage.dna.R2 = NULL) %>%
+  tibble::column_to_rownames('pid') %>%
+  t()
+
+
+stopifnot(colnames(tmp) == colnames(tmp.2))
+tmp <- rbind(tmp.2, tmp)
+
+#"ward.D", "single", "complete", "average", "mcquitty",  "median", "centroid", "ward.D2"
+# volgorde voor plotten:
+#h = hclust(as.dist(1 - abs(cor(t(tmp)))),method = "ward.D")
+
+h = hclust(as.dist(1 - cor(t(tmp),method="pearson", use = "pairwise.complete.obs")))
+#h = hclust(dist(t(tmp)))
+
+h = hclust(as.dist(1 - cor(t(tmp),method="pearson", use = "pairwise.complete.obs")),method="average")
+
+#h = hclust(as.dist(1 - abs(cor(t(tmp),method="pearson", use = "pairwise.complete.obs"))))
+#h = hclust(dist(t(scale(t(tmp)))), method="average")
+#h = hclust(dist(t(scale(t(tmp)))) * 2, method="cen")
+
+plot(h)
+o = h$labels[h$order]
+
+tmp <- tmp %>% as.matrix %>% t() %>% as.data.frame %>% dplyr::select(o) %>% t()
+
+corrplot::corrplot(cor(t(tmp), method="pearson"), method = "circle",tl.cex=0.35)
+
+
+
+
+png(file = "output/figures/paper_dge_corrplot_logFc_gene_per_patient_and_DE_genes.png", width = 1200 * 2.8, height = 900 * 2.8 )
+corrplot::corrplot(cor(t(tmp), method="pearson"), method = "circle",tl.cex=2.25)
+dev.off()
+
+
+#pheatmap::pheatmap(t(tmp), scale="column",clustering_distance_rows="correlation")
+
+
+
+
+## 2.18 pathology antibody genes ----
+
+
+plt <- results.out %>%
+  dplyr::filter(!is.na(log2FoldChange.gsam.res) & !is.na(log2FoldChange.glass.res)  & !is.na(statistic.gsam.cor.tpc) ) %>%
+  dplyr::mutate(is.limited.gsam.res = as.character(abs(log2FoldChange.gsam.res) > 2)) %>% # change pch to something that is limited
+  dplyr::mutate(log2FoldChange.gsam.res = ifelse(log2FoldChange.gsam.res > 2, 2 , log2FoldChange.gsam.res)) %>%
+  dplyr::mutate(log2FoldChange.gsam.res = ifelse(log2FoldChange.gsam.res < -2, -2 , log2FoldChange.gsam.res)) %>%
+  dplyr::mutate(is.limited.glass.res = as.character(abs(log2FoldChange.glass.res) > 3)) %>% # change pch to something that is limited
+  dplyr::mutate(log2FoldChange.glass.res = ifelse(log2FoldChange.glass.res > 3, 3 , log2FoldChange.glass.res)) %>%
+  dplyr::mutate(log2FoldChange.glass.res = ifelse(log2FoldChange.glass.res < -3, -3 , log2FoldChange.glass.res)) %>%
+  dplyr::mutate(show.label = hugo_symbol %in% IHC_diagnostiek_IVD_antibodies$hugo_symbol & !is.na(McKenzie_celltype_top_human_specificity))
+
+
+plt %>% filter(!is.na(McKenzie_celltype_top_human_specificity) & show.label)
+
+
+
+ggplot(plt, aes(x=log2FoldChange.gsam.res , y=statistic.gsam.cor.tpc , col=show.label, label = hugo_symbol )) + 
+  geom_point(data=subset(plt, show.label == F),cex=0.35) +
+  geom_smooth(data = subset(plt, padj.gsam.tpc.res > 0.1 &  is.limited.gsam.res == "FALSE"),method="lm", se = FALSE,  formula=y ~ x, orientation="y", col=rgb(1,0,0,0.5) , size=0.4) +
+  geom_point(data=subset(plt, show.label == T ),col="black",cex=0.65) +
+  geom_label_repel(data=subset(plt, show.label == T & log2FoldChange.gsam.res > 0), col="blue", size=2.5 ,nudge_x = 3.1, direction = "y", hjust = "left", segment.size=0.35, fill="white",label.size = 0) + 
+  geom_label_repel(data=subset(plt, show.label == T  & log2FoldChange.gsam.res < 0), col="blue", size=2.5 , nudge_x = -3.1, direction = "y", hjust = "right", segment.size=0.35, fill="white",label.size = 0) + 
+  scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
+  labs(x = "log2FC R1 vs. R2 [G-SAM]",
+       y="Corr t-stat tumour-%"
+       ,col="Neuron marker genes") +
+  youri_gg_theme + xlim(-2.5, 2.5)
 
 
 
