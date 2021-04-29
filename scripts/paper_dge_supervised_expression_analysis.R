@@ -456,6 +456,13 @@ results.out <- results.out %>%
   dplyr::left_join(glass.gene.res.res, by = c('ensembl_id' = 'ensembl_id'))
 
 
+glass.gene.expression.all.vst <- DESeqDataSetFromMatrix(glass.gene.expression.all %>%
+                                                         dplyr::filter(rowSums(.) > ncol(.) * 3)
+                                                       , glass.metadata.all, ~condition ) %>% # + resection
+  assay() %>%
+  vst(blind=T)
+
+
 # hypeR enrichment ---- 
 
 # ensembl to entrez?
@@ -2653,39 +2660,25 @@ p1 + p2
 
 
 
-plt <- data.frame(
+plt.genes <- data.frame(
   hugo_symbol = c(
-    "CREB5",	"TRIM24",	"ETV1", "COA1", # tumor
-    
+    "CREB5",	"TRIM24",	"ETV1", "COA1", # tumor [chr7]
     "CACHD1","AHCYL1","GPR37L1","BMPR1B", # astroctyes
-    #"RBFOX3", "GABRB2", "SLC17A7", # neuron; significant anyway
-    "SST", # neuron
-    
+    "RBFOX3", "GABRB2", "SLC17A7", "SST", # neuron; significant anyway
+    "PLP1", "OPALIN", "TMEM144","CLCA4", # oligodendrocyte [    #"PDGFA", "PDGFRA", "OLIG1", "OLIG2", "OLIG3",]
+    "TIE1","PEAR1","RGS5","NOSTRIN",  # endothelial
+    "CD163",  "CD14", "C1QA","THEMIS2", # TAM/MG
+
     #"SSTR1","SSTR2","SSTR3","SSTR5", # Antibodies
     #"GABRA1","GABRA2","GABRB1","GABRB2",
     #"TNNT1", "TNNT2", "TNNT3",
-    
-    "PLP1", "OPALIN", "TMEM144","CLCA4", # oligodendrocyte
-    #"PDGFA", "PDGFRA", "OLIG1", "OLIG2", "OLIG3",
-    
-    "TIE1","PEAR1","RGS5","NOSTRIN",  # endothelial
-    "CD163",  "CD14", "C1QA","THEMIS2" # TAM/MG
-    
+
     ###, "MME", "ERG", "FCER2", "EPCAM", "EREG" << !!
     #,"EGFR"
     #,"EREG","AREG", "BTC","HBEGF","NGF","TGFA","EGF","EPGN"
     
-    ,(results.out %>%
-      dplyr::filter(!is.na(padj.gsam.res) &  padj.gsam.res < 0.01 &
-                      !is.na(padj.glass.res) & padj.glass.res < 0.01 ) %>%
-      pull(hugo_symbol))
-    
-    
-    # tophits
-    #,"AGRN","KANK4","AK5","IVNS1ABP","NEK7","TNNT2","OTOF","CLIP4","MAL","THSD7B","DES","SYN2","SLC6A6","ANKRD28","SPINK8","MME","IQCJ","SPOCK3","TPPP","GDNF","EDIL3","SLIT3","FLT4","SCUBE3","COL12A1","RSPO3","FAM180A","PHYHIP","MAMDC2","SLC31A2","LAMC3","NODAL","PALD1","ANKRD1","PDZD7","MXI1","LHPP","JAKMIP3","TNNT3","YPEL4","NPAS4","KCNE3","WNT11","TRPC6","NRGN","KRT80","GLI1","CABP1","ATP8A2","KCTD4","ITGBL1","ABHD12B","PPP4R4","FGF7","LARP6","CPEB1","PCSK6","TARSL2","HS3ST2","NFATC2IP","LRRC36","RTN4RL1","CAMKK1","GRAP","CORO6","RAB11FIP4","PLXDC1","RAB40B","CCBE1","PLPP2","HCN2","ICAM5","RAB3A","IFNAR2","MMP11","REPS2","SYN1","ATP2B3"
-    #,"AGRN","TPRG1L","FBXO2","KANK4","DNAJC6","AK5","ANKRD34A","CDC42SE1","IVNS1ABP","NEK7","TNNT2","SYT2","MFSD4A","KCNK1","SLC35F3","OTOF","TRIM54","CLIP4","EGR4","MAL","THSD7B","DES","SYN2","SLC6A6","ANKRD28","HHATL","SPINK8","MME","IQCJ","SERPINI1","MMRN1","TRIM2","SPOCK3","ASB5","TPPP","GDNF","RASGRF2","EDIL3","ARHGEF37","SLIT3","AC139491.7","SNCB","FAM153CP","FLT4","NOTCH4","PACSIN1","SCUBE3","COL12A1","FAM162B","RSPO3","MAP7","DYNC1I1","GRM8","FAM180A","ANGPT2","PHYHIP","NEFM","DOCK5","NECAB1","PTP4A3","MAMDC2","SLC31A2","BSPRY","LAMC3","OLFM1","CLIC3","ABCA2","GRIN1","OPTN","MYPN","NODAL","PALD1","PRF1","SNCG","ANKRD1","PDZD7","MXI1","LHPP","TCERG1L","JAKMIP3","TNNI2","TNNT3","YPEL4","NPAS4","PDE2A","KCNE3","ARRB1","WNT11","TRPC6","NRGN","NOP2","KCNJ8","KRT80","GLI1","ARHGAP9","ANO4","WASHC3","CABP1","ATP8A2","KCTD4","ITGBL1","ADPRHL1","RNASE1","SSTR1","ABHD12B","PPP4R4","INAFM2","DLL4","FBN1","FGF7","LARP6","RASGRF1","CPEB1","BNC1","PCSK6","TARSL2","KCTD5","MMP25","SEC14L5","HS3ST2","NFATC2IP","FUS","CES4A","LRRC36","RTN4RL1","CAMKK1","BCL6B","PIK3R6","GRAP","CORO6","EVI2A","RAB11FIP4","MYO1D","PLXDC1","RAB40B","CCBE1","PLPP2","HCN2","ICAM5","MAST3","RAB3A","GPR4","TNNC2","LIME1","IFNAR2","MMP11","SHISAL1","REPS2","SYN1","FOXO4","ATP2B3"
-    
-  )) %>%
+    (results.out %>% dplyr::filter(!is.na(padj.gsam.res) &  padj.gsam.res < 0.01 & !is.na(padj.glass.res) & padj.glass.res < 0.01 ) %>% pull(hugo_symbol)))) %>%
+  dplyr::filter(!duplicated(hugo_symbol)) %>%
   dplyr::left_join(results.out %>% 
                      dplyr::select(c('gid','hugo_symbol','McKenzie_celltype_top_human_specificity','show.marker.chr7')) %>%
                      dplyr::rename(type=McKenzie_celltype_top_human_specificity) ,
@@ -2694,29 +2687,28 @@ plt <- data.frame(
   dplyr::mutate(type = ifelse(is.na(type), 'NA', type) ) %>%
   dplyr::mutate(type = ifelse(show.marker.chr7 & type != 'astrocyte' , 'chr7/gain' , type)) %>%
   dplyr::mutate(show.marker.chr7 = NULL) %>%
-  dplyr::filter(!is.na(gid)) 
+  dplyr::filter(!is.na(gid))
 
+
+### G-SAM ----
 
 
 tmp <- gsam.gene.expression.all.vst %>% 
   as.data.frame() %>%
-  dplyr::select(colnames(gsam.gene.expression.all.paired)) %>% # <3
+  dplyr::select(colnames(gsam.gene.expression.all.paired)) %>%
   tibble::rownames_to_column('gid') %>%
-  dplyr::filter(gid %in% plt$gid) %>%
+  dplyr::filter(gid %in% plt.genes$gid) %>%
   tibble::column_to_rownames('gid')
-
-odd <- 1:ncol(tmp) %>% purrr::keep(~ . %% 2 == 1)
-even <- 1:ncol(tmp) %>% purrr::keep(~ . %% 2 == 0)
-
-tmp.r1 <- tmp[,odd] 
-tmp.r2 <- tmp[,even]
+tmp.r1 <- tmp[,1:ncol(tmp) %>% purrr::keep(~ . %% 2 == 1)] # odd
+tmp.r2 <- tmp[,1:ncol(tmp) %>% purrr::keep(~ . %% 2 == 0)] # even
 stopifnot ( gsub("^(...).*$","\\1",colnames(tmp.r1)) == gsub("^(...).*$","\\1",colnames(tmp.r2)) )
 rm(tmp)
 
 
-tmp <- plt %>% dplyr::left_join(
+
+tmp <- plt.genes %>% dplyr::left_join(
   log2(tmp.r1 %>% `colnames<-`(gsub("^(...).*$","\\1",colnames(.))) /
-         tmp.r2 %>% `colnames<-`(gsub("^(...).*$","\\1",colnames(.))) ) %>%
+       tmp.r2 %>% `colnames<-`(gsub("^(...).*$","\\1",colnames(.))) ) %>%
     `rownames<-`(gsub("^ENSG.+\\|(.+)\\|chr.+$","\\1",rownames(.))) %>%
     tibble::rownames_to_column('hugo_symbol')
   , by = c('hugo_symbol'='hugo_symbol')) %>%
@@ -2731,8 +2723,6 @@ tmp <- plt %>% dplyr::left_join(
   dplyr::mutate(hugo_symbol = paste0(hugo_symbol , " [" , type, "]") ) %>%
   tibble::column_to_rownames('hugo_symbol') %>%
   dplyr::mutate(   gid    = NULL,  type=NULL)
-
-
 tmp.2 <- dplyr::full_join(
   data.frame(sid = colnames(tmp.r1)) %>%
     dplyr::left_join(gsam.metadata.all.paired %>% select(c('sid','tumour.percentage.dna')), by=c('sid'='sid')) %>%
@@ -2748,31 +2738,53 @@ tmp.2 <- dplyr::full_join(
   dplyr::mutate(tumour.percentage.dna.R1 = NULL, tumour.percentage.dna.R2 = NULL) %>%
   tibble::column_to_rownames('pid') %>%
   t()
-
-
 stopifnot(colnames(tmp) == colnames(tmp.2))
 tmp <- rbind(tmp.2, tmp)
+rm(tmp.2)
+
+
+
 
 #"ward.D", "single", "complete", "average", "mcquitty",  "median", "centroid", "ward.D2"
 # volgorde voor plotten:
 #h = hclust(as.dist(1 - abs(cor(t(tmp)))),method = "ward.D")
-
-h = hclust(as.dist(1 - cor(t(tmp),method="pearson", use = "pairwise.complete.obs")))
+#h = hclust(as.dist(1 - cor(t(tmp),method="pearson", use = "pairwise.complete.obs")))
 #h = hclust(dist(t(tmp)))
-
-h = hclust(as.dist(1 - cor(t(tmp),method="pearson", use = "pairwise.complete.obs")),method="average")
-
-#h = hclust(as.dist(1 - abs(cor(t(tmp),method="pearson", use = "pairwise.complete.obs"))))
+#h = hclust(as.dist(1 - cor(t(tmp),method="pearson", use = "pairwise.complete.obs")),method="average")
 #h = hclust(dist(t(scale(t(tmp)))), method="average")
 #h = hclust(dist(t(scale(t(tmp)))) * 2, method="cen")
 
-plot(h)
-o = h$labels[h$order]
+h = hclust(as.dist(1 - abs(cor(t(tmp),method="pearson", use = "pairwise.complete.obs")))) # nicest
+#h = hclust(as.dist(1 - cor(t(tmp),method="pearson", use = "pairwise.complete.obs")))# ,method="average"
+plot(h, hang = -1)
 
-tmp <- tmp %>% as.matrix %>% t() %>% as.data.frame %>% dplyr::select(o) %>% t()
 
-corrplot::corrplot(cor(t(tmp), method="pearson"), method = "circle",tl.cex=0.35)
+h2 <- cutree(h, k = 4)
+colors = c("red", "blue", "green", "black")
+plot(h, hang = -1)
 
+d = as.dendrogram(h) %>%  set("branches_k_color", k=8) 
+#plot(d)
+#p1 <- as.ggdend(d)
+
+plt <- cor(t(tmp %>% as.matrix %>% t() %>% as.data.frame %>% dplyr::select(h$labels[h$order]) %>% t()))
+labels <- rownames(plt)
+labels <- gsub("^[^ ]+ ","",labels)
+labels <- gsub("[?]","",labels,fixed=T)
+labels <- gsub("[","",labels,fixed=T)
+labels <- gsub("]","",labels,fixed=T)
+rownames(plt) <- labels
+corrplot::corrplot(plt, method = "circle",tl.cex=0.75) # , order="hclust", addrect=4)
+
+
+# pheatmap(tmp,scale="row",
+#          clustering_distance_rows = "correlation",
+#          clustering_distance_cols = "euclidean",
+#          cluster_cols = T,
+#         cutree_cols = 3,
+#   cutree_rows = 4,
+# fontsize_row = 2.1 )
+# 
 
 
 
@@ -2782,6 +2794,31 @@ dev.off()
 
 
 #pheatmap::pheatmap(t(tmp), scale="column",clustering_distance_rows="correlation")
+
+# a <- data.frame(a= c(1,2,5,6,7,8,1,2,5,6,7,8,1,2,5,6,7,8), b= c(4,4,6,8,8,9,4,4,6,8,8,9,4,4,6,8,8,9))
+# a <- cbind(a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a,a)
+# colnames(a) <- make.names(colnames(a),unique = T)
+# ggcorrplot(cor(a)) # incredibly slow
+
+
+### GLASS ----
+
+
+
+
+tmp <- glass.gene.expression.all.vst %>% 
+  as.data.frame() %>%
+  dplyr::select(colnames(gsam.gene.expression.all.paired)) %>%
+  tibble::rownames_to_column('gid') %>%
+  dplyr::filter(gid %in% plt.genes$gid) %>%
+  tibble::column_to_rownames('gid')
+tmp.r1 <- tmp[,1:ncol(tmp) %>% purrr::keep(~ . %% 2 == 1)] # odd
+tmp.r2 <- tmp[,1:ncol(tmp) %>% purrr::keep(~ . %% 2 == 0)] # even
+stopifnot ( gsub("^(...).*$","\\1",colnames(tmp.r1)) == gsub("^(...).*$","\\1",colnames(tmp.r2)) )
+rm(tmp)
+
+
+
 
 
 
