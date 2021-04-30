@@ -2662,25 +2662,25 @@ p1 + p2
 
 plt.genes <- data.frame(
   hugo_symbol = c(
-    "CREB5",	"TRIM24",	"ETV1", "COA1", # tumor [chr7]
-    "CACHD1","AHCYL1","GPR37L1","BMPR1B", # astroctyes
-    "RBFOX3", "GABRB2", "SLC17A7", "SST", # neuron; significant anyway
-    "PLP1", "OPALIN", "TMEM144","CLCA4", # oligodendrocyte [    #"PDGFA", "PDGFRA", "OLIG1", "OLIG2", "OLIG3",]
-    "TIE1","PEAR1","RGS5","NOSTRIN",  # endothelial
-    "CD163",  "CD14", "C1QA","THEMIS2", # TAM/MG
-
-    #"SSTR1","SSTR2","SSTR3","SSTR5", # Antibodies
-    #"GABRA1","GABRA2","GABRB1","GABRB2",
-    #"TNNT1", "TNNT2", "TNNT3",
-
-    ###, "MME", "ERG", "FCER2", "EPCAM", "EREG" << !!
-    #,"EGFR"
-    #,"EREG","AREG", "BTC","HBEGF","NGF","TGFA","EGF","EPGN"
+    # "CREB5",	"TRIM24",	"ETV1", "COA1", # tumor [chr7]
+    # "CACHD1","AHCYL1","GPR37L1","BMPR1B", # astroctyes
+    # "RBFOX3", "GABRB2", "SLC17A7", "SST", # neuron; significant anyway
+    # "PLP1", "OPALIN", "TMEM144","CLCA4", # oligodendrocyte [    #"PDGFA", "PDGFRA", "OLIG1", "OLIG2", "OLIG3",]
+    # "TIE1","PEAR1","RGS5","NOSTRIN",  # endothelial
+    # "CD163",  "CD14", "C1QA","THEMIS2", # TAM/MG
+    # 
+    # #"SSTR1","SSTR2","SSTR3","SSTR5", # Antibodies
+    # #"GABRA1","GABRA2","GABRB1","GABRB2",
+    # #"TNNT1", "TNNT2", "TNNT3",
+    # 
+    # ###, "MME", "ERG", "FCER2", "EPCAM", "EREG" << !!
+    # #,"EGFR"
+    # #,"EREG","AREG", "BTC","HBEGF","NGF","TGFA","EGF","EPGN"
     
     (results.out %>% dplyr::filter(!is.na(padj.gsam.res) &  padj.gsam.res < 0.01 & !is.na(padj.glass.res) & padj.glass.res < 0.01 ) %>% pull(hugo_symbol)))) %>%
   dplyr::filter(!duplicated(hugo_symbol)) %>%
   dplyr::left_join(results.out %>% 
-                     dplyr::select(c('gid','hugo_symbol','McKenzie_celltype_top_human_specificity','show.marker.chr7')) %>%
+                     dplyr::select(c('gid','hugo_symbol','McKenzie_celltype_top_human_specificity','show.marker.chr7','ensembl_id')) %>%
                      dplyr::rename(type=McKenzie_celltype_top_human_specificity) ,
                    by=c('hugo_symbol'='hugo_symbol'))  %>%
   dplyr::mutate(type = ifelse(hugo_symbol %in% c('SLC17A7','SST'), 'neuron', type) ) %>%
@@ -2688,6 +2688,7 @@ plt.genes <- data.frame(
   dplyr::mutate(type = ifelse(show.marker.chr7 & type != 'astrocyte' , 'chr7/gain' , type)) %>%
   dplyr::mutate(show.marker.chr7 = NULL) %>%
   dplyr::filter(!is.na(gid))
+
 
 
 ### G-SAM ----
@@ -2804,19 +2805,92 @@ dev.off()
 ### GLASS ----
 
 
+tmp.ids <- data.frame(R1 = colnames(glass.gene.expression.all.vst)) %>%
+  dplyr::filter(grepl("-TP-",R1)) %>%
+  dplyr::mutate(unified = gsub("-TP-.+$","",R1,fixed=F)) %>%
+  dplyr::full_join(
+    data.frame(R2 = colnames(glass.gene.expression.all.vst)) %>%
+      dplyr::filter(grepl("-TP-",R2) == F) %>%
+      dplyr::mutate(unified = gsub("-R[1-4]-.+$","",R2,fixed=F))
+    , by=c('unified' = 'unified')) %>%
+  dplyr::filter(! is.na(R1) & !is.na(R2))
 
 
-tmp <- glass.gene.expression.all.vst %>% 
+
+tmp <- glass.gene.expression.all.vst %>%
   as.data.frame() %>%
-  dplyr::select(colnames(gsam.gene.expression.all.paired)) %>%
+  dplyr::select(sort(colnames(.))) %>%
   tibble::rownames_to_column('gid') %>%
-  dplyr::filter(gid %in% plt.genes$gid) %>%
+  dplyr::filter(gid %in% plt.genes$ensembl_id) %>%
   tibble::column_to_rownames('gid')
-tmp.r1 <- tmp[,1:ncol(tmp) %>% purrr::keep(~ . %% 2 == 1)] # odd
-tmp.r2 <- tmp[,1:ncol(tmp) %>% purrr::keep(~ . %% 2 == 0)] # even
-stopifnot ( gsub("^(...).*$","\\1",colnames(tmp.r1)) == gsub("^(...).*$","\\1",colnames(tmp.r2)) )
-rm(tmp)
+tmp.r1 <- tmp %>% dplyr::select(tmp.ids$R1) # R1
+tmp.r2 <- tmp %>% dplyr::select(tmp.ids$R2) # R2,R3,R4
+stopifnot (gsub("^(.{12}).+$","\\1",colnames(tmp.r1)) == gsub("^(.{12}).+$","\\1",colnames(tmp.r2)) )
+rm(tmp.ids, tmp)
 
+
+
+tmp <- plt.genes %>% dplyr::left_join(
+  log2(tmp.r1 %>% `colnames<-`(gsub("^(.{12}).*$","\\1",colnames(.))) /
+         tmp.r2 %>% `colnames<-`(gsub("^(.{12}).*$","\\1",colnames(.))) ) %>%
+    tibble::rownames_to_column('ensembl_id')
+  , by = c('ensembl_id'='ensembl_id')) %>%
+  dplyr::mutate(type = case_when(
+    type == "chr7/gain" ~ "chr7", 
+    type == "astrocyte" ~ "astr",
+    type == "neuron" ~ "neur",
+    type == "endothelial" ~ "endo",
+    type == "microglia/TAM" ~ "TAM",
+    type == "oligodendrocyte" ~ "olig",
+    T ~ "?" )) %>%
+  dplyr::mutate(hugo_symbol = paste0(hugo_symbol , " [" , type, "]") ) %>%
+  tibble::column_to_rownames('hugo_symbol') %>%
+  dplyr::mutate(   gid    = NULL,  type=NULL, ensembl_id = NULL)
+
+
+
+
+h = hclust(as.dist(1 - abs(cor(t(tmp),method="pearson", use = "pairwise.complete.obs")))) # nicest
+
+#h = hclust(as.dist(1 - abs(cor(t(tmp))))) # nicest
+h = hclust(as.dist(1 - cor(t(tmp)))) # nicest
+h = hclust(dist(t(scale(t(tmp),center=F)))) # nicest
+
+d = t(scale(t(tmp), center = F))
+pc <- prcomp(d)
+plot(pc$x[,1],pc$x[,2],)
+text(pc$x[,1],pc$x[,2],rownames(pc$x),cex=0.6,pos=3)
+
+plot(pc$x[,3],pc$x[,2],)
+plot(pc$x[,4],pc$x[,2],)
+plot(pc$x[,5],pc$x[,2],)
+
+
+h = hclust(Dist(pc$x[,c(1,3,4,5)],method="euclidean"),method=m[1]) #m6 was nice with eucl/corr on full data
+
+
+#m = c("ward.D", "ward.D2", "single", "complete", "average" , "mcquitty" , "median" , "centroid")
+#h = hclust(Dist(t(scale(t(tmp), center = F)), method="euclidean"),method=m[ 6]) #m6 was nice
+
+#plot(h, hang = -1)
+# h2 <- cutree(h, k = 4)
+# colors = c("red", "blue", "green", "black")
+# plot(h, hang = -1)
+# 
+# d = as.dendrogram(h) %>%  set("branches_k_color", k=8) 
+# #plot(d)
+# #p1 <- as.ggdend(d)
+
+#plt <- cor(t(tmp %>% as.matrix %>% t() %>% as.data.frame %>% dplyr::select(h$labels[h$order]) %>% t()))
+plt <- cor(t(t(scale(t(tmp),center=F)) %>% as.matrix %>% t() %>% as.data.frame %>% dplyr::select(h$labels[h$order]) %>% t()))
+
+labels <- rownames(plt)
+labels <- gsub("^[^ ]+ ","",labels)
+labels <- gsub("[?]","",labels,fixed=T)
+labels <- gsub("[","",labels,fixed=T)
+labels <- gsub("]","",labels,fixed=T)
+rownames(plt) <- labels
+corrplot::corrplot(plt, method = "circle",tl.cex=0.75) # , order="hclust") #, addrect=4
 
 
 
