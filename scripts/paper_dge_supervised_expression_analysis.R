@@ -2869,8 +2869,11 @@ plot(pc$x[,5],pc$x[,2],)
 h = hclust(Dist(pc$x[,c(1,3,4,5)],method="euclidean"),method=m[6]) #m6 was nice with eucl/corr on full data
 
 
+a = pc$x %>% as.data.frame %>% dplyr::mutate(PC1.abs = abs(PC1)) %>% dplyr::arrange('PC1.abs') %>% rownames_to_column('gid') %>% pull('gid')
+
+
 #m = c("ward.D", "ward.D2", "single", "complete", "average" , "mcquitty" , "median" , "centroid")
-h = hclust(Dist(t(scale(t(tmp), center = F)), method="euclidean"),method=m[ 6]) #m6 was nice
+#h = hclust(Dist(t(scale(t(tmp), center = F)), method="abscorrelation"),method=m[ 1]) #m6 was nice
 
 #plot(h, hang = -1)
 # h2 <- cutree(h, k = 4)
@@ -2880,20 +2883,67 @@ h = hclust(Dist(t(scale(t(tmp), center = F)), method="euclidean"),method=m[ 6]) 
 # d = as.dendrogram(h) %>%  set("branches_k_color", k=8) 
 # #plot(d)
 # #p1 <- as.ggdend(d)
-
 #plt <- cor(t(tmp %>% as.matrix %>% t() %>% as.data.frame %>% dplyr::select(h$labels[h$order]) %>% t()))
+#plt <- cor(t(t(scale(t(tmp),center=F)) %>% as.matrix %>% t() %>% as.data.frame %>% dplyr::select(a) %>% t()))
+
+h = hclust(Dist(t(scale(t(tmp), center = F)), method="euclidean"),method=m[ 6]) #m6 was nice
 plt <- cor(t(t(scale(t(tmp),center=F)) %>% as.matrix %>% t() %>% as.data.frame %>% dplyr::select(h$labels[h$order]) %>% t()))
 
-labels <- rownames(plt)
+labels <- colnames(plt)
 labels <- gsub("^[^ ]+ ","",labels)
 labels <- gsub("[?]","",labels,fixed=T)
 labels <- gsub("[","",labels,fixed=T)
 labels <- gsub("]","",labels,fixed=T)
+colnames(plt) <- labels
+
+labels <- rownames(plt)
+labels <- gsub(" .+$","",labels)
 rownames(plt) <- labels
+
 corrplot::corrplot(plt, method = "circle",tl.cex=0.75) # , order="hclust") #, addrect=4
 
 
+svg(file = "output/figures/paper_dge_corrplot_logFc_gene_per_patient_and_DE_genes_GLASS.svg", width = 120, height = 90 )
+corrplot::corrplot(plt, method = "circle",tl.cex=2.25)
+dev.off()
 
+
+astr <- c(
+  "TMEM155 [?]",
+  "SLC39A12 [astr]",
+  "GABRG1 [astr]",
+  "SOWAHA [?]",
+  "GABRA2 [astr]",
+  "TMEM268 [?]",
+  "CYS1 [?]",
+  "CABLES1 [astr]"
+)
+stopifnot(astr %in% rownames(tmp))
+
+
+
+
+d <- Dist(t(scale(t(tmp), center = T)), method="euclidean")
+d <- Dist(tmp, method="correlation")
+fit <- cmdscale(d,eig=T, k=3) 
+plt <- fit$points %>% 
+  as.data.frame() %>%
+  tibble::rownames_to_column('gid') %>%
+  dplyr::mutate(type = as.factor(gsub("^.+ ","",gid))) %>%
+  dplyr::mutate(gid = gsub(" .+$","",gid))
+
+ggplot(plt, aes(x=V1, y=V3, col=type, label=gid) ) + 
+  geom_point()
+
+
+
+tt = as.data.frame(t(tmp))
+
+plot(tt$`TMEM268 [?]` , tt$`CYS1 [?]` )
+text(tt$`TMEM268 [?]` , tt$`CYS1 [?]`, rownames(tt), cex=0.6, pos=3 )
+
+plot(tt$`TMEM268 [?]` , tt$`HPCAL4 [?]` )
+text(tt$`TMEM268 [?]` , tt$`HPCAL4 [?]`, rownames(tt), cex=0.6, pos=3 )
 
 
 
