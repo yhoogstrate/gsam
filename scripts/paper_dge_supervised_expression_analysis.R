@@ -2872,7 +2872,6 @@ h = hclust(Dist(pc$x[,c(1,3,4,5)],method="euclidean"),method=m[6]) #m6 was nice 
 a = pc$x %>% as.data.frame %>% dplyr::mutate(PC1.abs = abs(PC1)) %>% dplyr::arrange('PC1.abs') %>% rownames_to_column('gid') %>% pull('gid')
 
 
-#m = c("ward.D", "ward.D2", "single", "complete", "average" , "mcquitty" , "median" , "centroid")
 #h = hclust(Dist(t(scale(t(tmp), center = F)), method="abscorrelation"),method=m[ 1]) #m6 was nice
 
 #plot(h, hang = -1)
@@ -2886,6 +2885,7 @@ a = pc$x %>% as.data.frame %>% dplyr::mutate(PC1.abs = abs(PC1)) %>% dplyr::arra
 #plt <- cor(t(tmp %>% as.matrix %>% t() %>% as.data.frame %>% dplyr::select(h$labels[h$order]) %>% t()))
 #plt <- cor(t(t(scale(t(tmp),center=F)) %>% as.matrix %>% t() %>% as.data.frame %>% dplyr::select(a) %>% t()))
 
+m = c("ward.D", "ward.D2", "single", "complete", "average" , "mcquitty" , "median" , "centroid")
 h = hclust(Dist(t(scale(t(tmp), center = F)), method="euclidean"),method=m[ 6]) #m6 was nice
 plt <- cor(t(t(scale(t(tmp),center=F)) %>% as.matrix %>% t() %>% as.data.frame %>% dplyr::select(h$labels[h$order]) %>% t()))
 
@@ -2901,11 +2901,40 @@ labels <- gsub(" .+$","",labels)
 rownames(plt) <- labels
 
 corrplot::corrplot(plt, method = "circle",tl.cex=0.75) # , order="hclust") #, addrect=4
+abline(h=4 + 0.5,lwd=0.85, col="purple")
+abline(h=30 + 0.5,lwd=0.85, col="purple")
+abline(h=53 + 0.5,lwd=0.85, col="purple")
+abline(h=89 + 0.5,lwd=0.85, col="purple")
+abline(h=223 + 0.5,lwd=0.85, col="purple")
+abline(h=238 + 0.5,lwd=0.85, col="purple")
+abline(h=257 + 0.5,lwd=0.85, col="purple")
+abline(h=263 + 0.5,lwd=0.85, col="purple")
 
+abline(v=265 - 4 + 0.5,lwd=0.85, col="purple")
+abline(v=265 - 30 + 0.5,lwd=0.85, col="purple")
+abline(v=265 - 53 + 0.5,lwd=0.85, col="purple")
+abline(v=265 - 89 + 0.5,lwd=0.85, col="purple")
+abline(v=265 - 223 + 0.5,lwd=0.85, col="purple")
+abline(v=265 - 238 + 0.5,lwd=0.85, col="purple")
+abline(v=265 - 257 + 0.5,lwd=0.85, col="purple")
+abline(v=265 - 263 + 0.5,lwd=0.85, col="purple")
+
+
+
+
+png(file = "output/figures/paper_dge_corrplot_logFc_gene_per_patient_and_DE_genes_GLASS.png", width = 1200 * 2.8, height = 900 * 2.8 )
+corrplot::corrplot(plt, method = "circle",tl.cex=2.25)
+abline(h=4 + 0.5,lwd=0.85, col="purple")
+abline(h=30 + 0.5,lwd=0.85, col="purple")
+abline(h=53 + 0.5,lwd=0.85, col="purple")
+abline(h=89 + 0.5,lwd=0.85, col="purple")
+abline(h=223 + 0.5,lwd=0.85, col="purple")
+dev.off()
 
 svg(file = "output/figures/paper_dge_corrplot_logFc_gene_per_patient_and_DE_genes_GLASS.svg", width = 120, height = 90 )
 corrplot::corrplot(plt, method = "circle",tl.cex=2.25)
 dev.off()
+
 
 
 astr <- c(
