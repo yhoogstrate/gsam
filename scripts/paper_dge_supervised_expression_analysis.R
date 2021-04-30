@@ -2866,11 +2866,11 @@ plot(pc$x[,4],pc$x[,2],)
 plot(pc$x[,5],pc$x[,2],)
 
 
-h = hclust(Dist(pc$x[,c(1,3,4,5)],method="euclidean"),method=m[1]) #m6 was nice with eucl/corr on full data
+h = hclust(Dist(pc$x[,c(1,3,4,5)],method="euclidean"),method=m[6]) #m6 was nice with eucl/corr on full data
 
 
 #m = c("ward.D", "ward.D2", "single", "complete", "average" , "mcquitty" , "median" , "centroid")
-#h = hclust(Dist(t(scale(t(tmp), center = F)), method="euclidean"),method=m[ 6]) #m6 was nice
+h = hclust(Dist(t(scale(t(tmp), center = F)), method="euclidean"),method=m[ 6]) #m6 was nice
 
 #plot(h, hang = -1)
 # h2 <- cutree(h, k = 4)
