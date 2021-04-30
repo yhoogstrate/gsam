@@ -2887,7 +2887,32 @@ a = pc$x %>% as.data.frame %>% dplyr::mutate(PC1.abs = abs(PC1)) %>% dplyr::arra
 
 m = c("ward.D", "ward.D2", "single", "complete", "average" , "mcquitty" , "median" , "centroid")
 h = hclust(Dist(t(scale(t(tmp), center = F)), method="euclidean"),method=m[ 6]) #m6 was nice
+
+plt.order <- data.frame(id = h$labels[h$order]) %>%
+  dplyr::mutate(i = nrow(.):1) %>%
+  dplyr::arrange(i) %>%
+  dplyr::mutate(cluster = as.factor(case_when(
+               i <= 4 ~  'glcm1', # glioblastoma longtitudinal correlation metafeature
+    i >= 4   & i <= 30 ~ 'glcm2',
+    i >= 30  & i <= 53 ~ 'glcm3',
+    i >= 53  & i <= 89 ~ 'glcm4',
+    i >= 89  & i <= 223 ~ 'glcm5',
+    i >= 223 & i <= 238 ~ 'glcm6',
+    i >= 238 & i <= 257 ~ 'glcm7',
+    i >= 257 & i <= 263 ~ 'glcm8',
+    i >= 263            ~ 'glcm9'
+    ))) %>%
+  #dplyr::mutate(cluster = factor(cluster, levels = 
+   #     c("glcm8","glcm5","glcm4", "glcm6","glcm2","glcm7","glcm3","glcm1","glcm9") )) %>%
+  dplyr::arrange(cluster, i) %>%
+  dplyr::mutate(k = 1:nrow(.))
+
+plt.order %>% pull(id)
+
+
 plt <- cor(t(t(scale(t(tmp),center=F)) %>% as.matrix %>% t() %>% as.data.frame %>% dplyr::select(h$labels[h$order]) %>% t()))
+#plt <- cor(t(t(scale(t(tmp),center=F)) %>% as.matrix %>% t() %>% as.data.frame %>% dplyr::select(plt.order %>% dplyr::arrange(cluster, i) %>% pull(id)) %>% t()))
+
 
 labels <- colnames(plt)
 labels <- gsub("^[^ ]+ ","",labels)
@@ -2901,23 +2926,22 @@ labels <- gsub(" .+$","",labels)
 rownames(plt) <- labels
 
 corrplot::corrplot(plt, method = "circle",tl.cex=0.75) # , order="hclust") #, addrect=4
-abline(h=4 + 0.5,lwd=0.85, col="purple")
-abline(h=30 + 0.5,lwd=0.85, col="purple")
-abline(h=53 + 0.5,lwd=0.85, col="purple")
-abline(h=89 + 0.5,lwd=0.85, col="purple")
-abline(h=223 + 0.5,lwd=0.85, col="purple")
-abline(h=238 + 0.5,lwd=0.85, col="purple")
-abline(h=257 + 0.5,lwd=0.85, col="purple")
-abline(h=263 + 0.5,lwd=0.85, col="purple")
 
-abline(v=265 - 4 + 0.5,lwd=0.85, col="purple")
-abline(v=265 - 30 + 0.5,lwd=0.85, col="purple")
-abline(v=265 - 53 + 0.5,lwd=0.85, col="purple")
-abline(v=265 - 89 + 0.5,lwd=0.85, col="purple")
-abline(v=265 - 223 + 0.5,lwd=0.85, col="purple")
-abline(v=265 - 238 + 0.5,lwd=0.85, col="purple")
-abline(v=265 - 257 + 0.5,lwd=0.85, col="purple")
-abline(v=265 - 263 + 0.5,lwd=0.85, col="purple")
+lines <- plt.order %>%
+  dplyr::group_by(cluster) %>%
+  summarise(max = max(k)) %>%
+  dplyr::mutate(max = max) %>%
+  pull(max) %>%
+  c(0)
+
+for(line in lines) {
+  lines(c(nrow(plt) - line,nrow(plt) - line),c(0.5,nrow(plt) + 0.5), lwd=0.6, col="black" )
+  lines(c(0.5,nrow(plt) + 0.5) , c( line,line), lwd=0.6, col="black" )
+}
+
+
+
+
 
 
 
