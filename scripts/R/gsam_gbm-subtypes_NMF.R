@@ -287,12 +287,17 @@ nmf.pca.svm.countours <- predict(s150.pca.nmf.subtype.classifier.svm, newdata = 
 rm(resolution, off_x, off_y, range_pc1, range_pc2, range_df)
 
 
+# ~~ Export stats ~~ ----
 
-
-#write.table(
-#  plt.single %>%
-#    dplyr::select(c("sid", "NMF:123456.membership", "NMF:123456.PC1", "NMF:123456.PC2", "NMF:123456.PC3", "NMF:123456.PCA.LDA.class", "NMF:123456.PCA.LDA.posterior.Classical", "NMF:123456.PCA.LDA.posterior.Mesenchymal", "NMF:123456.PCA.LDA.posterior.Proneural")),
-#  "output/tables/gsam_nmf_lda_data.txt")
+write.table(
+ plt.single %>%
+   dplyr::select(c("sid",
+                   "NMF:123456.membership",
+                   "NMF:123456.PC1", "NMF:123456.PC2", "NMF:123456.PC3",
+                   "NMF:123456.PCA.SVM.class"
+                   #"NMF:123456.PCA.LDA.class", "NMF:123456.PCA.LDA.posterior.Classical", "NMF:123456.PCA.LDA.posterior.Mesenchymal", "NMF:123456.PCA.LDA.posterior.Proneural"
+                   )),
+ "output/tables/gsam_nmf_lda_data.txt")
 
 
 
