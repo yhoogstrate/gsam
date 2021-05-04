@@ -8,6 +8,7 @@ library(NMF)
 library(scales)
 
 #library(MASS)
+library(e1071)
 library(fitdistrplus)
 library(patchwork)
 library(ggplot2)
@@ -104,7 +105,7 @@ rm(p)
 
 
 
-## + NMF:1-3 using Wang-code ----
+## NMF:1-3 using Wang-code ----
 
 
 if(!file.exists("tmp/gsam_nmf_150.Rds")) {
@@ -141,7 +142,7 @@ plt.single <- plt.single %>%
 
 
 
-## + PCA:1-2 over NMF:1-3 ----
+## PCA:1-2 over NMF:1-3 ----
 # clearly the nicest fit (!!!!!) compared w/ primary pca & NMF:1+2
 # PCA to also fit NMF 3 into two dimensions (is a better fit)
 
@@ -176,17 +177,26 @@ rm(p)
 
 
 
-## + LDA classification ----
+## LDA (re-)classification ----
 
-
+# # SVM > LDA
 # build classifier
 
-s150.pca.nmf.subtype.classifier.lda <- MASS::lda(`gliovis.majority_call` ~ `NMF:123456.PC1` + `NMF:123456.PC2` , data = train.in <- plt.single %>%
-                              dplyr::select(c('sid','NMF:123456.PC1', 'NMF:123456.PC2', 'gliovis.majority_call')) %>%
-                              tibble::column_to_rownames('sid') %>%
-                              as.data.frame())
-
-
+s150.pca.nmf.subtype.classifier.lda <-
+  MASS::lda(
+    `gliovis.majority_call` ~ `NMF:123456.PC1` + `NMF:123456.PC2` ,
+    data = train.in <- plt.single %>%
+      dplyr::select(
+        c(
+          'sid',
+          'NMF:123456.PC1',
+          'NMF:123456.PC2',
+          'gliovis.majority_call'
+        )
+      ) %>%
+      tibble::column_to_rownames('sid') %>%
+      as.data.frame()
+  )
 # re-fit against new classifier
 
 
@@ -200,6 +210,83 @@ plt.single <- plt.single %>% dplyr::left_join(
     `colnames<-`( gsub('^(.+)$','NMF:123456.PCA.LDA.\\1', colnames(.))  ) %>%
     tibble::rownames_to_column('sid')
   , by=c('sid'='sid') )
+
+
+
+
+### calc LDA Contour ----
+
+resolution <- 250 # 1000 x 1000 data points
+
+off_x <- (max(plt.single$`NMF:123456.PC1`) - min(plt.single$`NMF:123456.PC1`)) * 0.05
+off_y <- (max(plt.single$`NMF:123456.PC2`) - min(plt.single$`NMF:123456.PC2`)) * 0.05
+
+
+range_pc1 = seq(from = min(plt.single$`NMF:123456.PC1`) - off_x, to = max(plt.single$`NMF:123456.PC1`) + off_x, length.out = resolution)
+range_pc2 = seq(from = min(plt.single$`NMF:123456.PC2`) - off_y, to = max(plt.single$`NMF:123456.PC2`) + off_y, length.out = resolution)
+
+range_df = expand.grid('NMF:123456.PC1' = range_pc1, 'NMF:123456.PC2' = range_pc2)
+nmf.pca.lda.countours <- predict(s150.pca.nmf.subtype.classifier.lda, newdata = range_df) %>%
+  as.data.frame() %>%
+  cbind(range_df) %>%
+  dplyr::select(c('class', 'NMF:123456.PC1', 'NMF:123456.PC2')) %>%
+  dplyr::mutate(type="Contour")
+
+rm(resolution, off_x, off_y, range_pc1, range_pc2, range_df)
+
+
+
+## SVM (re-classification) ----
+
+s150.pca.nmf.subtype.classifier.svm <- svm(
+  x =  plt.single %>%
+    dplyr::select(c(
+      'sid',
+      'NMF:123456.PC1',
+      'NMF:123456.PC2'
+    )) %>%
+    tibble::column_to_rownames('sid') %>%
+    as.matrix() ,
+  y = as.factor(plt.single$gliovis.majority_call),
+  kernel = 'linear')
+
+
+
+# gliovis settings: svm(scale = F, tolerance = 0.0001, type = "C-classification", kernel = "linear", cost = 3, probability = T)
+
+plt.single <- plt.single %>% dplyr::left_join(
+    predict(s150.pca.nmf.subtype.classifier.svm, newdata = plt.single %>% dplyr::select(c('sid','NMF:123456.PC1', 'NMF:123456.PC2')) %>% tibble::column_to_rownames('sid') %>% as.data.frame() ) %>%
+    as.data.frame() %>%
+    `colnames<-`( c('NMF:123456.PCA.SVM.class' )) %>%
+    tibble::rownames_to_column('sid')
+  , by=c('sid'='sid'))
+
+
+sum(plt.single$gliovis.majority_call != plt.single$`NMF:123456.PCA.SVM.class`)
+
+
+### calc SVM contour ----
+
+
+resolution <- 250 # 1000 x 1000 data points
+
+off_x <- (max(plt.single$`NMF:123456.PC1`) - min(plt.single$`NMF:123456.PC1`)) * 0.05
+off_y <- (max(plt.single$`NMF:123456.PC2`) - min(plt.single$`NMF:123456.PC2`)) * 0.05
+
+
+range_pc1 = seq(from = min(plt.single$`NMF:123456.PC1`) - off_x, to = max(plt.single$`NMF:123456.PC1`) + off_x, length.out = resolution)
+range_pc2 = seq(from = min(plt.single$`NMF:123456.PC2`) - off_y, to = max(plt.single$`NMF:123456.PC2`) + off_y, length.out = resolution)
+
+range_df = expand.grid('NMF:123456.PC1' = range_pc1, 'NMF:123456.PC2' = range_pc2)
+nmf.pca.svm.countours <- predict(s150.pca.nmf.subtype.classifier.svm, newdata = range_df) %>%
+  as.data.frame() %>%
+  `colnames<-`(c('class')) %>%
+  cbind(range_df) %>%
+  dplyr::select(c('class', 'NMF:123456.PC1', 'NMF:123456.PC2')) %>%
+  dplyr::mutate(type="Contour")
+
+rm(resolution, off_x, off_y, range_pc1, range_pc2, range_df)
+
 
 
 
@@ -772,6 +859,8 @@ ggplot(plt.single, aes(x = `NMF:123456.1`, y = `NMF:123456.2`, col = gliovis.maj
   scale_x_continuous(expand = expansion(mult = c(.05, .05)) ) +
   scale_y_continuous(expand = expansion(mult = c(.05, .05)) ) +
   labs(x = "NMF meta-feature 1", y="NMF meta-feature 2", col='Subtype by GlioVis [majority call]')
+
+
 ggsave('output/figures/paper_subtypes_nmf_S150G_nmf1_nmf2_GlioVis.png',width=7,height=7.2)
 
 
@@ -790,6 +879,7 @@ ggplot(plt.single , aes(x = `NMF:123456.PC1` , y = `NMF:123456.PC2`, col = gliov
   scale_x_continuous(expand = expansion(mult = c(.05, .05)) ) +
   scale_y_continuous(expand = expansion(mult = c(.05, .05)) ) +
   labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", col='Subtype by GlioVis [majority call]')
+
 ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_GlioVis.png',width=7,height=7.2)
 
 
@@ -839,26 +929,6 @@ p4 <- ggplot(plt.single , aes(x = `NMF:123456.PC1` , y = `NMF:123456.PC2`, col =
 
 (p1 + p2) / (p3 + p4)
 
-
-## Determine Contour ----
-
-resolution <- 250 # 1000 x 1000 data points
-
-off_x <- (max(plt.single$`NMF:123456.PC1`) - min(plt.single$`NMF:123456.PC1`)) * 0.05
-off_y <- (max(plt.single$`NMF:123456.PC2`) - min(plt.single$`NMF:123456.PC2`)) * 0.05
-
-
-range_pc1 = seq(from = min(plt.single$`NMF:123456.PC1`) - off_x, to = max(plt.single$`NMF:123456.PC1`) + off_x, length.out = resolution)
-range_pc2 = seq(from = min(plt.single$`NMF:123456.PC2`) - off_y, to = max(plt.single$`NMF:123456.PC2`) + off_y, length.out = resolution)
-
-range_df = expand.grid('NMF:123456.PC1' = range_pc1, 'NMF:123456.PC2' = range_pc2)
-nmf.pca.lda.countours <- predict(s150.pca.nmf.subtype.classifier.lda, newdata = range_df) %>%
-  as.data.frame() %>%
-  cbind(range_df) %>%
-  dplyr::select(c('class', 'NMF:123456.PC1', 'NMF:123456.PC2')) %>%
-  dplyr::mutate(type="Contour")
-
-rm(resolution, off_x, off_y, range_pc1, range_pc2, range_df)
 
 
 ## LDA status circlize [observed] ----
@@ -1097,11 +1167,17 @@ dev.off()
 
 ## PCA:1+2(NMF:1+2+3) + LDA contours + GlioVis labels ----
 
+
+#sum(plt.single$gliovis.majority_call != plt.single$`NMF:123456.PCA.SVM.class`)
+#sum(plt.single$gliovis.majority_call != plt.single$`NMF:123456.PCA.LDA.class`)
+
+
 plt <- rbind(plt.single %>%
     dplyr::select(c(`NMF:123456.PC1`, `NMF:123456.PC2`, 'gliovis.majority_call')) %>%
     dplyr::mutate(type = "Patient Sample") %>%
     dplyr::rename(class = gliovis.majority_call),
-  nmf.pca.lda.countours)
+  nmf.pca.svm.countours)
+
 
 ggplot(plt, aes(x = `NMF:123456.PC1`, y = `NMF:123456.PC2`, col = class)) + 
   geom_raster(data = subset(plt, type == "Contour"), aes(fill = factor(class)), alpha=0.1) +
@@ -1114,6 +1190,9 @@ ggplot(plt, aes(x = `NMF:123456.PC1`, y = `NMF:123456.PC2`, col = class)) +
   labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", col='Subtype by GlioVis [majority call]',fill="LDA countour") +
   scale_color_manual(values = subtype_colors, guide = guide_legend(title = NULL, title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75)) + 
   scale_fill_manual(values = subtype_colors)
+
+
+
 
 ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_GlioVis_LDA-countours.png',width=7,height=7.2)
 
