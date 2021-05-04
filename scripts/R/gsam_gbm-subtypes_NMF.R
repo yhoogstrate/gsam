@@ -248,11 +248,11 @@ s150.pca.nmf.subtype.classifier.svm <- svm(
     tibble::column_to_rownames('sid') %>%
     as.matrix() ,
   y = as.factor(plt.single$gliovis.majority_call),
-  kernel = 'linear')
+  kernel = 'linear',
+  tolerance = 0.0001,
+  cost = 3
+  )
 
-
-
-# gliovis settings: svm(scale = F, tolerance = 0.0001, type = "C-classification", kernel = "linear", cost = 3, probability = T)
 
 plt.single <- plt.single %>% dplyr::left_join(
     predict(s150.pca.nmf.subtype.classifier.svm, newdata = plt.single %>% dplyr::select(c('sid','NMF:123456.PC1', 'NMF:123456.PC2')) %>% tibble::column_to_rownames('sid') %>% as.data.frame() ) %>%
@@ -260,7 +260,6 @@ plt.single <- plt.single %>% dplyr::left_join(
     `colnames<-`( c('NMF:123456.PCA.SVM.class' )) %>%
     tibble::rownames_to_column('sid')
   , by=c('sid'='sid'))
-
 
 sum(plt.single$gliovis.majority_call != plt.single$`NMF:123456.PCA.SVM.class`)
 
