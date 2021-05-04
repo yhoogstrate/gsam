@@ -2658,8 +2658,6 @@ p1 + p2
 ## 2.17 Corrplot DE + marker genes ----
 
 
-
-
 plt.genes <- data.frame(
   hugo_symbol = c(
     # "CREB5",	"TRIM24",	"ETV1", "COA1", # tumor [chr7]
@@ -2723,7 +2721,7 @@ tmp <- plt.genes %>% dplyr::left_join(
     T ~ "?" )) %>%
   dplyr::mutate(hugo_symbol = paste0(hugo_symbol , " [" , type, "]") ) %>%
   tibble::column_to_rownames('hugo_symbol') %>%
-  dplyr::mutate(   gid    = NULL,  type=NULL)
+  dplyr::mutate(gid = NULL, type=NULL, ensembl_id=NULL)
 tmp.2 <- dplyr::full_join(
   data.frame(sid = colnames(tmp.r1)) %>%
     dplyr::left_join(gsam.metadata.all.paired %>% select(c('sid','tumour.percentage.dna')), by=c('sid'='sid')) %>%
@@ -2740,9 +2738,8 @@ tmp.2 <- dplyr::full_join(
   tibble::column_to_rownames('pid') %>%
   t()
 stopifnot(colnames(tmp) == colnames(tmp.2))
-tmp <- rbind(tmp.2, tmp)
-rm(tmp.2)
-
+lfc.gsam <- rbind(tmp.2, tmp) # genes plus tumor percentage?!
+rm(tmp.2, tmp, tmp.r1, tmp.r2)
 
 
 
@@ -2754,28 +2751,29 @@ rm(tmp.2)
 #h = hclust(as.dist(1 - cor(t(tmp),method="pearson", use = "pairwise.complete.obs")),method="average")
 #h = hclust(dist(t(scale(t(tmp)))), method="average")
 #h = hclust(dist(t(scale(t(tmp)))) * 2, method="cen")
-
-h = hclust(as.dist(1 - abs(cor(t(tmp),method="pearson", use = "pairwise.complete.obs")))) # nicest
 #h = hclust(as.dist(1 - cor(t(tmp),method="pearson", use = "pairwise.complete.obs")))# ,method="average"
-plot(h, hang = -1)
-
-
-h2 <- cutree(h, k = 4)
-colors = c("red", "blue", "green", "black")
-plot(h, hang = -1)
-
-d = as.dendrogram(h) %>%  set("branches_k_color", k=8) 
+#plot(h, hang = -1)
+#h2 <- cutree(h, k = 4)
+#colors = c("red", "blue", "green", "black")
+#plot(h, hang = -1)
+#d = as.dendrogram(h) %>%  set("branches_k_color", k=8) 
 #plot(d)
 #p1 <- as.ggdend(d)
 
-plt <- cor(t(tmp %>% as.matrix %>% t() %>% as.data.frame %>% dplyr::select(h$labels[h$order]) %>% t()))
+
+h <- hclust(as.dist(1 - abs(cor(t(lfc.gsam),method="pearson", use = "pairwise.complete.obs")))) # nicest
+order <- h$labels[h$order]
+rm(h)
+plt.gsam <- lfc.gsam %>% as.matrix %>% t() %>% as.data.frame %>% dplyr::select(order) %>%  cor()
+stopifnot(colnames(plt.gsam) == rownames(plt.gsam))
+plt <- plt.gsam
 labels <- rownames(plt)
 labels <- gsub("^[^ ]+ ","",labels)
 labels <- gsub("[?]","",labels,fixed=T)
 labels <- gsub("[","",labels,fixed=T)
 labels <- gsub("]","",labels,fixed=T)
 rownames(plt) <- labels
-corrplot::corrplot(plt, method = "circle",tl.cex=0.75) # , order="hclust", addrect=4)
+corrplot::corrplot(plt.gsam, method = "circle",tl.cex=0.75) # , order="hclust", addrect=4)
 
 
 # pheatmap(tmp,scale="row",
@@ -2815,8 +2813,6 @@ tmp.ids <- data.frame(R1 = colnames(glass.gene.expression.all.vst)) %>%
     , by=c('unified' = 'unified')) %>%
   dplyr::filter(! is.na(R1) & !is.na(R2))
 
-
-
 tmp <- glass.gene.expression.all.vst %>%
   as.data.frame() %>%
   dplyr::select(sort(colnames(.))) %>%
@@ -2829,8 +2825,8 @@ stopifnot (gsub("^(.{12}).+$","\\1",colnames(tmp.r1)) == gsub("^(.{12}).+$","\\1
 rm(tmp.ids, tmp)
 
 
-
-tmp <- plt.genes %>% dplyr::left_join(
+# data, pre correlation
+lfc.glass <- plt.genes %>% dplyr::left_join(
   log2(tmp.r1 %>% `colnames<-`(gsub("^(.{12}).*$","\\1",colnames(.))) /
          tmp.r2 %>% `colnames<-`(gsub("^(.{12}).*$","\\1",colnames(.))) ) %>%
     tibble::rownames_to_column('ensembl_id')
@@ -2846,34 +2842,23 @@ tmp <- plt.genes %>% dplyr::left_join(
   dplyr::mutate(hugo_symbol = paste0(hugo_symbol , " [" , type, "]") ) %>%
   tibble::column_to_rownames('hugo_symbol') %>%
   dplyr::mutate(   gid    = NULL,  type=NULL, ensembl_id = NULL)
+rm(tmp.r1, tmp.r2)
 
 
-
-
-h = hclust(as.dist(1 - abs(cor(t(tmp),method="pearson", use = "pairwise.complete.obs")))) # nicest
-
-#h = hclust(as.dist(1 - abs(cor(t(tmp))))) # nicest
-h = hclust(as.dist(1 - cor(t(tmp)))) # nicest
-h = hclust(dist(t(scale(t(tmp),center=F)))) # nicest
-
-d = t(scale(t(tmp), center = F))
-pc <- prcomp(d)
-plot(pc$x[,1],pc$x[,2],)
-text(pc$x[,1],pc$x[,2],rownames(pc$x),cex=0.6,pos=3)
-
-plot(pc$x[,3],pc$x[,2],)
-plot(pc$x[,4],pc$x[,2],)
-plot(pc$x[,5],pc$x[,2],)
-
-
-h = hclust(Dist(pc$x[,c(1,3,4,5)],method="euclidean"),method=m[6]) #m6 was nice with eucl/corr on full data
-
-
-a = pc$x %>% as.data.frame %>% dplyr::mutate(PC1.abs = abs(PC1)) %>% dplyr::arrange('PC1.abs') %>% rownames_to_column('gid') %>% pull('gid')
-
-
+# h = hclust(as.dist(1 - abs(cor(t(tmp),method="pearson", use = "pairwise.complete.obs")))) # nicest
+# #h = hclust(as.dist(1 - abs(cor(t(tmp))))) # nicest
+# h = hclust(as.dist(1 - cor(t(tmp)))) # nicest
+# h = hclust(dist(t(scale(t(tmp),center=F)))) # nicest
+# d = t(scale(t(tmp), center = F))
+# pc <- prcomp(d)
+# plot(pc$x[,1],pc$x[,2],)
+# text(pc$x[,1],pc$x[,2],rownames(pc$x),cex=0.6,pos=3)
+# plot(pc$x[,3],pc$x[,2],)
+# plot(pc$x[,4],pc$x[,2],)
+# plot(pc$x[,5],pc$x[,2],)
+# h = hclust(Dist(pc$x[,c(1,3,4,5)],method="euclidean"),method=m[6]) #m6 was nice with eucl/corr on full data
+# a = pc$x %>% as.data.frame %>% dplyr::mutate(PC1.abs = abs(PC1)) %>% dplyr::arrange('PC1.abs') %>% rownames_to_column('gid') %>% pull('gid')
 #h = hclust(Dist(t(scale(t(tmp), center = F)), method="abscorrelation"),method=m[ 1]) #m6 was nice
-
 #plot(h, hang = -1)
 # h2 <- cutree(h, k = 4)
 # colors = c("red", "blue", "green", "black")
@@ -2886,7 +2871,7 @@ a = pc$x %>% as.data.frame %>% dplyr::mutate(PC1.abs = abs(PC1)) %>% dplyr::arra
 #plt <- cor(t(t(scale(t(tmp),center=F)) %>% as.matrix %>% t() %>% as.data.frame %>% dplyr::select(a) %>% t()))
 
 m = c("ward.D", "ward.D2", "single", "complete", "average" , "mcquitty" , "median" , "centroid")
-h = hclust(Dist(t(scale(t(tmp), center = F)), method="euclidean"),method=m[ 6]) #m6 was nice
+h = hclust(Dist(t(scale(t(lfc.glass), center = F)), method="euclidean"),method=m[6]) #m6 was nice
 
 plt.order <- data.frame(id = h$labels[h$order]) %>%
   dplyr::mutate(i = nrow(.):1) %>%
@@ -2902,15 +2887,17 @@ plt.order <- data.frame(id = h$labels[h$order]) %>%
     i >= 257 & i <= 263 ~ 'glcm8',
     i >= 263            ~ 'glcm9'
     ))) %>%
-  #dplyr::mutate(cluster = factor(cluster, levels = 
-   #     c("glcm8","glcm5","glcm4", "glcm6","glcm2","glcm7","glcm3","glcm1","glcm9") )) %>%
+  dplyr::mutate(cluster = factor(cluster, levels = 
+       c("glcm8","glcm5","glcm4", "glcm6","glcm2","glcm7","glcm3","glcm1","glcm9") )) %>%
   dplyr::arrange(cluster, i) %>%
   dplyr::mutate(k = 1:nrow(.))
 
-plt.order %>% pull(id)
+#plt.order %>% pull(id)
 
 
-plt <- cor(t(t(scale(t(tmp),center=F)) %>% as.matrix %>% t() %>% as.data.frame %>% dplyr::select(h$labels[h$order]) %>% t()))
+plt.glass <- cor(t(t(scale(t(lfc.glass),center=F)) %>% as.matrix %>% t() %>% as.data.frame %>% dplyr::select(h$labels[h$order]) %>% t()))
+plt <- plt.glass
+head(plt[1:6,1:6])
 #plt <- cor(t(t(scale(t(tmp),center=F)) %>% as.matrix %>% t() %>% as.data.frame %>% dplyr::select(plt.order %>% dplyr::arrange(cluster, i) %>% pull(id)) %>% t()))
 
 
@@ -2923,84 +2910,327 @@ colnames(plt) <- labels
 
 labels <- rownames(plt)
 labels <- gsub(" .+$","",labels)
+labels <- gsub("TNNT1","***        TNNT1",labels)
+labels <- gsub("TNNT2","***        TNNT2",labels)
+labels <- gsub("^GABR","***        GABR",labels)
 rownames(plt) <- labels
 
-corrplot::corrplot(plt, method = "circle",tl.cex=0.75) # , order="hclust") #, addrect=4
 
-lines <- plt.order %>%
-  dplyr::group_by(cluster) %>%
-  summarise(max = max(k)) %>%
-  dplyr::mutate(max = max) %>%
-  pull(max) %>%
-  c(0)
-
-for(line in lines) {
-  lines(c(nrow(plt) - line,nrow(plt) - line),c(0.5,nrow(plt) + 0.5), lwd=0.6, col="black" )
-  lines(c(0.5,nrow(plt) + 0.5) , c( line,line), lwd=0.6, col="black" )
-}
-
-
-
-
-
+lines <- plt.order %>% dplyr::group_by(cluster) %>% summarise(max = max(k)) %>% dplyr::mutate(max = max) %>% pull(max) %>% c(0)
 
 
 
 png(file = "output/figures/paper_dge_corrplot_logFc_gene_per_patient_and_DE_genes_GLASS.png", width = 1200 * 2.8, height = 900 * 2.8 )
-corrplot::corrplot(plt, method = "circle",tl.cex=2.25)
-abline(h=4 + 0.5,lwd=0.85, col="purple")
-abline(h=30 + 0.5,lwd=0.85, col="purple")
-abline(h=53 + 0.5,lwd=0.85, col="purple")
-abline(h=89 + 0.5,lwd=0.85, col="purple")
-abline(h=223 + 0.5,lwd=0.85, col="purple")
+corrplot::corrplot(plt, method = "circle",tl.cex=0.75) # , order="hclust") #, addrect=4
+for(line in lines) {
+  lines(c(nrow(plt) - line,nrow(plt) - line) + 0.5 ,c(0,nrow(plt)) + 0.5, lwd=3.5, col="black" )
+  lines(c(0,nrow(plt)) + 0.5 , c( line ,line) + 0.5, lwd=3.5, col="black" )
+}
 dev.off()
+
+
+
 
 svg(file = "output/figures/paper_dge_corrplot_logFc_gene_per_patient_and_DE_genes_GLASS.svg", width = 120, height = 90 )
 corrplot::corrplot(plt, method = "circle",tl.cex=2.25)
+
+for(line in lines) {
+  lines(c(nrow(plt) - line,nrow(plt) - line),c(0,nrow(plt) + 0.5), lwd=1, col="black" )
+  #lines(c(0.5,nrow(plt) + 0.5) , c( line + 0.5,line + 0.5), lwd=1, col="black" )
+}
+dev.off()
+
+
+# nos2: https://pure.uva.nl/ws/files/2782854/178651_04.pdf # page25
+
+
+
+plt <- plt.gsam %>%
+  as.data.frame() %>%
+  dplyr::select(h$labels[h$order]) %>%
+  t() %>% as.data.frame() %>% dplyr::select(h$labels[h$order]) %>% as.matrix
+plt[1:6,1:6]
+stopifnot(rownames(plt) == colnames(plt))
+head(plt[1:6,1:6])
+
+
+
+### combined ----
+
+lfc.combi <- rbind(
+    lfc.glass %>% t() , 
+    lfc.gsam %>% t() %>% as.data.frame() %>% dplyr::mutate(`tumor-% DNA` = NULL)
+  )
+
+# lines = c(0, 30, 49 , 66, 68, 86, 113, 172, 233, nrow(plt.combi))
+# h <- lfc.combi %>%
+#   t() %>%
+#   #scale() %>%
+#   scale(center = F) %>%
+#   Dist(method = "correlation") %>%
+#   hclust(method=m[1])
+# order <- h$labels[h$order] %>% purrr::discard(. %in% c("tumor-% DNA"))
+# rm(h)
+
+
+h <- lfc.combi %>%
+  t() %>%
+  #scale() %>%
+  #scale(center = F) %>%
+  Dist(method = "pearson") %>%
+  hclust(method=m[1])
+order <- h$labels[h$order] %>% purrr::discard(. %in% c("tumor-% DNA"))
+rm(h)
+
+plt.combi <- lfc.combi %>% t() %>%
+  scale(center=F) %>%
+  as.matrix %>% 
+  t() %>% 
+  as.data.frame %>%
+  dplyr::select(order) %>%
+  cor()
+
+
+labels <- colnames(plt.combi)
+labels <- gsub("^[^ ]+ ","",labels)
+labels <- gsub("[?]","",labels,fixed=T)
+labels <- gsub("[","",labels,fixed=T)
+labels <- gsub("]","",labels,fixed=T)
+colnames(plt.combi) <- labels
+
+labels <- rownames(plt.combi)
+labels <- gsub(" .+$","",labels)
+labels <- gsub("TNNT1","***        TNNT1",labels)
+labels <- gsub("TNNT2","***        TNNT2",labels)
+labels <- gsub("NOS2","***        NOS2",labels)
+labels <- gsub("VAV3","***        VAV3",labels)
+labels <- gsub("^GABR","***        GABR",labels)
+rownames(plt.combi) <- labels
+
+
+lines = c(0, 16, 45, 72, 88, 108, 126, 128,  161, 173, 239, nrow(plt.combi))
+png(file = "output/figures/paper_dge_corrplot_logFc_gene_per_patient_and_DE_genes_combi.png", width = 1200 * 2.8, height = 900 * 2.8 )
+corrplot::corrplot(plt.combi, method = "circle",tl.cex=0.75) # , order="hclust") #, addrect=4
+for(line in lines) {
+  lines(c(nrow(plt.combi) - line,nrow(plt.combi) - line) + 0.5 ,c(0,nrow(plt.combi)) + 0.5, lwd=3.5, col="black" )
+  lines(c(0,nrow(plt.combi)) + 0.5 , c( line ,line) + 0.5, lwd=3.5, col="black" )
+}
 dev.off()
 
 
 
-astr <- c(
-  "TMEM155 [?]",
-  "SLC39A12 [astr]",
-  "GABRG1 [astr]",
-  "SOWAHA [?]",
-  "GABRA2 [astr]",
-  "TMEM268 [?]",
-  "CYS1 [?]",
-  "CABLES1 [astr]"
-)
-stopifnot(astr %in% rownames(tmp))
+
+## 2.18 per patient clustering ----
+
+mat_breaks <- seq(min(mat), max(mat), length.out = 20)
+
+# quantile_breaks <- function(xs, n = 10) {
+#   breaks <- quantile(xs$values, probs = seq(0, 1, length.out = n))
+#   breaks[!duplicated(breaks)]
+# }
+# mat_breaks <- quantile_breaks(mat, n = 11)
+
+
+# the expected value of a logFc is 0, and thus scaling needs to be adapted to that
+scale0 <- function(m) {
+    return ( apply(m, 2,  function(v) {
+      svar <- sum(v^2) / (length(v) - 1)
+      return(v / sqrt(svar))
+    }     ) )
+}
+
+# m <- matrix( c(-4,-4,-3,-3,-2,-2,2,2,3,3,4,4) ,nrow=2)  %>%
+#   t()
+# m %>% scale() %>% t() 
+# m %>% scale0() %>% t() 
+
+
+# calc per gene var
+h <- lfc.combi %>%
+  as.matrix %>%
+  t() %>%
+  scale0 %>%
+  t() %>%
+  Dist(method='correlation') %>%
+  hclust(method = m[2])
+order <- h$labels[h$order]
+
+gltc <- data.frame(pid = h$labels[h$order],
+                   gltc = paste0('GLTC',cutree(h,3)[h$order])) %>%
+          dplyr::mutate(dataset = ifelse(grepl("GLSS|TCGA",pid),"GLASS","GSAM"))
+
+plt <-  lfc.combi %>% t() %>% as.data.frame %>% dplyr::select(gltc$pid) %>% as.matrix() %>% cor()
+corrplot(plt)
+
+lines  <- gltc %>%
+  dplyr::mutate(i = 1:nrow(.)) %>%
+  group_by(gltc) %>%
+  summarise(max = max(i)) %>% dplyr::mutate(max = max) %>% pull(max) %>% c(0) %>% sort()
+for(line in lines) {
+  lines(c(nrow(lfc.combi) - line,nrow(lfc.combi) - line) + 0.5 ,c(0, nrow(lfc.combi)) + 0.5, lwd=2.5, col="black" )
+  lines(c(0, nrow(lfc.combi)) + 0.5 , c(line ,line) + 0.5, lwd=2.5, col="black" )
+}
 
 
 
+# 
+# 
+# plt <- cor(t(lfc.combi))
+# colnames(plt) <- data.frame(cur.pid = colnames(plt)) %>%
+#   dplyr::left_join(gltc, by=c('cur.pid'='pid')) %>%
+#   dplyr::pull(gltc)
+# 
+# png(file = "output/figures/paper_dge_corrplot_logFc_gene_per_patient_and_DE_genes_pat.png", width = 1200 * 2.8, height = 900 * 2.8 )
+# corrplot(plt, order='hclust')
+# for(line in lines) {
+#   lines(c(nrow(lfc.combi) - line,nrow(lfc.combi) - line) + 0.5 ,c(0, nrow(lfc.combi)) + 0.5, lwd=2.5, col="black" )
+#   lines(c(0, nrow(lfc.combi)) + 0.5 , c(line ,line) + 0.5, lwd=2.5, col="black" )
+# }
+# dev.off()
+# 
 
-d <- Dist(t(scale(t(tmp), center = T)), method="euclidean")
-d <- Dist(tmp, method="correlation")
-fit <- cmdscale(d,eig=T, k=3) 
-plt <- fit$points %>% 
-  as.data.frame() %>%
-  tibble::rownames_to_column('gid') %>%
-  dplyr::mutate(type = as.factor(gsub("^.+ ","",gid))) %>%
-  dplyr::mutate(gid = gsub(" .+$","",gid))
 
-ggplot(plt, aes(x=V1, y=V3, col=type, label=gid) ) + 
+### SVVL!? ----
+
+library(survival)
+library(survminer)
+
+
+plt <- gltc %>%
+  dplyr::filter(dataset == "GSAM") %>%
+  dplyr::left_join(gsam.patient.metadata, by=c('pid'='studyID')) %>%
+  dplyr::left_join(gsam.rna.metadata %>%
+                     dplyr::filter(resection == 'r1') %>%
+                     dplyr::select(c('pid','NMF.123456.PCA.LDA.class')) %>%
+                     dplyr::rename('subtype.R1'='NMF.123456.PCA.LDA.class')
+                   , by=c('pid'='pid')) %>%
+  dplyr::left_join(gsam.rna.metadata %>%
+                     dplyr::filter(resection == 'r2') %>%
+                     dplyr::select(c('pid','NMF.123456.PCA.LDA.class')) %>%
+                     dplyr::rename('subtype.R2'='NMF.123456.PCA.LDA.class')
+                   , by=c('pid'='pid')) %>%
+  dplyr::mutate(subtype.stable = subtype.R1 == subtype.R2)
+
+
+ggplot(plt, aes(x = gltc, fill = tumorLocation)) +
+  geom_bar(position = "stack")
+  
+
+ggplot(plt, aes(x = gltc, fill = treatedWithTMZ)) +
+  geom_bar(position = "stack")
+
+
+ggplot(plt, aes(x = gltc, y = sizeLargestLesionSecondSurgery)) +
   geom_point()
 
 
-
-tt = as.data.frame(t(tmp))
-
-plot(tt$`TMEM268 [?]` , tt$`CYS1 [?]` )
-text(tt$`TMEM268 [?]` , tt$`CYS1 [?]`, rownames(tt), cex=0.6, pos=3 )
-
-plot(tt$`TMEM268 [?]` , tt$`HPCAL4 [?]` )
-text(tt$`TMEM268 [?]` , tt$`HPCAL4 [?]`, rownames(tt), cex=0.6, pos=3 )
+ggplot(plt, aes(x = gltc, y = daysToLastCycleTMZ)) +
+  geom_point()
 
 
+ggplot(plt, aes(x = gltc, y = nMutationsRecurrent)) +
+  geom_point()
 
-## 2.18 pathology antibody genes ----
+
+ggplot(plt, aes(x = gltc, fill = subtype.R1)) +
+  geom_bar(position = "stack")
+ggplot(plt, aes(x = gltc, fill = subtype.R2)) + # :)
+  geom_bar(position = "stack")
+ggplot(plt, aes(x = gltc, fill = subtype.stable)) +
+  geom_bar(position = "stack")
+
+
+
+
+
+
+surv.model <- Surv(time = plt$progressionFreeDays)
+surv.model <- Surv(time = plt$daysToSecondSurgery)
+surv.model <- Surv(time = plt$survivalFromSecondSurgeryDays , event = plt$survival.event)
+surv.model <- Surv(time = plt$survivalDays , event = plt$survival.event)
+
+surv.fit <- survfit(surv.model ~ gltc, data = plt)
+ggsurvplot(surv.fit , data = plt, pval = TRUE)
+
+surv.fit <- survfit(surv.model ~ subtype.R2, data = plt)
+ggsurvplot(surv.fit , data = plt, pval = TRUE)
+
+
+
+
+## 2.18b clustering on VST values? ----
+
+plt.genes <- data.frame(
+  hugo_symbol = c((results.out %>% dplyr::filter(!is.na(padj.gsam.res) &  padj.gsam.res < 0.01 & !is.na(padj.glass.res) & padj.glass.res < 0.01 ) %>% pull(hugo_symbol)))) %>%
+  dplyr::filter(!duplicated(hugo_symbol)) %>%
+  dplyr::left_join(results.out %>% 
+                     dplyr::select(c('gid','hugo_symbol','McKenzie_celltype_top_human_specificity','show.marker.chr7','ensembl_id')) %>%
+                     dplyr::rename(type=McKenzie_celltype_top_human_specificity) ,
+                   by=c('hugo_symbol'='hugo_symbol'))  %>%
+  dplyr::mutate(type = ifelse(hugo_symbol %in% c('SLC17A7','SST'), 'neuron', type) ) %>%
+  dplyr::mutate(type = ifelse(is.na(type), 'NA', type) ) %>%
+  dplyr::mutate(type = ifelse(show.marker.chr7 & type != 'astrocyte' , 'chr7/gain' , type)) %>%
+  dplyr::mutate(show.marker.chr7 = NULL) %>%
+  dplyr::filter(!is.na(gid))
+
+tmp <- gsam.gene.expression.all.vst %>%
+  as.data.frame %>%
+  tibble::rownames_to_column('gid') %>%
+  dplyr::filter(gid %in% plt.genes$gid) %>%
+  dplyr::left_join(plt.genes, by=c('gid'='gid')) %>%
+  dplyr::mutate(type = case_when(
+    type == "chr7/gain" ~ "chr7", 
+    type == "astrocyte" ~ "astr",
+    type == "neuron" ~ "neur",
+    type == "endothelial" ~ "endo",
+    type == "microglia/TAM" ~ "TAM",
+    type == "oligodendrocyte" ~ "olig",
+    T ~ "?" )) %>%
+  dplyr::mutate(hugo_symbol = paste0(hugo_symbol , " [" , type, "]") ) %>%
+  tibble::column_to_rownames('hugo_symbol') %>%
+  dplyr::mutate(gid = NULL, type = NULL, ensembl_id = NULL)
+
+# why are these different?!
+#h <- hclust(as.dist(1 - abs(cor(t(tmp),method="pearson", use = "pairwise.complete.obs")))) # nicest
+
+h <- tmp %>%
+  t() %>%
+  scale(center = T) %>%
+  t() %>%
+  Dist(method = "pearson") %>%
+  hclust(method=m[1])
+
+order <- h$labels[h$order]
+rm(h)
+plt <- tmp %>% as.matrix %>% t() %>% as.data.frame %>% dplyr::select(order) %>%  cor()
+
+labels <- colnames(plt)
+labels <- gsub("^[^ ]+ ","",labels)
+labels <- gsub("[?]","",labels,fixed=T)
+labels <- gsub("[","",labels,fixed=T)
+labels <- gsub("]","",labels,fixed=T)
+colnames(plt) <- labels
+
+labels <- rownames(plt)
+labels <- gsub(" .+$","",labels)
+labels <- gsub("TNNT1","***        TNNT1",labels)
+labels <- gsub("TNNT2","***        TNNT2",labels)
+labels <- gsub("NOS2","***        NOS2",labels)
+labels <- gsub("VAV3","***        VAV3",labels)
+labels <- gsub("^GABR","***        GABR",labels)
+rownames(plt) <- labels
+
+png(file = "output/figures/paper_dge_corrplot_vst_and_DE_genes_combi.png", width = 1200 * 2.8, height = 900 * 2.8 )
+lines = c(0,3, 22, 30, 51, 75, 96,98, 139, 155, 222,223, nrow(plt.combi))
+corrplot::corrplot(plt.combi, method = "circle",tl.cex=0.75) # , order="hclust") #, addrect=4
+for(line in lines) {
+  lines(c(nrow(plt.combi) - line,nrow(plt.combi) - line) + 0.5 ,c(0,nrow(plt.combi)) + 0.5, lwd=2.5, col="black" )
+  lines(c(0,nrow(plt.combi)) + 0.5 , c( line ,line) + 0.5, lwd=2.5, col="black" )
+}
+dev.off()
+
+
+## 2.19 pathology antibody genes ----
 
 
 plt <- results.out %>%
