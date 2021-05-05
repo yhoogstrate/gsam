@@ -400,6 +400,8 @@ rm(tmp)
 gsam.rna.metadata <- gsam.rna.metadata %>%
   dplyr::left_join(read.table("data/gsam/output/tables/gsam_nmf_lda_data.txt"), by=c('sid' = 'sid'))
 
+stopifnot('NMF.123456.PCA.LDA.class' %in% colnames(gsam.rna.metadata) == F)
+  
 
 
 # this is from a different NMF run - deprecated

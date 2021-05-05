@@ -47,8 +47,8 @@ plt.expanded <- data.frame(pid = unique(plt.ids$pid) ) %>%
   dplyr::mutate(R1.status =  ifelse(is.na(R1), "NA", "+") ) %>%
   dplyr::mutate(R2.status =  ifelse(is.na(R2), "NA", "+") ) %>%
   dplyr::mutate(R1.R2.status = case_when( is.na(R1) ~ 'R2', is.na(R2) ~ 'R1',     TRUE ~ 'both'   ) ) %>%
-  dplyr::left_join(gsam.rna.metadata %>% dplyr::filter(sid %in% plt.ids$sid & resection == "r1") %>% dplyr::select(c('pid','NMF.123456.PCA.LDA.class')) %>% dplyr::rename(R1.rna.subtype = NMF.123456.PCA.LDA.class ),  by = c('pid' = 'pid') ) %>%
-  dplyr::left_join(gsam.rna.metadata %>% dplyr::filter(sid %in% plt.ids$sid & resection == "r2") %>% dplyr::select(c('pid','NMF.123456.PCA.LDA.class')) %>% dplyr::rename(R2.rna.subtype = NMF.123456.PCA.LDA.class ),  by = c('pid' = 'pid') ) %>%
+  dplyr::left_join(gsam.rna.metadata %>% dplyr::filter(sid %in% plt.ids$sid & resection == "r1") %>% dplyr::select(c('pid','NMF.123456.PCA.SVM.class')) %>% dplyr::rename(R1.rna.subtype = NMF.123456.PCA.SVM.class ),  by = c('pid' = 'pid') ) %>%
+  dplyr::left_join(gsam.rna.metadata %>% dplyr::filter(sid %in% plt.ids$sid & resection == "r2") %>% dplyr::select(c('pid','NMF.123456.PCA.SVM.class')) %>% dplyr::rename(R2.rna.subtype = NMF.123456.PCA.SVM.class ),  by = c('pid' = 'pid') ) %>%
   dplyr::left_join(gsam.rna.metadata %>% dplyr::filter(sid %in% plt.ids$sid & resection == "r1") %>% dplyr::select(c('pid','pat.with.IDH')) %>% dplyr::rename(patient.idh.status = pat.with.IDH ),  by = c('pid' = 'pid') ) %>%
   dplyr::mutate(patient.idh.status = ifelse(patient.idh.status == "TRUE", "+", "-") ) %>%
   dplyr::left_join(gsam.rna.metadata %>% dplyr::filter(sid %in% plt.ids$sid &resection == "r1") %>% dplyr::select(c('pid','tumour.percentage.dna')) %>% dplyr::rename(R1.tumour.percentage.dna = tumour.percentage.dna )
