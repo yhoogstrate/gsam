@@ -128,17 +128,72 @@ stopifnot(colnames(gsam.rnaseq.expression.vst.150) == gsam.metadata$sid)
 
 #sva::ComBat(as.factor(gsub("^(..).*$","\\1",colnames(.))))
 
+# deze manier met zware batch correctie is aanzienlijk minder goed in de SVM
+# combi.rnaseq.expression.vst.150 <- dplyr::full_join(
+#   glass.gbm.rnaseq.expression.vst.150 %>%
+#     tibble::rownames_to_column('gid')
+#   ,
+#   gsam.rnaseq.expression.vst.150 %>%
+#     tibble::rownames_to_column('gid') ,
+#   by = c('gid'='gid') ) %>%
+#   tibble::column_to_rownames('gid') %>%
+#   limma::removeBatchEffect(as.factor(gsub("^(..).*$","\\1",colnames(.))))
+# 
 
-combi.rnaseq.expression.vst.150 <- dplyr::full_join(
-  glass.gbm.rnaseq.expression.vst.150 %>%
-    tibble::rownames_to_column('gid')
-  ,
-  gsam.rnaseq.expression.vst.150 %>%
-    tibble::rownames_to_column('gid') ,
-  by = c('gid'='gid') ) %>%
+
+
+# ruwe counts samenvoegen en dan VST en dan Batch correctie is net zo goed als alleen GSAM
+
+glass.gbm.rnaseq.expression.150 <- glass.gbm.rnaseq.expression %>% 
+  as.data.frame() %>%
+  tibble::rownames_to_column('gid') %>%
+  dplyr::filter(gid %in%  (wang.glioma.intrinsic.genes %>%
+                             dplyr::filter(Subtyping_Signature_Gene. != "") %>%
+                             dplyr::pull(ENSG.short) %>%
+                             gsub("ENSG00000276644","ENSG00000165659",.,fixed=T)) # DACH1
+  ) %>%
+  dplyr::mutate(ensg = NULL) %>%
+  dplyr::mutate(gid = gsub("ENSG00000276644","DACH1",gid) ) %>% 
+  dplyr::mutate(gid = gsub("ENSG00000165659","DACH1",gid) )
+  #%>% tibble::column_to_rownames('gid')
+
+
+gsam.rnaseq.expression.150 <- gsam.rnaseq.expression %>%
+  as.data.frame() %>%
+  `colnames<-`(paste0("GSAM-",colnames(.) )   ) %>%
+  tibble::rownames_to_column('gid') %>%
+  dplyr::mutate(ensg = gsub("\\..+$","",gid)) %>%
   dplyr::mutate(gid = NULL) %>%
-  ###limma::removeBatchEffect(as.factor(gsub("^(..).*$","\\1",colnames(.)) == "GS"))
-  limma::removeBatchEffect(as.factor(gsub("^(..).*$","\\1",colnames(.))))
+  dplyr::filter(ensg %in%
+                  (wang.glioma.intrinsic.genes %>%
+                     dplyr::filter(Subtyping_Signature_Gene. != "") %>%
+                     dplyr::pull(ENSG.short))
+  ) %>%
+  dplyr::mutate(ensg = gsub("ENSG00000276644","DACH1",ensg) ) %>% 
+  dplyr::mutate(ensg = gsub("ENSG00000165659","DACH1",ensg) ) 
+  #%>%   tibble::column_to_rownames('ensg') 
+
+combi.rnaseq.expression.vst.150 <- dplyr::inner_join(
+    glass.gbm.rnaseq.expression.150,
+    gsam.rnaseq.expression.150,
+  by = c('gid'='ensg')) %>%
+  tibble::column_to_rownames('gid')
+
+
+# TODO: nice one-liner
+
+cond <- as.factor(paste0('r',sample(c(1,2),ncol(combi.rnaseq.expression.vst.150), T)))
+combi.rnaseq.expression.vst.150 <- DESeq2::DESeqDataSetFromMatrix(as.matrix(combi.rnaseq.expression.vst.150), S4Vectors::DataFrame(cond), ~cond)
+combi.rnaseq.expression.vst.150 <- SummarizedExperiment::assay(DESeq2::varianceStabilizingTransformation(combi.rnaseq.expression.vst.150,blind=T))
+rm(cond, tmp)
+
+
+combi.rnaseq.expression.vst.150 <- combi.rnaseq.expression.vst.150 %>%
+  limma::removeBatchEffect(as.factor(gsub("^(..).*$","\\1",colnames(.)) == "GS"))
+
+# batch removal: limma::removeBatchEffect(as.factor(gsub("^(..).*$","\\1",colnames(.))))
+# gsub("^(..).*$","\\1",colnames(combi.rnaseq.expression.vst.150))
+
 
 
 
@@ -209,12 +264,12 @@ ggplot(p$x, aes(x=PC1, y=PC2, col=subtype.public , label=sid.label ) ) +
 
 
 
-if(!file.exists("tmp/combi.gbm_nmf_150.Rds") ) {
+if(!file.exists("tmp/combi.gbm_nmf_150.Rds" ) & F ) {
    combi.gbm_nmf_150 <- {{}}
-   #seeds <- c(123456) #, 12345, 1337, 909) # 123456 is the one used by their paper
+   seeds <- c(123456) #, 12345, 1337, 909) # 123456 is the one used by their paper
    # 
    # for(seed in seeds) {
-  #      combi.gbm_nmf_150[[as.character(seed)]] <- NMF(as.matrix(combi.rnaseq.expression.vst.150), 3, seed = seed)
+        combi.gbm_nmf_150[[as.character(seed)]] <- NMF(as.matrix(combi.rnaseq.expression.vst.150), 3, seed = seed)
    # }
 
   # rudimentairy code:?
@@ -228,7 +283,7 @@ if(!file.exists("tmp/combi.gbm_nmf_150.Rds") ) {
 
 
 
-   
+
 
 plt.single <- plt.single %>%
   dplyr::left_join(
@@ -315,13 +370,16 @@ ggplot(plt.single, aes( x=`NMF:123456.PC1` , y = `NMF:123456.PC2` , col=`subtype
 
 plt.single$`NMF:123456.PCA.SVM.class` = NULL
 s150.pca.nmf.subtype.classifier.svm <- svm(x = plt.single  %>%
+                                             #dplyr::filter(dataset == "GSAM") %>%
                                              dplyr::select(c('sid' ,'NMF:123456.PC1', 'NMF:123456.PC2')) %>%
                                              tibble::column_to_rownames('sid') ,
-                                           y = plt.single$subtype.public, 
+                                           y = plt.single %>% 
+                                             #dplyr::filter(dataset == "GSAM") %>%
+                                             dplyr::pull(subtype.public), 
                                            scale = F,
                                            #type = "C-classification",
 
-                                           #kernel = 'linear',
+                                           kernel = 'linear',
                                            tolerance = 0.0001,
                                            cost = 3
                                            )
@@ -345,8 +403,8 @@ plt.single <- plt.single %>% dplyr::left_join(
     ) , by = c('sid'='sid') )
 
 
-plt.single %>% dplyr::filter(dataset != "GLSS") %>% dplyr::mutate(err = subtype.public != `NMF:123456.PCA.SVM.class`) %>% dplyr::pull(err) %>% summary
-plt.single %>% dplyr::filter(dataset == "GLSS") %>% dplyr::mutate(err = subtype.public != `NMF:123456.PCA.SVM.class`) %>% dplyr::pull(err) %>% summary
+plt.single %>% dplyr::filter(dataset == "GSAM") %>% dplyr::mutate(err = subtype.public != `NMF:123456.PCA.SVM.class`) %>% dplyr::pull(err) %>% summary
+plt.single %>% dplyr::filter(dataset != "GSAM") %>% dplyr::mutate(err = subtype.public != `NMF:123456.PCA.SVM.class`) %>% dplyr::pull(err) %>% summary
 plt.single %>% dplyr::mutate(err = subtype.public != `NMF:123456.PCA.SVM.class`) %>% dplyr::pull(err) %>% summary
 
 
@@ -424,7 +482,7 @@ rm(resolution, off_x, off_y, range_pc1, range_pc2, range_df)
 
 
 
-## PCA:1+2(NMF:1+2+3) + LDA contours + GlioVis labels ----
+## PCA:1+2(NMF:1+2+3) + SVM contours + GlioVis labels ----
 
 
 plt <- rbind(plt.single %>%
@@ -473,13 +531,14 @@ ggsave('output/figures/paper_GLASS_subtypes_nmf_S150G_PC1_PC2_GlioVis_LDA-counto
 
 
 
-## PCA:1+2(NMF:1+2+3) + LDA contours + LDA labels ----
+## PCA:1+2(NMF:1+2+3) + SVM contours + SVM labels ----
+
 
 
 plt <- rbind(plt.single %>%
-               dplyr::select(c(`NMF:123456.PC1`, `NMF:123456.PC2`, 'NMF:123456.PCA.LDA.class')) %>%
+               dplyr::select(c(`NMF:123456.PC1`, `NMF:123456.PC2`, 'NMF:123456.PCA.SVM.class')) %>%
                dplyr::mutate(type = "Patient Sample") %>%
-               dplyr::rename(class = `NMF:123456.PCA.LDA.class`),
+               dplyr::rename(class = `NMF:123456.PCA.SVM.class`),
              nmf.pca.lda.countours)
 
 ggplot(plt, aes(x = `NMF:123456.PC1`, y = `NMF:123456.PC2`, col = class)) + 
