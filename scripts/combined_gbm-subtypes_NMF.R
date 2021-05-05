@@ -137,32 +137,35 @@ combi.rnaseq.expression.vst.150 <- dplyr::full_join(
     tibble::rownames_to_column('gid') ,
   by = c('gid'='gid') ) %>%
   dplyr::mutate(gid = NULL) %>%
+  ###limma::removeBatchEffect(as.factor(gsub("^(..).*$","\\1",colnames(.)) == "GS"))
   limma::removeBatchEffect(as.factor(gsub("^(..).*$","\\1",colnames(.))))
 
 
 
-combi.metadata <- rbind(
-  glass.metadata %>%
-    dplyr::mutate(
-      resection = case_when( resection == "TP" ~ "R1",
-                             resection == "R1" ~ "R2",
-                             resection == "R2" ~ "R3",
-                             resection == "R3" ~ "R4" )) %>%
-    dplyr::rename(subtype.public = GBM.transcriptional.subtype.Synapse) ,
-  gsam.metadata %>%
-    dplyr::select(c("sid","pid","resection","gliovis.majority_call")) %>%
-    dplyr::rename(subtype.public = gliovis.majority_call ) %>%
-    dplyr::mutate(sid.label = gsub("GSAM-","",sid) ) %>%
-    dplyr::mutate(sid) %>%
-    dplyr::mutate(resection = gsub("r","R",resection)) %>%
-    dplyr::mutate(dataset = "GSAM") ) %>%
+
+combi.metadata <- rbind(glass.metadata %>%
+                          dplyr::mutate(
+                            resection = case_when( resection == "TP" ~ "R1",
+                                                   resection == "R1" ~ "R2",
+                                                   resection == "R2" ~ "R3",
+                                                   resection == "R3" ~ "R4" )) %>%
+                          dplyr::rename(subtype.public = GBM.transcriptional.subtype.Synapse) %>%
+                          dplyr::select(c("sid", "pid", "resection", "subtype.public" ,"sid.label", "dataset"))
+                        , 
+                        gsam.metadata %>%
+                          dplyr::select(c("sid","pid","resection","gliovis.majority_call")) %>%
+                          dplyr::rename(subtype.public = gliovis.majority_call ) %>%
+                          dplyr::mutate(sid.label = gsub("GSAM-","",sid) ) %>%
+                          dplyr::mutate(sid) %>%
+                          dplyr::mutate(resection = gsub("r","R",resection)) %>%
+                          dplyr::mutate(dataset = "GSAM")
+                        ) %>%
   dplyr::mutate(resection = as.factor(resection)) %>%
   dplyr::mutate(dataset = as.factor(dataset))
 
 
-
-colnames(combi.rnaseq.expression.vst.150)
-combi.metadata$sid
+#colnames(combi.rnaseq.expression.vst.150)
+#combi.metadata$sid
 
 stopifnot(colnames(combi.rnaseq.expression.vst.150) == combi.metadata$sid)
 stopifnot(sum(is.na(combi.rnaseq.expression.vst.150)) == 0)
@@ -201,23 +204,31 @@ ggplot(p$x, aes(x=PC1, y=PC2, col=subtype.public , label=sid.label ) ) +
 ## + NMF:1-3 using Wang-code ----
 
 
-#if(!file.exists("tmp/combi.gbm_nmf_150.Rds") & F) {
-  combi.gbm_nmf_150 <- {{}}
-  seeds <- c(123456 ) #, 12345, 1337, 909) # 123456 is the one used by their paper
-  
-  for(seed in seeds) {
-    combi.gbm_nmf_150[[as.character(seed)]] <- NMF(as.matrix(combi.rnaseq.expression.vst.150), 3, seed = seed)
-  }
-  
-  #glass.gbm_nmf_150[["nmf"]] <- nmf(as.data.frame(glass.gbm.rnaseq.expression.vst.150), 3, seed=12345)
-  
+#plt.single <- plt.single %>% dplyr::filter(dataset == "GSAM")
+#combi.rnaseq.expression.vst.150 <- combi.rnaseq.expression.vst.150 %>% as.data.frame %>% dplyr::select(plt.single$sid)
+
+
+
+if(!file.exists("tmp/combi.gbm_nmf_150.Rds") ) {
+   combi.gbm_nmf_150 <- {{}}
+   #seeds <- c(123456) #, 12345, 1337, 909) # 123456 is the one used by their paper
+   # 
+   # for(seed in seeds) {
+  #      combi.gbm_nmf_150[[as.character(seed)]] <- NMF(as.matrix(combi.rnaseq.expression.vst.150), 3, seed = seed)
+   # }
+
+  # rudimentairy code:?
+  # #glass.gbm_nmf_150[["nmf"]] <- nmf(as.data.frame(glass.gbm.rnaseq.expression.vst.150), 3, seed=12345)
+
   # huidige mds is baas
-  #saveRDS(glass.gbm_nmf_150, "tmp/combi.gbm_nmf_150.Rds")
-#} else {
-  #glass.gbm_nmf_150 <- readRDS("tmp/glass.gbm_nmf_150.Rds")
-#}
+  # #saveRDS(combi.gbm_nmf_150, "tmp/combi.gbm_nmf_150.Rds")
+} else {
+  combi.gbm_nmf_150 <- readRDS("tmp/combi.gbm_nmf_150.Rds")
+}
 
 
+
+   
 
 plt.single <- plt.single %>%
   dplyr::left_join(
@@ -301,12 +312,19 @@ ggplot(plt.single, aes( x=`NMF:123456.PC1` , y = `NMF:123456.PC2` , col=`subtype
 
 # Aanzienlijk lekkerdere fit dan LDA
 
+
+plt.single$`NMF:123456.PCA.SVM.class` = NULL
 s150.pca.nmf.subtype.classifier.svm <- svm(x = plt.single  %>%
                                              dplyr::select(c('sid' ,'NMF:123456.PC1', 'NMF:123456.PC2')) %>%
                                              tibble::column_to_rownames('sid') ,
-                                           y = plt.single$subtype.public, scale = F, tolerance = 0.0001, type = "C-classification", kernel = "linear", cost = 3, probability = T)
+                                           y = plt.single$subtype.public, 
+                                           scale = F,
+                                           #type = "C-classification",
 
-
+                                           #kernel = 'linear',
+                                           tolerance = 0.0001,
+                                           cost = 3
+                                           )
 
 # re-fit samples
 
@@ -318,13 +336,20 @@ plt.single <- plt.single %>% dplyr::left_join(
     'NMF:123456.PCA.SVM.class' = as.character(
       predict(object = s150.pca.nmf.subtype.classifier.svm , newdata =  (plt.single  %>%
                                                 dplyr::select(c('sid' ,'NMF:123456.PC1', 'NMF:123456.PC2')) %>%
-                                                tibble::column_to_rownames('sid')) , decision.values = T, probability = T)),
+                                                tibble::column_to_rownames('sid')),
+              decision.values = T,
+              tolerance = 0.0001,
+              cost = 3
+              )),
     check.names = F
     ) , by = c('sid'='sid') )
 
 
+plt.single %>% dplyr::filter(dataset != "GLSS") %>% dplyr::mutate(err = subtype.public != `NMF:123456.PCA.SVM.class`) %>% dplyr::pull(err) %>% summary
+plt.single %>% dplyr::filter(dataset == "GLSS") %>% dplyr::mutate(err = subtype.public != `NMF:123456.PCA.SVM.class`) %>% dplyr::pull(err) %>% summary
+plt.single %>% dplyr::mutate(err = subtype.public != `NMF:123456.PCA.SVM.class`) %>% dplyr::pull(err) %>% summary
 
-#plt.single$`NMF:123456.PCA.SVM.class`
+
 
 
 
