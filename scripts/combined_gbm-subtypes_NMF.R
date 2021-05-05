@@ -327,6 +327,22 @@ plt.single <- plt.single %>% dplyr::left_join(
 #plt.single$`NMF:123456.PCA.SVM.class`
 
 
+
+# ~~ Export stats ~~ ----
+
+write.table(
+  plt.single %>%
+    dplyr::select(c("sid",
+                    "NMF:123456.membership",
+                    "NMF:123456.PC1", "NMF:123456.PC2", "NMF:123456.PC3",
+                    "NMF:123456.PCA.SVM.class"
+                    #"NMF:123456.PCA.LDA.class", "NMF:123456.PCA.LDA.posterior.Classical", "NMF:123456.PCA.LDA.posterior.Mesenchymal", "NMF:123456.PCA.LDA.posterior.Proneural"
+    )),
+  "output/tables/gsam_nmf_lda_data.txt")
+
+
+
+
 # Per pair stats ----
 ## Split table into pairs + eucl dist ----
 
