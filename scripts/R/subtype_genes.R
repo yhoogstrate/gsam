@@ -1,9 +1,13 @@
 #!/usr/bin/env R 
 
+# load expression data for matching ----
 
 if(!exists('gencode.31')) {
   source('scripts/R/gsam_rna-seq_expression.R')
 }
+
+
+# TCGA wang/verhaak 2017 subtypes ----
 
 
 subtype.classical.tt2 <- {{}}
@@ -165,6 +169,9 @@ subtype.mesenchymal.tt2['49'] <- 'GPRC5A'
 subtype.mesenchymal.tt2['50'] <- 'COL15A1'
 
 
+## ensure match in gencode 31 ----
+
+
 stopifnot(length(subtype.classical.tt2[subtype.classical.tt2 %in% gencode.31$GENE == F]) == 0)
 stopifnot(length(subtype.proneural.tt2[subtype.proneural.tt2 %in% gencode.31$GENE == F]) == 0)
 stopifnot(length(subtype.mesenchymal.tt2[subtype.mesenchymal.tt2 %in% gencode.31$GENE == F]) == 0)
@@ -190,5 +197,128 @@ subtype.classical <-data.frame(symbol=subtype.classical.tt2) %>%
 stopifnot(subtype.mesenchymal$id %in% rownames(gsam.rnaseq.expression))
 stopifnot(subtype.proneural$id %in% rownames(gsam.rnaseq.expression))
 stopifnot(subtype.classical$id %in% rownames(gsam.rnaseq.expression))
+
+
+# GLiTS Redux set ----
+
+
+# https://www.nature.com/articles/s41374-020-0437-0/figures/1?proof=t
+
+
+classical.glits.redux.tt2 <- {{}}
+classical.glits.redux.tt2['1'] <- 'EGFR'
+classical.glits.redux.tt2['2'] <- 'NOS2'
+classical.glits.redux.tt2['3'] <- 'GAS1'
+classical.glits.redux.tt2['4'] <- 'KCNF1'
+classical.glits.redux.tt2['5'] <- 'ELOVL2'
+classical.glits.redux.tt2['6'] <- 'VAV3'
+classical.glits.redux.tt2['7'] <- 'SOCS2'
+classical.glits.redux.tt2['8'] <- 'MEOX2'
+classical.glits.redux.tt2['9'] <- 'RGS6'
+classical.glits.redux.tt2['10'] <- 'HS3ST3B1'
+classical.glits.redux.tt2['11'] <- 'PDGFA'
+classical.glits.redux.tt2['12'] <- 'GRIK1'
+classical.glits.redux.tt2['13'] <- 'EYA2'
+classical.glits.redux.tt2['14'] <- 'CAMK2B'
+classical.glits.redux.tt2['15'] <- 'SLC4A4'
+classical.glits.redux.tt2['16'] <- 'CDH4'
+classical.glits.redux.tt2['17'] <- 'WSCD1'
+classical.glits.redux.tt2['18'] <- 'ACSBG1'
+classical.glits.redux.tt2['19'] <- 'MLC1'
+classical.glits.redux.tt2['20'] <- 'NES'
+classical.glits.redux.tt2['21'] <- 'KLHL4'
+classical.glits.redux.tt2['22'] <- 'ZFHX4'
+classical.glits.redux.tt2['23'] <- 'KLHDC8A'
+classical.glits.redux.tt2['24'] <- 'SPRY2'
+classical.glits.redux.tt2['25'] <- 'DENND2A'
+classical.glits.redux.tt2['26'] <- 'MEIS1'
+classical.glits.redux.tt2['27'] <- 'SOX9'
+classical.glits.redux.tt2['28'] <- 'ARAP3'
+
+mesenchymal.glits.redux.tt2 <- {{}}
+mesenchymal.glits.redux.tt2['1'] <- 'KLRC4'
+mesenchymal.glits.redux.tt2['2'] <- 'GRID2'
+mesenchymal.glits.redux.tt2['3'] <- 'UGT8'
+mesenchymal.glits.redux.tt2['4'] <- 'EPHB1'
+mesenchymal.glits.redux.tt2['5'] <- 'MYT1'
+mesenchymal.glits.redux.tt2['6'] <- 'DCX'
+mesenchymal.glits.redux.tt2['7'] <- 'KLRC3'
+mesenchymal.glits.redux.tt2['8'] <- 'TMSB15A'
+mesenchymal.glits.redux.tt2['9'] <- 'CNTN1'
+mesenchymal.glits.redux.tt2['10'] <- 'ERBB3'
+mesenchymal.glits.redux.tt2['11'] <- 'PLAAT1' # formerly known as 'HRASLS' [https://www.genecards.org/cgi-bin/carddisp.pl?gene=PLAAT1]
+mesenchymal.glits.redux.tt2['12'] <- 'DNM3'
+mesenchymal.glits.redux.tt2['13'] <- 'SCN3A'
+mesenchymal.glits.redux.tt2['14'] <- 'PAK3'
+mesenchymal.glits.redux.tt2['15'] <- 'GNG4'
+mesenchymal.glits.redux.tt2['16'] <- 'AMOTL2'
+mesenchymal.glits.redux.tt2['17'] <- 'CHD7'
+mesenchymal.glits.redux.tt2['18'] <- 'CRMP1'
+mesenchymal.glits.redux.tt2['19'] <- 'SOX4'
+mesenchymal.glits.redux.tt2['20'] <- 'SATB1'
+
+proneural.glits.redux.tt2 <- {{}}
+proneural.glits.redux.tt2['1`'] <- 'LOX'
+proneural.glits.redux.tt2['2'] <- 'SERPINE1'
+proneural.glits.redux.tt2['3'] <- 'COL1A1'
+proneural.glits.redux.tt2['4'] <- 'CRYBG1' # formerly known as 'AIM1' [https://www.genecards.org/cgi-bin/carddisp.pl?gene=CRYBG1]
+proneural.glits.redux.tt2['5'] <- 'FCGR2B'
+proneural.glits.redux.tt2['6'] <- 'COL1A2'
+proneural.glits.redux.tt2['7'] <- 'FHL2'
+proneural.glits.redux.tt2['8'] <- 'IGFBP6'
+proneural.glits.redux.tt2['9'] <- 'TGFBI'
+proneural.glits.redux.tt2['10'] <- 'PLAU'
+proneural.glits.redux.tt2['11'] <- 'P4HA2'
+proneural.glits.redux.tt2['12'] <- 'CSTA'
+proneural.glits.redux.tt2['13'] <- 'DSE'
+proneural.glits.redux.tt2['14'] <- 'LAMB1'
+proneural.glits.redux.tt2['15'] <- 'SRPX2'
+proneural.glits.redux.tt2['16'] <- 'TIMP1'
+proneural.glits.redux.tt2['17'] <- 'S100A11'
+proneural.glits.redux.tt2['18'] <- 'PLAUR'
+proneural.glits.redux.tt2['19'] <- 'FPR3'
+proneural.glits.redux.tt2['20'] <- 'CLEC2B'
+proneural.glits.redux.tt2['21'] <- 'DCBLD2'
+proneural.glits.redux.tt2['22'] <- 'MYOF'
+proneural.glits.redux.tt2['23'] <- 'MAFB'
+proneural.glits.redux.tt2['24'] <- 'ARPC1B'
+proneural.glits.redux.tt2['25'] <- 'RAB27A'
+proneural.glits.redux.tt2['26'] <- 'LY75'
+proneural.glits.redux.tt2['27'] <- 'PLBD1'
+proneural.glits.redux.tt2['28'] <- 'LY96'
+
+
+## ensure match in gencode 31 ----
+
+
+
+
+stopifnot(classical.glits.redux.tt2 %in% gencode.31$GENE) # classical.glits.redux.tt2[classical.glits.redux.tt2 %in% gencode.31$GENE == F]
+stopifnot(mesenchymal.glits.redux.tt2 %in% gencode.31$GENE) # mesenchymal.glits.redux.tt2[mesenchymal.glits.redux.tt2 %in% gencode.31$GENE == F]
+stopifnot(proneural.glits.redux.tt2 %in% gencode.31$GENE) # proneural.glits.redux.tt2[proneural.glits.redux.tt2 %in% gencode.31$GENE == F]
+
+
+
+
+mesenchymal.glits.redux <-data.frame(symbol=mesenchymal.glits.redux.tt2) %>%
+  dplyr::left_join(gencode.31, by=c('symbol' = 'GENE')) %>%
+  dplyr::mutate(id = paste0(ENSG , "|" , symbol , "|" , V1 , ":" , V4, "-" , V5 ,"(", V7 , ")")) # "ENSG00000141736.13_3|ERBB2|chr17:37844167-37886679(+)
+
+
+proneural.glits.redux <-data.frame(symbol=proneural.glits.redux.tt2) %>%
+  dplyr::left_join(gencode.31, by=c('symbol' = 'GENE')) %>%
+  dplyr::mutate(id = paste0(ENSG , "|" , symbol , "|" , V1 , ":" , V4, "-" , V5 ,"(", V7 , ")")) # "ENSG00000141736.13_3|ERBB2|chr17:37844167-37886679(+)
+
+
+classical.glits.redux <-data.frame(symbol=classical.glits.redux.tt2) %>%
+  dplyr::left_join(gencode.31, by=c('symbol' = 'GENE')) %>%
+  dplyr::mutate(id = paste0(ENSG , "|" , symbol , "|" , V1 , ":" , V4, "-" , V5 ,"(", V7 , ")")) # "ENSG00000141736.13_3|ERBB2|chr17:37844167-37886679(+)
+
+
+
+stopifnot(mesenchymal.glits.redux$id %in% rownames(gsam.rnaseq.expression))
+stopifnot(proneural.glits.redux$id %in% rownames(gsam.rnaseq.expression))
+stopifnot(classical.glits.redux$id %in% rownames(gsam.rnaseq.expression))
+
 
 
