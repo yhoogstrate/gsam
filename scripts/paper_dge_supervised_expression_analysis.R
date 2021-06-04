@@ -1809,7 +1809,7 @@ tmp <- rbind(
     head(n=14)
   ,
   results.out %>%
-    dplyr::filter(results.out$neftel.meta.module.NPC1 == T) %>%
+    dplyr::filter(results.out$neftel.meta.module.NPC2 == T) %>%
     dplyr::mutate(label = "Neftel: NPC2") %>%
     head(n=14)
   ,
@@ -1836,7 +1836,6 @@ tmp <- rbind(
                    c(  "Patel: Cell cycle" ,   "Neftel: G1.S" , "Neftel: G2.M", 
                        "Subtype: GliTS-MES",   "Neftel: MES1" ,  "Neftel: MES2"  , "Patel: Hypoxia" , "Patel: Compl/Imm.res",
                        "Neftel: AC" , "Subtype: GliTS-CL" ,   "Neftel: OPC" ,
-                       
                        "Neftel: NPC1" ,  "Neftel: NPC2","Subtype: GliTS-PN" )
                      )) %>%
   dplyr::arrange(label) %>%
@@ -1846,7 +1845,7 @@ tmp <- rbind(
 
 plt <- tmp %>% dplyr::select(-c(gid,label,hugo_symbol)) %>% as.matrix %>% t() %>% cor() %>% `rownames<-`(tmp %>%   dplyr::mutate(label = ifelse(duplicated(label), "", label)) %>% dplyr::pull(label))
 corrplot::corrplot(plt,tl.cex=0.7)
-
+ 
 
 
 
@@ -1859,44 +1858,234 @@ plt <- tmp %>%
   t() %>%
   cor()
 
+#h <- hclust(as.dist(1 - plt))
+h <- hclust( as.dist(1 - cor(plt)) ) # Geniale manier om te clusteren!!!
+o <- h$labels[h$order]
 
+plt <- plt %>%
+  as.data.frame %>%
+  dplyr::select(o) %>%
+  t() %>%
+  as.data.frame %>%
+  dplyr::select(o) %>%
+  t() %>%
+  as.matrix
 
-plt <- plt[1:15,1:15]
+corrplot::corrplot(plt)
+  
 
-plt.expanded <- data.frame(x = c() , y = c() , value = c(), type = c())
-for(i in nrow(plt):1) {
+#plt <- plt[1:35,1:35]
+
+plt.expanded <- data.frame()
+for(i in 1:nrow(plt)) {
   x <- rownames(plt)[i]
   
   for(j in 1:ncol(plt)) {
     y <- colnames(plt)[j]
     
-    plt.expanded <- dplyr::bind_rows(plt.expanded, c(x = x, y = y , value = plt[i,j], type = 'cor'))
+    plt.expanded <- dplyr::bind_rows(plt.expanded, c(x = x, x.order = i,
+                                                     y = y, y.order = nrow(plt) - j,
+                                                     order = (i - 1) * nrow(plt) + j,
+                                                     value = plt[i,j],
+                                                     type = 'cor'))
   }
 }
 
 plt.expanded <- plt.expanded %>%
-  dplyr::mutate(value = as.numeric(value))
+  dplyr::mutate(value = as.numeric(value)) %>%
+  dplyr::mutate(x.order = as.numeric(x.order)) %>%
+  dplyr::mutate(y.order = as.numeric(y.order)) %>%
+  dplyr::mutate(order = as.numeric(order))
+
+
+# add metadata
+tmp.meta <- results.out %>% dplyr::filter(!is.na(GliTS.reduxsubtype.marker) & GliTS.reduxsubtype.marker == "GliTS-CL") %>% dplyr::pull(hugo_symbol)
+tmp.meta <- plt.expanded %>%
+  dplyr::filter(x %in% tmp.meta & x == y) %>%
+  dplyr::mutate(y.order = nrow(plt ) + 1) %>%
+  dplyr::mutate(y = "GliTS-CL")  %>%
+  dplyr::mutate(type = y) %>% 
+  dplyr::mutate(value=0)
+dim(tmp.meta)
+plt.expanded <- dplyr::bind_rows(plt.expanded, tmp.meta)
+
+# add metadata
+tmp.meta <- results.out %>% dplyr::filter(!is.na(GliTS.reduxsubtype.marker) & GliTS.reduxsubtype.marker == "GliTS-PN") %>% dplyr::pull(hugo_symbol)
+tmp.meta <- plt.expanded %>%
+  dplyr::filter(x %in% tmp.meta & x == y) %>%
+  dplyr::mutate(y.order = nrow(plt ) + 2) %>%
+  dplyr::mutate(y = "GliTS-PN")  %>%
+  dplyr::mutate(type = y) %>% 
+  dplyr::mutate(value=0)
+dim(tmp.meta)
+plt.expanded <- dplyr::bind_rows(plt.expanded, tmp.meta)
+
+# add metadata
+tmp.meta <- results.out %>% dplyr::filter(!is.na(GliTS.reduxsubtype.marker) & GliTS.reduxsubtype.marker == "GliTS-MES") %>% dplyr::pull(hugo_symbol)
+tmp.meta <- plt.expanded %>%
+  dplyr::filter(x %in% tmp.meta & x == y) %>%
+  dplyr::mutate(y.order = nrow(plt ) + 3) %>%
+  dplyr::mutate(y = "GliTS-MES")  %>%
+  dplyr::mutate(type = y) %>% 
+  dplyr::mutate(value=0)
+dim(tmp.meta)
+plt.expanded <- dplyr::bind_rows(plt.expanded, tmp.meta)
+
+# add metadata
+tmp.meta <- results.out %>% dplyr::filter(!is.na(patel.scRNAseq.cluster) & patel.scRNAseq.cluster == "Complete/Immune response") %>% dplyr::pull(hugo_symbol)
+tmp.meta <- plt.expanded %>%
+  dplyr::filter(x %in% tmp.meta & x == y) %>%
+  dplyr::mutate(y.order = nrow(plt ) + 4) %>%
+  dplyr::mutate(y = "Patel: Comp/Imm.res")  %>%
+  dplyr::mutate(type = y) %>% 
+  dplyr::mutate(value=0)
+dim(tmp.meta)
+plt.expanded <- dplyr::bind_rows(plt.expanded, tmp.meta)
+
+# add metadata
+tmp.meta <- results.out %>% dplyr::filter(!is.na(patel.scRNAseq.cluster) & patel.scRNAseq.cluster == "Cell cycle") %>% dplyr::pull(hugo_symbol)
+tmp.meta <- plt.expanded %>%
+  dplyr::filter(x %in% tmp.meta & x == y) %>%
+  dplyr::mutate(y.order = nrow(plt ) + 5) %>%
+  dplyr::mutate(y = "Patel: Cell Cycle")  %>%
+  dplyr::mutate(type = y) %>% 
+  dplyr::mutate(value=0)
+dim(tmp.meta)
+plt.expanded <- dplyr::bind_rows(plt.expanded, tmp.meta)
+
+# add metadata
+tmp.meta <- results.out %>% dplyr::filter(!is.na(patel.scRNAseq.cluster) & patel.scRNAseq.cluster == "Hypoxia") %>% dplyr::pull(hugo_symbol)
+tmp.meta <- plt.expanded %>%
+  dplyr::filter(x %in% tmp.meta & x == y) %>%
+  dplyr::mutate(y.order = nrow(plt ) + 6) %>%
+  dplyr::mutate(y = "Patel: Hypoxia")  %>%
+  dplyr::mutate(type = y) %>% 
+  dplyr::mutate(value=0)
+dim(tmp.meta)
+plt.expanded <- dplyr::bind_rows(plt.expanded, tmp.meta)
+
+# add metadata
+tmp.meta <- results.out %>% dplyr::filter(neftel.meta.module.MES1 == T) %>% dplyr::pull(hugo_symbol)
+tmp.meta <- plt.expanded %>%
+  dplyr::filter(x %in% tmp.meta & x == y) %>%
+  dplyr::mutate(y.order = nrow(plt ) + 7) %>%
+  dplyr::mutate(y = "Neftel: MES1")  %>%
+  dplyr::mutate(type = y) %>% 
+  dplyr::mutate(value=0)
+dim(tmp.meta)
+plt.expanded <- dplyr::bind_rows(plt.expanded, tmp.meta)
+
+# add metadata
+tmp.meta <- results.out %>% dplyr::filter(neftel.meta.module.MES2 == T) %>% dplyr::pull(hugo_symbol)
+tmp.meta <- plt.expanded %>%
+  dplyr::filter(x %in% tmp.meta & x == y) %>%
+  dplyr::mutate(y.order = nrow(plt ) + 8) %>%
+  dplyr::mutate(y = "Neftel: MES2")  %>%
+  dplyr::mutate(type = y) %>% 
+  dplyr::mutate(value=0)
+dim(tmp.meta)
+plt.expanded <- dplyr::bind_rows(plt.expanded, tmp.meta)
+
+# add metadata
+tmp.meta <- results.out %>% dplyr::filter(neftel.meta.module.AC == T) %>% dplyr::pull(hugo_symbol)
+tmp.meta <- plt.expanded %>%
+  dplyr::filter(x %in% tmp.meta & x == y) %>%
+  dplyr::mutate(y.order = nrow(plt ) + 9) %>%
+  dplyr::mutate(y = "Neftel: AC")  %>%
+  dplyr::mutate(type = y) %>% 
+  dplyr::mutate(value=0)
+dim(tmp.meta)
+plt.expanded <- dplyr::bind_rows(plt.expanded, tmp.meta)
+
+# add metadata
+tmp.meta <- results.out %>% dplyr::filter(neftel.meta.module.OPC == T) %>% dplyr::pull(hugo_symbol)
+tmp.meta <- plt.expanded %>%
+  dplyr::filter(x %in% tmp.meta & x == y) %>%
+  dplyr::mutate(y.order = nrow(plt ) + 10) %>%
+  dplyr::mutate(y = "Neftel: OPC")  %>%
+  dplyr::mutate(type = y) %>% 
+  dplyr::mutate(value=0)
+dim(tmp.meta)
+plt.expanded <- dplyr::bind_rows(plt.expanded, tmp.meta)
+
+
+# add metadata
+tmp.meta <- results.out %>% dplyr::filter(neftel.meta.module.NPC1 == T) %>% dplyr::pull(hugo_symbol)
+tmp.meta <- plt.expanded %>%
+  dplyr::filter(x %in% tmp.meta & x == y) %>%
+  dplyr::mutate(y.order = nrow(plt ) + 11) %>%
+  dplyr::mutate(y = "Neftel: NPC1")  %>%
+  dplyr::mutate(type = y) %>% 
+  dplyr::mutate(value=0)
+dim(tmp.meta)
+plt.expanded <- dplyr::bind_rows(plt.expanded, tmp.meta)
+
+# add metadata
+tmp.meta <- results.out %>% dplyr::filter(neftel.meta.module.NPC2 == T) %>% dplyr::pull(hugo_symbol)
+tmp.meta <- plt.expanded %>%
+  dplyr::filter(x %in% tmp.meta & x == y) %>%
+  dplyr::mutate(y.order = nrow(plt ) + 12) %>%
+  dplyr::mutate(y = "Neftel: NPC2")  %>%
+  dplyr::mutate(type = y) %>% 
+  dplyr::mutate(value=0)
+dim(tmp.meta)
+plt.expanded <- dplyr::bind_rows(plt.expanded, tmp.meta)
+
+# add metadata
+tmp.meta <- results.out %>% dplyr::filter(neftel.meta.module.G1.S == T) %>% dplyr::pull(hugo_symbol)
+tmp.meta <- plt.expanded %>%
+  dplyr::filter(x %in% tmp.meta & x == y) %>%
+  dplyr::mutate(y.order = nrow(plt ) + 13) %>%
+  dplyr::mutate(y = "Neftel: G1+S")  %>%
+  dplyr::mutate(type = y) %>% 
+  dplyr::mutate(value=0)
+dim(tmp.meta)
+plt.expanded <- dplyr::bind_rows(plt.expanded, tmp.meta)
+
+
+# add metadata
+tmp.meta <- results.out %>% dplyr::filter(neftel.meta.module.G2.M == T) %>% dplyr::pull(hugo_symbol)
+tmp.meta <- plt.expanded %>%
+  dplyr::filter(x %in% tmp.meta & x == y) %>%
+  dplyr::mutate(y.order = nrow(plt ) + 14) %>%
+  dplyr::mutate(y = "Neftel: G2+M")  %>%
+  dplyr::mutate(type = y) %>% 
+  dplyr::mutate(value=0)
+dim(tmp.meta)
+plt.expanded <- dplyr::bind_rows(plt.expanded, tmp.meta)
 
 
 
-ggplot(plt.expanded, aes(x=x, y=y,  coll = value, fill=value)) +
-  geom_tile(data = subset(plt.expanded, type == 'cor')) +
+
+ggplot(plt.expanded, aes(x=reorder(x, x.order), y=reorder(y, y.order),  col=type, fill=value)) +
+  geom_tile(col = "white") +
   scale_x_discrete(labels = NULL, breaks = NULL) +
   labs(x = "") +
   scale_fill_gradient2(
-    low = muted("red"),
+    low = "blue",
     mid = "white",
-    high = muted("blue"),
+    high = "red",
     midpoint = 0,
     space = "Lab",
     na.value = "grey50",
     guide = "colourbar",
     aesthetics = "fill",
     limits = c(-1,1)
-  )
+  ) +
+  geom_point(data = subset(plt.expanded, type != "cor"), pch=19,cex=1) + 
+  theme(legend.position = 'bottom',  axis.text = element_text(),
+        axis.line = element_line(colour="black"),
+        text = element_text(size=5)) +
+  labs(y = "")
+  
+ggsave("/tmp/cor_clusters.pdf", width = 11, height = 11)
 
-  #scale_y_discrete(labels = NULL, breaks = NULL) +
-  #labs(y = "")
+
+
+
+
+#scale_y_discrete(labels = NULL, breaks = NULL) +
+
 
 
 
