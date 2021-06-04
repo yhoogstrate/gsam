@@ -1,6 +1,9 @@
 #!/usr/bin/env R
 
 
+# scRNA-seq gene clusters from: https://science.sciencemag.org/content/344/6190/1396
+
+
 # load expression data for matching ----
 
 
@@ -100,7 +103,7 @@ patel.hypoxia.tt2 <- c(
   "RPL10",
   "IGFBP3",
   "SDC4",
-  "FTL",
+  # "FTL", appears in both hypoxia & complete/imm resp
   "BHLHE40",
   "EEF1A1",
   "ACTG1",
@@ -113,7 +116,7 @@ stopifnot(patel.hypoxia.tt2 %in% gencode.31$GENE) # patel.hypoxia.tt2[patel.hypo
 
 # complement/immune response ----
 
-
+# http://www.sciencemag.org/content/344/6190/1396/suppl/DC1
 # Fig S10
 
 patel.complement.immune.response.tt2 <- c(
@@ -155,12 +158,23 @@ patel.complement.immune.response.tt2 <- c(
   "MIR4709",
   "FN1",
   "FAM107A",
-  "HLA-DRA",
-  "FTL"
+  "HLA-DRA"
+  # ,"FTL" appears in both hypoxia & complete/imm resp
 )
 
 
 stopifnot(patel.complement.immune.response.tt2 %in% gencode.31$GENE) # patel.complement.immune.response.tt2[patel.complement.immune.response.tt2 %in% gencode.31$GENE == F]
+
+
+# check mutex ----
+
+
+# require mutual exclusivity
+stopifnot(patel.cell.cycle.tt2 %in% c(patel.complement.immune.response.tt2, patel.hypoxia.tt2) == F )
+stopifnot(patel.complement.immune.response.tt2 %in% c(patel.cell.cycle.tt2, patel.hypoxia.tt2) == F )
+stopifnot(patel.hypoxia.tt2 %in% c(patel.complement.immune.response.tt2, patel.cell.cycle.tt2) == F )
+
+# "FTL" is in both patel.complement.immune.response.tt2 and patel.hypoxia.tt2
 
 
 
