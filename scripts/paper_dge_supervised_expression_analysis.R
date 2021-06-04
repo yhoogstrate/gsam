@@ -29,7 +29,9 @@ source("scripts/R/youri_gg_theme.R")
 
 
 source("scripts/R/ligands.R")
-source("scripts/R/subtype_genes.R")
+source("scripts/R/subtype_genes.R") # Verhaak/Wang/TCGA + GliTS Redux
+source("scripts/R/patel_scRNA_clusters.R")
+source("scripts/R/neftel_meta_modules.R")
 
 source("scripts/R/gsam_metadata.R")
 source("scripts/R/gsam_rna-seq_expression.R")
@@ -343,9 +345,8 @@ dim(results.out)
 ### TCGA / Wang / Verhaak 2017 subtype signature ----
 
 
-
-results.out %>%
-  dplyr::mutate(TCGA.subtype.marker = NA) %>% # remove if already exists
+results.out <- results.out %>%
+  dplyr::mutate(TCGA.subtype.marker = NULL) %>% # remove if already exists
   dplyr::left_join(rbind(
     data.frame(
       TCGA.subtype.marker = "TCGA-CL",
@@ -367,25 +368,61 @@ results.out %>%
 ### GliTS redux signature ----
 
 
-results.out %>%
-  dplyr::mutate(GliTS.reduxsubtype.marker = NA) %>% # remove if already exists
+
+results.out <- results.out %>%
+  dplyr::mutate(GliTS.reduxsubtype.marker = NULL) %>% # remove if already exists
   dplyr::left_join(rbind(
     data.frame(
-      GliTS.reduxsubtype.marker = "TCGA-CL",
+      GliTS.reduxsubtype.marker = "GliTS-CL",
       ensembl_id = gsub("^([A-Z0-9]+).+$", "\\1", classical.glits.redux$ENSG)
     ),
     data.frame(
-      GliTS.reduxsubtype.marker = "TCGA-PN",
+      GliTS.reduxsubtype.marker = "GliTS-PN",
       ensembl_id = gsub("^([A-Z0-9]+).+$", "\\1", proneural.glits.redux$ENSG)
     ),
     data.frame(
-      GliTS.reduxsubtype.marker = "TCGA-MES",
+      GliTS.reduxsubtype.marker = "GliTS-MES",
       ensembl_id = gsub("^([A-Z0-9]+).+$", "\\1", mesenchymal.glits.redux$ENSG)
     )
   ) ,
   by = c('ensembl_id' = 'ensembl_id'))
 
 
+
+### Patel scRNA-seq clusters ----
+
+
+
+results.out <- results.out %>%
+  dplyr::mutate(patel.scRNAseq.cluster = NULL) %>% # reset
+  dplyr::mutate(patel.scRNAseq.cluster = case_when(
+    hugo_symbol %in% patel.cell.cycle.tt2 ~ "Cell cycle",
+    hugo_symbol %in% patel.complement.immune.response.tt2 ~ "Complete/Immune response",
+    hugo_symbol %in% patel.hypoxia.tt2 ~ "Hypoxia",
+    T ~ "")) %>%
+  dplyr::mutate(patel.scRNAseq.cluster = ifelse(patel.scRNAseq.cluster == "", NA, patel.scRNAseq.cluster))
+
+
+results.out %>% dplyr::filter(!is.na(patel.scRNAseq.cluster) )
+
+
+
+
+
+### Neftel scRNA-seq 6 meta clusters ----
+
+# too many overlaps in the clusters, also AC/ODS, no mutex state
+
+
+results.out <- results.out %>%
+  dplyr::mutate(neftel.meta.module.MES1 = hugo_symbol %in% neftel.meta.modules.MES1.tt2)  %>%
+  dplyr::mutate(neftel.meta.module.MES2 = hugo_symbol %in% neftel.meta.modules.MES2.tt2)  %>%
+  dplyr::mutate(neftel.meta.module.AC = hugo_symbol %in% neftel.meta.modules.AC.tt2)  %>%
+  dplyr::mutate(neftel.meta.module.OPC = hugo_symbol %in% neftel.meta.modules.OPC.tt2)  %>%
+  dplyr::mutate(neftel.meta.module.NPC1 = hugo_symbol %in% neftel.meta.modules.NPC1.tt2)  %>%
+  dplyr::mutate(neftel.meta.module.NPC2 = hugo_symbol %in% neftel.meta.modules.NPC2.tt2)  %>%
+  dplyr::mutate(neftel.meta.module.G1.S = hugo_symbol %in% neftel.meta.modules.G1.S.tt2)  %>%
+  dplyr::mutate(neftel.meta.module.G2.M = hugo_symbol %in% neftel.meta.modules.G2.M.tt2) 
 
 
 
@@ -424,6 +461,8 @@ stopifnot(
 
 
 
+# custom markers
+
 results.out <- results.out %>%
   dplyr::mutate(primary.marker.genes = ifelse(hugo_symbol %in% c("CREB5","TRIM24","ETV1","COA1") , "chr7 gained (tumor)", primary.marker.genes)) %>%
   dplyr::mutate(primary.marker.genes = ifelse(hugo_symbol %in% c("CD45") , "non-malignant", primary.marker.genes)) %>%
@@ -431,6 +470,7 @@ results.out <- results.out %>%
 
 
 
+# subtype markers
 
 results.out %>%
   dplyr::filter(!is.na(TCGA.subtype.marker)) %>%
@@ -440,12 +480,23 @@ results.out %>%
 
 
 results.out <- results.out %>%
-  dplyr::mutate(primary.marker.genes = ifelse(hugo_symbol %in% subtype.classical.tt2 , paste0(primary.marker.genes, ",TCGA-CL"), primary.marker.genes)) %>%
-  dplyr::mutate(primary.marker.genes = ifelse(hugo_symbol %in% subtype.proneural.tt2 , paste0(primary.marker.genes, ",TCGA-PN"), primary.marker.genes)) %>%
-  dplyr::mutate(primary.marker.genes = ifelse(hugo_symbol %in% subtype.mesenchymal.tt2 , paste0(primary.marker.genes, ",TCGA-MES"), primary.marker.genes)) %>%
-  dplyr::mutate(primary.marker.genes = gsub("^[,]+","", primary.marker.genes) ) %>%
-  dplyr::filter(grepl(",",primary.marker.genes ))
+  dplyr::mutate(primary.marker.genes = ifelse(hugo_symbol %in%  c("COL1A1", "LAMB1", "RUNX1", "S100A11"), paste0(primary.marker.genes, ",CL subtype"), primary.marker.genes)) %>%
+  dplyr::mutate(primary.marker.genes = ifelse(hugo_symbol %in%  c("ELOVL2", "VAV3", "SOCS2", "MLC1"), paste0(primary.marker.genes, ",PN subtype"), primary.marker.genes)) %>%
+  dplyr::mutate(primary.marker.genes = ifelse(hugo_symbol %in%  c("PLAAT1", "DNM3", "ERBB3","SOX10"), paste0(primary.marker.genes, ",MES subtype"), primary.marker.genes)) %>%
+  dplyr::mutate(primary.marker.genes = gsub("^[,]+","", primary.marker.genes) ) 
 
+
+
+# aesthetics
+
+results.out <- results.out %>%
+  dplyr::mutate(primary.marker.genes = ifelse(primary.marker.genes == "", NA, primary.marker.genes))
+
+
+
+# final view?
+
+results.out %>% dplyr::filter(primary.marker.genes != "" & !is.na(primary.marker.genes))
 
 
 
@@ -1696,6 +1747,164 @@ plot(b$tpc, b$gen, col=ifelse(b$res == "R1",2,4), pch=19)
 
 # plots ----
 
+## 2.0 :: gene-set corr plot ----
+
+# to find whether the scRNA-seq clusters are (largely) identical to verhaak etc.
+
+
+tmp <- rbind(
+  results.out %>%
+    dplyr::filter(!is.na(GliTS.reduxsubtype.marker) & GliTS.reduxsubtype.marker == "GliTS-CL") %>%
+    dplyr::mutate(label = paste0("Subtype: ",GliTS.reduxsubtype.marker)) %>%
+    head(n=14)
+  ,
+  results.out %>%
+    dplyr::filter(!is.na(GliTS.reduxsubtype.marker) & GliTS.reduxsubtype.marker == "GliTS-MES") %>%
+    dplyr::mutate(label = paste0("Subtype: ",GliTS.reduxsubtype.marker)) %>%
+    head(n=14)
+  ,
+  results.out %>%
+    dplyr::filter(!is.na(GliTS.reduxsubtype.marker) & GliTS.reduxsubtype.marker == "GliTS-PN") %>%
+    dplyr::mutate(label = paste0("Subtype: ",GliTS.reduxsubtype.marker)) %>%
+    head(n=14)
+  ,
+  
+  results.out %>%
+    dplyr::filter(!is.na(patel.scRNAseq.cluster) & patel.scRNAseq.cluster == "Complete/Immune response") %>%
+    dplyr::mutate(label = "Patel: Compl/Imm.res") %>%
+    head(n=14)
+  ,
+  results.out %>%
+    dplyr::filter(!is.na(patel.scRNAseq.cluster) & patel.scRNAseq.cluster == "Cell cycle") %>%
+    dplyr::mutate(label = paste0("Patel: ",patel.scRNAseq.cluster))
+  ,
+  results.out %>%
+    dplyr::filter(!is.na(patel.scRNAseq.cluster) & patel.scRNAseq.cluster == "Hypoxia") %>%
+    dplyr::mutate(label = paste0("Patel: ",patel.scRNAseq.cluster))
+  ,
+  
+  results.out %>%
+    dplyr::filter(neftel.meta.module.MES1 == T) %>%
+    dplyr::mutate(label = "Neftel: MES1") %>%
+    head(n=7)
+  ,
+  results.out %>%
+    dplyr::filter(results.out$neftel.meta.module.MES2 == T) %>%
+    dplyr::mutate(label = "Neftel: MES2") %>%
+    head(n=7)
+  ,
+  results.out %>%
+    dplyr::filter(results.out$neftel.meta.module.AC == T) %>%
+    dplyr::mutate(label = "Neftel: AC") %>%
+    head(n=14)
+  ,
+  results.out %>%
+    dplyr::filter(results.out$neftel.meta.module.OPC == T) %>%
+    dplyr::mutate(label = "Neftel: OPC") %>%
+    head(n=14)
+  ,
+  results.out %>%
+    dplyr::filter(results.out$neftel.meta.module.NPC1 == T) %>%
+    dplyr::mutate(label = "Neftel: NPC1") %>%
+    head(n=14)
+  ,
+  results.out %>%
+    dplyr::filter(results.out$neftel.meta.module.NPC1 == T) %>%
+    dplyr::mutate(label = "Neftel: NPC2") %>%
+    head(n=14)
+  ,
+  results.out %>%
+    dplyr::filter(results.out$neftel.meta.module.G1.S == T) %>%
+    dplyr::mutate(label = "Neftel: G1.S") %>%
+    head(n=14)
+  ,
+  results.out %>%
+    dplyr::filter(results.out$neftel.meta.module.G2.M == T) %>%
+    dplyr::mutate(label = "Neftel: G2.M") %>%
+    head(n=14)
+) %>%
+  dplyr::filter(!is.na(gid)) %>%
+  dplyr::select(c(gid, label, hugo_symbol)) %>%
+  dplyr::left_join(
+    gsam.gene.expression.all.vst %>%
+      as.data.frame %>%
+      tibble::rownames_to_column('gid'),
+    by=c('gid'='gid')
+  ) %>%
+  dplyr::mutate(
+    label = factor(label, levels = 
+                   c(  "Patel: Cell cycle" ,   "Neftel: G1.S" , "Neftel: G2.M", 
+                       "Subtype: GliTS-MES",   "Neftel: MES1" ,  "Neftel: MES2"  , "Patel: Hypoxia" , "Patel: Compl/Imm.res",
+                       "Neftel: AC" , "Subtype: GliTS-CL" ,   "Neftel: OPC" ,
+                       
+                       "Neftel: NPC1" ,  "Neftel: NPC2","Subtype: GliTS-PN" )
+                     )) %>%
+  dplyr::arrange(label) %>%
+  dplyr::mutate(label=as.character(label))
+
+
+
+plt <- tmp %>% dplyr::select(-c(gid,label,hugo_symbol)) %>% as.matrix %>% t() %>% cor() %>% `rownames<-`(tmp %>%   dplyr::mutate(label = ifelse(duplicated(label), "", label)) %>% dplyr::pull(label))
+corrplot::corrplot(plt,tl.cex=0.7)
+
+
+
+
+
+plt <- tmp %>%
+  dplyr::filter(!duplicated(hugo_symbol)) %>%
+  tibble::column_to_rownames('hugo_symbol') %>%
+  dplyr::select(-c(label, gid)) %>%
+  as.matrix %>% 
+  t() %>%
+  cor()
+
+
+
+plt <- plt[1:15,1:15]
+
+plt.expanded <- data.frame(x = c() , y = c() , value = c(), type = c())
+for(i in nrow(plt):1) {
+  x <- rownames(plt)[i]
+  
+  for(j in 1:ncol(plt)) {
+    y <- colnames(plt)[j]
+    
+    plt.expanded <- dplyr::bind_rows(plt.expanded, c(x = x, y = y , value = plt[i,j], type = 'cor'))
+  }
+}
+
+plt.expanded <- plt.expanded %>%
+  dplyr::mutate(value = as.numeric(value))
+
+
+
+ggplot(plt.expanded, aes(x=x, y=y,  coll = value, fill=value)) +
+  geom_tile(data = subset(plt.expanded, type == 'cor')) +
+  scale_x_discrete(labels = NULL, breaks = NULL) +
+  labs(x = "") +
+  scale_fill_gradient2(
+    low = muted("red"),
+    mid = "white",
+    high = muted("blue"),
+    midpoint = 0,
+    space = "Lab",
+    na.value = "grey50",
+    guide = "colourbar",
+    aesthetics = "fill",
+    limits = c(-1,1)
+  )
+
+  #scale_y_discrete(labels = NULL, breaks = NULL) +
+  #labs(y = "")
+
+
+
+
+
+
+
+
 ## 2.1 :: TPC violin ----
 
 
@@ -2927,42 +3136,86 @@ ggsave("output/figures/paper_dge_cell-type_genes.png",width=2*6, height=6*6)
 ## 2.14 Corrplot marker genes ----
 #
 # dit figuur 
+# TCGA.subtype.marker,GliTS.reduxsubtype.marker
 # 
-# 
+
+a.cl = results.out %>%
+  dplyr::filter(!is.na(TCGA.subtype.marker) | !is.na(GliTS.reduxsubtype.marker)) %>%
+  dplyr::filter(TCGA.subtype.marker == "TCGA-CL" | GliTS.reduxsubtype.marker == "GliTS-CL") %>%
+  dplyr::select(c(hugo_symbol, gid,TCGA.subtype.marker,  GliTS.reduxsubtype.marker)) 
+
+
+a.mes = results.out %>%
+  dplyr::filter(!is.na(TCGA.subtype.marker) | !is.na(GliTS.reduxsubtype.marker)) %>%
+  dplyr::filter(TCGA.subtype.marker == "TCGA-MES" | GliTS.reduxsubtype.marker == "GliTS-MES") %>%
+  dplyr::select(c(hugo_symbol, gid,TCGA.subtype.marker,  GliTS.reduxsubtype.marker)) 
+
+
+a.pn = results.out %>%
+  dplyr::filter(!is.na(TCGA.subtype.marker) | !is.na(GliTS.reduxsubtype.marker) | hugo_symbol %in% c('NCAM1', 'NRCAN', 'OLIG1', 'SOX4', 'SOX6') ) %>%
+  dplyr::filter(TCGA.subtype.marker == "TCGA-PN" | GliTS.reduxsubtype.marker == "GliTS-PN" | hugo_symbol %in% c('NCAM1', 'NRCAN', 'OLIG1', 'SOX4', 'SOX6')) %>%
+  dplyr::select(c(hugo_symbol, gid,TCGA.subtype.marker,  GliTS.reduxsubtype.marker)) 
+
+
+a <- rbind(a.cl, a.mes, a.pn)
+a <- a.mes
+
+b = gsam.gene.expression.all.vst %>% 
+  as.data.frame %>%
+  tibble::rownames_to_column('gid') %>%
+  dplyr::filter(gid %in% a$gid) %>%
+  dplyr::left_join(a, by=c('gid'='gid')) %>%
+  dplyr::mutate(hugo_symbol =  ifelse(is.na(TCGA.subtype.marker) , paste0(hugo_symbol, "     "), paste0(hugo_symbol, " [T]")) ) %>%
+  dplyr::mutate(hugo_symbol =  ifelse(is.na(GliTS.reduxsubtype.marker) , paste0(hugo_symbol, "     "), paste0(hugo_symbol, "[G]")) ) %>%
+  tibble::column_to_rownames('hugo_symbol')  %>%
+  dplyr::mutate(gid = NULL, TCGA.subtype.marker= NULL, GliTS.reduxsubtype.marker= NULL)
+
+
+corrplot::corrplot(cor(t(b), method="pearson") %>% `colnames<-`(NULL), method = "circle",tl.cex=1, order='hclust')
+
+
+
+# beste voor MES: COL1A1, LAMB1, RUNX1, S100A11
+# beste voor CL:  ELOVL2, VAV3, SOCS2, MLC1
+# beste voor PN: GABRB3, MAST1 GNG4, ERBB3, SOX10, 
+
 
 
 plt <- data.frame(
   hugo_symbol = c(
-    "CREB5",	"TRIM24",	"ETV1", "COA1", # tumor/chr7 gain
-    "CD45",
+    a
     
-    "CACHD1","AHCYL1","GPR37L1","BMPR1B", # astroctyes
-    #"RBFOX3", "GABRB2", "SLC17A7","SST", # neuron
-    "RBFOX3", "GABRB2","GABRA1","GABRG2","GABBR2",
-
-    #"SSTR1","SSTR2","SSTR3","SSTR5", # Antibodies
-    #"GABRA1","GABRA2","GABRB1","GABRB2",
-    #"TNNT1", "TNNT2", "TNNT3",
     
-    "PLP1", "OPALIN", "TMEM144","CLCA4", # oligodendrocyte
-    #"PDGFA", "PDGFRA", "OLIG1", "OLIG2", "OLIG3",
-    
-    "TIE1","PEAR1","RGS5","NOSTRIN",  # endothelial
-    "CD163",  "CD14", "C1QA","THEMIS2" # TAM/MG
-    
-    ,"CD4","CD2", "CD3D", "CD3E","CD8A" # t-cell? TIL
-    
-    ###, "MME", "ERG", "FCER2", "EPCAM", "EREG" << !!
-    ,"EGFR"
-    ,"EREG","AREG", "BTC","HBEGF","NGF","TGFA","EGF","EPGN",
-    
-    #"ARHGAP28","RHGEF26","BVES-AS1","BVES","CACNA2D1","CDH4","CNGA3","COL11A1","ELOVL2","ETV4","EVA1A","FGFR3","GNAI1","LFNG","LHFPL6","POPDC3","PPARGC1A","RFX4","RNF180","ROBO2","SLC24A3","SOCS2-AS1","SOCS2","SOX9","SULF1","TACR1","TAP1","VAV3"
-    
-    "TOP2A", "CDK1", "DTL", "CCNB1", "XRCC2", "CCNE2", "DSN1", "TIMELESS", # Cell Cycle genes Patel/Bernstein
-    "VEGFA", "ADM", "TREM1", "ENO1", "LDHA", "NRN1", "UBC", "GBE1", "MIF" # Hypoxia genes Patel Bernstein
+  #   "CREB5",	"TRIM24",	"ETV1", "COA1", # tumor/chr7 gain
+  #   "CD45",
+  #   
+  #   "CACHD1","AHCYL1","GPR37L1","BMPR1B", # astroctyes
+  #   #"RBFOX3", "GABRB2", "SLC17A7","SST", # neuron
+  #   "RBFOX3", "GABRB2","GABRA1","GABRG2","GABBR2",
+  # 
+  #   #"SSTR1","SSTR2","SSTR3","SSTR5", # Antibodies
+  #   #"GABRA1","GABRA2","GABRB1","GABRB2",
+  #   #"TNNT1", "TNNT2", "TNNT3",
+  #   
+  #   "PLP1", "OPALIN", "TMEM144","CLCA4", # oligodendrocyte
+  #   #"PDGFA", "PDGFRA", "OLIG1", "OLIG2", "OLIG3",
+  #   
+  #   "TIE1","PEAR1","RGS5","NOSTRIN",  # endothelial
+  #   "CD163",  "CD14", "C1QA","THEMIS2" # TAM/MG
+  #   
+  #   ,"CD4","CD2", "CD3D", "CD3E","CD8A" # t-cell? TIL
+  #   
+  #   ###, "MME", "ERG", "FCER2", "EPCAM", "EREG" << !!
+  #   ,"EGFR"
+  #   ,"EREG","AREG", "BTC","HBEGF","NGF","TGFA","EGF","EPGN",
+  #   
+  #   #"ARHGAP28","RHGEF26","BVES-AS1","BVES","CACNA2D1","CDH4","CNGA3","COL11A1","ELOVL2","ETV4","EVA1A","FGFR3","GNAI1","LFNG","LHFPL6","POPDC3","PPARGC1A","RFX4","RNF180","ROBO2","SLC24A3","SOCS2-AS1","SOCS2","SOX9","SULF1","TACR1","TAP1","VAV3"
+  #   
+  #   "TOP2A", "CDK1", "DTL", "CCNB1", "XRCC2", "CCNE2", "DSN1", "TIMELESS", # Cell Cycle genes Patel/Bernstein
+  #   "VEGFA", "ADM", "TREM1", "ENO1", "LDHA", "NRN1", "UBC", "GBE1", "MIF" # Hypoxia genes Patel Bernstein
   )) %>%
   dplyr::left_join(results.out %>% 
-      dplyr::select(c('gid','hugo_symbol','McKenzie_celltype_top_human_specificity','show.marker.chr7')) %>%
+      dplyr::select(c('gid','hugo_symbol','McKenzie_celltype_top_human_specificity','show.marker.chr7',TCGA.subtype.marker,  GliTS.reduxsubtype.marker)) %>%
       dplyr::rename(type=McKenzie_celltype_top_human_specificity) ,
     by=c('hugo_symbol'='hugo_symbol'))  %>%
   dplyr::mutate(type = ifelse(hugo_symbol %in% c('SLC17A7','SST'), 'neuron', type) ) %>%
@@ -3040,7 +3293,7 @@ tmp <- rbind(tmp.2, tmp)
 
 
 #png(file = "output/figures/paper_dge_corrplot_logFc_gene_per_patient.png", width = 1200 * 0.8, height = 900 *0.8 )
-corrplot::corrplot(cor(t(tmp), method="pearson"), method = "circle",tl.cex=1)
+corrplot::corrplot(cor(t(tmp), method="pearson") %>% `colnames<-`(NULL), method = "circle",tl.cex=1, order='hclust')
 #dev.off()
 
 
