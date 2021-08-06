@@ -1,0 +1,12 @@
+#checklist_accession									
+#unique_name_prefix									
+sample_alias	tax_id	scientific_name	common_name	sample_title	sample_description	subject_id	gender	phenotype	disease_site
+#template									
+#units									
+AAB1	9606	Homo sapiens	human	AAB1	Material from 1st surgery of AAB	AAB	unknown	glioblastoma	brain
+AAB2	9606	Homo sapiens	human	AAB2	Material from 2nd surgery of AAB	AAB	unknown	glioblastoma	brain
+AAC1	9606	Homo sapiens	human	AAC1	Material from 1st surgery of AAC	AAC	unknown	glioblastoma	brain
+AAC2	9606	Homo sapiens	human	AAC2	Material from 2nd surgery of AAC	AAC	unknown	glioblastoma	brain
+AAD1	9606	Homo sapiens	human	AAD1	Material from 1st surgery of AAD	AAD	unknown	glioblastoma	brain
+AAF1	9606	Homo sapiens	human	AAF1	Material from 1st surgery of AAF	AAF	unknown	glioblastoma	brain
+AAF2	9606	Homo sapiens	human	AAF2	Material from 2nd surgery of AAF	AAF	unknown	glioblastoma	brain

@@ -1,0 +1,20 @@
+G-SAM: Transcriptional Evolution of Glioblastomas Treated With Standard of Care
+G-SAM
+
+Collection of mostly matching primary and recurrent glioblastoma RNA-seq sample pairs
+
+PMID kaspar: 31743054
+
+
+G-SAM study id: EGAS00001005436
+
+-----------
+
+DAC:
+
+G-SAM Data access committee
+
+
+
+Email: datasharing [at] sanger [dot] ac [dot] uk
+More details: EGAC00001000000
