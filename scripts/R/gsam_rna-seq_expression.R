@@ -71,6 +71,9 @@ gsam.rnaseq.expression <- "data/gsam/output/tables/gsam_featureCounts_readcounts
 
 
 
+#colnames(gsam.rnaseq.expression)[colnames(gsam.rnaseq.expression) %in% gsam.viii.rnaseq$sample == F]
+
+
 stopifnot(colnames(gsam.rnaseq.expression) %in% gsam.viii.rnaseq$sample)
 stopifnot(sum(duplicated(gsub("^([A-Z0-9]+).+$","\\1",rownames(gsam.rnaseq.expression)))) == 0) # no duplicate ens ids
 

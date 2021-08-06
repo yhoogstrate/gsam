@@ -109,9 +109,19 @@ glass.gbm.rnaseq.metadata <- data.frame(sid = colnames(glass.gbm.rnaseq.expressi
     read.table('data/glass_clinical_surgeries.txt',sep="\t",header=T,stringsAsFactors = F) %>%
       dplyr::mutate(ROW_ID=NULL, ROW_VERSION=NULL)
       ,
-    by=c('sample_barcode'='sample_barcode'))
+    by=c('sample_barcode'='sample_barcode')) %>%
+  dplyr::mutate(condition = ifelse(resection == "TP","Primary","NotPrimary")) %>%
+  dplyr::mutate(condition = factor(condition, levels = c("Primary","NotPrimary") )) %>%
+  dplyr::filter(idh_status == "IDHwt") # exclude the three IDH mutants according to Synapse WGS/WES VCF files
 
 
+# exclude samples from patients that had a no grade IV tumor
+no.grave.iv <- glass.gbm.rnaseq.metadata %>%
+  dplyr::filter(grade %in% c('II','III')) %>%
+  dplyr::pull(pid)
+
+glass.gbm.rnaseq.metadata <- glass.gbm.rnaseq.metadata %>%
+  dplyr::filter(pid %in% no.grave.iv == F )
 
 
 stopifnot(!is.na(glass.gbm.rnaseq.metadata$GBM.transcriptional.subtype.Synapse))
@@ -146,12 +156,13 @@ stopifnot(!is.na(glass.gbm.rnaseq.metadata$GBM.transcriptional.subtype.Synapse))
 
 
 
-
-# exclude IDH mutants ----
+# select only those that are eligible for the study ----
 
 glass.gbm.rnaseq.expression <- glass.gbm.rnaseq.expression %>%
-  dplyr::select( glass.gbm.rnaseq.metadata %>% dplyr::filter( pid %in% 
-                                                                (glass.gbm.rnaseq.metadata %>% dplyr::filter(who_classification != "Glioblastoma, IDH-wildtype") %>% pull(pid)) == F) %>% pull(sid) )
+  dplyr::select(glass.gbm.rnaseq.metadata$sid)
+
+
+stopifnot(colnames(glass.gbm.rnaseq.expression) %in% glass.gbm.rnaseq.metadata$sid)
 
 
 
@@ -197,6 +208,26 @@ glass.gbm.rnaseq.expression.vst <- DESeq2::DESeqDataSetFromMatrix(glass.gbm.rnas
 glass.gbm.rnaseq.expression.vst <- SummarizedExperiment::assay(DESeq2::vst(glass.gbm.rnaseq.expression.vst, blind=F))
 rm(cond)
 
+
+
+
+# Add TPC to metadata ----
+
+glass.gbm.rnaseq.metadata <- glass.gbm.rnaseq.metadata %>%
+  dplyr::mutate(pid.tmp = gsub("^([^-]+-[^-]+-[^-]+-[^-]+)-.+$","\\1",sid) ) %>%
+  dplyr::left_join(
+  read.table("output/tables/cnv/tumor.percentage.estimate_glass.txt") %>%
+    dplyr::select(c('sample','pct')) %>%
+    dplyr::mutate(pid.tmp = gsub("^([^-]+-[^-]+-[^-]+-[^-]+)-.+$","\\1",sample) ) %>%
+    dplyr::rename(tumour.percentage.dna = pct) ,
+  by = c('pid.tmp' = 'pid.tmp')) %>%
+  dplyr::mutate(pid.tmp = NULL)
+
+stopifnot(!is.na(glass.gbm.rnaseq.metadata$tumour.percentage.dna))
+
+
+
+# Combine table into paired data table ----
 
 
 

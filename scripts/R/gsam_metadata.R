@@ -105,9 +105,9 @@ gsam.rna.metadata <- read.delim("data/gsam/output/tables/gsam_featureCounts_read
   dplyr::mutate(sid =  gsub(".","-", sample,fixed=T) ) %>%
   dplyr::mutate(pid = as.factor( gsub("^(...).*$","\\1", sid) )) %>%
   dplyr::mutate(resection = as.factor(gsub("^...(.).*$","r\\1", sid) )) %>%
-  dplyr::mutate(new.batch=grepl("new", sid)) %>%
-  dplyr::mutate(name.strip = ifelse(new.batch == T ,gsub("-new", "", .$sid, fixed=T),"")) %>%
-  dplyr::mutate(old.batch = sid %in% name.strip) %>%
+  dplyr::mutate(new.batch = grepl("new", sid)) %>%
+  dplyr::mutate(name.strip = ifelse(new.batch == T , gsub("-new", "", sid, fixed=T),"")) %>%
+  dplyr::mutate(old.batch = gsub("-replicate","",sid) %in% name.strip) %>%
   dplyr::mutate(name.strip = NULL) %>%
   dplyr::mutate(batch = dplyr::case_when ((old.batch == T & new.batch == F) ~ "old" , (old.batch == F & new.batch == T) ~ "new" , (old.batch == F & new.batch == F) ~ "single" )) %>%
   dplyr::mutate(batch = as.factor(batch)) %>%
@@ -397,8 +397,12 @@ rm(tmp)
 ## NMF stats ----
 
 
+gsam.rna.metadata[1:3,]
+
+
 gsam.rna.metadata <- gsam.rna.metadata %>%
-  dplyr::left_join(read.table("data/gsam/output/tables/gsam_nmf_lda_data.txt"), by=c('sid' = 'sid'))
+  dplyr::left_join(read.table("data/gsam/output/tables/gsam_nmf_lda_data.txt") %>%
+                     dplyr::mutate(sid = gsub("^GSAM-","",sid)), by=c('sid' = 'sid'))
 
 stopifnot('NMF.123456.PCA.LDA.class' %in% colnames(gsam.rna.metadata) == F)
   
