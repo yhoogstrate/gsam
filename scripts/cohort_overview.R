@@ -1,6 +1,11 @@
 #!/usr/bin/env R
 
+
+# load libs ----
+
+
 library(ggplot2)
+
 
 # load data ----
 
@@ -50,7 +55,7 @@ plt.expanded <- data.frame(pid = unique(plt.ids$pid) ) %>%
   dplyr::left_join(gsam.rna.metadata %>% dplyr::filter(sid %in% plt.ids$sid & resection == "r1") %>% dplyr::select(c('pid','NMF.123456.PCA.SVM.class')) %>% dplyr::rename(R1.rna.subtype = NMF.123456.PCA.SVM.class ),  by = c('pid' = 'pid') ) %>%
   dplyr::left_join(gsam.rna.metadata %>% dplyr::filter(sid %in% plt.ids$sid & resection == "r2") %>% dplyr::select(c('pid','NMF.123456.PCA.SVM.class')) %>% dplyr::rename(R2.rna.subtype = NMF.123456.PCA.SVM.class ),  by = c('pid' = 'pid') ) %>%
   dplyr::left_join(gsam.rna.metadata %>% dplyr::filter(sid %in% plt.ids$sid & resection == "r1") %>% dplyr::select(c('pid','pat.with.IDH')) %>% dplyr::rename(patient.idh.status = pat.with.IDH ),  by = c('pid' = 'pid') ) %>%
-  dplyr::mutate(patient.idh.status = ifelse(patient.idh.status == "TRUE", "+", "-") ) %>%
+  dplyr::mutate(patient.idh.status = ifelse(patient.idh.status == "TRUE", "-", "+") ) %>%
   dplyr::left_join(gsam.rna.metadata %>% dplyr::filter(sid %in% plt.ids$sid &resection == "r1") %>% dplyr::select(c('pid','tumour.percentage.dna')) %>% dplyr::rename(R1.tumour.percentage.dna = tumour.percentage.dna )
     ,  by = c('pid' = 'pid')) %>%
   dplyr::left_join(
@@ -77,7 +82,7 @@ plt <- bind_rows(
     plt.expanded %>% dplyr::select(c('pid', 'R2.status')) %>% dplyr::rename(col = R2.status) %>% dplyr::mutate(y = "RNA-Seq sample R2") ,
     plt.expanded %>% dplyr::select(c('pid', 'R1.rna.subtype')) %>% dplyr::rename(col = R1.rna.subtype) %>% dplyr::mutate(y = "Transcriptional subtype R1") ,
     plt.expanded %>% dplyr::select(c('pid', 'R2.rna.subtype')) %>% dplyr::rename(col = R2.rna.subtype) %>% dplyr::mutate(y = "Transcriptional subtype R2") ,
-    plt.expanded %>% dplyr::select(c('pid', 'patient.idh.status')) %>% dplyr::rename(col = patient.idh.status) %>% dplyr::mutate(y = "Patient IDH status") ,
+    plt.expanded %>% dplyr::select(c('pid', 'patient.idh.status')) %>% dplyr::rename(col = patient.idh.status) %>% dplyr::mutate(y = "IDH wildtype") ,
     plt.expanded %>% dplyr::select(c('pid', 'R1.tumour.percentage.status')) %>% dplyr::rename(col = R1.tumour.percentage.status) %>% dplyr::mutate(y = "Tumor cells >= 15% (WES) R1") ,
     plt.expanded %>% dplyr::select(c('pid', 'R2.tumour.percentage.status')) %>% dplyr::rename(col = R2.tumour.percentage.status) %>% dplyr::mutate(y = "Tumor cells >= 15% (WES) R2") ,
     
@@ -100,6 +105,14 @@ ggplot(plt, aes(x = reorder(pid, order), y = y, fill=col)) +
 ggsave("output/figures/cohort_overview_gsam.png",width=11,height=3)
 
 
+# find num paired samples
+plt.expanded %>%
+  dplyr::filter(patient.idh.status != "-" ) %>%
+  dplyr::filter( !is.na(R1) ) %>%
+  dplyr::filter( !is.na(R2) ) %>%
+  dim
+
+
 
 # GLASS ----
 
@@ -109,7 +122,8 @@ c1  <- c("GLSS-SM-R068-TP-01R-RNA-0UPMYO", "GLSS-SM-R068-R1-01R-RNA-7I5H9P",
    "GLSS-SM-R099-R1-01R-RNA-MNTPMI", 
    "GLSS-SM-R100-TP-01R-RNA-EUI7AZ", "GLSS-SM-R100-R1-01R-RNA-46UW5U")
 
-c2 <- gsub(".","-",colnames(read.table("data/gsam/data/GLASS_GBM_R1-R2/glass_transcript_counts.txt",sep="\t",header=T,stringsAsFactors = F) %>% dplyr::mutate("target_id"=NULL,"length"=NULL) ) ,fixed=T)
+c2 <- gsub(".","-",colnames(read.table("data/gsam/data/GLASS_GBM_R1-R2/glass_transcript_counts.txt",sep="\t",header=T,stringsAsFactors = F) %>%
+                              dplyr::mutate("target_id"=NULL,"length"=NULL) ) ,fixed=T)
 c3 <- glass.gbm.rnaseq.metadata$sid
 
 
@@ -118,7 +132,7 @@ plt.ids <- data.frame( sid = unique(sort(c(c1,c2,c3))) ) %>%
   dplyr::mutate(pid = as.factor(gsub("^([^\\-]+.[^\\-]+.[^\\-]+).*$","\\1",sid))) %>%
   dplyr::mutate(resection = as.factor(gsub("^[^\\-]+.[^\\-]+.[^\\-]+.([^\\-]+).*$","\\1",sid)))
 stopifnot(duplicated(plt.ids$sid) == F)
-
+coho
 
 
 plt.expanded <- data.frame(pid = unique(plt.ids$pid) ) %>%
@@ -141,7 +155,7 @@ plt.expanded <- data.frame(pid = unique(plt.ids$pid) ) %>%
   dplyr::mutate(Grade.IV = pid %in% (glass.gbm.rnaseq.metadata %>% dplyr::filter(grade == "IV") %>% dplyr::pull(pid)) ) %>%
   dplyr::mutate(R1.R2.Grade.IV = ifelse(Grade.IV & !Grade.III & !Grade.II,"+","-")) %>%
   dplyr::mutate(R1.R2.Grade.IV.order = ifelse(Grade.IV & !Grade.III & !Grade.II,1,2)) %>%
-  dplyr::left_join(glass.metadata.all %>%
+  dplyr::left_join(glass.gbm.rnaseq.metadata %>%
       dplyr::filter(treatment_tmz %in% c('t','f') ) %>%
       dplyr::select(c("case_barcode","treatment_tmz")) %>%
       dplyr::distinct() ,  by=c('pid'='case_barcode')) %>%
@@ -172,6 +186,12 @@ plt <- bind_rows(
   dplyr::left_join(plt.expanded %>% dplyr::select('pid','order'), by=c('pid'='pid')) 
 
 
+# num matching pairs
+plt.expanded %>%
+  #dplyr::filter(!is.na(TP)) %>%
+  #dplyr::filter(!is.na(R1) | !is.na(R2) | !is.na(R3) ) %>%
+  dim()
+
 
 
 ggplot(plt, aes(x = reorder(pid, order), y = y, fill=col)) +
@@ -180,6 +200,8 @@ ggplot(plt, aes(x = reorder(pid, order), y = y, fill=col)) +
   job_gg_theme + 
   theme(axis.text.x = element_text(angle = 90, size = 5)) + 
   labs(y=NULL, x=NULL)
+
+
 
 
 
