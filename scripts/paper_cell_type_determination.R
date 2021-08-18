@@ -13,13 +13,16 @@ library(EPIC)
 source("scripts/R/gsam_rna-seq_expression.R")
 source("scripts/R/gsam_metadata.R")
 
+source("scripts/R/youri_gg_theme.R")
+source("scripts/R/job_gg_theme.R")
+
 
 # counts to tpm ----
 # use stricly protein coding genes to avoid biasses by rRNA etc.
 
 
 # [x] read counts
-gsam.rnaseq.expression
+# gsam.rnaseq.expression
 
 # [x] feature / gene lengths
 feature.lengths <- gsam.rnaseq.expression %>% 
@@ -37,7 +40,7 @@ stopifnot(rownames(gsam.rnaseq.expression) == feature.lengths$gid)
 
 # [x] fragment lengths
 fragment.lengths <- data.frame(sid = colnames(gsam.rnaseq.expression)) %>%
-  dplyr::left_join(read.delim("output/tables/picard_insertsizemetrics_combined.txt", header=T, stringsAsFactors = F), by = c('sid'='sample'))
+  dplyr::left_join(read.delim("data/gsam/output/tables/picard_insertsizemetrics_combined.txt", header=T, stringsAsFactors = F), by = c('sid'='sample'))
 
 stopifnot(rownames(gsam.rnaseq.expression) == feature.lengths$sid)
 
@@ -121,9 +124,27 @@ counts.tpm <- counts_to_tpm(gsam.rnaseq.expression , feature.lengths$Length , fr
   tibble::column_to_rownames('gid')
   
 
-# make out ----
+# make outs ----
 
-out <- gsam.patient.metadata %>%
+
+
+out.sample <- gsam.rna.metadata %>%
+  dplyr::select(
+    c(
+      'sid',
+      'pid',
+      'resection',
+      'tumour.percentage.dna' ,
+      'NMF.123456.PCA.SVM.class',
+      'NMF.123456.PCA.SVM.Classical.p',
+      'NMF.123456.PCA.SVM.Proneural.p',
+      'NMF.123456.PCA.SVM.Mesenchymal.p'
+    )
+  ) %>%
+  dplyr::filter(!is.na(tumour.percentage.dna))
+
+
+out.patient <- gsam.patient.metadata %>%
   dplyr::select(c('studyID')) %>%
   dplyr::rename(pid = studyID) %>%
   dplyr::left_join(
@@ -142,6 +163,7 @@ out <- gsam.patient.metadata %>%
 
 
 
+stopifnot( gsam.rnaseq.expression.vst > 1) # log fold changes need log( >=1 / >= 1) 
 
 rbfox3 <- gsam.rnaseq.expression.vst %>%
   as.data.frame() %>%
@@ -151,7 +173,7 @@ rbfox3 <- gsam.rnaseq.expression.vst %>%
   t() %>%
   as.data.frame %>%
   tibble::rownames_to_column('sid') %>%
-  dplyr::rename(RBFOX3 = `ENSG00000167281.19_4|RBFOX3|chr17:77085427-77512230(-)`)
+  dplyr::rename(`RBFOX3 [neur]` = `ENSG00000167281.19_4|RBFOX3|chr17:77085427-77512230(-)`)
 
 
 cd163 <- gsam.rnaseq.expression.vst %>%
@@ -162,119 +184,404 @@ cd163 <- gsam.rnaseq.expression.vst %>%
   t() %>%
   as.data.frame %>%
   tibble::rownames_to_column('sid') %>%
-  dplyr::rename(CD163 = `ENSG00000177575.12_3|CD163|chr12:7623409-7656489(-)`)
+  dplyr::rename(`CD163 [TAM]` = `ENSG00000177575.12_3|CD163|chr12:7623409-7656489(-)`)
+
+
+nos2 <- gsam.rnaseq.expression.vst %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column('gid') %>%
+  dplyr::filter(grepl("ENSG00000007171", gid)) %>% 
+  column_to_rownames('gid') %>%
+  t() %>%
+  as.data.frame %>%
+  tibble::rownames_to_column('sid') %>%
+  dplyr::rename(NOS2 = `ENSG00000007171.17_5|NOS2|chr17:26083792-26127525(-)`)
+
+vav3 <- gsam.rnaseq.expression.vst %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column('gid') %>%
+  dplyr::filter(grepl("ENSG00000134215", gid)) %>% 
+  column_to_rownames('gid') %>%
+  t() %>%
+  as.data.frame %>%
+  tibble::rownames_to_column('sid') %>%
+  dplyr::rename(VAV3 = `ENSG00000134215.16_4|VAV3|chr1:108113783-108507802(-)`)
+
+egfr <- gsam.rnaseq.expression.vst %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column('gid') %>%
+  dplyr::filter(grepl("ENSG00000146648", gid)) %>% 
+  column_to_rownames('gid') %>%
+  t() %>%
+  as.data.frame %>%
+  tibble::rownames_to_column('sid') %>%
+  dplyr::rename(`EGFR [CL]` = `ENSG00000146648.18_5|EGFR|chr7:55086710-55279321(+)`)
+
+egfrviii <- gsam.rnaseq.expression.vst %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column('gid') %>%
+  dplyr::filter(grepl("EGFRvIII", gid)) %>% 
+  column_to_rownames('gid') %>%
+  t() %>%
+  as.data.frame %>%
+  tibble::rownames_to_column('sid')
+
+lox <- gsam.rnaseq.expression.vst %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column('gid') %>%
+  dplyr::filter(grepl("ENSG00000113083", gid)) %>% 
+  column_to_rownames('gid') %>%
+  t() %>%
+  as.data.frame %>%
+  tibble::rownames_to_column('sid') %>%
+  dplyr::rename(`LOX [MES]` = `ENSG00000113083.14_5|LOX|chr5:121398890-121414055(-)`)
+
+erbb3 <- gsam.rnaseq.expression.vst %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column('gid') %>%
+  dplyr::filter(grepl("ENSG00000065361", gid)) %>% 
+  column_to_rownames('gid') %>%
+  t() %>%
+  as.data.frame %>%
+  tibble::rownames_to_column('sid') %>%
+  dplyr::rename(`ERBB3 [PN]` = `ENSG00000065361.15_4|ERBB3|chr12:56470583-56497289(+)`)
+
+tmem144<- gsam.rnaseq.expression.vst %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column('gid') %>%
+  dplyr::filter(grepl("ENSG00000164124", gid)) %>% 
+  column_to_rownames('gid') %>%
+  t() %>%
+  as.data.frame %>%
+  tibble::rownames_to_column('sid') %>%
+  dplyr::rename(`TMEM144 [olig]` = `ENSG00000164124.10_3|TMEM144|chr4:159122756-159176563(+)`)
+
+nostrin<- gsam.rnaseq.expression.vst %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column('gid') %>%
+  dplyr::filter(grepl("ENSG00000163072", gid)) %>% 
+  column_to_rownames('gid') %>%
+  t() %>%
+  as.data.frame %>%
+  tibble::rownames_to_column('sid') %>%
+  dplyr::rename(`NOSTRIN [endo]` = `ENSG00000163072.15_5|NOSTRIN|chr2:169643049-169722024(+)`)
+
+cachd1<- gsam.rnaseq.expression.vst %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column('gid') %>%
+  dplyr::filter(grepl("ENSG00000158966", gid)) %>% 
+  column_to_rownames('gid') %>%
+  t() %>%
+  as.data.frame %>%
+  tibble::rownames_to_column('sid') %>%
+  dplyr::rename(`CACHD1 [astr]` = `ENSG00000158966.15_4|CACHD1|chr1:64935812-65158741(+)`)
 
 
 
-out <- out %>%
-  dplyr::left_join(rbfox3 %>% dplyr::rename(RBFOX3.R1 = RBFOX3), by = c('sid.R1'='sid')) %>%
-  dplyr::left_join(rbfox3 %>% dplyr::rename(RBFOX3.R2 = RBFOX3), by = c('sid.R2'='sid')) %>%
-  dplyr::left_join(cd163 %>% dplyr::rename(CD163.R1 = CD163), by = c('sid.R1'='sid')) %>%
-  dplyr::left_join(cd163 %>% dplyr::rename(CD163.R2 = CD163), by = c('sid.R2'='sid'))
+
+out.patient <- out.patient %>%
+  dplyr::left_join(rbfox3 %>% dplyr::rename(RBFOX3.R1 = `RBFOX3 [neur]`), by = c('sid.R1'='sid')) %>%
+  dplyr::left_join(rbfox3 %>% dplyr::rename(RBFOX3.R2 = `RBFOX3 [neur]`), by = c('sid.R2'='sid')) %>%
+  dplyr::left_join(cd163 %>% dplyr::rename(CD163.R1 = `CD163 [TAM]`), by = c('sid.R1'='sid')) %>%
+  dplyr::left_join(cd163 %>% dplyr::rename(CD163.R2 = `CD163 [TAM]`), by = c('sid.R2'='sid')) %>%
+  dplyr::left_join(nos2 %>% dplyr::rename(NOS2.R1 = NOS2), by = c('sid.R1'='sid')) %>%
+  dplyr::left_join(nos2 %>% dplyr::rename(NOS2.R2 = NOS2), by = c('sid.R2'='sid')) %>%
+  dplyr::left_join(vav3 %>% dplyr::rename(VAV3.R1 = VAV3), by = c('sid.R1'='sid')) %>%
+  dplyr::left_join(vav3 %>% dplyr::rename(VAV3.R2 = VAV3), by = c('sid.R2'='sid')) %>%
+  dplyr::left_join(egfr %>% dplyr::rename(EGFR.R1 = `EGFR [CL]`), by = c('sid.R1'='sid')) %>%
+  dplyr::left_join(egfr %>% dplyr::rename(EGFR.R2 = `EGFR [CL]`), by = c('sid.R2'='sid')) %>%
+  dplyr::left_join(egfrviii %>% dplyr::rename(EGFRvIII.R1 = EGFRvIII), by = c('sid.R1'='sid')) %>%
+  dplyr::left_join(egfrviii %>% dplyr::rename(EGFRvIII.R2 = EGFRvIII), by = c('sid.R2'='sid')) %>%
+  dplyr::left_join(lox %>% dplyr::rename(LOX.R1 = `LOX [MES]`), by = c('sid.R1'='sid')) %>%
+  dplyr::left_join(lox %>% dplyr::rename(LOX.R2 = `LOX [MES]`), by = c('sid.R2'='sid')) %>%
+  dplyr::left_join(erbb3 %>% dplyr::rename(ERBB3.R1 = `ERBB3 [PN]`), by = c('sid.R1'='sid')) %>%
+  dplyr::left_join(erbb3 %>% dplyr::rename(ERBB3.R2 = `ERBB3 [PN]`), by = c('sid.R2'='sid')) %>%
+  
+  dplyr::left_join(tmem144 %>% dplyr::rename(TMEM144.R1 = `TMEM144 [olig]`), by = c('sid.R1'='sid')) %>%
+  dplyr::left_join(tmem144 %>% dplyr::rename(TMEM144.R2 = `TMEM144 [olig]`), by = c('sid.R2'='sid')) %>%
+  
+  dplyr::left_join(nostrin %>% dplyr::rename(NOSTRIN.R1 = `NOSTRIN [endo]`), by = c('sid.R1'='sid')) %>%
+  dplyr::left_join(nostrin %>% dplyr::rename(NOSTRIN.R2 = `NOSTRIN [endo]`), by = c('sid.R2'='sid')) %>%
+  
+  dplyr::left_join(cachd1 %>% dplyr::rename(CACHD1.R1 = `CACHD1 [astr]`), by = c('sid.R1'='sid')) %>%
+  dplyr::left_join(cachd1 %>% dplyr::rename(CACHD1.R2 = `CACHD1 [astr]`), by = c('sid.R2'='sid')) %>%
+  
+  
+  dplyr::left_join(
+    gsam.rna.metadata %>%
+      dplyr::select(c('sid','tumour.percentage.dna')) %>%
+      dplyr::rename(tumour.percentage.dna.R1 = tumour.percentage.dna)
+    ,by = c('sid.R1'='sid')) %>% 
+  dplyr::left_join(
+    gsam.rna.metadata %>%
+      dplyr::select(c('sid','tumour.percentage.dna')) %>%
+      dplyr::rename(tumour.percentage.dna.R2 = tumour.percentage.dna)
+    ,by = c('sid.R2'='sid')) %>%
+  dplyr::filter(!is.na(tumour.percentage.dna.R1) & !is.na(tumour.percentage.dna.R2) ) %>%
+  dplyr::mutate(tumour.percentage.dna.log.odds = log(tumour.percentage.dna.R2 / tumour.percentage.dna.R1 )) %>%
+  
+  dplyr::mutate(`RBFOX3.lfc [neur]` = log(RBFOX3.R2 / RBFOX3.R1 )) %>%
+  dplyr::mutate(`CD163.lfc [TAM]` =  log(CD163.R2 / CD163.R1 )) %>%
+  dplyr::mutate(`NOS2.lfc` =  log(NOS2.R2 / NOS2.R1 )) %>%
+  dplyr::mutate(`VAV3.lfc` =  log(VAV3.R2 / VAV3.R1 )) %>%
+  dplyr::mutate(`EGFR.lfc [CL]` =  log(EGFR.R2 / EGFR.R1 )) %>%
+  dplyr::mutate(`EGFRvIII.lfc` =  log(EGFRvIII.R2 / EGFRvIII.R1 )) %>%
+  dplyr::mutate(`LOX.lfc [MES]` =  log(LOX.R2 / LOX.R1 )) %>%
+  dplyr::mutate(`ERBB3.lfc [PN]` =  log(ERBB3.R2 / ERBB3.R1 ))  %>%
+  dplyr::mutate(`TMEM144.lfc [olig]` =  log(TMEM144.R2 / TMEM144.R1 ))  %>%
+  dplyr::mutate(`NOSTRIN.lfc [endo]` =  log(NOSTRIN.R2 / NOSTRIN.R1 ))  %>%
+  dplyr::mutate(`CACHD1.lfc [astr]` =  log(CACHD1.R2 / CACHD1.R1 )) 
 
 
 
 
+stopifnot(is.na(out.patient$tumour.percentage.dna.log.odds) == F)
+
+
+out.sample <- out.sample %>%
+  dplyr::left_join(rbfox3 , by = c('sid'='sid')) %>%
+  dplyr::left_join(cd163 , by = c('sid'='sid')) %>%
+  dplyr::left_join(nos2, by = c('sid'='sid')) %>%
+  dplyr::left_join(vav3 , by = c('sid'='sid')) %>% 
+  dplyr::left_join(egfr, by = c('sid'='sid')) %>%
+  dplyr::left_join(egfrviii , by = c('sid'='sid')) %>%
+  dplyr::left_join(lox , by = c('sid'='sid')) %>%
+  dplyr::left_join(erbb3, by = c('sid'='sid')) %>%
+  dplyr::left_join(tmem144, by = c('sid'='sid')) %>%
+  dplyr::left_join(nostrin, by = c('sid'='sid')) %>%
+  dplyr::left_join(cachd1, by = c('sid'='sid')) %>%
+  dplyr::filter(!is.na(NOS2)) 
+
+
+
+  
 # epic ----
 
 
 
+if(file.exists('tmp/out.epic.Rds')) {
+  
+  out.epic <- readRDS(file ='tmp/out.epic.Rds')
+  print("Reading EPIC data from cache")
+  
+} else {
+  
+  out.epic <- EPIC(bulk = counts.tpm)
+  out.epic$mRNAProportions <- as.data.frame(out.epic$mRNAProportions) %>%
+    `colnames<-`(paste0('EPIC.',colnames(.))) %>%
+    tibble::rownames_to_column('sid')
+  
+  saveRDS(out.epic, file = "tmp/out.epic.Rds")
+  
+}
 
-out.epic <- EPIC(bulk = counts.tpm)
-out.epic$mRNAProportions <- as.data.frame(out.epic$mRNAProportions) %>%
-  `colnames<-`(paste0('EPIC.',colnames(.))) %>%
-  tibble::rownames_to_column('sid')
 
 
-out <- out %>%
+out.patient <- out.patient %>%
   dplyr::left_join(out.epic$mRNAProportions %>% `colnames<-`(paste0(colnames(.),'.R1')) , by = c('sid.R1'='sid.R1')) %>%
   dplyr::left_join(out.epic$mRNAProportions %>% `colnames<-`(paste0(colnames(.),'.R2')) , by = c('sid.R2'='sid.R2'))
 
+out.patient <- out.patient %>%
+  dplyr::mutate( `EPIC.Bcells.log.odds` = log( ( `EPIC.Bcells.R2` + 1 ) /  ( `EPIC.Bcells.R1` + 1 ))) %>%
+  dplyr::mutate( `EPIC.CAFs.log.odds` = log( ( `EPIC.CAFs.R2` + 1 ) /  ( `EPIC.CAFs.R1` + 1 ))) %>%
+  dplyr::mutate( `EPIC.CD4_Tcells.log.odds` = log( ( `EPIC.CD4_Tcells.R2` + 1 ) /  ( `EPIC.CD4_Tcells.R1` + 1 ))) %>%
+  dplyr::mutate( `EPIC.CD8_Tcells.log.odds` = log( ( `EPIC.CD8_Tcells.R2` + 1 ) /  ( `EPIC.CD8_Tcells.R1` + 1 ))) %>%
+  dplyr::mutate( `EPIC.Endothelial.log.odds` = log( ( `EPIC.Endothelial.R2` + 1 ) /  ( `EPIC.Endothelial.R1` + 1 ))) %>%
+  dplyr::mutate( `EPIC.Macrophages.log.odds` = log( ( `EPIC.Macrophages.R2` + 1 ) /  ( `EPIC.Macrophages.R1` + 1 ))) %>%
+  dplyr::mutate( `EPIC.NKcells.log.odds` = log( ( `EPIC.NKcells.R2` + 1 ) /  ( `EPIC.NKcells.R1` + 1 ))) %>%
+  dplyr::mutate( `EPIC.otherCells.log.odds` = log( ( `EPIC.otherCells.R2` + 1 ) /  ( `EPIC.otherCells.R1` + 1 )))
 
-# @todo volgende:
-out.epic.paired <- dplyr::inner_join(out.epic.r1, out.epic.r2, by=c('pid'='pid'))  %>%
-  #dplyr::mutate(Macrophages.log.odds = log(Macrophages.r2) - log(Macrophages.r1) ) %>%
-  #dplyr::mutate(Macrophages.log.odds = -log( log(Macrophages.r2) / log(Macrophages.r1) )) %>% 
-  #dplyr::mutate(tpc.log.odds =         log( tumour.percentage.dna.r2 / tumour.percentage.dna.r1)) %>%
-  dplyr::mutate(Bcells.log.odds =      -log( log(Bcells.r2) / log(Bcells.r1) )) %>% 
-  dplyr::mutate(CAFs.log.odds =        -log( log(CAFs.r2) / log(CAFs.r1) )) %>% 
-  dplyr::mutate(CD4_Tcells.log.odds =  -log( log(CD4_Tcells.r2) / log(CD4_Tcells.r1) )) %>% 
-  dplyr::mutate(CD8_Tcells.log.odds =  -log( log(CD8_Tcells.r2) / log(CD8_Tcells.r1) )) %>% 
-  dplyr::mutate(Endothelial.log.odds = -log( log(Endothelial.r2) / log(Endothelial.r1) )) %>% 
-  dplyr::mutate(NKcells.log.odds =     -log( log(NKcells.r2) / log(NKcells.r1) )) %>% 
-  dplyr::mutate(otherCells.log.odds =  -log( log(otherCells.r2) / log(otherCells.r1) )) %>%
-  dplyr::mutate(Macrophages.log.odds =  log(Macrophages.r2 / Macrophages.r1)) %>% 
-  dplyr::mutate(tpc.log.odds =          tumour.percentage.dna.r2 - tumour.percentage.dna.r1) %>%
-  dplyr::filter(!is.na(tpc.log.odds))
+  
+
+
+out.sample <- out.sample %>%
+  dplyr::left_join( out.epic$mRNAProportions , by=c('sid' = 'sid') )
+
+
+
+
+rm(out.epic)
 
 
 
 # quantiseq ----
 
-# https://icbi.i-med.ac.at/software/quantiseq/doc/
+## results are not as good as EPICs [https://doi.org/10.1093/bioinformatics/btz363]
+## discrepancies w/ EPIC, requiring to chooose one
+# 
+# 
+# 
+# if (file.exists('tmp/out.quantiseq.Rds') &
+#     file.exists('tmp/data.quantiseq.Rds')) {
+#   data.quantiseq <- readRDS(file = 'tmp/data.quantiseq.Rds')
+#   out.quantiseq <- readRDS(file = 'tmp/out.quantiseq.Rds')
+#   print("Reading QUANTISEQ data from cache")
+#   
+# } else {
+#   # https://icbi.i-med.ac.at/software/quantiseq/doc/
+#   data.quantiseq <- immunedeconv::deconvolute(
+#     counts.tpm ,
+#     method = 'quantiseq',
+#     tumor = T,
+#     scale_mrna = T
+#   )
+#   out.quantiseq <- data.quantiseq %>%
+#     as.data.frame() %>%
+#     tibble::column_to_rownames('cell_type') %>%
+#     t() %>%
+#     as.data.frame() %>%
+#     `colnames<-`(paste0('QS.', colnames(.))) %>%
+#     #`colnames<-`(make.names(colnames(.))) %>%
+#     `colnames<-`(gsub(' ', '.', colnames(.))) %>%
+#     tibble::rownames_to_column('sid')
+#   
+#   saveRDS(data.quantiseq, file = "tmp/data.quantiseq.Rds")
+#   saveRDS(out.quantiseq, file = "tmp/out.quantiseq.Rds")
+# }
+# 
+# 
+# 
+# 
+# out.patient <- out.patient %>%
+#   dplyr::left_join(out.quantiseq %>% `colnames<-`(paste0(colnames(.), '.R1')) ,
+#                    by = c('sid.R1' = 'sid.R1')) %>%
+#   dplyr::left_join(out.quantiseq %>% `colnames<-`(paste0(colnames(.), '.R2')) ,
+#                    by = c('sid.R2' = 'sid.R2')) %>%
+#   `colnames<-`(gsub(' ', '.', colnames(.)))
+# 
+# out.patient <- out.patient %>%
+#   dplyr::mutate(`QS.B.cell.log.odds` = log((`QS.B.cell.R2` + 1) /  (`QS.B.cell.R1` + 1))) %>%
+#   
+#   #dplyr::mutate( `QS.Macrophage.M1.log.odds` = log( ( `QS.Macrophage.M1.R2` + 1 ) /  ( `QS.Macrophage.M1.R1` + 1 ))) %>%
+#   #dplyr::mutate( `QS.Macrophage.M2.log.odds` = log( ( `QS.Macrophage.M2.R2` + 1 ) /  ( `QS.Macrophage.M2.R1` + 1 ))) %>%
+#   
+#   dplyr::mutate(`QS.Macrophage.M1.log.odds` =  (`QS.Macrophage.M1.R2` - `QS.Macrophage.M1.R1`)) %>%
+#   dplyr::mutate(`QS.Macrophage.M2.log.odds` =  (`QS.Macrophage.M2.R2` - `QS.Macrophage.M2.R1`)) %>%
+#   
+#   dplyr::mutate(`QS.Monocyte.log.odds` = log((`QS.Monocyte.R2` + 1) /  (`QS.Monocyte.R1` + 1))) %>%
+#   dplyr::mutate(`QS.Neutrophil.log.odds` = log((`QS.Neutrophil.R2` + 1) /  (`QS.Neutrophil.R1` + 1))) %>%
+#   dplyr::mutate(`QS.NK.cell.log.odds` = log((`QS.NK.cell.R2` + 1) /  (`QS.NK.cell.R1` + 1))) %>%
+#   dplyr::mutate(`QS.T.cell.CD4+.(non-regulatory).log.odds` = log(
+#     (`QS.T.cell.CD4+.(non-regulatory).R2` + 1) /  (`QS.T.cell.CD4+.(non-regulatory).R1` + 1)
+#   )) %>%
+#   dplyr::mutate(`QS.T.cell.CD8+.log.odds` = log((`QS.T.cell.CD8+.R2` + 1) /  (`QS.T.cell.CD8+.R1` + 1))) %>%
+#   dplyr::mutate(`QS.T.cell.regulatory.(Tregs).log.odds` = log(
+#     (`QS.T.cell.regulatory.(Tregs).R2` + 1) /  (`QS.T.cell.regulatory.(Tregs).R1` + 1)
+#   )) %>%
+#   dplyr::mutate(`QS.Myeloid.dendritic.cell.log.odds` = log(
+#     (`QS.Myeloid.dendritic.cell.R2` + 1) /  (`QS.Myeloid.dendritic.cell.R1` + 1)
+#   )) %>%
+#   dplyr::mutate(`QS.uncharacterized.cell.log.odds` = log(
+#     (`QS.uncharacterized.cell.R2` + 1) /  (`QS.uncharacterized.cell.R1` + 1)
+#   ))
+# 
+# 
+# 
+# 
+# 
+# out.sample <- out.sample %>%
+#   dplyr::left_join(out.quantiseq , by = c('sid' = 'sid'))
+# 
+# 
+# 
+# 
+# rm(out.quantiseq)
 
 
-data.quantiseq <- immunedeconv::deconvolute(counts.tpm ,
-                                            method = 'quantiseq',
-                                            tumor = T,
-                                            scale_mrna = T)
-out.quantiseq <- data.quantiseq %>% 
-  as.data.frame() %>%
-  tibble::column_to_rownames('cell_type') %>%
-  t() %>%
-  as.data.frame() %>%
-  `colnames<-`(paste0('QS.',colnames(.))) %>%
-  tibble::rownames_to_column('sid')
 
 
-out <- out %>%
-  dplyr::left_join(out.quantiseq %>% `colnames<-`(paste0(colnames(.),'.R1')) , by = c('sid.R1'='sid.R1')) %>%
-  dplyr::left_join(out.quantiseq %>% `colnames<-`(paste0(colnames(.),'.R2')) , by = c('sid.R2'='sid.R2'))
-
-
-# todo
-
-out.paired <- dplyr::inner_join(out.r1, out.r2, by=c('pid'='pid'))  %>%
-  #dplyr::mutate(Macrophages.log.odds.2 =  Macrophages.r2 - Macrophages.r1 ) %>% 
-  
-  dplyr::mutate(Bcells.log.odds =      log(Bcells.r2 / Bcells.r1)) %>% 
-  dplyr::mutate(CAFs.log.odds =        log(CAFs.r2 / CAFs.r1)) %>% 
-  dplyr::mutate(CD4_Tcells.log.odds =  log(CD4_Tcells.r2 / CD4_Tcells.r1)) %>% 
-  dplyr::mutate(CD8_Tcells.log.odds =  log(CD8_Tcells.r2 / CD8_Tcells.r1)) %>% 
-  dplyr::mutate(Endothelial.log.odds = log(Endothelial.r2 / Endothelial.r1)) %>% 
-  
-  dplyr::mutate(NKcells.log.odds =     log(NKcells.r2 / NKcells.r1)) %>% 
-  dplyr::mutate(otherCells.log.odds =  log(otherCells.r2 / otherCells.r1)) %>%
-  
-  dplyr::mutate(RBFOX3.log.odds =      log( RBFOX3.r2 / RBFOX3.r1 )) %>%
-  dplyr::mutate(CD163.log.odds =       log( CD163.r2 / CD163.r1 )) %>%
-  
-  dplyr::mutate(Macrophages.log.odds.1 =  log(Macrophages.r2 / Macrophages.r1 )) %>% 
-  #dplyr::mutate(tpc.log.odds.1 =         log( tumour.percentage.dna.r2 / tumour.percentage.dna.r1)) %>%
-  dplyr::mutate(tpc.log.odds.2 =          tumour.percentage.dna.r2 - tumour.percentage.dna.r1) %>%
-  dplyr::filter(!is.na(tpc.log.odds.2) & pid != 'ECD')
-
-
-# todo make checks on NA's and duplicate id's
-
-
-# @ done @ make plots
-
-# & pid != 'ECD'
-
-rm(out.epic, out.epic.r1, out.epic.r2)  
-
-
-out %>% dplyr::left_join(out.epic.paired , by = c('pid'='pid') )
+# Additional changes  ----
 
 
 
-corrplot::corrplot(
-  cor(
-    out.epic.paired %>%
-      dplyr::filter(!is.na(tpc.log.odds)) %>%
-      dplyr::select(contains("log.odds")) )
-)
+
+
+
+out.patient <- out.patient %>%  
+  dplyr::filter(pid != 'ECD') %>% # excessive outlier, R1 or R2 RNA odd?
+  dplyr::left_join(
+    gsam.rna.metadata %>%
+      dplyr::filter(resection == 'r1') %>%
+      dplyr::select(c('pid','NMF.123456.PCA.SVM.class', 'NMF.123456.PCA.SVM.Classical.p','NMF.123456.PCA.SVM.Proneural.p','NMF.123456.PCA.SVM.Mesenchymal.p')) %>%
+      dplyr::filter(!is.na(NMF.123456.PCA.SVM.class) ) %>%
+      dplyr::rename(NMF.123456.PCA.SVM.class.R1 = NMF.123456.PCA.SVM.class) %>%
+      dplyr::rename(NMF.123456.PCA.SVM.Classical.p.R1 = NMF.123456.PCA.SVM.Classical.p) %>%
+      dplyr::rename(NMF.123456.PCA.SVM.Proneural.p.R1 = NMF.123456.PCA.SVM.Proneural.p) %>%
+      dplyr::rename(NMF.123456.PCA.SVM.Mesenchymal.p.R1 = NMF.123456.PCA.SVM.Mesenchymal.p)
+    , by=c('pid'='pid')) %>%
+  dplyr::left_join(
+    gsam.rna.metadata %>%
+      dplyr::filter(resection == 'r2') %>%
+      dplyr::select(c('pid','NMF.123456.PCA.SVM.class', 'NMF.123456.PCA.SVM.Classical.p','NMF.123456.PCA.SVM.Proneural.p','NMF.123456.PCA.SVM.Mesenchymal.p')) %>%
+      dplyr::filter(!is.na(NMF.123456.PCA.SVM.class) ) %>%
+      dplyr::rename(NMF.123456.PCA.SVM.class.R2 = NMF.123456.PCA.SVM.class) %>%
+      dplyr::rename(NMF.123456.PCA.SVM.Classical.p.R2 = NMF.123456.PCA.SVM.Classical.p) %>%
+      dplyr::rename(NMF.123456.PCA.SVM.Proneural.p.R2 = NMF.123456.PCA.SVM.Proneural.p) %>%
+      dplyr::rename(NMF.123456.PCA.SVM.Mesenchymal.p.R2 = NMF.123456.PCA.SVM.Mesenchymal.p)
+    , by=c('pid'='pid')) %>%
+  dplyr::mutate(NMF.123456.PCA.SVM.Classical.p.log.odds = log( (NMF.123456.PCA.SVM.Classical.p.R2+1) / (NMF.123456.PCA.SVM.Classical.p.R1+1) )) %>%
+  dplyr::mutate(NMF.123456.PCA.SVM.Mesenchymal.p.log.odds = log( (NMF.123456.PCA.SVM.Mesenchymal.p.R2+1) / (NMF.123456.PCA.SVM.Mesenchymal.p.R1+1) )) %>%
+  dplyr::mutate(NMF.123456.PCA.SVM.Proneural.p.log.odds = log( (NMF.123456.PCA.SVM.Proneural.p.R2+1) / (NMF.123456.PCA.SVM.Proneural.p.R1+1 )))
+  #dplyr::mutate(NMF.123456.PCA.SVM.Classical.p.log.odds2 = NMF.123456.PCA.SVM.Classical.p.R2 - NMF.123456.PCA.SVM.Classical.p.R1 ) %>%
+  #dplyr::mutate(NMF.123456.PCA.SVM.Mesenchymal.p.log.odds2 = NMF.123456.PCA.SVM.Mesenchymal.p.R2 - NMF.123456.PCA.SVM.Mesenchymal.p.R1 ) %>%
+  #dplyr::mutate(NMF.123456.PCA.SVM.Proneural.p.log.odds2 = NMF.123456.PCA.SVM.Proneural.p.R2 - NMF.123456.PCA.SVM.Proneural.p.R1 )
+
+
+
+
+
+
+
+# plots ----
+
+## 1: corplot per sample ----
+
+
+
+plt <- out.sample %>%
+  dplyr::rename(`--- [   NMF.SVM.Classical.p   ] ---` = NMF.123456.PCA.SVM.Classical.p) %>%
+  dplyr::rename(`--- [   NMF.SVM.Mesenchymal.p   ] ---` = NMF.123456.PCA.SVM.Mesenchymal.p) %>%
+  dplyr::rename(`--- [   NMF.SVM.Proneural.p   ] ---` = NMF.123456.PCA.SVM.Proneural.p) %>%
+  #dplyr::filter(resection == 'r1') %>%
+  dplyr::select(-c('pid','resection','NMF.123456.PCA.SVM.class')) %>%
+  tibble::column_to_rownames('sid') %>%
+  cor(   )
+  #as.data.frame %>%
+  #dplyr::select(contains("EPIC")) %>%
+  #tibble::rownames_to_column('type') %>%
+  #dplyr::filter(grepl("^QS", type)) %>% 
+  #tibble::column_to_rownames('type') %>%
+  #as.matrix
+
+
+corrplot::corrplot(plt, order='hclust' )
+
+
+
+
+
+
+## 2: corrplot per patient (change/time) ----
+
+
+
+plt <- out.patient %>%
+  dplyr::rename(SVM.CL.p.log.odds = NMF.123456.PCA.SVM.Classical.p.log.odds) %>%
+  dplyr::rename(SVM.MES.p.log.odds = NMF.123456.PCA.SVM.Mesenchymal.p.log.odds) %>%
+  dplyr::rename(SVM.PN.p.log.odds = NMF.123456.PCA.SVM.Proneural.p.log.odds) %>%
+  #dplyr::filter(NMF.123456.PCA.SVM.class.R1 == "Mesenchymal") %>%
+  tibble::column_to_rownames('pid') %>%
+  dplyr::select(contains('log.odds')) %>%
+  `colnames<-`(gsub('.log.odds','.lfc',colnames(.))) 
+
+
+corrplot::corrplot(  cor( plt , method="pearson" ) , order="hclust")
+#corrplot::corrplot(  cor( plt ) %>% `colnames<-`(NULL) )
+
+
+
+
+
 
 
 plot(out.paired$tpc.log.odds,  out.paired$Macrophages.log.odds)#, ylim = c(2.8,-2)) 
@@ -383,5 +690,232 @@ plot(out.paired$tpc.log.odds.2 ,  out.paired$Macrophages.log.odds.1)#, ylim = c(
 abline(h=0)
 abline(v=0)
 
+
+
+
+
+## 3: per patient stats ----
+
+
+
+
+
+
+plt <- out %>%
+  dplyr::mutate(order = match(1:nrow(.), order(`tumour.percentage.dna.log.odds`))) 
+
+
+
+plt <- out %>%
+  dplyr::mutate(order = match(1:nrow(.), order(`QS.Macrophage.M2.log.odds`)))
+
+
+
+plt <- out %>%
+  dplyr::mutate(order = match(1:nrow(.), order(`RBFOX3.log.odds`)))
+
+
+
+
+plt <- out %>%
+  dplyr::mutate(order = match(1:nrow(.), order(2 * `VAV3.log.odds` + `NOS2.log.odds`)))
+
+
+
+
+
+p1 <- ggplot(plt, aes(x =  reorder(pid, order), y = `tumour.percentage.dna.log.odds` ))  +
+  geom_bar(stat="identity") + labs(x=NULL)
+
+p2 <- ggplot(plt, aes(x =  reorder(pid, order), y = `CD163.log.odds` ))  +
+  geom_bar(stat="identity") + labs(x=NULL)
+
+p3 <- ggplot(plt, aes(x =  reorder(pid, order), y = `EPIC.Macrophages.log.odds` ))  +
+  geom_bar(stat="identity") + labs(x=NULL)
+
+#p4 <- ggplot(plt, aes(x =  reorder(pid, order), y = `QS.Macrophage.M1.log.odds` ))  +
+#  geom_bar(stat="identity")
+
+p5 <- ggplot(plt, aes(x =  reorder(pid, order), y = `QS.Macrophage.M2.log.odds` ))  +
+  geom_bar(stat="identity") + labs(x=NULL)
+
+p6a <- ggplot(plt, aes(x =  reorder(pid, order), y = `NOS2.log.odds` ))  +
+  geom_bar(stat="identity") + labs(x=NULL)
+p6b <- ggplot(plt, aes(x =  reorder(pid, order), y = `VAV3.log.odds` ))  +
+  geom_bar(stat="identity") + labs(x=NULL)
+
+
+plt.class.R1 <- 
+  rbind(
+    plt %>%
+      dplyr::select(c(pid, order, p.SVM.Classical.R1)) %>%
+      dplyr::mutate(class.R1 = "Classical") %>%
+      dplyr::rename(probability.R1 = p.SVM.Classical.R1),
+    plt %>%
+      dplyr::select(c(pid, order, p.SVM.Proneural.R1)) %>%
+      dplyr::mutate(class.R1 = "Proneural") %>%
+      dplyr::rename(probability.R1 = p.SVM.Proneural.R1) ,
+    plt %>%
+      dplyr::select(c(pid, order, p.SVM.Mesenchymal.R1)) %>%
+      dplyr::mutate(class.R1 = "Mesenchymal") %>%
+      dplyr::rename(probability.R1 = p.SVM.Mesenchymal.R1)
+  )
+
+p7 <- ggplot(plt.class.R1, aes(x =  reorder(pid, order), y = `probability.R1` , fill=class.R1 ))  +
+  geom_bar(stat="identity") + labs(x=NULL)
+p7 <- ggplot(plt, aes(x =  reorder(pid, order), y = 1 , fill=NMF.123456.PCA.SVM.class.R1 ))  +
+  geom_bar(stat="identity") + labs(x=NULL)
+
+
+
+
+plt.class.R2 <- 
+  rbind(
+    plt %>%
+      dplyr::select(c(pid, order, p.SVM.Classical.R2)) %>%
+      dplyr::mutate(class.R2 = "Classical") %>%
+      dplyr::rename(probability.R2 = p.SVM.Classical.R2),
+    plt %>%
+      dplyr::select(c(pid, order, p.SVM.Proneural.R2)) %>%
+      dplyr::mutate(class.R2 = "Proneural") %>%
+      dplyr::rename(probability.R2 = p.SVM.Proneural.R2) ,
+    plt %>%
+      dplyr::select(c(pid, order, p.SVM.Mesenchymal.R2)) %>%
+      dplyr::mutate(class.R2 = "Mesenchymal") %>%
+      dplyr::rename(probability.R2 = p.SVM.Mesenchymal.R2)
+  )
+
+p8 <- ggplot(plt.class.R2, aes(x =  reorder(pid, order), y = `probability.R2` , fill=class.R2 ))  +
+  geom_bar(stat="identity") + labs(x=NULL)
+
+p8 <- ggplot(plt, aes(x =  reorder(pid, order), y = 1 , fill=NMF.123456.PCA.SVM.class.R2 ))  +
+  geom_bar(stat="identity") + labs(x=NULL)
+
+
+
+
+p1 / p2 / p3 / p5 / p7 / p8 / p6a / p6b
+
+
+
+
+
+plot( out$p.SVM.Classical.R1 , out$tumour.percentage.dna.R1 )
+plot( out$p.SVM.Classical.R2 , out$tumour.percentage.dna.R2 )
+
+plot( out$p.SVM.Mesenchymal.R1 , out$tumour.percentage.dna.R1 )
+plot( out$p.SVM.Mesenchymal.R2 , out$tumour.percentage.dna.R2 )
+
+plot( out$p.SVM.Proneural.R1 , out$tumour.percentage.dna.R1 )
+plot( out$p.SVM.Proneural.R2 , out$tumour.percentage.dna.R2 )
+
+
+
+
+plot( out$tumour.percentage.dna.R1  , out$p.SVM.Classical.R1 )
+
+
+corrplot::corrplot(
+  out %>%
+    #tibble::rownames_to_column('type') %>%
+    dplyr::mutate(`QS.T.cell.CD8+.R1` = NULL) %>%
+    #dplyr::filter(NMF.123456.PCA.SVM.class.R1 == "Classical") %>%
+    dplyr::select(- c( NMF.123456.PCA.SVM.class.R1, NMF.123456.PCA.SVM.class.R2 ,sid.R1  , sid.R2)) %>%
+    dplyr::select(contains("R1")) %>%
+    cor ,
+  order='hclust'
+)
+
+
+corrplot::corrplot(
+  out %>%
+    dplyr::select(- c( NMF.123456.PCA.SVM.class.R1, NMF.123456.PCA.SVM.class.R2 ,sid.R1  , sid.R2)) %>%
+    dplyr::select(contains("R2")) %>%
+    cor ,
+  order="hclust"
+)
+
+
+
+EPIC.Bcells.log.odds # poor corr
+EPIC.CAFs.log.odds # poor corr
+EPIC.CD4_Tcells.log.odds # nice corr !!
+EPIC.CD8_Tcells.log.odds # poor corr
+EPIC.Endothelial.log.odds # some corr !
+EPIC.Macrophages.log.odds # nice corr !!
+EPIC.NKcells.log.odds # poor corr
+EPIC.otherCells.log.odds # some corr ! [tumor cells itself ofc.]
+
+ggplot(out.patient, aes(x = tumour.percentage.dna.log.odds, 
+                        y = EPIC.Macrophages.log.odds
+                        #, col=NMF.123456.PCA.SVM.class.R1
+                        )) +
+  geom_point() +
+  geom_smooth(method="lm")
+
+
+
+plt <- out.sample %>%
+  dplyr::filter(pid %in%  out.patient$pid) %>%
+  dplyr::arrange(pid, resection, sid) %>%
+  dplyr::left_join(out.patient %>% dplyr::select(c(pid, tumour.percentage.dna.log.odds, EPIC.Macrophages.log.odds,EPIC.CD4_Tcells.log.odds)), by=c('pid'='pid')) %>%
+  dplyr::mutate(tumour.percentage.status = ifelse(tumour.percentage.dna.log.odds > 0, "increase", "decrease"))
+
+p1 <- ggplot(plt, aes(x=tumour.percentage.dna, y=EPIC.Macrophages, group=pid, col= tumour.percentage.status)) + 
+  geom_point(data = subset(plt, resection == "r1"), pch=19, cex=1.2, alpha=0.5) +
+  geom_path(  arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.125, "inches")) , alpha = 0.5 ) + 
+  labs(x = "Tumor cell percentage (DNA-seq estimate)",y="EPIC Macrophages score") +
+  xlim(0, 100) +
+  ylim(0, 0.5) +
+  youri_gg_theme
+
+p2 <- ggplot(plt, aes(x=tumour.percentage.dna, y=EPIC.CD4_Tcells, group=pid, col= tumour.percentage.status)) + 
+  geom_point(data = subset(plt, resection == "r1"), pch=19, cex=1.2, alpha=0.5) +
+  geom_path(  arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.125, "inches")) , alpha = 0.5 ) + 
+  labs(x = "Tumor cell percentage (DNA-seq estimate)",y="EPIC CD4 T-cells score") +
+  xlim(0, 100) +
+  ylim(0, 0.5) +
+  youri_gg_theme
+
+
+p1 + p2
+
+
+
+ggsave("output/figures/epic_tumor_percentage_traversal.png", width = 12, height=6)
+
+
+
+plt <- out.sample %>%
+  dplyr::filter(pid %in%  out.patient$pid) %>%
+  dplyr::arrange(pid, resection, sid) %>%
+  dplyr::left_join(out.patient %>% dplyr::select(c(pid, tumour.percentage.dna.log.odds,
+                                                   tumour.percentage.dna.R1,
+                                                   tumour.percentage.dna.R2,
+                                                   EPIC.Macrophages.log.odds,EPIC.CD4_Tcells.log.odds)), by=c('pid'='pid')) %>%
+  dplyr::mutate(tumour.percentage.dna.delta = tumour.percentage.dna.R2 - tumour.percentage.dna.R1 )
+
+plt <- rbind(plt %>% dplyr::mutate(y = tumour.percentage.dna, type="Tumour percentage (DNA estimate)",
+                                   sign = ifelse(tumour.percentage.dna.log.odds > 0, "increase", "decrease")),
+             plt %>% dplyr::mutate(y = EPIC.Macrophages, type="EPIC Macrophages score",
+                                   sign = ifelse(EPIC.Macrophages.log.odds > 0, "increase", "decrease")),
+             plt %>% dplyr::mutate(y = EPIC.CD4_Tcells, type="EPIC CD4 T-cells score",
+                                   sign = ifelse(EPIC.CD4_Tcells.log.odds > 0, "increase", "decrease"))
+             )
+
+ggplot(plt, aes(x = reorder(pid, tumour.percentage.dna.log.odds), y=y, col=sign)) +
+  geom_point(data = subset(plt, resection == "r1"), pch=19, cex=1.2, alpha=0.8) +
+  geom_path(arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.125, "inches")) , alpha = 0.8, lwd=1.05 )  +
+  facet_grid(rows=vars(type), scales="free") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 0.5),
+    legend.position = 'bottom') +
+  labs(y=NULL,x="G-Sam patient identifier",col="Longitudinal direction")
+
+ggsave("output/figures/epic_tumor_percentage_traversal_vertical.png", width = 16, height=2/3*16)
+
+
+
+## VAV3 en NOS2 staan in de GLITS/REDUX set
 
 
