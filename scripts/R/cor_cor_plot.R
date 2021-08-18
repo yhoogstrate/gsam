@@ -7,9 +7,18 @@ library(ggforce)
 
 
 
+
+col2 <- colorRampPalette(c("#67001F", "#B2182B", "#D6604D", "#F4A582",
+                           "#FDDBC7", "#FFFFFF", "#D1E5F0", "#92C5DE",
+                           "#4393C3", "#2166AC", "#053061"))
+
+
+
+
+
 cor_cor_plot <- function(normalised_correlated_data, labels) {
   
-  normalised_correlated_data <- plt.n
+  normalised_correlated_data <- plt
   
   # remove duplicate entries:
   plt <- normalised_correlated_data %>%
@@ -117,20 +126,9 @@ cor_cor_plot <- function(normalised_correlated_data, labels) {
 }
 
 
-cor_cor_plot(tmp.bak)
+#cor_cor_plot(expression_vst_data , labels)
 
 
-
-labels.bak <- data.frame(gid = c(o) )  %>%
-  dplyr::mutate(tumor.chr7.gain = gid %in% c("CREB5",	"TRIM24",	"ETV1", "COA1")) %>%
-  dplyr::mutate(astrocytes = gid %in% c("CACHD1","AHCYL1","GPR37L1","BMPR1B")) %>%
-  dplyr::mutate(neurons = gid %in% c("RBFOX3", "GABRB2","GABRA1","GABRG2","GABBR2")) %>%
-  dplyr::mutate(oligodendrocytes = gid %in% c("PLP1", "OPALIN", "TMEM144","CLCA4")) %>%
-  dplyr::mutate(endothelial = gid %in% c("TIE1","PEAR1","RGS5","NOSTRIN")) %>%
-  dplyr::mutate(tam = gid %in% c("CD163",  "CD14", "C1QA","THEMIS2" )) %>%
-  dplyr::mutate(EGFR.ligand = gid %in% c("AREG", "BTC","HBEGF","NGF","TGFA","EGF","EPGN")) %>%
-  tibble::column_to_rownames('gid')
-  
 
 
 
