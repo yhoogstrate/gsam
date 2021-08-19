@@ -213,19 +213,32 @@ rm(cond)
 
 # Add TPC to metadata ----
 
+# These estimates are just not good enough:
+# 
+# glass.gbm.rnaseq.metadata <- glass.gbm.rnaseq.metadata %>%
+#   dplyr::mutate(pid.tmp = gsub("^([^-]+-[^-]+-[^-]+-[^-]+)-.+$","\\1",sid) ) %>%
+#   dplyr::left_join(
+#   read.table("output/tables/cnv/tumor.percentage.estimate_glass.txt") %>%
+#     dplyr::select(c('sample','pct')) %>%
+#     dplyr::mutate(pid.tmp = gsub("^([^-]+-[^-]+-[^-]+-[^-]+)-.+$","\\1",sample) ) %>%
+#     dplyr::rename(tumour.percentage.dna = pct) ,
+#   by = c('pid.tmp' = 'pid.tmp')) %>%
+#   dplyr::mutate(pid.tmp = NULL)
+# 
+# stopifnot(!is.na(glass.gbm.rnaseq.metadata$tumour.percentage.dna))
+
+
+
+
+# Add imputed / predict TPCs ----
+
 glass.gbm.rnaseq.metadata <- glass.gbm.rnaseq.metadata %>%
-  dplyr::mutate(pid.tmp = gsub("^([^-]+-[^-]+-[^-]+-[^-]+)-.+$","\\1",sid) ) %>%
-  dplyr::left_join(
-  read.table("output/tables/cnv/tumor.percentage.estimate_glass.txt") %>%
-    dplyr::select(c('sample','pct')) %>%
-    dplyr::mutate(pid.tmp = gsub("^([^-]+-[^-]+-[^-]+-[^-]+)-.+$","\\1",sample) ) %>%
-    dplyr::rename(tumour.percentage.dna = pct) ,
-  by = c('pid.tmp' = 'pid.tmp')) %>%
-  dplyr::mutate(pid.tmp = NULL)
-
-stopifnot(!is.na(glass.gbm.rnaseq.metadata$tumour.percentage.dna))
+  dplyr::left_join(read.table("output/tables/GLASS.tumour.percentage.dna.imputed.caret.txt"), by=c('sid'='sid'))
 
 
+
+# pretty poor correlation, something seems odd w/ the predictions in GLASS?
+#plot(glass.gbm.rnaseq.metadata$tumour.percentage.dna , glass.gbm.rnaseq.metadata$tumour.percentage.dna.imputed.caret)
 
 # Combine table into paired data table ----
 
