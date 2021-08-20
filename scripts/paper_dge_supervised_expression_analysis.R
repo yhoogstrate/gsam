@@ -1,5 +1,11 @@
 #!/usr/bin/env R
 
+# settings ----
+
+
+options(warnPartialMatchDollar = TRUE) # https://stackoverflow.com/questions/32854683/data-frames-in-r-name-autocompletion
+
+
 # load libs ----
 
 
@@ -41,8 +47,8 @@ source('scripts/R/wang_glioma_intrinsic_genes.R')
 source("scripts/R/glass_expression_matrix.R") # glass & tcga validation set + metedata
 
 
-m <- c("ward.D", "ward.D2", "single", "complete", "average" , "mcquitty" , "median" , "centroid")
-
+#m <- c("ward.D", "ward.D2", "single", "complete", "average" , "mcquitty" , "median" , "centroid")
+m <- "use correlation of correlation instead?!"
 
 
 # prepare data ----
@@ -152,10 +158,20 @@ glass.metadata.tr <- glass.metadata.all %>%
 
 
 # uncomment out the minimum TPC
-wilcox.test(glass.metadata.tp %>% dplyr::pull(tumour.percentage.dna) ,
-            glass.metadata.tr %>% dplyr::pull(tumour.percentage.dna) , alternative="two.sided")
+wilcox.test(glass.metadata.tp %>% dplyr::pull(tumour.percentage.dna.imputed.caret) ,
+            glass.metadata.tr %>% dplyr::pull(tumour.percentage.dna.imputed.caret) , alternative="two.sided")
 
 
+# ggplot(glass.metadata.all %>%
+#          dplyr::mutate(resection.status = ifelse(resection == "TP", "primary" , "recurrent")),
+#        aes(x = resection.status, y = tumour.percentage.dna.imputed.caret)) +
+#   geom_violin() +
+#   #geom_segment(aes(x=0.55, y=m1.gsam, xend=1.45, yend=m1.gsam),lty=1,lwd=0.15, col="gray40") +
+#   #geom_segment(aes(x=1.55, y=m2.gsam, xend=2.45, yend=m2.gsam),lty=1,lwd=0.15, col="gray40") +
+#   geom_jitter( position=position_jitter(0.2), size=0.9) +
+#   ylim(25, 80) +
+#   labs(x = NULL, col = NULL, y = "WES estimate tumour cell percentage" ) +
+#   job_gg_theme
 
 
 
@@ -442,9 +458,9 @@ results.out <- results.out %>%
 results.out <- results.out %>% 
   dplyr::mutate(primary.marker.genes = '') %>%
   dplyr::mutate(primary.marker.genes = ifelse(hugo_symbol %in% c("RBFOX3", "GABRB2","GABRA1","GABRG2") , "neuron", primary.marker.genes)) %>%
-  dplyr::mutate(primary.marker.genes = ifelse(hugo_symbol %in% c("CACHD1","AHCYL1","GPR37L1","BMPR1B") , "astrocyte", primary.marker.genes)) %>%
-  dplyr::mutate(primary.marker.genes = ifelse(hugo_symbol %in% c("PLP1","OPALIN", "TMEM144","CLCA4") , "oligodendrocyte", primary.marker.genes)) %>%
-  dplyr::mutate(primary.marker.genes = ifelse(hugo_symbol %in% c("TIE1","PEAR1","RGS5","NOSTRIN") , "endothelial", primary.marker.genes)) %>%
+  dplyr::mutate(primary.marker.genes = ifelse(hugo_symbol %in% c("CACHD1","AHCYL1","GPR37L1","BMPR1B", "GFAP") , "astrocyte", primary.marker.genes)) %>%
+  dplyr::mutate(primary.marker.genes = ifelse(hugo_symbol %in% c("PLP1","OPALIN", "TMEM144","MOG") , "oligodendrocyte", primary.marker.genes)) %>%
+  dplyr::mutate(primary.marker.genes = ifelse(hugo_symbol %in% c("TIE1","RGS5","NOSTRIN","FLT1") , "endothelial", primary.marker.genes)) %>%
   dplyr::mutate(primary.marker.genes = ifelse(hugo_symbol %in% c("CD163","CD14","C1QA","THEMIS2") , "microglia/TAM", primary.marker.genes))
 
 stopifnot(
@@ -464,7 +480,7 @@ stopifnot(
 # custom markers
 
 results.out <- results.out %>%
-  dplyr::mutate(primary.marker.genes = ifelse(hugo_symbol %in% c("CREB5","TRIM24","ETV1","COA1") , "chr7 gained (tumor)", primary.marker.genes)) %>%
+  dplyr::mutate(primary.marker.genes = ifelse(hugo_symbol %in% c("CREB5","TRIM24","ETV1","COA1","SETD5","SMAD5") , "chr7 gained (tumor)", primary.marker.genes)) %>%
   dplyr::mutate(primary.marker.genes = ifelse(hugo_symbol %in% c("CD45") , "non-malignant", primary.marker.genes)) %>%
   dplyr::mutate(primary.marker.genes = ifelse(hugo_symbol %in% c("CD2", "CD3D", "CD3E","CD8A") , "TIL / T-cell", primary.marker.genes)) # Van Levi
 
@@ -589,30 +605,39 @@ stopifnot("statistic.gsam.cor.tpc" %in% colnames(results.out))
 # corr TPC [GLASS] ----
 
 
-glass.gbm.rnaseq.expression.vst.old <- glass.gbm.rnaseq.expression.vst
-glass.metadata.all.old <- glass.metadata.all
+
+
+#glass.gbm.rnaseq.expression.vst.old <- glass.gbm.rnaseq.expression.vst
+#glass.metadata.all.old <- glass.metadata.all
 
 
 
-# sample with '99' pct tumor
-glass.gbm.rnaseq.expression.vst = glass.gbm.rnaseq.expression.vst %>% as.data.frame %>% dplyr::select(-c('GLSS-HF-2919-TP'))
-glass.metadata.all = glass.metadata.all %>% dplyr::filter(sid != 'GLSS-HF-2919-TP' )
+# sample with '99' pct tumor in wrong determination
+#glass.gbm.rnaseq.expression.vst <- glass.gbm.rnaseq.expression.vst %>%
+#  as.data.frame %>%
+#  dplyr::select(-c('GLSS-HF-2919-TP'))
+#glass.metadata.all <- glass.metadata.all %>%
+#  dplyr::filter(sid != 'GLSS-HF-2919-TP' )
 
-glass.gbm.rnaseq.expression.vst = glass.gbm.rnaseq.expression.vst %>% as.data.frame %>% dplyr::select(contains('GLSS'))
-glass.metadata.all = glass.metadata.all %>% dplyr::filter(grepl("GLSS",sid))
+
+#glass.gbm.rnaseq.expression.vst <- glass.gbm.rnaseq.expression.vst %>%
+#  as.data.frame %>%
+#  dplyr::select(contains('GLSS'))
+#glass.metadata.all <- glass.metadata.all %>%
+#  dplyr::filter(grepl("GLSS",sid))
 
 
 
 stopifnot(colnames(glass.gbm.rnaseq.expression.vst) == glass.metadata.all$sid)
-glass.gene.expression.all.cor.estimate <- data.frame(apply(glass.gbm.rnaseq.expression.vst, 1, function (x)  cor.test(x, glass.metadata.all$tumour.percentage.dna) %>% purrr::pluck('estimate') ), stringsAsFactors = F) %>%
+glass.gene.expression.all.cor.estimate <- data.frame(apply(glass.gbm.rnaseq.expression.vst, 1, function (x)  cor.test(x, glass.metadata.all %>% dplyr::pull(tumour.percentage.dna.imputed.caret)) %>% purrr::pluck('estimate') ), stringsAsFactors = F) %>%
   `colnames<-`("estimate") %>%
   tibble::rownames_to_column('gid')
 
-glass.gene.expression.all.cor.statistic <- data.frame(apply(glass.gbm.rnaseq.expression.vst, 1, function (x)  cor.test(x, glass.metadata.all$tumour.percentage.dna) %>% purrr::pluck('statistic') ), stringsAsFactors = F) %>%
+glass.gene.expression.all.cor.statistic <- data.frame(apply(glass.gbm.rnaseq.expression.vst, 1, function (x)  cor.test(x, glass.metadata.all %>% dplyr::pull(tumour.percentage.dna.imputed.caret)) %>% purrr::pluck('statistic') ), stringsAsFactors = F) %>%
   `colnames<-`("statistic") %>%
   tibble::rownames_to_column('gid')
 
-glass.gene.expression.all.cor.p.value <- data.frame(apply(glass.gbm.rnaseq.expression.vst, 1, function (x)  cor.test(x, glass.metadata.all$tumour.percentage.dna) %>% purrr::pluck('p.value') ), stringsAsFactors = F) %>%
+glass.gene.expression.all.cor.p.value <- data.frame(apply(glass.gbm.rnaseq.expression.vst, 1, function (x)  cor.test(x, glass.metadata.all %>% dplyr::pull(tumour.percentage.dna.imputed.caret)) %>% purrr::pluck('p.value') ), stringsAsFactors = F) %>%
   `colnames<-`("p.value") %>%
   tibble::rownames_to_column('gid')
 
@@ -635,14 +660,11 @@ stopifnot("statistic.gsam.cor.tpc" %in% colnames(results.out))
 
 
 
-glass.gbm.rnaseq.expression.vst <- glass.gbm.rnaseq.expression.vst.old
-glass.metadata.all <- glass.metadata.all.old
-
-
-
 #plot(results.out$stat.gsam.res , results.out$stat.glass.res)
-a <- results.out %>% dplyr::filter(!is.na(statistic.gsam.cor.tpc) & !is.na(statistic.glass.cor.tpc))
+a <- results.out %>%
+  dplyr::filter(!is.na(statistic.gsam.cor.tpc) &!is.na(statistic.glass.cor.tpc))
 cor(a$statistic.gsam.cor.tpc , a$statistic.glass.cor.tpc)
+#plot(a$statistic.gsam.cor.tpc , a$statistic.glass.cor.tpc,pch=19,cex=0.01)
 
 
 # all samples: 0.493
@@ -670,8 +692,7 @@ cor(a$statistic.gsam.cor.tpc , a$statistic.glass.cor.tpc)
 
 
 
-# DE unpaired all [G-SAM] ----
-
+# DE unpaired [G-SAM] ----
 
 
 gsam.gene.res.res <- DESeqDataSetFromMatrix(gsam.gene.expression.all %>%
@@ -691,7 +712,9 @@ results.out <- results.out %>%
 
 
 
-# TODO remove .paired twice:
+# DE unpaired ~ TPC [G-SAM] ----
+
+
 gsam.gene.res.tpc.res <- DESeqDataSetFromMatrix(gsam.gene.expression.all %>%
                                                   dplyr::filter(rowSums(.) > ncol(.) * 3),
                                                 gsam.metadata.all, ~tpc + resection ) %>% # + resection; corrected for tpc
@@ -701,8 +724,6 @@ gsam.gene.res.tpc.res <- DESeqDataSetFromMatrix(gsam.gene.expression.all %>%
   dplyr::mutate(significant = padj <= 0.01 & abs(log2FoldChange) > 0.5 ) %>%
   dplyr::arrange(padj) %>%
   tibble::rownames_to_column('gid') %>%
-  #dplyr::mutate(ensembl_id = gsub('\\..+\\|.+$','',gid) ) %>%
-  #dplyr::mutate(hugo_symbol = gsub("^.+\\|([^\\]+)\\|.+$","\\1",gid) ) %>%
   `colnames<-`(paste0(colnames(.),".gsam.tpc.res")) %>%
   dplyr::rename(gid = gid.gsam.tpc.res)
 
@@ -712,8 +733,6 @@ results.out <- results.out %>%
 
 
 # DE unpaired all [GLASS] ----
-
-# no per-sample tumor percentage available in Synapse portal
 
 
 stopifnot(colnames(glass.gene.expression.all) == glass.metadata.all$sid)
@@ -742,7 +761,72 @@ glass.gene.expression.all.vst <- DESeqDataSetFromMatrix(glass.gene.expression.al
   vst(blind=T)
 
 
+# # DE unpaired ~ TPC [GLASS : GLASS TPC] - - - -
+# 
+# 
+# stopifnot(colnames(glass.gene.expression.all) == glass.metadata.all$sid)
+# 
+# glass.gene.res.res.tpc.g <- DESeqDataSetFromMatrix(glass.gene.expression.all %>%
+#                                                dplyr::filter(rowSums(.) > ncol(.) * 3),
+#                                              glass.metadata.all %>%
+#                                                dplyr::mutate(tpc = 1 - (tumour.percentage.dna / 100)),
+#                                              ~tpc + condition ) %>% # + resection
+#   DESeq(parallel = T) %>%
+#   results() %>% 
+#   as.data.frame() %>%
+#   dplyr::mutate(significant = padj <= 0.01 & abs(log2FoldChange) > 0.5) %>%
+#   dplyr::arrange(padj) %>%
+#   tibble::rownames_to_column('ensembl_id') %>% 
+#   `colnames<-`(paste0(colnames(.),".glass.res.tpc.g")) %>%
+#   dplyr::rename(ensembl_id = ensembl_id.glass.res.tpc.g)
+# 
+# 
+# results.out <- results.out %>%
+#   dplyr::left_join(glass.gene.res.res.tpc.g, by = c('ensembl_id' = 'ensembl_id'))
+# 
 
+
+
+# DE unpaired ~ TPC [GLASS : RNA imputed TPC] ----
+
+
+
+stopifnot(colnames(glass.gene.expression.all) == glass.metadata.all$sid)
+
+glass.gene.res.tpc.res <- DESeqDataSetFromMatrix(glass.gene.expression.all %>%
+                                                     dplyr::filter(rowSums(.) > ncol(.) * 3),
+                                                   glass.metadata.all %>%
+                                                     dplyr::mutate(tpc = 1 - (tumour.percentage.dna.imputed.caret / 100)),
+                                                   ~tpc + condition ) %>% # + resection
+  DESeq(parallel = T) %>%
+  results() %>% 
+  as.data.frame() %>%
+  dplyr::mutate(significant = padj <= 0.01 & abs(log2FoldChange) > 0.5) %>%
+  dplyr::arrange(padj) %>%
+  tibble::rownames_to_column('ensembl_id') %>% 
+  `colnames<-`(paste0(colnames(.),".glass.tpc.res")) %>%
+  dplyr::rename(ensembl_id = ensembl_id.glass.tpc.res)
+
+
+results.out <- results.out %>%
+  dplyr::left_join(glass.gene.res.tpc.res, by = c('ensembl_id' = 'ensembl_id'))
+
+# ::::::::::::: ----
+# Export (!) ----
+
+saveRDS(results.out, file="tmp/results.out.Rds")
+
+# ::::::::::::: ----
+
+
+# __________ ----
+
+# :::::::::::::::::::: ----
+# Import (quick) ----
+
+results.out <- readRDS(file = 'tmp/results.out.Rds')
+
+# :::::::::::::::::::: ----
 
 
 # hypeR enrichment ---- 
@@ -1776,22 +1860,24 @@ tmp <- rbind(
   ,
   results.out %>%
     dplyr::filter(!is.na(patel.scRNAseq.cluster) & patel.scRNAseq.cluster == "Cell cycle") %>%
-    dplyr::mutate(label = paste0("Patel: ",patel.scRNAseq.cluster))
+    dplyr::mutate(label = paste0("Patel: ",patel.scRNAseq.cluster))%>%
+    head(n=14)
   ,
   results.out %>%
     dplyr::filter(!is.na(patel.scRNAseq.cluster) & patel.scRNAseq.cluster == "Hypoxia") %>%
-    dplyr::mutate(label = paste0("Patel: ",patel.scRNAseq.cluster))
+    dplyr::mutate(label = paste0("Patel: ",patel.scRNAseq.cluster))%>%
+    head(n=14)
   ,
   
   results.out %>%
     dplyr::filter(neftel.meta.module.MES1 == T) %>%
     dplyr::mutate(label = "Neftel: MES1") %>%
-    head(n=7)
+    head(n=14)
   ,
   results.out %>%
     dplyr::filter(results.out$neftel.meta.module.MES2 == T) %>%
     dplyr::mutate(label = "Neftel: MES2") %>%
-    head(n=7)
+    head(n=14)
   ,
   results.out %>%
     dplyr::filter(results.out$neftel.meta.module.AC == T) %>%
@@ -1821,7 +1907,25 @@ tmp <- rbind(
   results.out %>%
     dplyr::filter(results.out$neftel.meta.module.G2.M == T) %>%
     dplyr::mutate(label = "Neftel: G2.M") %>%
+    head(n=14),
+  
+  results.out %>%
+    dplyr::filter(grepl("astrocyte",primary.marker.genes)) %>%
+    dplyr::mutate(label = "McKenzy: ast") %>%
+    head(n=14),
+  results.out %>%
+    dplyr::filter(grepl("neuron",primary.marker.genes)) %>%
+    dplyr::mutate(label = "McKenzy: neu") %>%
+    head(n=14),
+  results.out %>%
+    dplyr::filter(grepl("oligodendrocyte",primary.marker.genes)) %>%
+    dplyr::mutate(label = "McKenzy: oli") %>%
+    head(n=14),
+  results.out %>%
+    dplyr::filter(grepl("microglia",primary.marker.genes)) %>%
+    dplyr::mutate(label = "McKenzy: tam") %>%
     head(n=14)
+    
 ) %>%
   dplyr::filter(!is.na(gid)) %>%
   dplyr::select(c(gid, label, hugo_symbol)) %>%
@@ -1843,8 +1947,8 @@ tmp <- rbind(
 
 
 
-plt <- tmp %>% dplyr::select(-c(gid,label,hugo_symbol)) %>% as.matrix %>% t() %>% cor() %>% `rownames<-`(tmp %>%   dplyr::mutate(label = ifelse(duplicated(label), "", label)) %>% dplyr::pull(label))
-corrplot::corrplot(plt,tl.cex=0.7)
+#plt <- tmp %>% dplyr::select(-c(gid,label,hugo_symbol)) %>% as.matrix %>% t() %>% cor() %>% `rownames<-`(tmp %>%   dplyr::mutate(label = ifelse(duplicated(label), "", label)) %>% dplyr::pull(label))
+#corrplot::corrplot(plt,tl.cex=0.7)
  
 
 
@@ -1874,7 +1978,8 @@ plt <- plt %>%
 corrplot::corrplot(plt)
   
 
-#plt <- plt[1:35,1:35]
+
+
 
 plt.expanded <- data.frame()
 for(i in 1:nrow(plt)) {
@@ -1902,7 +2007,7 @@ plt.expanded <- plt.expanded %>%
 tmp.meta <- results.out %>% dplyr::filter(!is.na(GliTS.reduxsubtype.marker) & GliTS.reduxsubtype.marker == "GliTS-CL") %>% dplyr::pull(hugo_symbol)
 tmp.meta <- plt.expanded %>%
   dplyr::filter(x %in% tmp.meta & x == y) %>%
-  dplyr::mutate(y.order = nrow(plt ) + 1) %>%
+  dplyr::mutate(y.order = nrow(plt ) + 13) %>%
   dplyr::mutate(y = "GliTS-CL")  %>%
   dplyr::mutate(type = y) %>% 
   dplyr::mutate(value=0)
@@ -1913,7 +2018,7 @@ plt.expanded <- dplyr::bind_rows(plt.expanded, tmp.meta)
 tmp.meta <- results.out %>% dplyr::filter(!is.na(GliTS.reduxsubtype.marker) & GliTS.reduxsubtype.marker == "GliTS-PN") %>% dplyr::pull(hugo_symbol)
 tmp.meta <- plt.expanded %>%
   dplyr::filter(x %in% tmp.meta & x == y) %>%
-  dplyr::mutate(y.order = nrow(plt ) + 2) %>%
+  dplyr::mutate(y.order = nrow(plt ) + 6) %>%
   dplyr::mutate(y = "GliTS-PN")  %>%
   dplyr::mutate(type = y) %>% 
   dplyr::mutate(value=0)
@@ -1924,7 +2029,7 @@ plt.expanded <- dplyr::bind_rows(plt.expanded, tmp.meta)
 tmp.meta <- results.out %>% dplyr::filter(!is.na(GliTS.reduxsubtype.marker) & GliTS.reduxsubtype.marker == "GliTS-MES") %>% dplyr::pull(hugo_symbol)
 tmp.meta <- plt.expanded %>%
   dplyr::filter(x %in% tmp.meta & x == y) %>%
-  dplyr::mutate(y.order = nrow(plt ) + 3) %>%
+  dplyr::mutate(y.order = nrow(plt ) + 5) %>%
   dplyr::mutate(y = "GliTS-MES")  %>%
   dplyr::mutate(type = y) %>% 
   dplyr::mutate(value=0)
@@ -1946,7 +2051,7 @@ plt.expanded <- dplyr::bind_rows(plt.expanded, tmp.meta)
 tmp.meta <- results.out %>% dplyr::filter(!is.na(patel.scRNAseq.cluster) & patel.scRNAseq.cluster == "Cell cycle") %>% dplyr::pull(hugo_symbol)
 tmp.meta <- plt.expanded %>%
   dplyr::filter(x %in% tmp.meta & x == y) %>%
-  dplyr::mutate(y.order = nrow(plt ) + 5) %>%
+  dplyr::mutate(y.order = nrow(plt ) + 10) %>%
   dplyr::mutate(y = "Patel: Cell Cycle")  %>%
   dplyr::mutate(type = y) %>% 
   dplyr::mutate(value=0)
@@ -1957,7 +2062,7 @@ plt.expanded <- dplyr::bind_rows(plt.expanded, tmp.meta)
 tmp.meta <- results.out %>% dplyr::filter(!is.na(patel.scRNAseq.cluster) & patel.scRNAseq.cluster == "Hypoxia") %>% dplyr::pull(hugo_symbol)
 tmp.meta <- plt.expanded %>%
   dplyr::filter(x %in% tmp.meta & x == y) %>%
-  dplyr::mutate(y.order = nrow(plt ) + 6) %>%
+  dplyr::mutate(y.order = nrow(plt ) + 1) %>%
   dplyr::mutate(y = "Patel: Hypoxia")  %>%
   dplyr::mutate(type = y) %>% 
   dplyr::mutate(value=0)
@@ -1968,7 +2073,7 @@ plt.expanded <- dplyr::bind_rows(plt.expanded, tmp.meta)
 tmp.meta <- results.out %>% dplyr::filter(neftel.meta.module.MES1 == T) %>% dplyr::pull(hugo_symbol)
 tmp.meta <- plt.expanded %>%
   dplyr::filter(x %in% tmp.meta & x == y) %>%
-  dplyr::mutate(y.order = nrow(plt ) + 7) %>%
+  dplyr::mutate(y.order = nrow(plt ) + 3) %>%
   dplyr::mutate(y = "Neftel: MES1")  %>%
   dplyr::mutate(type = y) %>% 
   dplyr::mutate(value=0)
@@ -1979,7 +2084,7 @@ plt.expanded <- dplyr::bind_rows(plt.expanded, tmp.meta)
 tmp.meta <- results.out %>% dplyr::filter(neftel.meta.module.MES2 == T) %>% dplyr::pull(hugo_symbol)
 tmp.meta <- plt.expanded %>%
   dplyr::filter(x %in% tmp.meta & x == y) %>%
-  dplyr::mutate(y.order = nrow(plt ) + 8) %>%
+  dplyr::mutate(y.order = nrow(plt ) + 2) %>%
   dplyr::mutate(y = "Neftel: MES2")  %>%
   dplyr::mutate(type = y) %>% 
   dplyr::mutate(value=0)
@@ -1990,7 +2095,7 @@ plt.expanded <- dplyr::bind_rows(plt.expanded, tmp.meta)
 tmp.meta <- results.out %>% dplyr::filter(neftel.meta.module.AC == T) %>% dplyr::pull(hugo_symbol)
 tmp.meta <- plt.expanded %>%
   dplyr::filter(x %in% tmp.meta & x == y) %>%
-  dplyr::mutate(y.order = nrow(plt ) + 9) %>%
+  dplyr::mutate(y.order = nrow(plt ) + 14) %>%
   dplyr::mutate(y = "Neftel: AC")  %>%
   dplyr::mutate(type = y) %>% 
   dplyr::mutate(value=0)
@@ -2001,7 +2106,7 @@ plt.expanded <- dplyr::bind_rows(plt.expanded, tmp.meta)
 tmp.meta <- results.out %>% dplyr::filter(neftel.meta.module.OPC == T) %>% dplyr::pull(hugo_symbol)
 tmp.meta <- plt.expanded %>%
   dplyr::filter(x %in% tmp.meta & x == y) %>%
-  dplyr::mutate(y.order = nrow(plt ) + 10) %>%
+  dplyr::mutate(y.order = nrow(plt ) + 7) %>%
   dplyr::mutate(y = "Neftel: OPC")  %>%
   dplyr::mutate(type = y) %>% 
   dplyr::mutate(value=0)
@@ -2013,7 +2118,7 @@ plt.expanded <- dplyr::bind_rows(plt.expanded, tmp.meta)
 tmp.meta <- results.out %>% dplyr::filter(neftel.meta.module.NPC1 == T) %>% dplyr::pull(hugo_symbol)
 tmp.meta <- plt.expanded %>%
   dplyr::filter(x %in% tmp.meta & x == y) %>%
-  dplyr::mutate(y.order = nrow(plt ) + 11) %>%
+  dplyr::mutate(y.order = nrow(plt ) + 9) %>%
   dplyr::mutate(y = "Neftel: NPC1")  %>%
   dplyr::mutate(type = y) %>% 
   dplyr::mutate(value=0)
@@ -2024,7 +2129,7 @@ plt.expanded <- dplyr::bind_rows(plt.expanded, tmp.meta)
 tmp.meta <- results.out %>% dplyr::filter(neftel.meta.module.NPC2 == T) %>% dplyr::pull(hugo_symbol)
 tmp.meta <- plt.expanded %>%
   dplyr::filter(x %in% tmp.meta & x == y) %>%
-  dplyr::mutate(y.order = nrow(plt ) + 12) %>%
+  dplyr::mutate(y.order = nrow(plt ) + 8) %>%
   dplyr::mutate(y = "Neftel: NPC2")  %>%
   dplyr::mutate(type = y) %>% 
   dplyr::mutate(value=0)
@@ -2035,20 +2140,63 @@ plt.expanded <- dplyr::bind_rows(plt.expanded, tmp.meta)
 tmp.meta <- results.out %>% dplyr::filter(neftel.meta.module.G1.S == T) %>% dplyr::pull(hugo_symbol)
 tmp.meta <- plt.expanded %>%
   dplyr::filter(x %in% tmp.meta & x == y) %>%
-  dplyr::mutate(y.order = nrow(plt ) + 13) %>%
+  dplyr::mutate(y.order = nrow(plt ) + 12) %>%
   dplyr::mutate(y = "Neftel: G1+S")  %>%
   dplyr::mutate(type = y) %>% 
   dplyr::mutate(value=0)
 dim(tmp.meta)
 plt.expanded <- dplyr::bind_rows(plt.expanded, tmp.meta)
 
-
 # add metadata
 tmp.meta <- results.out %>% dplyr::filter(neftel.meta.module.G2.M == T) %>% dplyr::pull(hugo_symbol)
 tmp.meta <- plt.expanded %>%
   dplyr::filter(x %in% tmp.meta & x == y) %>%
-  dplyr::mutate(y.order = nrow(plt ) + 14) %>%
+  dplyr::mutate(y.order = nrow(plt ) + 11) %>%
   dplyr::mutate(y = "Neftel: G2+M")  %>%
+  dplyr::mutate(type = y) %>% 
+  dplyr::mutate(value=0)
+dim(tmp.meta)
+plt.expanded <- dplyr::bind_rows(plt.expanded, tmp.meta)
+
+# add metadata
+tmp.meta <- results.out %>% dplyr::filter(grepl("astrocyte",primary.marker.genes)) %>% dplyr::pull(hugo_symbol)
+tmp.meta <- plt.expanded %>%
+  dplyr::filter(x %in% tmp.meta & x == y) %>%
+  dplyr::mutate(y.order = nrow(plt ) + 15) %>%
+  dplyr::mutate(y = "McKenzy: ast")  %>%
+  dplyr::mutate(type = y) %>% 
+  dplyr::mutate(value=0)
+dim(tmp.meta)
+plt.expanded <- dplyr::bind_rows(plt.expanded, tmp.meta)
+
+# add metadata
+tmp.meta <- results.out %>% dplyr::filter(grepl("neuron",primary.marker.genes)) %>% dplyr::pull(hugo_symbol)
+tmp.meta <- plt.expanded %>%
+  dplyr::filter(x %in% tmp.meta & x == y) %>%
+  dplyr::mutate(y.order = nrow(plt ) + 16) %>%
+  dplyr::mutate(y = "McKenzy: neu")  %>%
+  dplyr::mutate(type = y) %>% 
+  dplyr::mutate(value=0)
+dim(tmp.meta)
+plt.expanded <- dplyr::bind_rows(plt.expanded, tmp.meta)
+
+# add metadata
+tmp.meta <- results.out %>% dplyr::filter(grepl("oligodendrocyte",primary.marker.genes)) %>% dplyr::pull(hugo_symbol)
+tmp.meta <- plt.expanded %>%
+  dplyr::filter(x %in% tmp.meta & x == y) %>%
+  dplyr::mutate(y.order = nrow(plt ) + 17) %>%
+  dplyr::mutate(y = "McKenzy: oli")  %>%
+  dplyr::mutate(type = y) %>% 
+  dplyr::mutate(value=0)
+dim(tmp.meta)
+plt.expanded <- dplyr::bind_rows(plt.expanded, tmp.meta)
+
+# add metadata
+tmp.meta <- results.out %>% dplyr::filter(grepl("microglia",primary.marker.genes)) %>% dplyr::pull(hugo_symbol)
+tmp.meta <- plt.expanded %>%
+  dplyr::filter(x %in% tmp.meta & x == y) %>%
+  dplyr::mutate(y.order = nrow(plt ) + 18) %>%
+  dplyr::mutate(y = "McKenzy: tam")  %>%
   dplyr::mutate(type = y) %>% 
   dplyr::mutate(value=0)
 dim(tmp.meta)
@@ -2056,29 +2204,52 @@ plt.expanded <- dplyr::bind_rows(plt.expanded, tmp.meta)
 
 
 
+plt.expanded <- plt.expanded %>%
+  dplyr::mutate(mckenzy = grepl("McKenzy", type))
 
-ggplot(plt.expanded, aes(x=reorder(x, x.order), y=reorder(y, y.order),  col=type, fill=value)) +
-  geom_tile(col = "white") +
+
+
+
+col2 <- colorRampPalette(c("#67001F", "#B2182B", "#D6604D", "#F4A582",
+                   "#FDDBC7", "#FFFFFF", "#D1E5F0", "#92C5DE",
+                   "#4393C3", "#2166AC", "#053061"))
+
+
+
+p1 <- ggplot(plt.expanded %>% dplyr::filter(type != 'cor'), aes(x=reorder(x, x.order), y=reorder(y, y.order),  fill=type)) +
+  geom_tile(col="black") +
+  scale_x_discrete(labels = NULL, breaks = NULL) +
+  labs(x = "", col=NULL, fill=NULL) +
+  guides(fill=FALSE) +
+  theme(axis.text = element_text(),
+        axis.line = element_line(colour="black"),
+        text = element_text(size=15)) +
+  labs(y = "") + 
+  facet_grid(rows = vars(mckenzy), scales = "free", space = "free") +
+  theme(strip.text.y = element_blank())
+
+
+p2 <- ggplot(plt.expanded %>% dplyr::filter(type == 'cor'), aes(x=reorder(x, x.order), y=reorder(y, y.order),  col=type, fill=value)) +
+  geom_tile(col = "gray") +
   scale_x_discrete(labels = NULL, breaks = NULL) +
   labs(x = "") +
-  scale_fill_gradient2(
-    low = "blue",
-    mid = "white",
-    high = "red",
-    midpoint = 0,
-    space = "Lab",
+  scale_fill_gradientn(
+    colours = col2(200),
     na.value = "grey50",
     guide = "colourbar",
     aesthetics = "fill",
     limits = c(-1,1)
   ) +
-  geom_point(data = subset(plt.expanded, type != "cor"), pch=19,cex=1) + 
   theme(legend.position = 'bottom',  axis.text = element_text(),
         axis.line = element_line(colour="black"),
         text = element_text(size=5)) +
   labs(y = "")
-  
-ggsave("/tmp/cor_clusters.pdf", width = 11, height = 11)
+
+p1 / p2 +  plot_layout(heights = c(1,  3))
+
+
+#ggsave("/tmp/cor_clusters.pdf", width = 11, height = 11)
+ggsave("/tmp/cor_clusters.png", width = 11 , height = 11 )
 
 
 
@@ -2145,6 +2316,60 @@ p1 + p2
 
 
 ggsave('output/figures/tpc_estimate_wes.png', width = 5.7 * 1.4, height = 4.3 * 1.3)
+
+
+## 2.2 :: TopCor genes ----
+
+
+sel <- plt %>%
+  dplyr::arrange( -statistic.gsam.cor.tpc) %>%
+  dplyr::filter(log2FoldChange.gsam.res > -0.25) %>%
+  head(100)
+
+
+sel <- plt %>% 
+  dplyr::filter(hugo_symbol %in% c(
+    
+    "ACTN4", "AEBP1", "AHR", "AIRE", "ALX1", "ALX3", "ALX4", "ANHX", "APP", "AR", "ARGFX", "ARNT", "ARNT2", "ARNTL", "ARNTL2", "ARX", "ASCL1", "ASCL2", "ASCL3", "ASCL4", "ASCL5", "ATF1", "ATF2", "ATF3", "ATF4", "ATF5", "ATF6", "ATF6B", "ATF7", "ATOH1", "ATOH7", "ATOH8", "ATXN3L", "BACH1", "BACH2", "BARHL1", "BARHL2", "BARX1", "BARX2", "BATF", "BATF2", "BATF3", "BBX", "BCL11A", "BCL11B", "BCL6", "BCL6B", "BCOR", "BHLHA15", "BHLHA9", "BHLHE22", "BHLHE23", "BHLHE40", "BHLHE41", "BMI1", "BORCS8-MEF2B", "BPTF", "BSX", "CALCOCO1", "CARF", "CASZ1", "CC2D1A", "CC2D1B", "CCAR1", "CDC5L", "CDK9", "CDX1", "CDX2", "CDX4", "CEBPA", "CEBPB", "CEBPD", "CEBPE", "CEBPG", "CHD2", "CHD7", "CIART", "CIC", "CLOCK", "CPHXL", "CREB1", "CREB3", "CREB3L1", "CREB3L2", "CREB3L3", "CREB3L4", "CREB5", "CREBRF", "CREM", "CRX", "CRY1", "CTCF", "CTCFL", "CUX1", "CUX2", "DACH1", "DACH2", "DBP", "DDIT3", "DEAF1", "DHX36", "DHX9", "DLX1", "DLX2", "DLX3", "DLX4", "DLX5", "DLX6", "DMBX1", "DMRT1", "DMRT2", "DMRT3", "DMRTA1", "DMRTA2", "DMRTB1", "DMRTC2", "DMTF1", "DNMT3A", "DPRX", "DRGX", "DUX4", "DUXA", "DUXB", "E2F1", "E2F2", "E2F3", "E2F4", "E2F5", "E2F6", "E2F7", "E2F8", "E4F1", "EBF1", "EBF2", "EBF3", "EBF4", "EGR1", "EGR2", "EGR3", "EGR4", "EHF", "EHMT2", "ELF1", "ELF3", "ELF4", "ELK1", "ELK3", "ELK4", "EMX1", "EMX2", "EN1", "EN2", "ENO1", "EOMES", "EPAS1", "ERG", "ESR1", "ESR2", "ESRRA", "ESRRB", "ESRRG", "ESX1", "ETS1", "ETS2", "ETV1", "ETV2", "ETV3", "ETV4", "ETV5", "ETV6", "ETV7", "EVX1", "EVX2", "EZH2", "FERD3L", "FEZF1", "FEZF2", "FIGLA", "FLI1", "FOS", "FOSB", "FOSL1", "FOSL2", "FOXA1", "FOXA2", "FOXA3", "FOXB1", "FOXB2", "FOXC1", "FOXC2", "FOXD1", "FOXD2", "FOXD3", "FOXD4", "FOXD4L1", "FOXD4L3", "FOXD4L4", "FOXD4L5", "FOXD4L6", "FOXE1", "FOXE3", "FOXF1", "FOXF2", "FOXI1", "FOXI2", "FOXI3", "FOXJ1", "FOXJ2", "FOXJ3", "FOXK1", "FOXK2", "FOXL1", "FOXL2", "FOXL3", "FOXM1", "FOXO1", "FOXO3", "FOXO4", "FOXO6", "FOXP1", "FOXP2", "FOXP3", "FOXP4", "FOXQ1", "FOXS1", "GABPA", "GATA1", "GATA2", "GATA3", "GATA4", "GATA5", "GATA6", "GBX1", "GBX2", "GCM1",
+    "GCM2", "GFI1", "GFI1B", "GLI1", "GLI2", "GLI3", "GLI4", "GLIS1", "GLIS2", "GLIS3", "GMEB1", "GMEB2", "GRHL1", "GRHL2", "GRHL3", "GSC", "GSC2", "GSX1", "GTF2A1", "GTF2B", "GTF2IRD1", "GZF1", "H2AZ1", "H3-3A", "H3-3B", "HAND1", "HAND2", "HBP1", "HDAC1", "HDAC4", "HDAC5", "HDAC6", "HDX", "HELT", "HES1", "HES2", "HES3", "HES4", "HES5", "HES6", "HES7", "HESX1", "HEY1", "HEY2", "HEYL", "HHEX", "HIC1", "HIC2", "HIF1A", "HIF3A", "HINFP", "HIVEP1", "HIVEP2", "HIVEP3", "HLF", "HMGA2", "HMX1", "HMX2", "HMX3", "HNF1A", "HNF1B", "HNF4A", "HNF4G", "HNRNPU", "HOXA10", "HOXA11", "HOXA13", "HOXA2", "HOXA3", "HOXA4", "HOXA5", "HOXA6", "HOXA7", "HOXA9", "HOXB1", "HOXB13", "HOXB2", "HOXB3", "HOXB4", "HOXB5", "HOXB6", "HOXB7", "HOXB8", "HOXB9", "HOXC10", "HOXC11", "HOXC13", "HOXC4", "HOXC5", "HOXC6", "HOXC8", "HOXC9", "HOXD1", "HOXD10", "HOXD11", "HOXD13", "HOXD3", "HOXD4", "HOXD8", "HOXD9", "HSF1", "HSF2", "HSF4", "HSF5", "HSFX1", "HSFX2", "HSFX3", "HSFX4", "HSFY1", "HSFY2", "IFI16", "IKZF1", "IKZF2", "IKZF3", "IKZF4", "IKZF5", "initial_alias,", "INSM1", "INSM2", "IRF1", "IRF2", "IRF3", "IRF4", "IRF5", "IRF6", "IRF7", "IRF8", "IRF9", "IRX1", "IRX2", "IRX3", "IRX4", "IRX5", "IRX6", "ISL1", "ISX", "JDP2", "JUN", "JUNB",
+    "JUND", "KAT2B", "KCNIP3", "KDM2B", "KDM6A", "KDM6B", "KLF1", "KLF10", "KLF11", "KLF12", "KLF13", "KLF14", "KLF15", "KLF16", "KLF17", "KLF18", "KLF2", "KLF3", "KLF4", "KLF5", "KLF6", "KLF7", "KLF8", "KLF9", "LEF1", "LEUTX", "LHX1", "LHX2", "LHX3", "LHX4", "LHX5", "LHX6", "LHX8", "LHX9", "LITAF", "LMX1A", "LMX1B", "LRRFIP1", "LYL1", "MACROH2A1", "MACROH2A2", "MAF", "MAFA", "MAFB", "MAFF", "MAFG", "MAFK", "MAX", "MAZ", "MECOM", "MED1", "MED12", "MED8", "MEF2A", "MEF2B", "MEF2C", "MEF2D", "MEIS1", "MEIS2", "MEIS3", "MEOX1", "MEOX2", "MESP1", "MESP2", "MGA", "MITF", "MIXL1", "MKX", "MLX", "MLXIP", "MLXIPL", "MNT", "MSC", "MSGN1", "MSX1", "MSX2", "MTA1", "MTF1", "MTF2", "MUC1", "MXD1", "MXD3", "MXD4", "MXI1", "MYB", "MYBBP1A", "MYBL1", "MYBL2", "MYC", "MYCL", "MYCN", "MYF5", "MYF6", "MYNN", "MYOD1", "MYOG", "MYPOP", "MYT1", "MYT1L", "MZF1", "NACC1", "NACC2", "nan", "nan", "nan", "nan", "nan", "nan", "nan", "NANOG", "NANOGP8", "NCOA1", "NCOA2", "NDN", "NEUROD1", "NEUROD2", "NEUROD4", "NEUROD6", "NEUROG1", "NEUROG2", "NEUROG3", "NFAT5", "NFATC1", "NFATC2", "NFATC3", "NFATC4", "NFE2", "NFE2L1", "NFE2L2", "NFE2L3", "NFIA", "NFIB", "NFIC", "NFIL3", "NFIX", "NFKB1", "NFKB2", "NFX1", "NFXL1", "NFYA", "NFYB", "NFYC", "NHLH1", "NHLH2", "NKRF", "NKX1-1", "NKX1-2", "NKX2-1", "NKX2-2", "NKX2-3", "NKX2-4", "NKX2-5", "NKX2-6", "NKX2-8", "NKX3-1", "NKX3-2", "NKX6-1", "NKX6-2", "NKX6-3", "NLRC5", "NME1", "NOBOX", "NOTO", "NPAS1", "NPAS2", "NPAS3", "NPAS4", "NR1D1", "NR1D2", "NR1H2", "NR1H3", "NR1H4", "NR1I2", "NR1I3", "NR2C1", "NR2C2", "NR2E1", "NR2E3", "NR2F1", "NR2F2", "NR2F6", "NR3C1", "NR3C2", "NR4A1", "NR4A2", "NR4A3", "NR5A1", "NR5A2", "NR6A1", "NRF1", "NRIP1", "NRL", "NSD1", "OLIG1", "OLIG2", "OLIG3", "ONECUT1", "ONECUT2", "ONECUT3", "OSR1", "OSR2", "OTP", "OTX1", "OTX2", "OVOL1", "OVOL2", "OVOL3", "PATZ1", "PAX1", "PAX2",
+    "PAX3", "PAX4", "PAX5", "PAX6", "PAX7", "PAX8", "PAX9", "PBX1", "PBX2", "PBX3", "PBX4", "PDX1", "PEG3", "PER1", "PGBD1", "PGR", "PHOX2A", "PHOX2B", "PITX1", "PITX2", "PITX3", "PKNOX1", "PKNOX2", "PLAG1", "PLAGL1", "POU1F1", "POU2F1", "POU2F2", "POU2F3", "POU3F1", "POU3F2", "POU3F3", "POU3F4", "POU4F1", "POU4F2", "POU4F3", "POU5F1", "POU5F1B", "POU5F2", "POU6F1", "POU6F2", "PPARA", "PPARD", "PPARG", "PRDM1", "PRDM14", "PRDM15", "PRDM16", "PRDM2", "PRDM4", "PRDM5", "PRMT5", "PROP1", "PROX1", "PROX2", "PRRX1", "PRRX2", "PTF1A", "PURA", "PURB", "PURG", "RAD23B", "RARA", "RARB", "RARG", "RAX", "RAX2", "RB1", "RBAK", "RBBP4", "RBL1", "RBL2", "RBMX", "RBPJ", "RBPJL", "REL", "RELA", "RELB", "REST", "RFX1", "RFX2", "RFX3", "RFX4", "RFX5", "RFX6", "RFX7", "RFX8", "RFXANK", "RFXAP", "RHOXF1", "RHOXF2", "RHOXF2B", "RORA", "RORB", "RORC", "RPS3", "RREB1", "RUNX1", "RUNX2", "RUNX3", "RUVBL2", "RXRA", "RXRB", "RXRG", "SAFB", "SALL1", "SALL2", "SALL3", "SALL4", "SARS1", "SATB1", "SATB2", "SCRT1", "SCRT2", "SCX", "SIM1", "SIM2", "SIRT1", "SIX1", "SIX2", "SIX3", "SIX4", "SIX5", "SIX6", "SKI", "SKIL", "SKOR1", "SKOR2", "SLC2A4RG", "SMAD1", "SMAD2", "SMAD3", "SMAD4", "SMAD5", "SMAD9", "SMYD3", "SNAI1", "SNAI2", "SNAI3", "SNAPC3", "SOHLH1", "SOHLH2", "SOX1", "SOX10", "SOX11", "SOX12", "SOX13", "SOX14", "SOX15", "SOX17", "SOX18", "SOX2", "SOX21", "SOX3", "SOX30", "SOX4", "SOX5", "SOX6", "SOX7", "SOX8", "SOX9",
+    "SP1", "SP2", "SP3", "SP4", "SP5", "SP6", "SP7", "SP8", "SP9", "SPI1", "SPIB", "SPIC", "SREBF1", "SREBF2", "SRF", "SRY", "ST18", "STAT1", "STAT2", "STAT3", "STAT4", "STAT5A", "STAT5B", "STAT6", "STK16", "STOX1", "SUB1", "TAF1", "TAL1", "TAL2", "TARDBP", "TBP", "TBPL1", "TBR1", "TBX1", "TBX10", "TBX15", "TBX18", "TBX19", "TBX2", "TBX20", "TBX21", "TBX22", "TBX3", "TBX4", "TBX5", "TBX6", "TBXT", "TCF12", "TCF15", "TCF21", "TCF23", "TCF24", "TCF3", "TCF4", "TCF7", "TCF7L1", "TCF7L2", "TCFL5", "TEAD1", "TEAD2", "TEAD3", "TEAD4", "TEF", "TFAP2A", "TFAP2B", "TFAP2C", "TFAP2D", "TFAP2E", "TFAP4", "TFCP2", "TFCP2L1", "TFDP1", "TFDP2", "TFE3", "TFEB", "TFEC", "TGIF1", "TGIF2", "TGIF2LX", "TGIF2LY", "THAP1", "THAP11", "THRA", "THRAP3", "THRB", "TLX1", "TLX2", "TLX3", "TOP1", "TP53", "TP63", "TP73", "TPRX1", "TRIM24", "TRPS1", "TWIST1", "TWIST2", "UBP1", "USF1", "USF2", "USP3", "UTY", "VAX1", "VAX2", "VDR", "VENTX", "VEZF1", "VSX2", "WBP2", "WIZ", "WT1", "XBP1", "YAP1", "YBX3", "YY1", "YY2", "ZBED1", "ZBTB1", "ZBTB10", "ZBTB11", "ZBTB12", "ZBTB14", "ZBTB16", "ZBTB17", "ZBTB18", "ZBTB2", "ZBTB20", "ZBTB22", "ZBTB24", "ZBTB25", "ZBTB26", "ZBTB3", "ZBTB32", "ZBTB33", "ZBTB34", "ZBTB37", "ZBTB38", "ZBTB39",
+    "ZBTB4", "ZBTB40", "ZBTB41", "ZBTB42", "ZBTB43", "ZBTB45", "ZBTB46", "ZBTB47", "ZBTB48", "ZBTB49", "ZBTB5", "ZBTB6", "ZBTB7A", "ZBTB7B", "ZBTB7C", "ZBTB8A", "ZBTB8B", "ZBTB9", "ZC3H8", "ZEB1", "ZEB2", "ZFAT", "ZFHX2", "ZFHX3", "ZFHX4", "ZFP1", "ZFP14", "ZFP2", "ZFP28", "ZFP3", "ZFP30", "ZFP37", "ZFP41", "ZFP42", "ZFP57", "ZFP62", "ZFP69", "ZFP69B", "ZFP82", "ZFP90", "ZFP92", "ZGPAT", "ZHX3", "ZIC1", "ZIC2", "ZIC3", "ZIC4", "ZIC5", "ZIK1", "ZIM2", "ZIM3", "ZKSCAN1", "ZKSCAN2", "ZKSCAN3", "ZKSCAN4", "ZKSCAN5", "ZKSCAN7", "ZKSCAN8", "ZNF10", "ZNF100", "ZNF101", "ZNF107", "ZNF112", "ZNF114", "ZNF117", "ZNF12", "ZNF121", "ZNF124", "ZNF131", "ZNF132", "ZNF133", "ZNF134", "ZNF135", "ZNF136", "ZNF138", "ZNF14", "ZNF140", "ZNF141", "ZNF142", "ZNF143", "ZNF146", "ZNF148", "ZNF154", "ZNF155", "ZNF157", "ZNF16", "ZNF160", "ZNF165", "ZNF169", "ZNF17", "ZNF174", "ZNF175", "ZNF177", "ZNF18", "ZNF180", "ZNF181", "ZNF182", "ZNF184", "ZNF189", "ZNF19", "ZNF195", "ZNF197", "ZNF2", "ZNF20", "ZNF202", "ZNF205", "ZNF208", "ZNF211", "ZNF212", "ZNF213", "ZNF214", "ZNF215", "ZNF217", "ZNF219", "ZNF22", "ZNF221", "ZNF222", "ZNF223", "ZNF224", "ZNF225", "ZNF226", "ZNF227", "ZNF229", "ZNF23", "ZNF230", "ZNF232",
+    "ZNF233", "ZNF234", "ZNF235", "ZNF236", "ZNF239", "ZNF24", "ZNF248", "ZNF25", "ZNF250", "ZNF251", "ZNF253", "ZNF254", "ZNF256", "ZNF257", "ZNF26", "ZNF260", "ZNF263", "ZNF264", "ZNF266", "ZNF267", "ZNF268", "ZNF273", "ZNF274", "ZNF275", "ZNF277", "ZNF28", "ZNF280A", "ZNF280B", "ZNF280C", "ZNF280D", "ZNF281", "ZNF282", "ZNF283", "ZNF284", "ZNF285", "ZNF286A", "ZNF287", "ZNF296", "ZNF3", "ZNF30", "ZNF300", "ZNF302", "ZNF304", "ZNF311", "ZNF317", "ZNF319", "ZNF32", "ZNF320", "ZNF322", "ZNF324", "ZNF324B", "ZNF329", "ZNF331", "ZNF333", "ZNF334", "ZNF335", "ZNF337", "ZNF33A", "ZNF33B", "ZNF34", "ZNF341", "ZNF343", "ZNF345", "ZNF347", "ZNF35", "ZNF350", "ZNF354A", "ZNF354B", "ZNF354C", "ZNF358", "ZNF362", "ZNF366", "ZNF367", "ZNF37A", "ZNF382", "ZNF383", "ZNF384", "ZNF391", "ZNF394", "ZNF395", "ZNF396", "ZNF397", "ZNF398", "ZNF404", "ZNF408", "ZNF41", "ZNF415", "ZNF416", "ZNF417", "ZNF418", "ZNF419", "ZNF420", "ZNF423", "ZNF425", "ZNF426", "ZNF429", "ZNF43", "ZNF430", "ZNF431", "ZNF432", "ZNF433", "ZNF436", "ZNF438", "ZNF439", "ZNF44", "ZNF440", "ZNF441", "ZNF442", "ZNF443", "ZNF444", "ZNF445", "ZNF446", "ZNF449", "ZNF45", "ZNF454", "ZNF460", "ZNF461", "ZNF467", "ZNF468", "ZNF470", "ZNF471", "ZNF473", "ZNF479", "ZNF48", "ZNF480", "ZNF483", "ZNF484", "ZNF485", "ZNF486", "ZNF490", "ZNF491", "ZNF492", "ZNF493", "ZNF496", "ZNF497", "ZNF500", "ZNF501", "ZNF502", "ZNF506", "ZNF510",
+    "ZNF514", "ZNF516", "ZNF517", "ZNF518A", "ZNF518B", "ZNF519", "ZNF521", "ZNF524", "ZNF526", "ZNF527", "ZNF528", "ZNF529", "ZNF530", "ZNF534", "ZNF536", "ZNF540", "ZNF543", "ZNF544", "ZNF546", "ZNF547", "ZNF548", "ZNF549", "ZNF550", "ZNF551", "ZNF552", "ZNF554", "ZNF555", "ZNF556", "ZNF557", "ZNF558", "ZNF559", "ZNF560", "ZNF561", "ZNF562", "ZNF563", "ZNF564", "ZNF565", "ZNF566", "ZNF567", "ZNF568", "ZNF569", "ZNF57", "ZNF570", "ZNF571", "ZNF572", "ZNF573", "ZNF574", "ZNF575", "ZNF577", "ZNF578", "ZNF580", "ZNF581", "ZNF582", "ZNF583", "ZNF584", "ZNF585A", "ZNF585B", "ZNF586", "ZNF587", "ZNF587B", "ZNF589", "ZNF594", "ZNF595", "ZNF596", "ZNF597", "ZNF599", "ZNF600", "ZNF605", "ZNF606", "ZNF607", "ZNF610", "ZNF611", "ZNF613", "ZNF614", "ZNF615", "ZNF616", "ZNF619", "ZNF620", "ZNF621", "ZNF623", "ZNF624", "ZNF625", "ZNF626", "ZNF627", "ZNF628", "ZNF629", "ZNF630", "ZNF639", "ZNF641", "ZNF644", "ZNF646", "ZNF648", "ZNF649", "ZNF652", "ZNF655", "ZNF658", "ZNF66", "ZNF660", "ZNF662", "ZNF664", "ZNF665", "ZNF667", "ZNF668", "ZNF669", "ZNF670", "ZNF671", "ZNF674", "ZNF675", "ZNF676", "ZNF677", "ZNF678", "ZNF679", "ZNF680", "ZNF681", "ZNF682", "ZNF683", "ZNF684", "ZNF688", "ZNF689", "ZNF69",
+    "ZNF691", "ZNF692", "ZNF695", "ZNF696", "ZNF697", "ZNF699", "ZNF7", "ZNF70", "ZNF700", "ZNF701", "ZNF704", "ZNF705A", "ZNF705B", "ZNF705D", "ZNF705E", "ZNF705G", "ZNF707", "ZNF708", "ZNF709", "ZNF71", "ZNF710", "ZNF713", "ZNF716", "ZNF718", "ZNF721", "ZNF723", "ZNF724", "ZNF726", "ZNF727", "ZNF728", "ZNF729", "ZNF730", "ZNF732", "ZNF735", "ZNF736", "ZNF737", "ZNF74", "ZNF740", "ZNF746", "ZNF749", "ZNF750", "ZNF75A", "ZNF75D", "ZNF76", "ZNF761", "ZNF763", "ZNF764", "ZNF765", "ZNF768", "ZNF77", "ZNF770", "ZNF771", "ZNF772", "ZNF773", "ZNF774", "ZNF775", "ZNF776", "ZNF777", "ZNF778", "ZNF780A", "ZNF780B", "ZNF782", "ZNF783", "ZNF784", "ZNF785", "ZNF786", "ZNF789", "ZNF79", "ZNF790", "ZNF791", "ZNF792", "ZNF793", "ZNF799", "ZNF8", "ZNF80", "ZNF805", "ZNF808", "ZNF81", "ZNF813", "ZNF814", "ZNF816", "ZNF821", "ZNF823", "ZNF829", "ZNF83", "ZNF835", "ZNF836", "ZNF837", "ZNF84", "ZNF841", "ZNF844", "ZNF845", "ZNF846", "ZNF85", "ZNF850", "ZNF852", "ZNF853", "ZNF860", "ZNF865", "ZNF875", "ZNF878", "ZNF879", "ZNF880", "ZNF888", "ZNF891", "ZNF90", "ZNF91", "ZNF92", "ZNF93", "ZNF98", "ZNF99", "ZSCAN1", "ZSCAN10", "ZSCAN12", "ZSCAN16", "ZSCAN18", "ZSCAN2", "ZSCAN20", "ZSCAN21", "ZSCAN22", "ZSCAN23", "ZSCAN25", "ZSCAN26", "ZSCAN29", "ZSCAN30", "ZSCAN31", "ZSCAN32", "ZSCAN4", "ZSCAN5A", "ZSCAN5B", "ZSCAN5C", "ZSCAN9"
+    
+  ))
+
+
+plt <- results.out %>%
+  dplyr::filter(!is.na(log2FoldChange.gsam.res) & !is.na(statistic.gsam.cor.tpc)) %>%
+  dplyr::mutate(is.limited.gsam.res = as.character(log2FoldChange.gsam.res > 2)) %>% # change pch to something that is limited
+  dplyr::mutate(log2FoldChange.gsam.res = ifelse(log2FoldChange.gsam.res > 2, 2 , log2FoldChange.gsam.res)) %>%
+  dplyr::mutate(col.chr7 = ifelse(gid %in% sel$gid  ,"at chr7",  "not at chr7")) 
+
+
+ggplot(plt, aes(x = log2FoldChange.gsam.res ,
+                      y = statistic.gsam.cor.tpc, 
+                      shape = col.chr7 , size = col.chr7, col = col.chr7  ,fill =  col.chr7  ) ) +
+  geom_hline(yintercept = 0, col="gray60",lwd=0.5) +
+  geom_vline(xintercept = 0, col="gray60",lwd=0.5) +
+  geom_point(data = subset(plt, col.chr7 != "at chr7")) +
+  geom_point(data = subset(plt, col.chr7 == "at chr7")) +
+  scale_shape_manual(values = c('truncated'= 4, 'not at chr7' = 19 , 'at chr7'= 21 )    ) +
+  scale_size_manual(values = c( 'not at chr7' = 0.1 , 'at chr7'= 0.8 )    ) +
+  scale_color_manual(values = c('truncated'= 'black', 'not at chr7' = rgb(0,0,0,0.35), 'at chr7'= rgb(0,0,0,0.5)  )    ) +
+  scale_fill_manual(values = c('truncated'= 'black', 'not at chr7' = rgb(0,0,0,0.35), 'at chr7'= rgb(1,0,0,1)  )    ) +
+  youri_gg_theme + 
+  labs(x = "log2FC R1 vs. R2 (unpaired)",
+       y="Correlation t-statistic with tumour percentage",
+       shape = "Truncated at x-axis",
+       size="Truncated at x-axis",
+       col="Truncated at x-axis") + 
+  xlim(-2,2) + ylim(-16.5,16.5)
+
+
 
 
 
@@ -2244,32 +2469,96 @@ ggsave('output/figures/paper_dge_log2FoldChange.res_x_statistic.cor.tpc.png', wi
 
 
 plt <- results.out %>%
-  dplyr::filter(!is.na(log2FoldChange.glass.res) & !is.na(statistic.gsam.cor.tpc)) %>%
+  dplyr::filter(!is.na(statistic.gsam.cor.tpc)) %>% # TPC correlation G-SAM
+  dplyr::filter(!is.na(statistic.glass.cor.tpc)) %>% # TPC correlation GLASS
+  dplyr::filter(!is.na(log2FoldChange.gsam.res)) %>%
+  dplyr::filter(!is.na(log2FoldChange.gsam.tpc.res)) %>%
+  dplyr::filter(!is.na(log2FoldChange.glass.res)) %>%
+  dplyr::filter(!is.na(log2FoldChange.glass.tpc.res)) %>%
+  dplyr::mutate(is.limited.gsam.res = as.character(abs(log2FoldChange.gsam.res) > 2.5)) %>% # change pch to something that is limited
+  dplyr::mutate(log2FoldChange.gsam.res = ifelse(log2FoldChange.gsam.res > 2.5, 2.5 , log2FoldChange.gsam.res)) %>%
+  dplyr::mutate(log2FoldChange.gsam.res = ifelse(log2FoldChange.gsam.res < -2.5, -2.5 , log2FoldChange.gsam.res)) %>%
+  dplyr::mutate(is.limited.gsam.tpc.res = as.character(abs(log2FoldChange.gsam.tpc.res) > 2.5)) %>% # change pch to something that is limited
+  dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res > 2.5, 2.5 , log2FoldChange.gsam.tpc.res)) %>%
+  dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res < -2.5, -2.5 , log2FoldChange.gsam.tpc.res)) %>%
   dplyr::mutate(is.limited.glass.res = as.character(abs(log2FoldChange.glass.res) > 2.5)) %>% # change pch to something that is limited
   dplyr::mutate(log2FoldChange.glass.res = ifelse(log2FoldChange.glass.res > 2.5, 2.5 , log2FoldChange.glass.res)) %>%
-  dplyr::mutate(log2FoldChange.glass.res = ifelse(log2FoldChange.glass.res < -2.5, -2.5 , log2FoldChange.glass.res)) 
+  dplyr::mutate(log2FoldChange.glass.res = ifelse(log2FoldChange.glass.res < -2.5, -2.5 , log2FoldChange.glass.res)) %>%
+  dplyr::mutate(is.limited.glass.tpc.res = as.character(abs(log2FoldChange.glass.tpc.res) > 2.5)) %>% # change pch to something that is limited
+  dplyr::mutate(log2FoldChange.glass.tpc.res = ifelse(log2FoldChange.glass.tpc.res > 2.5, 2.5 , log2FoldChange.glass.tpc.res)) %>%
+  dplyr::mutate(log2FoldChange.glass.tpc.res = ifelse(log2FoldChange.glass.tpc.res < -2.5, -2.5 , log2FoldChange.glass.tpc.res)) 
+
+
 
 p1 <- ggplot(plt, aes(x = log2FoldChange.glass.res ,
                       y =  statistic.gsam.cor.tpc,
-                    shape = is.limited.glass.res ,
-                    size = is.limited.glass.res  ,
-                    col = is.limited.glass.res  ) ) +
-      geom_hline(yintercept = 0, col="gray60",lwd=0.5) +
-      geom_vline(xintercept = 0, col="gray60",lwd=0.5) +
-      geom_point() +
-      geom_smooth(data = subset(plt, padj.glass.res > 0.05 &  is.limited.glass.res == "FALSE"),method="lm",
-                  se = FALSE,  formula=y ~ x, orientation="y", col="red" , size=0.8) +
-      scale_shape_manual(values = c('TRUE'= 4, 'FALSE' = 19)   )  +
-      scale_size_manual(values = c('TRUE'= 0.85, 'FALSE' = 0.1)    ) +
-      scale_color_manual(values = c('TRUE'= 'black', 'FALSE' = rgb(0,0,0,0.65))    ) +
-      youri_gg_theme + 
-      labs(x = "log2FC R1 vs. R2 (unpaired)",
-           y="Correlation t-statistic with tumour percentage",
-           shape = "Truncated at x-axis",
-           size="Truncated at x-axis",
-           col="Truncated at x-axis") +
-      xlim(-2.5,2.5) +
-      ylim(-16.5,16.5)
+                      shape = is.limited.glass.res ,
+                      size = is.limited.glass.res  ,
+                      col = is.limited.glass.res  ) ) +
+  geom_hline(yintercept = 0, col="gray60",lwd=0.5) +
+  geom_vline(xintercept = 0, col="gray60",lwd=0.5) +
+  geom_point() +
+  geom_smooth(data = subset(plt, padj.glass.res > 0.05 &  is.limited.glass.res == "FALSE"),method="lm",
+              se = FALSE,  formula=y ~ x, orientation="y", col="red" , size=0.8) +
+  scale_shape_manual(values = c('TRUE'= 4, 'FALSE' = 19)   )  +
+  scale_size_manual(values = c('TRUE'= 0.85, 'FALSE' = 0.1)    ) +
+  scale_color_manual(values = c('TRUE'= 'black', 'FALSE' = rgb(0,0,0,0.65))    ) +
+  youri_gg_theme + 
+  labs(x = "log2FC R1 vs. R2 (unpaired)",
+       y="Correlation t-statistic with tumour percentage",
+       shape = "Truncated at x-axis",
+       size="Truncated at x-axis",
+       col="Truncated at x-axis") +
+  xlim(-2.5,2.5) +
+  ylim(-16.5,16.5)
+
+p2 <- ggplot(plt, aes(x = log2FoldChange.glass.tpc.res ,
+                      y =  statistic.gsam.cor.tpc,
+                      shape = is.limited.glass.tpc.res ,
+                      size = is.limited.glass.tpc.res  ,
+                      col = is.limited.glass.tpc.res  ) ) +
+  geom_hline(yintercept = 0, col="gray60",lwd=0.5) +
+  geom_vline(xintercept = 0, col="gray60",lwd=0.5) +
+  geom_point() +
+  geom_smooth(data = subset(plt, padj.glass.tpc.res > 0.05 &  is.limited.glass.tpc.res == "FALSE"),method="lm",
+              se = FALSE,  formula=y ~ x, orientation="y", col="red" , size=0.8) +
+  scale_shape_manual(values = c('TRUE'= 4, 'FALSE' = 19)   )  +
+  scale_size_manual(values = c('TRUE'= 0.85, 'FALSE' = 0.1)    ) +
+  scale_color_manual(values = c('TRUE'= 'black', 'FALSE' = rgb(0,0,0,0.65))    ) +
+  youri_gg_theme + 
+  labs(x = "log2FC R1 vs. R2 (unpaired)",
+       y="Correlation t-statistic with tumour percentage",
+       shape = "Truncated at x-axis",
+       size="Truncated at x-axis",
+       col="Truncated at x-axis") +
+  xlim(-2.5,2.5) +
+  ylim(-16.5,16.5)
+
+p3 <- ggplot(plt, aes(x = log2FoldChange.glass.tpc.res ,
+                      y =  statistic.glass.cor.tpc,
+                      shape = is.limited.glass.tpc.res ,
+                      size = is.limited.glass.tpc.res  ,
+                      col = is.limited.glass.tpc.res  ) ) +
+  geom_hline(yintercept = 0, col="gray60",lwd=0.5) +
+  geom_vline(xintercept = 0, col="gray60",lwd=0.5) +
+  geom_point() +
+  geom_smooth(data = subset(plt, padj.glass.tpc.res > 0.05 &
+                              is.limited.glass.tpc.res == "FALSE"),method="lm",
+              se = FALSE,  formula=y ~ x, orientation="y", col="red" , size=0.8) +
+  scale_shape_manual(values = c('TRUE'= 4, 'FALSE' = 19)   )  +
+  scale_size_manual(values = c('TRUE'= 0.85, 'FALSE' = 0.1)    ) +
+  scale_color_manual(values = c('TRUE'= 'black', 'FALSE' = rgb(0,0,0,0.65))    ) +
+  youri_gg_theme + 
+  labs(x = "log2FC R1 vs. R2 (unpaired)",
+       y="Correlation t-statistic with tumour percentage",
+       shape = "Truncated at x-axis",
+       size="Truncated at x-axis",
+       col="Truncated at x-axis") +
+  xlim(-2.5,2.5) +
+  ylim(-16.5,16.5)
+
+
+p1 + p2 + p3
 
 
 
@@ -2311,6 +2600,8 @@ p2 <- ggplot(plt, aes(x = stat.gsam.res ,
   ylim(-8,8)
 
 
+
+cor(plt$stat.gsam.res, plt$stat.glass.res) # r=0.63
 
 
 p1 / p2
@@ -3102,6 +3393,9 @@ p3b <- ggplot(plt, aes(x=log2FoldChange.glass.res , y=statistic.gsam.cor.tpc , c
 (p2a + p1a + p3a) / (p2b + p1b + p3b) 
 
 
+ggsave("output/figures/corr_de_glioblastoma_relevant_genes.png", width=15,height=10)
+
+
 
 ## 2.13 Uncorrected LFC + cell types ----
 
@@ -3323,10 +3617,136 @@ ggsave("output/figures/paper_dge_cell-type_genes.png",width=2*6, height=6*6)
 
 
 ## 2.14 Corrplot marker genes ----
-#
-# dit figuur 
-# TCGA.subtype.marker,GliTS.reduxsubtype.marker
-# 
+
+
+### A :: each patient separately ----
+
+
+labels <- results.out %>% 
+  dplyr::filter(!is.na(primary.marker.genes)) %>%
+  dplyr::filter(!is.na(gid)) %>%
+  dplyr::filter(primary.marker.genes %in% c('CL subtype', 'MES subtype', 'PN subtype') == F ) %>%
+  dplyr::select(c('gid', 'hugo_symbol' , 'primary.marker.genes')) %>%
+  rbind(data.frame('gid'='tumor-% DNA', hugo_symbol = 'tumor-% DNA', primary.marker.genes = 'tumor-% DNA')) %>%
+  reshape2::dcast (gid + hugo_symbol ~ primary.marker.genes, fill = F,fun.aggregate = as.logical)
+
+
+plt <- labels %>%
+  dplyr::filter(gid != 'tumor-% DNA') %>%
+  dplyr::select('gid','hugo_symbol') %>%
+  dplyr::left_join(gsam.gene.expression.all.vst %>%
+                     as.data.frame %>%
+                     tibble::rownames_to_column('gid')
+                   , by=c('gid'='gid')) %>% 
+  tibble::column_to_rownames('hugo_symbol') %>%
+  dplyr::mutate(gid = NULL)
+
+
+plt.tpc <- data.frame(sid = colnames(plt)) %>%
+  dplyr::left_join(gsam.metadata.all %>% dplyr::select(c('sid','tumour.percentage.dna')), by=c('sid'='sid')) %>%
+  dplyr::rename('tumor-% DNA' = tumour.percentage.dna) %>%
+  tibble::column_to_rownames('sid') %>%
+  t()
+
+
+plt <- rbind(plt, plt.tpc)
+
+
+labels <- labels %>% 
+  `rownames<-`(NULL) %>%
+  tibble::column_to_rownames('hugo_symbol') %>%
+  dplyr::mutate(gid = NULL)  %>%
+  dplyr::mutate_all(is.na)
+
+
+cor_cor_plot(plt, labels)
+
+
+
+ggsave("output/figures/paper_dge_corrplot_expression_gene_per_patient.png",width = 1200 * 2, height = 900 * 2 ,units="px" )
+
+
+
+
+
+### B :: LFC per gepaard sample ----
+
+
+labels <- results.out %>% 
+  dplyr::filter(!is.na(primary.marker.genes)) %>%
+  dplyr::filter(primary.marker.genes %in% c('CL subtype', 'MES subtype', 'PN subtype') == F ) %>%
+  dplyr::select(c('gid', 'hugo_symbol' , 'primary.marker.genes')) %>%
+  rbind(data.frame('gid'='tumor-% DNA', hugo_symbol = 'tumor-% DNA', primary.marker.genes = 'tumor-% DNA')) %>%
+  reshape2::dcast (gid + hugo_symbol ~ primary.marker.genes, fill = F,fun.aggregate = as.logical)
+
+
+plt <- labels %>%
+  dplyr::filter(gid != 'tumor-% DNA') %>%
+  dplyr::select('gid','hugo_symbol') %>%
+  dplyr::left_join(gsam.gene.expression.all.vst %>%
+                     as.data.frame %>%
+                     tibble::rownames_to_column('gid')
+                   , by=c('gid'='gid')) %>% 
+  dplyr::select(c('gid','hugo_symbol',colnames(gsam.gene.expression.all.paired))) %>% # <3
+  dplyr::filter(gid %in% labels$gid) %>%
+  dplyr::mutate(gid = NULL) %>%
+  tibble::column_to_rownames('hugo_symbol')
+
+
+odd <- 1:ncol(plt) %>% purrr::keep(~ . %% 2 == 1)
+even <- 1:ncol(plt) %>% purrr::keep(~ . %% 2 == 0)
+
+
+
+plt.r1 <- plt[,odd] 
+plt.r2 <- plt[,even]
+stopifnot ( gsub("^(...).*$","\\1",colnames(plt.r1)) == gsub("^(...).*$","\\1",colnames(plt.r2)) )
+rm(plt)
+
+
+plt <- log2(plt.r1 %>% `colnames<-`(gsub("^(...).*$","\\1",colnames(.))) /
+            plt.r2 %>% `colnames<-`(gsub("^(...).*$","\\1",colnames(.))) )
+
+
+
+plt <- rbind(plt,
+  dplyr::full_join(
+    data.frame(sid = colnames(plt.r1)) %>%
+      dplyr::left_join(gsam.metadata.all.paired %>% dplyr::select(c('sid','tumour.percentage.dna')), by=c('sid'='sid')) %>%
+      dplyr::mutate(pid = gsub("^(...).*$","\\1",sid)) %>%
+      dplyr::rename(tumour.percentage.dna.R1 = tumour.percentage.dna) %>%
+      dplyr::mutate(sid = NULL) ,
+    data.frame(sid = colnames(plt.r2)) %>%
+      dplyr::left_join(gsam.metadata.all.paired %>% dplyr::select(c('sid','tumour.percentage.dna')), by=c('sid'='sid')) %>%
+      dplyr::mutate(pid = gsub("^(...).*$","\\1",sid))%>%
+      dplyr::rename(tumour.percentage.dna.R2 = tumour.percentage.dna) %>%
+      dplyr::mutate(sid = NULL) , by = c('pid'='pid'))  %>%
+    dplyr::mutate(`tumor-% DNA` = log2(tumour.percentage.dna.R1 / tumour.percentage.dna.R2)) %>%
+    dplyr::mutate(tumour.percentage.dna.R1 = NULL, tumour.percentage.dna.R2 = NULL) %>%
+    tibble::column_to_rownames('pid') %>%
+    t()
+  )
+
+stopifnot(labels$hugo_symbol == rownames(plt))
+
+
+labels <- labels %>% 
+  dplyr::mutate(gid = NULL) %>%
+  tibble::column_to_rownames('hugo_symbol')
+
+
+
+cor_cor_plot(plt, labels)
+
+
+
+ggsave("output/figures/paper_dge_corrplot_logFc_gene_per_pair.png",width = 1200 * 2, height = 900 * 2 ,units="px" )
+
+
+
+
+
+## old random stuff? ----
 
 a.cl = results.out %>%
   dplyr::filter(!is.na(TCGA.subtype.marker) | !is.na(GliTS.reduxsubtype.marker)) %>%
@@ -3372,36 +3792,34 @@ corrplot::corrplot(cor(t(b), method="pearson") %>% `colnames<-`(NULL), method = 
 
 plt <- data.frame(
   hugo_symbol = c(
-    a
-    
-    
-  #   "CREB5",	"TRIM24",	"ETV1", "COA1", # tumor/chr7 gain
-  #   "CD45",
-  #   
-  #   "CACHD1","AHCYL1","GPR37L1","BMPR1B", # astroctyes
-  #   #"RBFOX3", "GABRB2", "SLC17A7","SST", # neuron
-  #   "RBFOX3", "GABRB2","GABRA1","GABRG2","GABBR2",
-  # 
-  #   #"SSTR1","SSTR2","SSTR3","SSTR5", # Antibodies
-  #   #"GABRA1","GABRA2","GABRB1","GABRB2",
-  #   #"TNNT1", "TNNT2", "TNNT3",
-  #   
-  #   "PLP1", "OPALIN", "TMEM144","CLCA4", # oligodendrocyte
-  #   #"PDGFA", "PDGFRA", "OLIG1", "OLIG2", "OLIG3",
-  #   
-  #   "TIE1","PEAR1","RGS5","NOSTRIN",  # endothelial
-  #   "CD163",  "CD14", "C1QA","THEMIS2" # TAM/MG
-  #   
-  #   ,"CD4","CD2", "CD3D", "CD3E","CD8A" # t-cell? TIL
-  #   
-  #   ###, "MME", "ERG", "FCER2", "EPCAM", "EREG" << !!
-  #   ,"EGFR"
-  #   ,"EREG","AREG", "BTC","HBEGF","NGF","TGFA","EGF","EPGN",
-  #   
-  #   #"ARHGAP28","RHGEF26","BVES-AS1","BVES","CACNA2D1","CDH4","CNGA3","COL11A1","ELOVL2","ETV4","EVA1A","FGFR3","GNAI1","LFNG","LHFPL6","POPDC3","PPARGC1A","RFX4","RNF180","ROBO2","SLC24A3","SOCS2-AS1","SOCS2","SOX9","SULF1","TACR1","TAP1","VAV3"
-  #   
-  #   "TOP2A", "CDK1", "DTL", "CCNB1", "XRCC2", "CCNE2", "DSN1", "TIMELESS", # Cell Cycle genes Patel/Bernstein
-  #   "VEGFA", "ADM", "TREM1", "ENO1", "LDHA", "NRN1", "UBC", "GBE1", "MIF" # Hypoxia genes Patel Bernstein
+
+  "CREB5",	"TRIM24",	"ETV1", "COA1", # tumor/chr7 gain
+  "CD45",
+
+  "CACHD1","AHCYL1","GPR37L1","BMPR1B", # astroctyes
+  #"RBFOX3", "GABRB2", "SLC17A7","SST", # neuron
+  "RBFOX3", "GABRB2","GABRA1","GABRG2","GABBR2",
+
+  #"SSTR1","SSTR2","SSTR3","SSTR5", # Antibodies
+  #"GABRA1","GABRA2","GABRB1","GABRB2",
+  #"TNNT1", "TNNT2", "TNNT3",
+
+  "PLP1", "OPALIN", "TMEM144","CLCA4", # oligodendrocyte
+  #"PDGFA", "PDGFRA", "OLIG1", "OLIG2", "OLIG3",
+
+  "TIE1","PEAR1","RGS5","NOSTRIN",  # endothelial
+  "CD163",  "CD14", "C1QA","THEMIS2" # TAM/MG
+
+  ,"CD4","CD2", "CD3D", "CD3E","CD8A" # t-cell? TIL
+
+  ###, "MME", "ERG", "FCER2", "EPCAM", "EREG" << !!
+  ,"EGFR"
+  ,"EREG","AREG", "BTC","HBEGF","NGF","TGFA","EGF","EPGN",
+
+  #"ARHGAP28","RHGEF26","BVES-AS1","BVES","CACNA2D1","CDH4","CNGA3","COL11A1","ELOVL2","ETV4","EVA1A","FGFR3","GNAI1","LFNG","LHFPL6","POPDC3","PPARGC1A","RFX4","RNF180","ROBO2","SLC24A3","SOCS2-AS1","SOCS2","SOX9","SULF1","TACR1","TAP1","VAV3"
+
+  "TOP2A", "CDK1", "DTL", "CCNB1", "XRCC2", "CCNE2", "DSN1", "TIMELESS", # Cell Cycle genes Patel/Bernstein
+  "VEGFA", "ADM", "TREM1", "ENO1", "LDHA", "NRN1", "UBC", "GBE1", "MIF" # Hypoxia genes Patel Bernstein
   )) %>%
   dplyr::left_join(results.out %>% 
       dplyr::select(c('gid','hugo_symbol','McKenzie_celltype_top_human_specificity','show.marker.chr7',TCGA.subtype.marker,  GliTS.reduxsubtype.marker)) %>%
@@ -3411,7 +3829,9 @@ plt <- data.frame(
   dplyr::mutate(type = ifelse(is.na(type), 'NA', type) ) %>%
   dplyr::mutate(type = ifelse(show.marker.chr7 & type != 'astrocyte' , 'chr7/gain' , type)) %>%
   dplyr::mutate(show.marker.chr7 = NULL) %>%
-  dplyr::filter(!is.na(gid)) 
+  dplyr::filter(!is.na(gid))  %>%
+  dplyr::mutate(TCGA.subtype.marker = NULL) %>%
+  dplyr::mutate(GliTS.reduxsubtype.marker = NULL)
 
 
 
@@ -3481,12 +3901,16 @@ tmp <- rbind(tmp.2, tmp)
 # tmp <- t(tmp) %>% as.data.frame %>% select(o) %>% t()
 
 
+tmp.3 <- tmp %>% 
+          t() %>%
+        cor(method="pearson") %>%
+      `colnames<-`(NULL)
+
+
 #png(file = "output/figures/paper_dge_corrplot_logFc_gene_per_patient.png", width = 1200 * 0.8, height = 900 *0.8 )
-corrplot::corrplot(cor(t(tmp), method="pearson") %>% `colnames<-`(NULL), method = "circle",tl.cex=1, order='hclust')
+corrplot::corrplot(tmp.3, method = "circle",tl.cex=1, order='hclust')
 #dev.off()
 
-
-pheatmap::pheatmap(tmp,scale="row", clustering_distance_rows = "correlation")
 
 
 
@@ -3494,49 +3918,62 @@ pheatmap::pheatmap(tmp,scale="row", clustering_distance_rows = "correlation")
 
 ## 2.16 Corrected LFC + individual tophits ----
 
+# stap 1 - maak de selectie (en visualiseer deze)
 
 
 plt <- results.out %>%
-  dplyr::filter(!is.na(log2FoldChange.gsam.res) & !is.na(log2FoldChange.gsam.tpc.res)  & !is.na(statistic.gsam.cor.tpc) ) %>%
+  dplyr::filter( !is.na(log2FoldChange.gsam.tpc.res)   ) %>%
+  dplyr::filter( !is.na(log2FoldChange.glass.tpc.res)  ) %>%
+  dplyr::filter( !is.na(padj.gsam.tpc.res)   ) %>%
+  dplyr::filter( !is.na(padj.glass.tpc.res)  ) %>%
   
-  dplyr::mutate(is.limited.gsam.tpc.res = as.character(abs(log2FoldChange.gsam.tpc.res) > 2)) %>% # change pch to something that is limited
-  dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res > 2, 2 , log2FoldChange.gsam.tpc.res)) %>%
-  dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res < -2, -2 , log2FoldChange.gsam.tpc.res)) %>%
+  dplyr::mutate(is.limited.gsam.tpc.res = as.character(abs(log2FoldChange.gsam.tpc.res) > 2.5)) %>% # change pch to something that is limited
+  dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res > 2.5, 2.5 , log2FoldChange.gsam.tpc.res)) %>%
+  dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res < -2.5, -2.5 , log2FoldChange.gsam.tpc.res)) %>%
   
-  dplyr::mutate(is.limited.gsam.tpc.res = as.character(abs(log2FoldChange.gsam.tpc.res) > 3)) %>% # change pch to something that is limited
-  dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res > 3, 3 , log2FoldChange.gsam.tpc.res)) %>%
-  dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res < -3, -3 , log2FoldChange.gsam.tpc.res)) %>%
+  dplyr::mutate(is.limited.glass.tpc.res = as.character(abs(log2FoldChange.glass.tpc.res) > 2.5)) %>% # change pch to something that is limited
+  dplyr::mutate(log2FoldChange.glass.tpc.res = ifelse(log2FoldChange.glass.tpc.res > 2.5, 2.5 , log2FoldChange.glass.tpc.res)) %>%
+  dplyr::mutate(log2FoldChange.glass.tpc.res = ifelse(log2FoldChange.glass.tpc.res < -2.5, -2.5 , log2FoldChange.glass.tpc.res)) %>%
   
-  dplyr::mutate(significant = padj.gsam.tpc.res < 0.01 & lfcSE.gsam.tpc.res < 0.3 & abs(log2FoldChange.gsam.tpc.res) > 0.5 ) %>%
-  dplyr::mutate(show.label = 
-                  #padj.gsam.tpc.res < 0.00001 &
-                  #  lfcSE.gsam.tpc.res < 0.3 &
-                  #  is.na(McKenzie_celltype_top_human_specificity)
-                  hugo_symbol %in% c('LIF', 'IL6', 'NOS2', 'VAV3')
-  ) # hugo_symbol %in% c(
+  dplyr::mutate(direction.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res > 0 , "up", "down") ) %>%
+  dplyr::mutate(direction.glass.tpc.res = ifelse(log2FoldChange.glass.tpc.res > 0 , "up", "down") ) %>%
+  
+  dplyr::mutate(significant = 
+                  padj.gsam.tpc.res < 0.01 &
+                  abs(log2FoldChange.gsam.tpc.res) > 0.5 &
+                  #padj.glass.tpc.res < 0.05
+                  abs(log2FoldChange.glass.tpc.res) > 0.5 & 
+                  direction.gsam.tpc.res == direction.glass.tpc.res
+                #lfcSE.gsam.tpc.res < 0.3 &
+                ) %>%
+  dplyr::mutate(show.label = significant == T)
 
-plt %>% filter(show.label) %>% pull(hugo_symbol)
+
+# a = plt %>%
+#   dplyr::filter(significant == T) %>% 
+#   dplyr::filter(log2FoldChange.gsam.tpc.res < 0 )
+
 
 
 p1 <- ggplot(plt, aes(x=log2FoldChange.gsam.tpc.res , y=statistic.gsam.cor.tpc , col=show.label, label = hugo_symbol )) + 
   geom_point(data=subset(plt, show.label == F),cex=0.35) +
   geom_point(data=subset(plt, show.label == T ),col="black",cex=0.65) +
-  geom_text_repel(data=subset(plt, show.label == T & log2FoldChange.gsam.tpc.res > 0), col="blue", size=2.5 ,nudge_x = 3.1, direction = "y", hjust = "left", segment.size=0.35) + 
-  geom_text_repel(data=subset(plt, show.label == T & log2FoldChange.gsam.tpc.res < 0), col="blue", size=2.5 , nudge_x = -3.1, direction = "y", hjust = "right", segment.size=0.35) + 
+  #geom_text_repel(data=subset(plt, show.label == T & log2FoldChange.gsam.tpc.res > 0), col="blue", size=2.5 ,nudge_x = 3.1, direction = "y", hjust = "left", segment.size=0.35) + 
+  #geom_text_repel(data=subset(plt, show.label == T & log2FoldChange.gsam.tpc.res < 0), col="blue", size=2.5 , nudge_x = -3.1, direction = "y", hjust = "right", segment.size=0.35) + 
   scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
   labs(x = "log2FC R1 vs. R2 (Tumor cell percentage corrected)",
        y="Correlation t-statistic with tumour percentage"
        ,col="Difference significant (R1 ~ R2)") +
   youri_gg_theme + xlim(-3, 3)
 
-p2 <- ggplot(plt, aes(x=log2FoldChange.glass.res ,
-                      y=statistic.gsam.cor.tpc  ,
+p2 <- ggplot(plt, aes(x=log2FoldChange.glass.tpc.res ,
+                      y=statistic.glass.cor.tpc  ,
                       col=show.label,
                       label = hugo_symbol )) + 
   geom_point(data=subset(plt,  show.label == F),cex=0.35) +
   geom_point(data=subset(plt, show.label == T),col="red",cex=0.65) +
-  geom_text_repel(data=subset(plt, show.label == T & log2FoldChange.gsam.tpc.res > 0), col="blue", size=2.5 ,                   nudge_x = 3.1, direction = "y", hjust = "left" ) +
-  geom_text_repel(data=subset(plt, show.label == T & log2FoldChange.gsam.tpc.res < 0), col="blue", size=2.5 ,                  nudge_x = -3.1, direction = "y", hjust = "right"  ) +
+  #geom_text_repel(data=subset(plt, show.label == T & log2FoldChange.gsam.tpc.res > 0), col="blue", size=2.5 ,                   nudge_x = 3.1, direction = "y", hjust = "left" ) +
+  #geom_text_repel(data=subset(plt, show.label == T & log2FoldChange.gsam.tpc.res < 0), col="blue", size=2.5 ,                  nudge_x = -3.1, direction = "y", hjust = "right"  ) +
   scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
   labs(x = "log2FC R1 vs. R2 GLASS",
        y="Correlation t-statistic with tumour percentage"
@@ -3546,6 +3983,60 @@ p2 <- ggplot(plt, aes(x=log2FoldChange.glass.res ,
   xlim(-3, 3)
 
 p1 + p2
+
+
+
+### corrplot 'm ----
+
+
+
+
+labels <- results.out %>%
+  dplyr::filter( !is.na(log2FoldChange.gsam.tpc.res)   ) %>%
+  dplyr::filter( !is.na(log2FoldChange.glass.tpc.res)  ) %>%
+  dplyr::filter( !is.na(padj.gsam.tpc.res)   ) %>%
+  dplyr::filter( !is.na(padj.glass.tpc.res)  ) %>%
+  
+  dplyr::mutate(direction.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res > 0 , "up", "down") ) %>%
+  dplyr::mutate(direction.glass.tpc.res = ifelse(log2FoldChange.glass.tpc.res > 0 , "up", "down") ) %>%
+  
+  dplyr::mutate(direction_up = ifelse(log2FoldChange.gsam.tpc.res > 0 , T, F) ) %>%
+  dplyr::mutate(direction_down = ifelse(log2FoldChange.gsam.tpc.res < 0 , T, F) ) %>%
+  
+  dplyr::mutate(significant = 
+                  padj.gsam.tpc.res < 0.01 &
+                  abs(log2FoldChange.gsam.tpc.res) > 0.5 &
+                  abs(log2FoldChange.glass.tpc.res) > 0.5 & 
+                  direction.gsam.tpc.res == direction.glass.tpc.res) %>%
+  
+  dplyr::filter(significant == T) %>%
+  dplyr::select(c('gid', 'hugo_symbol' , 'McKenzie_celltype_top_human_specificity', 'direction_up', 'direction_down')) %>% 
+  
+  dplyr::slice_head(n=25) %>%
+  
+  reshape2::dcast (gid + hugo_symbol + direction_up + direction_down ~ McKenzie_celltype_top_human_specificity, fill = F,fun.aggregate = as.logical) %>%
+  dplyr::mutate('NA'=NULL)
+
+
+plt <- labels %>%
+  dplyr::select('gid','hugo_symbol') %>%
+  dplyr::left_join(gsam.gene.expression.all.vst %>%
+                     as.data.frame %>%
+                     tibble::rownames_to_column('gid')
+                   , by=c('gid'='gid')) %>% 
+  tibble::column_to_rownames('hugo_symbol') %>%
+  dplyr::mutate(gid = NULL)
+
+
+labels <- labels %>% 
+  `rownames<-`(NULL) %>%
+  tibble::column_to_rownames('hugo_symbol') %>%
+  dplyr::mutate(gid = NULL) 
+
+
+cor_cor_plot(plt, labels)
+
+
 
 
 ## 2.17a Corrected LFC + individual tophits ----
@@ -4903,4 +5394,24 @@ ggplot(plt, aes(x= log2FoldChange.glass.res,
        col="Difference significant (R1 ~ R2)"
   ) +
   youri_gg_theme
+
+
+
+
+# c("ENSG00000168137.16_5|SETD5|chr3:9439299-9520924(+)", "ENSG00000167785.9_3|ZNF558|chr19:8916846-8942990(-)", "ENSG00000171649.12_4|ZIK1|chr19:58089824-58105258(+)", "ENSG00000198521.7|ZNF43|chr19:21987752-22034927(-)", "ENSG00000204514.10_5|ZNF814|chr19:58360099-58400442(-)", "ENSG00000175414.7_4|ARL10|chr5:175792490-175828866(+)", "ENSG00000066117.14_4|SMARCD1|chr12:50478755-50494495(+)", "ENSG00000106344.8_5|RBM28|chr7:127937738-127983962(-)", "ENSG00000188321.13_4|ZNF559|chr19:9434448-9461838(+)", "ENSG00000078177.14_4|N4BP2|chr4:40058470-40159872(+)", "ENSG00000197299.12_4|BLM|chr15:91260577-91359396(+)", "ENSG00000008311.15_3|AASS|chr7:121713603-121784309(-)", "ENSG00000197128.11_3|ZNF772|chr19:57978031-57988938(-)", "ENSG00000138443.16_5|ABI2|chr2:204192962-204312451(+)", "ENSG00000105708.9_3|ZNF14|chr19:19821281-19843921(-)", "ENSG00000197928.10_3|ZNF677|chr19:53738634-53758151(-)", "ENSG00000198799.12_4|LRIG2|chr1:113615820-113674882(+)", "ENSG00000131115.16_4|ZNF227|chr19:44711700-44741421(+)", "ENSG00000103037.11_3|SETD6|chr16:58549383-58555085(+)", "ENSG00000204519.11_4|ZNF551|chr19:58193337-58228669(+)", "ENSG00000198551.10_5|ZNF627|chr19:11670189-11729976(+)", "ENSG00000189079.17_5|ARID2|chr12:46123489-46301823(+)", "ENSG00000007392.16_4|LUC7L|chr16:238968-279462(-)", "ENSG00000135164.18_5|DMTF1|chr7:86781677-86825653(+)", "ENSG00000105866.15_5|SP4|chr7:21467661-21554440(+)", "ENSG00000164828.18_7|SUN1|chr7:856252-936072(+)", "ENSG00000105486.14_6|LIG1|chr19:48618702-48673860(-)", "ENSG00000167637.17_4|ZNF283|chr19:44331473-44356169(+)", "ENSG00000254004.7_3|ZNF260|chr19:37001589-37019173(-)", "ENSG00000177839.6_5|PCDHB9|chr5:140566701-140571114(+)", "ENSG00000162086.15_4|ZNF75A|chr16:3355406-3368852(+)", "ENSG00000134744.14_6|TUT4|chr1:52873954-53019159(-)", "ENSG00000120784.16_5|ZFP30|chr19:38104650-38183238(-)", "ENSG00000147274.14_4|RBMX|chrX:135930163-135962923(-)", "ENSG00000129351.17_3|ILF3|chr19:10764937-10803093(+)", "ENSG00000151612.17_6|ZNF827|chr4:146678779-146859975(-)", "ENSG00000166704.11_3|ZNF606|chr19:58488421-58514717(-)", "ENSG00000106443.16_3|PHF14|chr7:11012963-11209257(+)", "ENSG00000004139.14_4|SARM1|chr17:26691378-26731067(+)", "ENSG00000122779.18_4|TRIM24|chr7:138145004-138274741(+)", "ENSG00000160961.12_3|ZNF333|chr19:14800613-14844558(+)", "ENSG00000167380.16_4|ZNF226|chr19:44669226-44682534(+)", "ENSG00000122970.16_4|IFT81|chr12:110562140-110656598(+)", "ENSG00000071575.11_2|TRIB2|chr2:12857015-12882860(+)", "ENSG00000263001.6_5|GTF2I|chr7:74064571-74175022(+)", "ENSG00000236609.4_3|ZNF853|chr7:6655241-6663921(+)", "ENSG00000197647.11_5|ZNF433|chr19:12125547-12146556(-)", "ENSG00000104885.18_3|DOT1L|chr19:2163932-2232577(+)", "ENSG00000113387.12_4|SUB1|chr5:32531739-32604185(+)", "ENSG00000167384.10_2|ZNF180|chr19:44978645-45004576(-)")
+# c("ENSG00000111885.7_4|MAN1A1|chr6:119498370-119670926(-)", "ENSG00000141506.13_4|PIK3R5|chr17:8782228-8869029(-)", "ENSG00000166272.18_5|WBP1L|chr10:104503705-104594273(+)", "ENSG00000198624.13_3|CCDC69|chr5:150560613-150603654(-)", "ENSG00000197746.14_4|PSAP|chr10:73576055-73611082(-)", "ENSG00000151726.14_4|ACSL1|chr4:185676749-185747972(-)", "ENSG00000107968.10_3|MAP3K8|chr10:30722950-30750762(+)", "ENSG00000266412.5_3|NCOA4|chr10:51565108-51590734(+)", "ENSG00000131370.16_5|SH3BP5|chr3:15295860-15382875(-)", "ENSG00000100365.16_5|NCF4|chr22:37257030-37274059(+)", "ENSG00000082397.17_7|EPB41L3|chr18:5392380-5630699(-)", "ENSG00000204161.14_6|TMEM273|chr10:50362770-50396630(-)", "ENSG00000108639.7_5|SYNGR2|chr17:76164639-76169608(+)", "ENSG00000248905.8_6|FMN1|chr15:33057746-33486934(-)", "ENSG00000084070.12_5|SMAP2|chr1:40810522-40888998(+)", "ENSG00000110079.18_5|MS4A4A|chr11:59953175-60085417(+)", "ENSG00000155252.13_3|PI4K2A|chr10:99400443-99436191(+)", "ENSG00000134996.11_2|OSTF1|chr9:77703459-77762181(+)", "ENSG00000130775.16_3|THEMIS2|chr1:28199054-28213196(+)", "ENSG00000122359.18_5|ANXA11|chr10:81910645-81965328(-)", "ENSG00000110324.10_3|IL10RA|chr11:117857063-117873752(+)", "ENSG00000165457.14_4|FOLR2|chr11:71927645-71932994(+)", "ENSG00000155926.14_4|SLA|chr8:134048973-134115156(-)", "ENSG00000134516.17_6|DOCK2|chr5:169064272-169510386(+)", "ENSG00000173372.17_4|C1QA|chr1:22963121-22966171(+)", "ENSG00000163131.11_4|CTSS|chr1:150702664-150738268(-)", "ENSG00000153071.15_5|DAB2|chr5:39371777-39462402(-)", "ENSG00000101336.14_6|HCK|chr20:30639991-30689659(+)", "ENSG00000175155.9_4|YPEL2|chr17:57409016-57479090(+)", "ENSG00000128805.14_4|ARHGAP22|chr10:49654077-49864310(-)", "ENSG00000148180.19_5|GSN|chr9:123970072-124095121(+)", "ENSG00000142185.16_6|TRPM2|chr21:45770046-45862964(+)", "ENSG00000111912.20_7|NCOA7|chr6:126102307-126253180(+)", "ENSG00000155659.15_5|VSIG4|chrX:65241580-65259967(-)", "ENSG00000137462.8_4|TLR2|chr4:154605222-154626854(+)", "ENSG00000180353.11_3|HCLS1|chr3:121350246-121379774(-)", "ENSG00000147459.18_4|DOCK5|chr8:25042204-25275598(+)", "ENSG00000136250.11_5|AOAH|chr7:36552557-36764154(-)", "ENSG00000235568.6_2|NFAM1|chr22:42776416-42828401(-)", "ENSG00000198879.11_3|SFMBT2|chr10:7200586-7453448(-)", "ENSG00000197142.10_2|ACSL5|chr10:114133776-114188138(+)", "ENSG00000143119.14_4|CD53|chr1:111413810-111442544(+)", "ENSG00000138964.17_5|PARVG|chr22:44568836-44615413(+)", "ENSG00000167613.16_5|LAIR1|chr19:54862991-54882165(-)", "ENSG00000183484.12_5|GPR132|chr14:105515732-105531782(-)", "ENSG00000130830.15_5|MPP1|chrX:154006959-154049282(-)", "ENSG00000101160.14_3|CTSZ|chr20:57570240-57582309(-)", "ENSG00000205744.10_4|DENND1C|chr19:6467218-6482568(-)", "ENSG00000100368.14_6|CSF2RB|chr22:37309670-37336481(+)", "ENSG00000012779.11_3|ALOX5|chr10:45869624-45941567(+)")
+
+results.out %>%
+  dplyr::arrange(-statistic.gsam.cor.tpc) %>%
+  dplyr::select(c(gid, ensembl_id, hugo_symbol, statistic.gsam.cor.tpc)) %>%
+  dplyr::slice_head(n=50) %>%
+  dplyr::pull(ensembl_id)
+
+results.out %>%
+  dplyr::arrange(statistic.gsam.cor.tpc) %>%
+  dplyr::select(c(gid, ensembl_id, hugo_symbol, statistic.gsam.cor.tpc)) %>%
+  dplyr::slice_head(n=50) %>%
+  dplyr::pull(ensembl_id)
+
+
 
