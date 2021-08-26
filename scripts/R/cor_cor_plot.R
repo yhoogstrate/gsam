@@ -6,17 +6,20 @@ setwd("~/projects/gsam")
 
 library(ggplot2)
 library(tidyverse)
-#library(ggforce)
 
-rm(geomnet)
-rm(geom_circle)
-detach("package:geomnet")
-detach("package:geomnet", unload=TRUE)
-detach("function:geom_circle", unload=TRUE)
-remove.packages('geomnet')
-devtools::install_github("yhoogstrate/geomnet")
+# rm(geomnet)
+# rm(geom_circle)
+# detach("package:geomnet")
+# detach("package:geomnet", unload=TRUE)
+# detach("function:geom_circle", unload=TRUE)
+# remove.packages('geomnet')
+# devtools::install_github("yhoogstrate/geomnet")
+# library(geomnet)
+
+
+
+#devtools::install_github("yhoogstrate/geomnet")
 library(geomnet)
-
 
 
 col2 <- colorRampPalette(c("#67001F", "#B2182B", "#D6604D", "#F4A582",
@@ -26,10 +29,33 @@ col2 <- colorRampPalette(c("#67001F", "#B2182B", "#D6604D", "#F4A582",
 
 
 
+# > plt
+#             AAB1     AAC1     AAD1     AAF1     AAF2     AAJ1
+# AJAP1   6.792060 5.161832 7.320888 5.750563 8.084654 6.998988
+# CHD5    7.048284 4.729151 5.568896 6.923165 9.552252 8.421078
+# FBXO2   5.517842 5.274932 5.099118 4.902737 7.686516 6.200491
+# GABRD   5.962070 6.069547 7.433840 5.167848 7.068670 5.738693
+# HSPB7   5.158878 5.375160 6.101220 5.670945 5.787876 5.464138
+# PLCH2   6.027242 5.120413 4.676221 5.810424 7.591514 6.172717
+# PRKCZ   6.027242 6.598770 5.436837 6.295483 7.761095 7.659296
+# TMEM88B 4.995062 4.243987 4.550191 4.243987 5.698900 4.621858
 
-cor_cor_plot <- function(normalised_correlated_data, labels) {
+
+# > labels
+#         direction_up direction_down
+# AJAP1           TRUE          FALSE
+# CHD5            TRUE          FALSE
+# FBXO2           TRUE          FALSE
+# GABRD           TRUE          FALSE
+# HSPB7           TRUE          FALSE
+# PLCH2           TRUE          FALSE
+# PRKCZ           TRUE          FALSE
+# TMEM88B         TRUE          FALSE
+
+
+cor_cor_plot <- function(normalised_correlated_data, labels, method="ward.D2") {
   
-  normalised_correlated_data <- plt
+  #normalised_correlated_data <- plt
   
   # remove duplicate entries:
   plt <- normalised_correlated_data %>%
@@ -44,10 +70,11 @@ cor_cor_plot <- function(normalised_correlated_data, labels) {
     cor()
   
   # find order by taking correlation of the correlation
-  h <- hclust( as.dist(1 - cor(plt)) ) # Geniale manier om te clusteren!!!
-  o <- h$labels[h$order]
-  rm(h)
+  h <- hclust( as.dist(1 - cor(plt)) , method = method ) # Geniale manier om te clusteren!!!
+  o <- h$labels[h$order] %>% rev()
   
+  ph <- ggdendro::ggdendrogram(h, rotate = TRUE, theme_dendro = FALSE) +
+    ggdendro::theme_dendro()
   
   # re-order to cor-cor clustering order and transform from data.frame into matrix
   plt <- plt %>%
@@ -93,7 +120,7 @@ cor_cor_plot <- function(normalised_correlated_data, labels) {
     geomnet::geom_circle(radius.fixed = T) + # not to be confused w/ geomnet::geom_circle
     scale_x_discrete(labels = NULL, breaks = NULL) +
     theme(legend.position = 'bottom',
-          axis.text.y = element_text(size = 9, angle = 0, hjust = 1, vjust = 0.5),
+          axis.text.y = element_text(size = 6, angle = 0, hjust = 1, vjust = 0.5),
           axis.text.x = element_text(angle = 90, hjust = 0, vjust = 0.5, color="gray80"),
           
           text = element_text(size=13),
@@ -114,53 +141,45 @@ cor_cor_plot <- function(normalised_correlated_data, labels) {
     reshape2::melt(id.vars = c('gid','i'))  
   
   
-  p2 <- ggplot(plt, aes(x = i , y = variable, fill=value, label=gid)) +
+  p2 <- ggplot(plt , aes(x = i , y = variable , fill=value, label=gid)) +
     geom_tile(col='white',lwd=0.6) +
     #scale_x_discrete(position = "bottom")  + 
     scale_x_discrete(labels = NULL, breaks = NULL) +
     theme(axis.text.x = element_text(angle = 90, hjust = 0, vjust = 0.5),
+          axis.text.y = element_text(size = 7, angle = 0, hjust = 1, vjust = 0.5),
           panel.grid.major = element_blank(),
           panel.grid.minor = element_blank(),
           panel.background = element_blank(),
           axis.line = element_blank()
           ) +
     guides(fill="none") +
-    ggplot2::coord_fixed() +
+    ggplot2::coord_fixed(ratio = 2.75) +
     labs(x=NULL, y=NULL) + 
-    scale_fill_manual(values=c('TRUE'='gray40','FALSE'='gray95')) 
-    #xlim(1, length(o) )
+    scale_fill_manual(values=c('TRUE'='red','FALSE'='gray95')) 
+    #scale_fill_manual(values=c('TRUE'='gray40','FALSE'='gray95')) 
 
   
-  p2 / p1
+  #(p2 / p1) / ph
+  
+  #(p2 + plot_layout(guides = 'collect') ) /
+  #(p1 + (ph))
+  
+  
+  layout <- '
+A#
+BC'
+  wrap_plots(A = p2, B = p1, C = (ph + plot_spacer () )  , design = layout)
+  
+  #  (p2 + plot_spacer()  + plot_layout(widths = c(1, 0.5)) ) /
+  #  (p1 + ph + plot_layout(widths = c(1, 0.5)))
+    
+    
+  
+  # (p1 + theme(plot.margin = unit(c(0,30,0,0), "pt"))) +
+  #  (p2 + theme(plot.margin = unit(c(0,0,0,30), "pt")))
   
   
 }
-
-
-cor_cor_plot(plt, labels)
-
-
-
-
-# plt.expanded2 <- plt.expanded2 %>%
-#   dplyr::mutate(r = ((abs(value) * 0.7) + 0.3) / 2 - 0.05) %>%
-#   dplyr::mutate(r = r / 15)
-
-
-
-#saveRDS(plt.expanded2 , file="tmp/tmp.Rds")
-plt.expanded2  <- readRDS(file="tmp/tmp.Rds")
-
-# , 
-# fill=value,
-# col=value,
-# label=x
-
-plt <- plt.expanded2 %>% dplyr::slice_head(n=2)
-
-ggplot(plt, aes( x = x.order, y = y.order, radius = r)) +
-  geom_circle(radius.fixed = T) # not to be confused w/ geomnet::geom_circle
-
 
 
 

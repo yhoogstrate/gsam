@@ -233,7 +233,10 @@ rm(cond)
 # Add imputed / predict TPCs ----
 
 glass.gbm.rnaseq.metadata <- glass.gbm.rnaseq.metadata %>%
-  dplyr::left_join(read.table("output/tables/GLASS.tumour.percentage.dna.imputed.caret.txt"), by=c('sid'='sid'))
+  dplyr::mutate(tumour.percentage.dna.imputed.caret = NULL) %>%
+  dplyr::mutate(tumour.percentage.dna.imputed.rf = NULL) %>%
+  #dplyr::left_join(read.table("output/tables/GLASS.tumour.percentage.dna.imputed.caret.txt"), by=c('sid'='sid'))%>%
+  dplyr::left_join(read.table("output/tables/GLASS.tumour.percentage.dna.imputed.rf.txt"), by=c('sid'='sid'))
 
 
 
