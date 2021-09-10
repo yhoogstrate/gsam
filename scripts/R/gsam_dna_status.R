@@ -1,6 +1,8 @@
 #!/usr/bin/env R 
 
-tmp <- read.csv('data/administratie/GSAM_combined_clinical_molecular.csv', stringsAsFactors=F)
+library(tidyverse)
+
+tmp <- read.csv('data/gsam/administratie/GSAM_combined_clinical_molecular.csv', stringsAsFactors=F)
 rownames(tmp) <- tmp$studyID
 tmp$X.1 <- NULL
 tmp$X <- NULL
