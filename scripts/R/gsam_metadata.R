@@ -40,13 +40,24 @@ gsam.patient.metadata <- gsam.patient.metadata %>%
 ## ---- DNA exome-seq ----
 
 
+# it remains unclear what files are missing
+
+
+gsam.wes.samples <- data.frame(file = Sys.glob('data/gsam/DNA/dna_data_2020/request_962/PDexport/decrypted/*/mapped_sample/*.bam')) %>%
+  dplyr::mutate(wesid1 = gsub("^.+/decrypted/([^/]+)/.+$","\\1", file)) %>% #   #dplyr::mutate(wesid2 = gsub("^.+_([^\\.]+)\\..+$","\\1", file))
+  dplyr::mutate(batch = as.factor(gsub("_.+$","",wesid1))) %>%
+  dplyr::mutate(wesid1 = gsub("^.+_","",wesid1))
+
+
+
+
 
 gsam.cnv.metadata <- read.delim("data/gsam/DNA/sample codes sanger gsam.txt",stringsAsFactors=FALSE) %>%
   dplyr::mutate(pid = gsub("[1-2]$","",donor_ID)) %>%
   dplyr::select(c("donor_ID", "pid", "PD_ID", "donor_sex", "donor_age_at_diagnosis","Concentration.at.QC..ng.ul.","Volume.at.QC..ul.","Amount.at.QC..ug.")) %>%
   dplyr::full_join(
     
-    tmp <- read.delim('data/gsam/output/tables/cnv_copynumber-ratio.cnr_log2_all.txt',stringsAsFactors=F) %>%
+    read.delim('data/gsam/output/tables/cnv_copynumber-ratio.cnr_log2_all.txt',stringsAsFactors=F) %>%
       dplyr::select( - c('chromosome', 'start', 'end', 'gene') ) %>%
       dplyr::slice_head(n=1) %>%
       t() %>%
@@ -54,7 +65,8 @@ gsam.cnv.metadata <- read.delim("data/gsam/DNA/sample codes sanger gsam.txt",str
       tibble::rownames_to_column('cnv.table.id') %>%
       dplyr::mutate(V1 = NULL) %>%
       dplyr::mutate(sid = gsub("\\.b[12]$","",cnv.table.id) ) %>%
-      dplyr::mutate(batch =  as.factor(gsub("^[^\\.]+\\.","",cnv.table.id)) )  
+      dplyr::mutate(batch =  as.factor(gsub("^[^\\.]+\\.","",cnv.table.id))) %>%
+      dplyr::mutate(CNVKIT.output = T)
     
     , by=c('PD_ID' = 'sid')) %>%
   dplyr::left_join(gsam.patient.metadata , by=c('pid' = 'studyID')) %>%
@@ -63,7 +75,7 @@ gsam.cnv.metadata <- read.delim("data/gsam/DNA/sample codes sanger gsam.txt",str
     read.delim('data/gsam/output/tables/dna/idh_mutations.txt', stringsAsFactors = F, header=F) %>%
       `colnames<-`(c('PD_ID' , 'IDH.mutation', 'IDH.mutation.call.status', 'IDH.mutation.VAF', 'IDH.mutation.count')),
   by = c('PD_ID'='PD_ID')) %>%
-  dplyr::select(c('donor_ID', 'pid', 'PD_ID', 'IDH1', 'IDH.mutation', 'IDH.mutation.call.status', 'IDH.mutation.VAF', 'IDH.mutation.count')) %>%
+  dplyr::select(c('donor_ID', 'pid', 'PD_ID', 'IDH1', 'IDH.mutation', 'IDH.mutation.call.status', 'IDH.mutation.VAF', 'IDH.mutation.count','CNVKIT.output')) %>%
   dplyr::mutate(tmp = ifelse(is.na(IDH.mutation), 'NA' , IDH.mutation)) %>%
   dplyr::mutate(tmp = case_when(
                 tmp == "NA" ~ '0',
@@ -82,7 +94,6 @@ gsam.cnv.metadata <- read.delim("data/gsam/DNA/sample codes sanger gsam.txt",str
   dplyr::mutate(resection = ifelse(resection == "RN", NA ,resection) )
   
   
-
 
 
 ## ---- RNA-seq metadata [full] ----
@@ -423,8 +434,8 @@ stopifnot('NMF.123456.PCA.LDA.class' %in% colnames(gsam.rna.metadata) == F)
 ## Gravendeel class ----
 
 
-gsam.rna.metadata <- gsam.rna.metadata %>%
-  dplyr::left_join(read.table("output/tables/gravendeel_centroid_classification_gsam.txt"), by=c('sid' = 'sid'))
+#gsam.rna.metadata <- gsam.rna.metadata %>%
+#  dplyr::left_join(read.table("output/tables/gravendeel_centroid_classification_gsam.txt"), by=c('sid' = 'sid'))
 
 
 
