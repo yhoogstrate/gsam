@@ -1,63 +1,69 @@
 #!/usr/bin/env R 
 
+# load libs ----
+
+
 library(tidyverse)
 
-tmp <- read.csv('data/gsam/administratie/GSAM_combined_clinical_molecular.csv', stringsAsFactors=F)
-rownames(tmp) <- tmp$studyID
-tmp$X.1 <- NULL
-tmp$X <- NULL
-#tmp$studyID <- NULL
 
-# not needed for this sudy?
-tmp$gender <- NULL
-tmp$age <- NULL
-tmp$status <- NULL
-tmp$survivalDays <- NULL
-tmp$nDocumentedRecurrences <- NULL
-tmp$progressionFreeDays <- NULL
-tmp$survivalFromSecondSurgeryDays <- NULL
-tmp$extentOfResectionFirstSurgery <- NULL
-tmp$extentFirstSurgeryConfirmedByMRI <- NULL
-tmp$tumorLocation <- NULL
-tmp$initialHistology <- NULL
-tmp$performanceAtStartRT <- NULL
-tmp$steroidsAtStartRT <- NULL
-tmp$steroidsDosageAtStartRT <- NULL
-tmp$initialMGMT <- NULL
-tmp$treatedWithRT <- NULL
-tmp$dosageRT <- NULL
-tmp$treatedWithTMZ <- NULL
-tmp$daysToCompletionRT <- NULL
-tmp$nCyclesTMZ <- NULL
-tmp$daysToLastCycleTMZ <- NULL
-tmp$reasonDiscontinuationTMZ <- NULL
-tmp$otherTreatmentsBeforeSecondSurgery <- NULL
-tmp$daysToSecondSurgery <- NULL
-tmp$secondSurgeryForRecurrenceNumber <- NULL
-tmp$extentOfResectionSecondSurgery <- NULL
-tmp$extentSecondSurgeryConfirmedByMRI <- NULL
-tmp$recurrentHistology <- NULL
-tmp$performanceAtSecondSurgery <- NULL
-tmp$sizeLargestLesionSecondSurgery <- NULL
-tmp$nTargetLesionsSecondSurgery <- NULL
-tmp$steroidsBeforeSecondSurgery <- NULL
-tmp$treatmentDetailsFirstPD <- NULL
-tmp$discontinuationReasonTreatmentFirstPD <- NULL
-tmp$daysToSecondPD <- NULL
-tmp$treatmentForSecondPD <- NULL
-tmp$treatmentDetailsSecondPD <- NULL
-tmp$discontinuationReasonTreatmentSecondPD <- NULL
-tmp$daysToThirdPD <- NULL
-tmp$treatmentForThirdPD <- NULL
-tmp$treatmentDetailsThirdPD <- NULL
-tmp$discontinuationReasonTreatmentThirdPD <- NULL
-tmp$daysToFourthPD <- NULL
-tmp$treatmentForFourthPD <- NULL
-tmp$treatmentDetailsFourthPD <- NULL
-tmp$discontinuationReasonTreatmentFourthPD <- NULL
-tmp$daysToFifthPD <- NULL
-tmp$centerLetter <- NULL
-tmp$PID <- NULL
+# load data ----
+
+
+#tmp$studyID <- NULL
+tmp <- read.csv('data/gsam/administratie/GSAM_combined_clinical_molecular.csv', stringsAsFactors=F) %>%
+  tibble::column_to_rownames('studyID') %>%
+  dplyr::mutate(X.1 = NULL, X = NULL) %>%
+  dplyr::mutate(gender = NULL) %>%
+  dplyr::mutate(age = NULL) %>%
+  dplyr::mutate(status = NULL) %>%
+  dplyr::mutate(survivalDays = NULL) %>%
+  dplyr::mutate(nDocumentedRecurrences = NULL) %>%
+  dplyr::mutate(progressionFreeDays = NULL) %>%
+  dplyr::mutate(survivalFromSecondSurgeryDays = NULL) %>%
+  dplyr::mutate(extentOfResectionFirstSurgery = NULL) %>%
+  dplyr::mutate(extentFirstSurgeryConfirmedByMRI = NULL) %>%
+  dplyr::mutate(tumorLocation = NULL) %>%
+  dplyr::mutate(initialHistology = NULL) %>%
+  dplyr::mutate(performanceAtStartRT = NULL) %>%
+  dplyr::mutate(steroidsAtStartRT = NULL) %>%
+  dplyr::mutate(steroidsDosageAtStartRT = NULL) %>%
+  dplyr::mutate(initialMGMT = NULL) %>%
+  dplyr::mutate(treatedWithRT = NULL) %>%
+  dplyr::mutate(dosageRT = NULL) %>%
+  dplyr::mutate(treatedWithTMZ = NULL) %>%
+  dplyr::mutate(daysToCompletionRT = NULL) %>%
+  dplyr::mutate(nCyclesTMZ = NULL) %>%
+  dplyr::mutate(daysToLastCycleTMZ = NULL) %>%
+  dplyr::mutate(reasonDiscontinuationTMZ = NULL) %>%
+  dplyr::mutate(otherTreatmentsBeforeSecondSurgery = NULL) %>%
+  dplyr::mutate(daysToSecondSurgery = NULL) %>%
+  dplyr::mutate(secondSurgeryForRecurrenceNumber = NULL) %>%
+  dplyr::mutate(extentOfResectionSecondSurgery = NULL) %>%
+  dplyr::mutate(extentSecondSurgeryConfirmedByMRI = NULL) %>%
+  dplyr::mutate(recurrentHistology = NULL) %>%
+  dplyr::mutate(performanceAtSecondSurgery = NULL) %>%
+  dplyr::mutate(sizeLargestLesionSecondSurgery = NULL) %>%
+  dplyr::mutate(nTargetLesionsSecondSurgery = NULL) %>%
+  dplyr::mutate(steroidsBeforeSecondSurgery = NULL) %>%
+  dplyr::mutate(treatmentDetailsFirstPD = NULL) %>%
+  dplyr::mutate(discontinuationReasonTreatmentFirstPD = NULL) %>%
+  dplyr::mutate(daysToSecondPD = NULL) %>%
+  dplyr::mutate(treatmentForSecondPD = NULL) %>%
+  dplyr::mutate(treatmentDetailsSecondPD = NULL) %>%
+  dplyr::mutate(discontinuationReasonTreatmentSecondPD = NULL) %>%
+  dplyr::mutate(daysToThirdPD = NULL) %>%
+  dplyr::mutate(treatmentForThirdPD = NULL) %>%
+  dplyr::mutate(treatmentDetailsThirdPD = NULL) %>%
+  dplyr::mutate(discontinuationReasonTreatmentThirdPD = NULL) %>%
+  dplyr::mutate(daysToFourthPD = NULL) %>%
+  dplyr::mutate(treatmentForFourthPD = NULL) %>%
+  dplyr::mutate(treatmentDetailsFourthPD = NULL) %>%
+  dplyr::mutate(discontinuationReasonTreatmentFourthPD = NULL) %>%
+  dplyr::mutate(daysToFifthPD = NULL) %>%
+  dplyr::mutate(centerLetter = NULL) %>%
+  dplyr::mutate(PID = NULL)
+
+
 tmp[is.na(tmp)] <- "N/A"
 
 
