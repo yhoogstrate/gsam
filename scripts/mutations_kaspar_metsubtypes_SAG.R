@@ -205,13 +205,40 @@ cnv_plot <- ggplot(dat_cnv, aes(x = reorder(reorder(reorder(pid,transition),to_M
 
 
 
-## plot x neuronal & oligodendrocyte scores etc. ----
+# plot x neuronal & oligodendrocyte scores etc. ----
 
 
 
-plt.tight <- gsam.patient.metadata
-  
-  
+
+
+plt.tight <- gsam.patient.metadata %>% 
+  dplyr::rename(pid = studyID ) %>%
+  dplyr::filter(IDH1 == "Wildtype") %>%
+  dplyr::mutate(order.1 =  match(1:nrow(.), order(- (nMutationsRecurrent - nMutationsPrimary)))) %>%
+  dplyr::mutate(order.2 =  match(1:nrow(.), order(EGFR))) %>%
+  dplyr::select(pid,PTEN,PIK3C2G,PIK3CA,TSC2,MTOR,PIK3R1,TP53, TP53BP1, EGFR, ERBB3, FGFR3, IGF1R,
+                EPHA3, KIT, NF1, MAP3K1, KRAS, KMT2D, KMT2C, ARID2, SETD2, ATM, BRCA2, MSH6, BRCA1,
+                MSH2, RB1, BUB1B, JAK2, IDH1, IDH2, APC, AXIN2, cnStatusCDKN2ABs, order.1)
+
+
+
+plt <- plt.tight %>%
+  melt(., id.vars=c("pid", "order.1"))
+
+
+
+ggplot(plt, aes(x = reorder(pid, order.1), y = variable, fill = value)) +
+  geom_tile(colour = "black", size = 0.3) +
+  theme(axis.title.x=element_blank(),
+        axis.text.x = element_text(angle = 90,vjust = 0.5, hjust=1),
+        axis.title.y=element_blank(),
+        axis.ticks.y =element_blank(),
+        legend.title = element_blank(),
+        axis.text=element_text(size=5),
+        legend.key.size = unit(0.3, 'cm')) +
+  scale_fill_manual(values = c("#bb5f6c", "#79b1b1", "#2e415e", "white","grey")) +
+  coord_equal() 
+
 
 
 
