@@ -1,20 +1,30 @@
-#setwd("~/projects/gsam")
+#!/usr/bin/env R 
 
-#### ---- load data ---- ####
+# load libs ----
+
 library(tidyverse)
 library(reshape2)
 library(RColorBrewer)
 library(cowplot)
 
-source('~/projects/gsam/scripts/R/job_gg_theme.R')
-source('~/projects/gsam/scripts/R/youri_gg_theme.R')
-source('~/projects/gsam/scripts/R/palette.R')
+
+#  load data ----
+
+source('scripts/R/job_gg_theme.R')
+source('scripts/R/youri_gg_theme.R')
+source('scripts/R/palette.R')
+
 source('scripts/R/gsam_rna-seq_expression.R') # recursively calls metadata
-source('scripts/R/subtype_genes.R')
-source('scripts/R/glass_expression_matrix.R')
-source('data/wang/msig.library.12.R')  # no license w/ code provided, can't include it in source tree
-source('scripts/R/wang_glioma_intrinsic_genes.R')
-       
+source('scripts/R/gsam_metadata.R') # recursively calls metadata
+
+#source('scripts/R/subtype_genes.R')
+#source('scripts/R/glass_expression_matrix.R')
+#source('data/wang/msig.library.12.R')  # no license w/ code provided, can't include it in source tree
+#source('scripts/R/wang_glioma_intrinsic_genes.R')
+
+
+      
+
 subtypes <- read.delim("output/tables/gsam_nmf_lda_data.txt", sep = "") 
 
 dat <- merge(x = gsam.metadata, y = gsam.patient.metadata, by.x = "pid", by.y = "studyID", all.x = TRUE)
@@ -24,6 +34,8 @@ dat <- merge(x = gsam.metadata, y = gsam.patient.metadata, by.x = "pid", by.y = 
 #                       EPHA3, KIT, NF1, MAP3K1, KRAS, KMT2D, KMT2C, ARID2, SETD2, ATM, BRCA2, MSH6, BRCA1,
 #                       MSH2, RB1, BUB1B, JAK2, IDH1, IDH2, APC, AXIN2, mgmtStability,tertPrimary,nMutationsPrimary,nMutationsRecurrent,
 #                       cnStatusEGFRs,viiiStability,daysToSecondSurgery, survivalFromSecondSurgeryDays, gender,treatedWithTMZ,treatedWithRT, HM,nMutationsPrimary)
+
+
 
 #### ---- surv plot ---- ####
 dat_surv <- dat %>%
@@ -123,4 +135,18 @@ cnv_plot <- ggplot(dat_cnv, aes(x = reorder(reorder(reorder(pid,transition),to_M
         legend.key.size = unit(0.3, 'cm')) +
   scale_fill_manual(values = c("#f59d87", "grey", "orange", "#555b8a", "#eb4634", "white", "green")) +
   coord_equal() 
+
+
+
+## plot x neuronal & oligodendrocyte scores etc. ----
+
+
+
+plt.tight <- gsam.patient.metadata
+  
+  
+
+
+
+
 
