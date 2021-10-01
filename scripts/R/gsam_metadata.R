@@ -478,9 +478,9 @@ gsam.rna.metadata <- gsam.rna.metadata %>%
 
 # 〰 © Dr. Youri Hoogstrate 〰 ----
 
-# ---- summary plots ---- 
+# summary plots ---- 
 
-## ---- tumour percentages rna samples ----
+# tumour percentages rna samples ----
 
 #ggplot(gsam.rna.metadata , aes(y = tumour.percentage.dna , x = reorder( sid , tumour.percentage.dna) , col=resection)  ) + 
 #  geom_hline(yintercept = 15, col="red", lty=2) + 

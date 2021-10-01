@@ -116,12 +116,14 @@ glass.gbm.rnaseq.metadata <- data.frame(sid = colnames(glass.gbm.rnaseq.expressi
 
 
 # exclude samples from patients that had a no grade IV tumor
-no.grave.iv <- glass.gbm.rnaseq.metadata %>%
+no.grade.iv <- glass.gbm.rnaseq.metadata %>%
   dplyr::filter(grade %in% c('II','III')) %>%
   dplyr::pull(pid)
 
 glass.gbm.rnaseq.metadata <- glass.gbm.rnaseq.metadata %>%
-  dplyr::filter(pid %in% no.grave.iv == F )
+  dplyr::filter(pid %in% no.grade.iv == F )
+
+rm(no.grade.iv)
 
 
 stopifnot(!is.na(glass.gbm.rnaseq.metadata$GBM.transcriptional.subtype.Synapse))
