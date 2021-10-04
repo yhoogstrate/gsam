@@ -54,7 +54,9 @@ plt.expanded <- data.frame(pid = unique(plt.ids$pid) ) %>%
   dplyr::mutate(R1.R2.status = case_when( is.na(R1) ~ 'R2', is.na(R2) ~ 'R1',     TRUE ~ 'both'   ) ) %>%
   dplyr::left_join(gsam.rna.metadata %>% dplyr::filter(sid %in% plt.ids$sid & resection == "r1") %>% dplyr::select(c('pid','NMF.123456.PCA.SVM.class')) %>% dplyr::rename(R1.rna.subtype = NMF.123456.PCA.SVM.class ),  by = c('pid' = 'pid') ) %>%
   dplyr::left_join(gsam.rna.metadata %>% dplyr::filter(sid %in% plt.ids$sid & resection == "r2") %>% dplyr::select(c('pid','NMF.123456.PCA.SVM.class')) %>% dplyr::rename(R2.rna.subtype = NMF.123456.PCA.SVM.class ),  by = c('pid' = 'pid') ) %>%
-  dplyr::left_join(gsam.rna.metadata %>% dplyr::filter(sid %in% plt.ids$sid & resection == "r1") %>% dplyr::select(c('pid','pat.with.IDH')) %>% dplyr::rename(patient.idh.status = pat.with.IDH ),  by = c('pid' = 'pid') ) %>%
+  dplyr::left_join(
+  gsam.rna.metadata %>% dplyr::select(c('pid','pat.with.IDH')) %>% dplyr::distinct() %>% dplyr::rename(patient.idh.status = pat.with.IDH ),  by = c('pid' = 'pid') ) %>%
+  
   dplyr::mutate(patient.idh.status = ifelse(patient.idh.status == "TRUE", "-", "+") ) %>%
   dplyr::left_join(gsam.rna.metadata %>% dplyr::filter(sid %in% plt.ids$sid &resection == "r1") %>% dplyr::select(c('pid','tumour.percentage.dna')) %>% dplyr::rename(R1.tumour.percentage.dna = tumour.percentage.dna )
     ,  by = c('pid' = 'pid')) %>%
@@ -102,15 +104,56 @@ ggplot(plt, aes(x = reorder(pid, order), y = y, fill=col)) +
   labs(y=NULL, x=NULL)
 
 
-ggsave("output/figures/cohort_overview_gsam.png",width=11,height=3)
+ggsave("output/figures/cohort_overview_gsam.pdf",width=11,height=3)
+
+## n rna-seq
+
+## n=291
+
+(plt.expanded %>%
+  dplyr::filter(is.na(patient.idh.status) | patient.idh.status != "-" ) %>%
+  dplyr::filter(is.na(R1.tumour.percentage.status) | R1.tumour.percentage.status != '-') %>%
+  dplyr::filter(R1.status == "+") %>%
+  nrow) + (plt.expanded %>%
+  dplyr::filter(is.na(patient.idh.status) | patient.idh.status != "-" ) %>%
+  dplyr::filter(is.na(R2.tumour.percentage.status) | R2.tumour.percentage.status != '-') %>%
+  dplyr::filter(R2.status == "+") %>%
+  nrow)
 
 
-# find num paired samples
+## n patients
+
+rbind(plt.expanded %>%
+    dplyr::filter(is.na(patient.idh.status) | patient.idh.status != "-" ) %>%
+    dplyr::filter(is.na(R1.tumour.percentage.status) | R1.tumour.percentage.status != '-') %>%
+    dplyr::filter(R1.status == "+")
+    ,
+    plt.expanded %>%
+               dplyr::filter(is.na(patient.idh.status) | patient.idh.status != "-" ) %>%
+               dplyr::filter(is.na(R2.tumour.percentage.status) | R2.tumour.percentage.status != '-') %>%
+               dplyr::filter(R2.status == "+")
+               ) %>% dplyr::pull('pid') %>% unique %>% length
+
+
+## n complete tumor pairs
+
+plt.expanded %>%
+    dplyr::filter(is.na(patient.idh.status) | patient.idh.status != "-" ) %>%
+    dplyr::filter(is.na(R1.tumour.percentage.status) | R1.tumour.percentage.status != '-') %>%
+    dplyr::filter(is.na(R2.tumour.percentage.status) | R2.tumour.percentage.status != '-') %>%
+    dplyr::filter(R1.status == "+") %>%
+    dplyr::filter(R2.status == "+") %>%
+    nrow
+
+
+
+## find num paired samples ----
 plt.expanded %>%
   dplyr::filter(patient.idh.status != "-" ) %>%
   dplyr::filter( !is.na(R1) ) %>%
   dplyr::filter( !is.na(R2) ) %>%
   dim
+
 
 
 
@@ -205,7 +248,7 @@ ggplot(plt, aes(x = reorder(pid, order), y = y, fill=col)) +
 
 
 
-ggsave("output/figures/cohort_overview_glass.png",width=11,height=3)
+ggsave("output/figures/cohort_overview_glass.pdf",width=11,height=3)
 
 
 
