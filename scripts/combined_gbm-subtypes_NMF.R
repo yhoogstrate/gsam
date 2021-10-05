@@ -1208,14 +1208,29 @@ plt <- plt.single %>%
 
 
 ggplot(plt , aes(x = `NMF:123456.PC1`, y = `NMF:123456.PC2`, group=pid,  col = `NMF:123456.PCA.SVM.status`, label=pid)) +
-  geom_raster(data = nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.SVM.status' = NA, pid=NA, GBM.transcriptional.subtype.Synapse.status=NA) ,  aes(fill = factor(class)), alpha=0.075) +
+  geom_raster(data = nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.SVM.status' = NA, pid=NA, GBM.transcriptional.subtype.Synapse.status=NA) ,  aes(fill = factor(class)), alpha=0.05) +
   geom_contour(data=  nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.SVM.status' = NA, pid=NA, GBM.transcriptional.subtype.Synapse.status=NA) , aes(z=as.numeric(class)), colour="gray40", size=0.25, lty=2,breaks=c(1.5,2.5)) +
-  geom_point(data = plt %>% dplyr::filter(primary.classical & complete.pair & resection == "R1"), aes(fill = `NMF:123456.PCA.SVM.class`), size=2.5, alpha=0.8, col="black",pch=21) +
-  geom_point(data = plt %>% dplyr::filter(!primary.classical | !complete.pair), size=2.5, alpha=0.15, col="black",pch=21, fill='gray80') +
-  geom_path(
-    data = plt %>% dplyr::filter(pid %in% .$pid[duplicated(.$pid)]) %>%
-      dplyr::filter(primary.classical == T),
-    arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.135, "inches")) , alpha = 0.8 ) +
+  geom_point(data = plt %>% dplyr::filter(!primary.classical | !complete.pair), size=2.5 * 0.65, alpha=0.15, col="black",pch=21, fill='gray80') +
+  #geom_path( data = plt %>% dplyr::filter(pid %in% .$pid[duplicated(.$pid)]) %>% dplyr::filter(primary.classical == T), arrow = arrow(ends = "last",  type = "closed", angle=15, length = unit(0.135, "inches")), col="red", alpha = 0.8 ) +
+  geom_segment(data=plt.paired %>%
+                 dplyr::filter(`NMF:123456.PCA.SVM.class.R1` == "Classical" & `NMF:123456.PCA.SVM.class.R2` == "Mesenchymal") %>% 
+                 dplyr::mutate(`NMF:123456.PC1`=`NMF:123456.PC1.R1`, `NMF:123456.PC2`=`NMF:123456.PC2.R1`),
+               aes(xend = `NMF:123456.PC1.R2`, yend=`NMF:123456.PC2.R2`, fill = `NMF:123456.PCA.SVM.class.R2`), arrow.fill="#eab509", col=rgb(0,0,0,0.6),
+               lwd = 0.35,
+               arrow = arrow(ends = "last", type = "closed",  angle=15, length = unit(0.135 * 0.65, "inches"))) +
+  geom_segment(data=plt.paired %>%
+                 dplyr::filter(`NMF:123456.PCA.SVM.class.R1` == "Classical" & `NMF:123456.PCA.SVM.class.R2` == "Proneural") %>% 
+                 dplyr::mutate(`NMF:123456.PC1`=`NMF:123456.PC1.R1`, `NMF:123456.PC2`=`NMF:123456.PC2.R1`),
+               aes(xend = `NMF:123456.PC1.R2`, yend=`NMF:123456.PC2.R2`, fill = `NMF:123456.PCA.SVM.class.R2`), arrow.fill="#ff5f68", col=rgb(0,0,0,0.6),
+               lwd = 0.35,
+               arrow = arrow(ends = "last", type = "closed",  angle=15, length = unit(0.135 * 0.65, "inches"))) +
+  geom_segment(data=plt.paired %>%
+                 dplyr::filter(`NMF:123456.PCA.SVM.class.R1` == "Classical" & `NMF:123456.PCA.SVM.class.R2` == "Classical") %>% 
+                 dplyr::mutate(`NMF:123456.PC1`=`NMF:123456.PC1.R1`, `NMF:123456.PC2`=`NMF:123456.PC2.R1`),
+               aes(xend = `NMF:123456.PC1.R2`, yend=`NMF:123456.PC2.R2`, fill = `NMF:123456.PCA.SVM.class.R2`), arrow.fill="#6ba6e5", col=rgb(0,0,0,0.6), 
+               lwd=0.35,
+               arrow = arrow(ends = "last", type = "closed",  angle=15, length = unit(0.135 * 0.65, "inches"))) +
+  geom_point(data = plt %>% dplyr::filter(primary.classical & complete.pair & resection == "R1"), aes(fill = `NMF:123456.PCA.SVM.class`), size=2.5 * 0.65, alpha=0.8, col="black",pch=21) +
   youri_gg_theme +
   labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", col=NULL,fill="Sub-type") +
   scale_color_manual(values=c('Stable'= rgb(0,0.75,0), 'Transition' = 'gray30','NA'='#cc00cc')) +
@@ -1223,7 +1238,8 @@ ggplot(plt , aes(x = `NMF:123456.PC1`, y = `NMF:123456.PC2`, group=pid,  col = `
   scale_fill_manual(values = subtype_colors)
 
 
-ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_SVM-reclassification_SVM-countours_classical.pdf',width=7,height=7)
+ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_SVM-reclassification_SVM-countours_classical.pdf', width=12 * 0.5,height=10 * 0.5)
+
 
 
 
@@ -1231,48 +1247,75 @@ ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_SVM-reclassification_SVM
 
 
 ggplot(plt , aes(x = `NMF:123456.PC1`, y = `NMF:123456.PC2`, group=pid,  col = `NMF:123456.PCA.SVM.status`, label=pid)) +
-  geom_point()
-
-  geom_raster(data = nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.SVM.status' = NA, pid=NA, GBM.transcriptional.subtype.Synapse.status=NA) ,  aes(fill = factor(class)), alpha=0.075) +
+  geom_raster(data = nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.SVM.status' = NA, pid=NA, GBM.transcriptional.subtype.Synapse.status=NA) ,  aes(fill = factor(class)), alpha=0.05) +
   geom_contour(data=  nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.SVM.status' = NA, pid=NA, GBM.transcriptional.subtype.Synapse.status=NA) , aes(z=as.numeric(class)), colour="gray40", size=0.25, lty=2,breaks=c(1.5,2.5)) +
-  geom_point(data = plt %>% dplyr::filter(primary.mesenchymal & complete.pair & resection == "R1"), aes(fill = `NMF:123456.PCA.SVM.class`), size=2.5, alpha=0.8, col="black",pch=21) +
-  geom_point(data = plt %>% dplyr::filter(!primary.mesenchymal | !complete.pair), size=2.5, alpha=0.15, col="black",pch=21, fill='gray80') +
-  geom_path(
-    data = plt %>% dplyr::filter(pid %in% .$pid[duplicated(.$pid)]) %>%
-      dplyr::filter(primary.mesenchymal == T),
-    arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.135, "inches")) , alpha = 0.8 ) +
+  geom_point(data = plt %>% dplyr::filter(!primary.mesenchymal | !complete.pair), size=2.5 * 0.65, alpha=0.15, col="black",pch=21, fill='gray80') +
+  #geom_path( data = plt %>% dplyr::filter(pid %in% .$pid[duplicated(.$pid)]) %>% dplyr::filter(primary.classical == T), arrow = arrow(ends = "last",  type = "closed", angle=15, length = unit(0.135, "inches")), col="red", alpha = 0.8 ) +
+  geom_segment(data=plt.paired %>%
+                 dplyr::filter(`NMF:123456.PCA.SVM.class.R1` == "Mesenchymal" & `NMF:123456.PCA.SVM.class.R2` == "Mesenchymal") %>% 
+                 dplyr::mutate(`NMF:123456.PC1`=`NMF:123456.PC1.R1`, `NMF:123456.PC2`=`NMF:123456.PC2.R1`),
+               aes(xend = `NMF:123456.PC1.R2`, yend=`NMF:123456.PC2.R2`, fill = `NMF:123456.PCA.SVM.class.R2`), arrow.fill="#eab509", col=rgb(0,0,0,0.6),
+               lwd = 0.35,
+               arrow = arrow(ends = "last", type = "closed",  angle=15, length = unit(0.135 * 0.65, "inches"))) +
+  geom_segment(data=plt.paired %>%
+                 dplyr::filter(`NMF:123456.PCA.SVM.class.R1` == "Mesenchymal" & `NMF:123456.PCA.SVM.class.R2` == "Proneural") %>% 
+                 dplyr::mutate(`NMF:123456.PC1`=`NMF:123456.PC1.R1`, `NMF:123456.PC2`=`NMF:123456.PC2.R1`),
+               aes(xend = `NMF:123456.PC1.R2`, yend=`NMF:123456.PC2.R2`, fill = `NMF:123456.PCA.SVM.class.R2`), arrow.fill="#ff5f68", col=rgb(0,0,0,0.6),
+               lwd = 0.35,
+               arrow = arrow(ends = "last", type = "closed",  angle=15, length = unit(0.135 * 0.65, "inches"))) +
+  geom_segment(data=plt.paired %>%
+                 dplyr::filter(`NMF:123456.PCA.SVM.class.R1` == "Mesenchymal" & `NMF:123456.PCA.SVM.class.R2` == "Classical") %>% 
+                 dplyr::mutate(`NMF:123456.PC1`=`NMF:123456.PC1.R1`, `NMF:123456.PC2`=`NMF:123456.PC2.R1`),
+               aes(xend = `NMF:123456.PC1.R2`, yend=`NMF:123456.PC2.R2`, fill = `NMF:123456.PCA.SVM.class.R2`), arrow.fill="#6ba6e5", col=rgb(0,0,0,0.6), 
+               lwd=0.35,
+               arrow = arrow(ends = "last", type = "closed",  angle=15, length = unit(0.135 * 0.65, "inches"))) +
+  geom_point(data = plt %>% dplyr::filter(primary.mesenchymal & complete.pair & resection == "R1"), aes(fill = `NMF:123456.PCA.SVM.class`), size=2.5 * 0.65, alpha=0.8, col="black",pch=21) +
   youri_gg_theme +
-  #coord_equal() +
   labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", col=NULL,fill="Sub-type") +
   scale_color_manual(values=c('Stable'= rgb(0,0.75,0), 'Transition' = 'gray30','NA'='#cc00cc')) +
   scale_fill_manual(values=c('Stable'= rgb(0,0.75,0), 'Transition' = 'gray30','NA'='#cc00cc')) +
   scale_fill_manual(values = subtype_colors)
 
 
-ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_SVM-reclassification_SVM-countours_mesenchymal.pdf',width=7,height=7)
+
+ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_SVM-reclassification_SVM-countours_mesenchymal.pdf', width=12 * 0.5,height=10 * 0.5)
 
 
 
 
 
 ggplot(plt , aes(x = `NMF:123456.PC1`, y = `NMF:123456.PC2`, group=pid,  col = `NMF:123456.PCA.SVM.status`, label=pid)) +
-  geom_raster(data = nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.SVM.status' = NA, pid=NA, GBM.transcriptional.subtype.Synapse.status=NA) ,  aes(fill = factor(class)), alpha=0.075) +
+  geom_raster(data = nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.SVM.status' = NA, pid=NA, GBM.transcriptional.subtype.Synapse.status=NA) ,  aes(fill = factor(class)), alpha=0.05) +
   geom_contour(data=  nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.SVM.status' = NA, pid=NA, GBM.transcriptional.subtype.Synapse.status=NA) , aes(z=as.numeric(class)), colour="gray40", size=0.25, lty=2,breaks=c(1.5,2.5)) +
-  geom_point(data = plt %>% dplyr::filter(primary.proneural & complete.pair & resection == "R1"), aes(fill = `NMF:123456.PCA.SVM.class`), size=2.5, alpha=0.8, col="black",pch=21) +
-  geom_point(data = plt %>% dplyr::filter(!primary.proneural | !complete.pair), size=2.5, alpha=0.15, col="black",pch=21, fill='gray80') +
-  geom_path(
-    data = plt %>% dplyr::filter(pid %in% .$pid[duplicated(.$pid)]) %>%
-      dplyr::filter(primary.proneural == T),
-    arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.135, "inches")) , alpha = 0.8 ) +
+  geom_point(data = plt %>% dplyr::filter(!primary.proneural | !complete.pair), size=2.5 * 0.65, alpha=0.15, col="black",pch=21, fill='gray80') +
+  #geom_path( data = plt %>% dplyr::filter(pid %in% .$pid[duplicated(.$pid)]) %>% dplyr::filter(primary.classical == T), arrow = arrow(ends = "last",  type = "closed", angle=15, length = unit(0.135, "inches")), col="red", alpha = 0.8 ) +
+  geom_segment(data=plt.paired %>%
+                 dplyr::filter(`NMF:123456.PCA.SVM.class.R1` == "Proneural" & `NMF:123456.PCA.SVM.class.R2` == "Mesenchymal") %>% 
+                 dplyr::mutate(`NMF:123456.PC1`=`NMF:123456.PC1.R1`, `NMF:123456.PC2`=`NMF:123456.PC2.R1`),
+               aes(xend = `NMF:123456.PC1.R2`, yend=`NMF:123456.PC2.R2`, fill = `NMF:123456.PCA.SVM.class.R2`), arrow.fill="#eab509", col=rgb(0,0,0,0.6),
+               lwd = 0.35,
+               arrow = arrow(ends = "last", type = "closed",  angle=15, length = unit(0.135 * 0.65, "inches"))) +
+  geom_segment(data=plt.paired %>%
+                 dplyr::filter(`NMF:123456.PCA.SVM.class.R1` == "Proneural" & `NMF:123456.PCA.SVM.class.R2` == "Proneural") %>% 
+                 dplyr::mutate(`NMF:123456.PC1`=`NMF:123456.PC1.R1`, `NMF:123456.PC2`=`NMF:123456.PC2.R1`),
+               aes(xend = `NMF:123456.PC1.R2`, yend=`NMF:123456.PC2.R2`, fill = `NMF:123456.PCA.SVM.class.R2`), arrow.fill="#ff5f68", col=rgb(0,0,0,0.6),
+               lwd = 0.35,
+               arrow = arrow(ends = "last", type = "closed",  angle=15, length = unit(0.135 * 0.65, "inches"))) +
+  geom_segment(data=plt.paired %>%
+                 dplyr::filter(`NMF:123456.PCA.SVM.class.R1` == "Proneural" & `NMF:123456.PCA.SVM.class.R2` == "Classical") %>% 
+                 dplyr::mutate(`NMF:123456.PC1`=`NMF:123456.PC1.R1`, `NMF:123456.PC2`=`NMF:123456.PC2.R1`),
+               aes(xend = `NMF:123456.PC1.R2`, yend=`NMF:123456.PC2.R2`, fill = `NMF:123456.PCA.SVM.class.R2`), arrow.fill="#6ba6e5", col=rgb(0,0,0,0.6), 
+               lwd=0.35,
+               arrow = arrow(ends = "last", type = "closed",  angle=15, length = unit(0.135 * 0.65, "inches"))) +
+  geom_point(data = plt %>% dplyr::filter(primary.proneural & complete.pair & resection == "R1"), aes(fill = `NMF:123456.PCA.SVM.class`), size=2.5 * 0.65, alpha=0.8, col="black",pch=21) +
   youri_gg_theme +
-  #coord_equal() +
   labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", col=NULL,fill="Sub-type") +
   scale_color_manual(values=c('Stable'= rgb(0,0.75,0), 'Transition' = 'gray30','NA'='#cc00cc')) +
   scale_fill_manual(values=c('Stable'= rgb(0,0.75,0), 'Transition' = 'gray30','NA'='#cc00cc')) +
   scale_fill_manual(values = subtype_colors)
 
 
-ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_SVM-reclassification_SVM-countours_proneural.pdf',width=7,height=7)
+ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_SVM-reclassification_SVM-countours_proneural.pdf', width=12 * 0.5,height=10 * 0.5)
 
 
 
