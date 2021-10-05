@@ -3,8 +3,10 @@
 # load libs ----
 
 
+
+
 library(tidyverse)
-library(NMF)
+#library(NMF) - use one from wang
 #install.packages('NMF')
 library(scales)
 
@@ -24,23 +26,10 @@ library(combinat)
 library(rlang) # https://adv-r.hadley.nz/environments.html
 
 library(limma)
-
-
-
-# env ----
+library(igraph)
 
 library(tidyverse)
 
-d = data.frame(x = 1:9 , y = 2:10 ^2 )
-
-ggplot(d)
-
-
-# nmf.env <- env(PCA = NULL,
-#                expression.vst = NULL,
-#                expression.vst.150 = NULL,
-#                PNC = NULL,
-#                plots = NULL)
 
 
 # load data ----
@@ -67,7 +56,6 @@ source('scripts/R/palette.R')
 
 ## GLASS: vst.150 ----
 
-
 glass.gbm.rnaseq.expression.vst.150 <- glass.gbm.rnaseq.expression.vst %>% 
   as.data.frame() %>%
   tibble::rownames_to_column('gid') %>%
@@ -89,6 +77,7 @@ stopifnot(nrow(glass.gbm.rnaseq.expression.vst.150) == 150)
 ## GLASS: metadata ----
 
 
+
 glass.metadata <- glass.gbm.rnaseq.metadata %>%
   dplyr::slice(match(colnames(glass.gbm.rnaseq.expression.vst.150), sid))
 
@@ -102,6 +91,8 @@ stopifnot(colnames(glass.gbm.rnaseq.expression.vst.150) == glass.metadata$sid)
 
 
 ## G-SAM: vst.150 ----
+
+
 
 
 gsam.rnaseq.expression.vst.150 <- gsam.rnaseq.expression.vst %>%
@@ -130,18 +121,20 @@ stopifnot(nrow(gsam.rnaseq.expression.vst.150) == 150)
 
 
 gsam.metadata <- gsam.rna.metadata %>%
+  dplyr::filter(is.na(tumour.percentage.dna) | tumour.percentage.dna >= 15 ) %>%
   dplyr::mutate(sid = paste0("GSAM-",sid)) %>%
   dplyr::slice(match(colnames(gsam.rnaseq.expression.vst.150), sid))
+
+
+
+gsam.rnaseq.expression.vst.150 <- gsam.rnaseq.expression.vst.150 %>%
+  dplyr::select(gsam.metadata$sid)
 
 
 stopifnot(ncol(gsam.rnaseq.expression.vst.150) > 0)
 stopifnot(ncol(gsam.rnaseq.expression.vst.150) == nrow(gsam.metadata))
 stopifnot(colnames(gsam.rnaseq.expression.vst.150) %in% gsam.metadata$sid)
 stopifnot(gsam.metadata$sid %in% colnames(gsam.rnaseq.expression.vst.150))
-
-
-gsam.rnaseq.expression.vst.150 <- gsam.rnaseq.expression.vst.150 %>%
-  dplyr::select(gsam.metadata$sid)
 
 
 stopifnot(colnames(gsam.rnaseq.expression.vst.150) == gsam.metadata$sid)
@@ -168,6 +161,7 @@ stopifnot(colnames(gsam.rnaseq.expression.vst.150) == gsam.metadata$sid)
 
 # ruwe counts samenvoegen en dan VST en dan Batch correctie is net zo goed als alleen GSAM
 
+
 glass.gbm.rnaseq.expression.150 <- glass.gbm.rnaseq.expression %>% 
   as.data.frame() %>%
   tibble::rownames_to_column('gid') %>%
@@ -185,6 +179,7 @@ glass.gbm.rnaseq.expression.150 <- glass.gbm.rnaseq.expression %>%
 gsam.rnaseq.expression.150 <- gsam.rnaseq.expression %>%
   as.data.frame() %>%
   `colnames<-`(paste0("GSAM-",colnames(.) )   ) %>%
+  dplyr::select(colnames(gsam.rnaseq.expression.vst.150)) %>%
   tibble::rownames_to_column('gid') %>%
   dplyr::mutate(ensg = gsub("\\..+$","",gid)) %>%
   dplyr::mutate(gid = NULL) %>%
@@ -202,6 +197,7 @@ combi.rnaseq.expression.vst.150 <- dplyr::inner_join(
     gsam.rnaseq.expression.150,
   by = c('gid'='ensg')) %>%
   tibble::column_to_rownames('gid')
+
 
 
 # TODO: nice one-liner
@@ -273,12 +269,12 @@ p$x <- p$x %>%
 
 
 
-
-ggplot(p$x, aes(x=PC1, y=PC2 ) ) +
-  geom_point() +
-  youri_gg_theme
-
-plot(p$x$PC1 , p$x$PC2 )
+# 
+# ggplot(p$x, aes(x=PC1, y=PC2 ) ) +
+#   geom_point() +
+#   youri_gg_theme
+# 
+# plot(p$x$PC1 , p$x$PC2 )
 
 
 
@@ -293,30 +289,28 @@ ggplot(p$x, aes(x=PC1, y=PC2, col=subtype.public , label=sid.label ) ) +
 
 
 
-## + NMF:1-3 using Wang-code ----
-
-
-#plt.single <- plt.single %>% dplyr::filter(dataset == "GSAM")
-#combi.rnaseq.expression.vst.150 <- combi.rnaseq.expression.vst.150 %>% as.data.frame %>% dplyr::select(plt.single$sid)
+## + NMF:1-3, using Wang-code ----
 
 
 
-if(!file.exists("tmp/combi.gbm_nmf_150.Rds" ) & F ) {
-   combi.gbm_nmf_150 <- {{}}
-   seeds <- c(123456) #, 12345, 1337, 909) # 123456 is the one used by their paper
-   # 
-   # for(seed in seeds) {
-        combi.gbm_nmf_150[[as.character(seed)]] <- NMF(as.matrix(combi.rnaseq.expression.vst.150), 3, seed = seed)
-   # }
 
-  # rudimentairy code:?
-  # #glass.gbm_nmf_150[["nmf"]] <- nmf(as.data.frame(glass.gbm.rnaseq.expression.vst.150), 3, seed=12345)
+#if(!file.exists("tmp/combi.gbm_nmf_150.Rds" ) & F ) {
+  # avoid re-calculating
+  # NMF is not a pure mathematical solution
+  # it (randomly) converges into more or less the same answers
+  # use the cached data when
+  
+  #combi.gbm_nmf_150 <- {{}}
+  #combi.gbm_nmf_150[[as.character(123456)]] <- NMF(as.matrix(combi.rnaseq.expression.vst.150), 3, seed = 123456) # seed 123456 is the one used by their paper
+  #saveRDS(combi.gbm_nmf_150, "tmp/combi.gbm_nmf_150.new.Rds")
 
-  # huidige mds is baas
-  # #saveRDS(combi.gbm_nmf_150, "tmp/combi.gbm_nmf_150.Rds")
-} else {
-  combi.gbm_nmf_150 <- readRDS("tmp/combi.gbm_nmf_150.Rds")
-}
+  combi.gbm_nmf_150 <- readRDS("tmp/combi.gbm_nmf_150.new.Rds")
+
+
+
+#} else {
+  #combi.gbm_nmf_150 <- readRDS("tmp/combi.gbm_nmf_150.Rds")
+#}
 
 
 
@@ -333,6 +327,46 @@ plt.single <- plt.single %>%
       tibble::rownames_to_column('sid') %>%
       dplyr::mutate(`NMF:123456.membership` = as.factor (combi.gbm_nmf_150 %>% purrr::pluck('123456') %>% purrr::pluck('membership') %>% gsub('^(.+)$','NMF-cluster:\\1',.) ) )
     , by=c('sid' = 'sid') )
+
+
+# Figure S1 A ----
+
+plt <- plt.single %>% 
+  dplyr::select(c('sid', 'NMF:123456.1','NMF:123456.2','NMF:123456.3' , 'NMF:123456.membership', 'subtype.public' )) %>%
+  dplyr::mutate(max.1 = pmax(`NMF:123456.2`, `NMF:123456.3`) ) %>%
+  dplyr::mutate(max.2 = pmax(`NMF:123456.1`, `NMF:123456.3`) ) %>%
+  dplyr::mutate(max.3 = pmax(`NMF:123456.1`, `NMF:123456.2`) ) %>%
+  dplyr::mutate(diff.1 = ifelse(`NMF:123456.1` > max.1, `NMF:123456.1` , 0) ) %>%
+  dplyr::mutate(diff.2 = ifelse(`NMF:123456.2` > max.2, `NMF:123456.2`, 0) ) %>%
+  dplyr::mutate(diff.3 = ifelse(`NMF:123456.3` > max.3, `NMF:123456.3` , 0) ) %>%
+
+  #dplyr::mutate(diff.1 = ifelse(`NMF:123456.membership` == 'NMF-cluster:1', `NMF:123456.1` , 0) ) %>%
+  #dplyr::mutate(diff.2 = ifelse(`NMF:123456.membership` == 'NMF-cluster:2', `NMF:123456.2`, 0) ) %>%
+  #dplyr::mutate(diff.3 = ifelse(`NMF:123456.membership` == 'NMF-cluster:3', `NMF:123456.3` , 0) ) %>%
+  
+  dplyr::mutate(order =  match(1:nrow(.), order(-diff.1, -diff.2, -diff.3))) %>%
+  dplyr::mutate(max.1 = NULL, max.2 = NULL, max.3 = NULL, diff.1 = NULL, diff.2 = NULL, diff.3 = NULL) %>%
+  dplyr::arrange(order) %>%
+  reshape2::melt(id.vars=c("sid", "order", "subtype.public", 'NMF:123456.membership')) %>%
+  dplyr::rename(NMF = variable) %>%
+  dplyr::mutate(NMF = gsub("123456."," W",NMF))
+
+
+ggplot(plt, aes(x=reorder(sid, order), xend=reorder(sid, order), y =value, yend = 0, col=subtype.public) ) +
+  geom_point()  +
+  geom_segment() +
+  facet_grid(rows = vars(NMF), scales = "free", space = "free") +
+  scale_color_manual(values = subtype_colors ) + 
+  labs(col = 'Original Subtype', y = "NMF V-matrix values", x = "Patient sample") + 
+  theme(
+    text = element_text(family = 'Helvetica'),
+    axis.text.x = element_blank(),
+    legend.position = 'bottom'
+  )
+
+
+
+ggsave("output/figures/Figure_S1_A.png", width=12,height=10)
 
 
 
@@ -373,16 +407,89 @@ plt.single <- plt.single %>%
 # store scaling factors
 
 
-#screeplot(p)
+# Figure S1B ----
+#screeplot(p, main="Screeplot PCA on NMF (for p=3)", col="white", lwd=1)
 
+plt <- data.frame(PC= paste0("PC",1:3),
+                               var_explained=(p$sdev)^2/sum((p$sdev)^2)) %>%
+  dplyr::mutate(label = paste0(round(var_explained * 100,1),"%"))
 
-rm(p)
-
-
-
-ggplot(plt.single, aes( x=`NMF:123456.PC1` , y = `NMF:123456.PC2` , col=`subtype.public` )) + 
-  geom_point(size=2) +
+ggplot(plt, aes(x=PC,y=var_explained, group=1, label=label))+
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  geom_col(fill="gray60", col="black", lwd=0.4) +
+  geom_line()+
+  geom_label(y = 0.35, size=4) + 
+  geom_point(size=4)+
+  labs(title="Scree plot: PCA on NMF (for p=3)", x= NULL, y="Variance in NMF V-matrix explained") + 
   youri_gg_theme
+
+
+ggsave("output/figures/Figure_S1_B.png", width=12 * 0.4,height=10 * 0.4)
+
+
+
+  
+# Figure S1C ----
+
+# biplot met nmf coords
+
+
+# https://stackoverflow.com/a/6579572
+
+
+PCbiplot <- function(PC, x="PC1", y="PC2") {
+  # PC being a prcomp object
+  data <- data.frame(obsnames=row.names(PC$x), PC$x, varnames='NMF meta-feature 1')
+  datapc <- data.frame(varnames=rownames(PC$rotation), PC$rotation) %>%
+    dplyr::mutate(varnames = gsub('NMF:123456.','NMF meta-feature ', varnames))
+  
+  #print(head(datapc$varnames))
+  #print(head(datapc))
+  
+  mult <- min(
+    (max(data[,y]) - min(data[,y])/(max(datapc[,y])-min(datapc[,y]))),
+    (max(data[,x]) - min(data[,x])/(max(datapc[,x])-min(datapc[,x])))
+  )
+  datapc <- transform(datapc,
+                      v1 = .7 * mult * (get(x)),
+                      v2 = .7 * mult * (get(y))
+  )
+  
+  ggplot(data, aes(x=PC1, y=PC2, col=varnames)) +
+    geom_point(size=2.5,  col='black', fill='gray', pch=21) +
+    coord_equal() +
+    geom_segment(data=datapc, aes(x=0, y=0, xend=v1, yend=v2), arrow=arrow(length=unit(0.4,"cm")), lwd=1.3, alpha=0.7) +
+    geom_label_repel(data=datapc, aes(x=v1, y=v2, label=varnames), size = 3.5, vjust=1, show.legend=F) +
+    youri_gg_theme +
+    labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", fill = "Sub-type (GlioVis)") +
+    scale_color_manual(values = subtype_colors_nmfm, labels = c('NMF meta-feature 2'='Classical',
+                           'NMF meta-feature 1'='Mesenchymal',
+                           'NMF meta-feature 3'='Proneural')) +
+    labs(col = "Associated sub-type")
+    #+ theme(legend.position = "none")
+}
+
+
+PCbiplot(p)
+
+
+ggsave("output/figures/Figure_S1_C.png", width=12 * 0.4,height=10 * 0.4)
+
+#rm(p)
+
+# Figure S1D ----
+
+
+ggplot(plt.single, aes(x=`NMF:123456.PC1`, y=`NMF:123456.PC2`, fill=subtype.public)) +
+  geom_point(size=2.5,  col='black',  pch=21) +
+  coord_equal() +
+  youri_gg_theme +
+  scale_fill_manual(values = subtype_colors) +
+  labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", fill = "Sub-type (GlioVis)")
+  #theme(legend.position = "none")
+
+ggsave("output/figures/Figure_S1_D.png", width=12 * 0.4,height=10 * 0.4)
+
 
 
 # ## + LDA classification 
@@ -411,27 +518,36 @@ ggplot(plt.single, aes( x=`NMF:123456.PC1` , y = `NMF:123456.PC2` , col=`subtype
 
 
 ## + SVM classification ----
-
 # Aanzienlijk lekkerdere fit dan LDA
 
 
-plt.single$`NMF:123456.PCA.SVM.class` = NULL
-s150.pca.nmf.subtype.classifier.svm <- svm(x = plt.single  %>%
-                                             #dplyr::filter(dataset == "GSAM") %>%
-                                             dplyr::select(c('sid' ,'NMF:123456.PC1', 'NMF:123456.PC2')) %>%
-                                             tibble::column_to_rownames('sid') ,
-                                           y = plt.single %>% 
-                                             #dplyr::filter(dataset == "GSAM") %>%
-                                             dplyr::pull(subtype.public), 
-                                           scale = F,
-                                           #type = "C-classification",
 
-                                           kernel = 'linear',
-                                           tolerance = 0.0001,
-                                           cost = 3
-                                           
-                                           #,probability = T # worse fit, but handy values
-                                           )
+
+if(file.exists("output/tables/gsam_nmf_lda_data.txt")) {
+  a = read.table("output/tables/gsam_nmf_lda_data.txt") 
+  
+  colnames(a)
+}  
+
+s150.pca.nmf.subtype.classifier.svm <- readRDS(s150.pca.nmf.subtype.classifier.svm, 'tmp/s150.pca.nmf.subtype.classifier.svm.Rds')
+# s150.pca.nmf.subtype.classifier.svm <- svm(x = plt.single  %>%
+#                                              #dplyr::filter(dataset == "GSAM") %>%
+#                                              dplyr::select(c('sid' ,'NMF:123456.PC1', 'NMF:123456.PC2')) %>%
+#                                              tibble::column_to_rownames('sid') ,
+#                                            y = plt.single %>% 
+#                                              #dplyr::filter(dataset == "GSAM") %>%
+#                                              dplyr::pull(subtype.public), 
+#                                            scale = F,
+#                                            #type = "C-classification",
+# 
+#                                            kernel = 'linear',
+#                                            tolerance = 0.0001,
+#                                            cost = 3
+#                                            
+#                                            #,probability = T # worse fit, but handy values
+#                                            )
+#saveRDS(s150.pca.nmf.subtype.classifier.svm, 'tmp/s150.pca.nmf.subtype.classifier.svm.Rds')
+
 
 # re-fit samples
 
@@ -641,6 +757,9 @@ wilcox.test(env.test$pairs$eucledian.dist, env.test$shuffle$eucledian.dist)
 
 ## Verschil distance transities ----
 
+# https://stackoverflow.com/questions/17084566/put-stars-on-ggplot-barplots-and-boxplots-to-indicate-the-level-of-significanc
+
+t <- seq(0, 180, by = 1) * pi / 180
 
 r <- .5
 x <- r * cos(t)
@@ -656,6 +775,14 @@ y <- r*4 * sin(t)
 y[20:162] <- y[20] # Flattens the arc
 y <- y * 0.3
 arc.b <- data.frame(x = x, eucledian.dist = y, type="GLASS")
+
+
+r <- .5
+x <- r * cos(t) * 1 + 0.5
+y <- r*4 * sin(t)
+y[20:162] <- y[20] # Flattens the arc
+y <- y * 0.3
+arc.c <- data.frame(x = x, eucledian.dist = y, type="GLASS")
 
 
 
@@ -704,19 +831,23 @@ plt <- rbind(plt.c.c , plt.c.p, plt.c.m) %>%
   dplyr::mutate(dataset = as.factor(ifelse(dataset.R1 == "GSAM", "G-SAM" , "GLASS")))
 
 
-plt.c <- ggplot(plt, aes(x=type, y=eucledian.dist , group = type)) +
+plt.c <- ggplot(plt, aes(x=type, y=eucledian.dist , group = type , fill = type == "Classical\nto\nClassical")) +
   ylim(0, 4.3) +
-  geom_violin() +
+  geom_violin(width=1.105) +
   geom_boxplot(width=0.1,outlier.shape = NA,alpha=0.5)  +
   geom_point(aes(x=x, col = dataset),cex=2) +
-  labs(x = NULL, y = "Eucledian distance in PNC space", col = "Dataset") +
+  labs(x = NULL, y = "Eucledian distance in PNC space", col = "Dataset", fill = "Stable") +
   youri_gg_theme + 
   theme(  axis.text.x = element_text(angle = 0, hjust = 0.5)) +
   geom_line(data = arc.a, aes(x = x+1.5, y = eucledian.dist+3.85), lty = 2) +
   geom_line(data = arc.b, aes(x = x+2, y = eucledian.dist+3.85 + 0.2), lty = 2) +
-  geom_text(data = data.frame(x = c(1.5, 2), eucledian.dist = c(4.05,4.3), type="GLASS", label = "***" ),
+  geom_text(data = data.frame(x = c(2), eucledian.dist = c(4.3), type="GLASS", label = "**" ),
             size=6,
-            aes(x=x, y=eucledian.dist, label=label))
+            aes(x=x, y=eucledian.dist, label=label)) +
+  geom_text(data = data.frame(x = c(1.5), eucledian.dist = c(4.05), type="GLASS", label = "***" ),
+            size=6,
+            aes(x=x, y=eucledian.dist, label=label)) +
+  scale_fill_manual(values = c('TRUE' = 'gray95', 'FALSE' = 'white'))
 
 
 rm(plt.c.c , plt.c.p, plt.c.m)
@@ -762,19 +893,22 @@ plt.m.p <- env.test$pairs %>%
 sig.m.p <- wilcox.test(plt.m.m$eucledian.dist , plt.m.p$eucledian.dist )$p.value
 
 plt <- rbind(plt.m.c , plt.m.p, plt.m.m) %>%
-  dplyr::mutate(type = factor(type, levels = c("Mesenchymal\nto\nMesenchymal", "Mesenchymal\nto\nClassical", "Mesenchymal\nto\nProneural"))) %>%
+  dplyr::mutate(type = factor(type, levels = c("Mesenchymal\nto\nClassical",
+                                               "Mesenchymal\nto\nMesenchymal",
+                                               "Mesenchymal\nto\nProneural"))) %>%
   dplyr::mutate(x = x + as.numeric(as.factor(type))) %>%
   dplyr::mutate(dataset = as.factor(ifelse(dataset.R1 == "GSAM", "G-SAM" , "GLASS")))
 
 
-plt.m <- ggplot(plt, aes(x=type, y=eucledian.dist , group = type)) +
+plt.m <- ggplot(plt, aes(x=type, y=eucledian.dist , group = type, fill = type == "Mesenchymal\nto\nMesenchymal")) +
   ylim(0, 4.3) +
-  geom_violin() +
+  geom_violin(width=1.105) +
   geom_boxplot(width=0.1,outlier.shape = NA,alpha=0.5)  +
   geom_point(aes(x=x, col = dataset),cex=2) +
-  labs(x = NULL, y = "Eucledian distance in PNC space", col = "Dataset") +
+  labs(x = NULL, y = "Eucledian distance in PNC space", col = "Dataset", fill = "Stable") +
   youri_gg_theme + 
-  theme(  axis.text.x = element_text(angle = 0, hjust = 0.5))
+  theme(  axis.text.x = element_text(angle = 0, hjust = 0.5)) +
+  scale_fill_manual(values = c('TRUE' = 'gray95', 'FALSE' = 'white'))
 
 # no sig diff's
 
@@ -785,6 +919,8 @@ rm(plt.m.c , plt.m.p, plt.m.m)
 
 
 ### Proneural ----
+
+
 
 plt.p.p <- env.test$pairs %>%
   dplyr::filter(`NMF:123456.PCA.SVM.class.R1` == 'Proneural') %>%
@@ -822,26 +958,28 @@ sig.p.m <- wilcox.test(plt.p.p$eucledian.dist , plt.p.m$eucledian.dist )$p.value
 
 
 plt <- rbind(plt.p.c , plt.p.p, plt.p.m) %>%
-  dplyr::mutate(type = factor(type, levels = c("Proneural\nto\nProneural",
-                                               "Proneural\nto\nClassical",
-                                               "Proneural\nto\nMesenchymal"))) %>%
-  dplyr::mutate(x = x + as.numeric(as.factor(type))) %>%
-  dplyr::mutate(dataset = as.factor(ifelse(dataset.R1 == "GSAM", "G-SAM" , "GLASS")))
+  dplyr::mutate(type = factor(type, levels = c("Proneural\nto\nClassical",
+                                               "Proneural\nto\nMesenchymal",
+                                               "Proneural\nto\nProneural"))) %>%
+  dplyr::mutate(x = x + as.numeric(type)) %>%
+  dplyr::mutate(dataset = as.factor(ifelse(dataset.R1 == "GSAM", "G-SAM" , "GLASS"))) %>%
+  dplyr::mutate(facet = "Proneural")
 
 
-plt.p <- ggplot(plt, aes(x=type, y=eucledian.dist , group = type)) +
+plt.p <- ggplot(plt, aes(x=type, y=eucledian.dist , group = type, fill = type == "Proneural\nto\nProneural")) +
   ylim(0, 4.3) +
-  geom_violin() +
+  geom_violin(width=1.105) +
   geom_boxplot(width=0.1,outlier.shape = NA,alpha=0.5)  +
-  geom_point(aes(x=x, col = dataset),cex=2) +
-  labs(x = NULL, y = "Eucledian distance in PNC space", col = "Dataset") +
+  geom_point(aes(x=x, col=dataset, fill=dataset),cex=2) +
+  labs(x = NULL, y = "Eucledian distance in PNC space", col = "Dataset", fill = "Stable") +
   youri_gg_theme + 
   theme(  axis.text.x = element_text(angle = 0, hjust = 0.5)) +
   #geom_line(data = arc.a, aes(x = x+1.5, y = eucledian.dist+3.85), lty = 2) +
-  geom_line(data = arc.b, aes(x = x+2, y = eucledian.dist+3.85 + 0.2), lty = 2) +
-  geom_text(data = data.frame(x = c(2), eucledian.dist = c(4.3), type="GLASS", label = "***" ),
+  geom_line(data = arc.c, aes(x = x+2, y = eucledian.dist+3.85 + 0.2), lty = 2) +
+  geom_text(data = data.frame(x = c(2.5), eucledian.dist = c(4.3), type="GLASS", label = "*" ),
             size=6,
-            aes(x=x, y=eucledian.dist, label=label))
+            aes(x=x, y=eucledian.dist, label=label)) +
+  scale_fill_manual(values = c('TRUE' = 'gray95', 'FALSE' = 'white'))
 
 rm(plt.p.c , plt.p.p, plt.p.m)
 
@@ -851,9 +989,108 @@ rm(plt.p.c , plt.p.p, plt.p.m)
 plt.c / plt.m / plt.p
 
 
+ggsave('output/figures/paper_subtypes_nmf_eucledian_dists_stable_unstable.pdf',width=8 ,height=6*1.5)
 
-ggsave('output/figures/paper_subtypes_nmf_eucledian_dists_stable_unstable.pdf',width=10 ,height=6*2)
 
+plt.c.c <- env.test$pairs %>%
+  dplyr::filter(`NMF:123456.PCA.SVM.class.R1` == 'Classical') %>%
+  dplyr::filter(`NMF:123456.PCA.SVM.class.R2` == 'Classical') %>%
+  dplyr::mutate(order = (rank(eucledian.dist)) - 1) %>%
+  dplyr::mutate(x = order / (nrow(.) - 1))
+
+plt.c.p <- env.test$pairs %>%
+  dplyr::filter(`NMF:123456.PCA.SVM.class.R1` == 'Classical') %>%
+  dplyr::filter(`NMF:123456.PCA.SVM.class.R2` == 'Proneural') %>%
+  dplyr::mutate(order = (rank(eucledian.dist)) - 1) %>%
+  dplyr::mutate(x = order / (nrow(.) - 1))
+
+plt.c.m <- env.test$pairs %>%
+  dplyr::filter(`NMF:123456.PCA.SVM.class.R1` == 'Classical') %>%
+  dplyr::filter(`NMF:123456.PCA.SVM.class.R2` == 'Mesenchymal') %>%
+  dplyr::mutate(order = (rank(eucledian.dist)) - 1) %>%
+  dplyr::mutate(x = order / (nrow(.) - 1))
+
+plt.c <- rbind(plt.c.c , plt.c.p, plt.c.m) %>%
+  dplyr::mutate(x = x - 0.5) %>%
+  dplyr::mutate(x = x *  0.4) %>%
+  dplyr::mutate(type = factor(paste0('to\n', `NMF:123456.PCA.SVM.class.R2`), levels = c("to\nClassical","to\nMesenchymal","to\nProneural"))) %>%
+  dplyr::mutate(x = x + as.numeric(as.factor(type))) %>%
+  dplyr::mutate(dataset = as.factor(ifelse(dataset.R1 == "GSAM", "G-SAM" , "GLASS"))) %>%
+  dplyr::mutate(facet = "Classical")
+
+
+
+plt.p.p <- env.test$pairs %>%
+  dplyr::filter(`NMF:123456.PCA.SVM.class.R1` == 'Proneural') %>%
+  dplyr::filter(`NMF:123456.PCA.SVM.class.R2` == 'Proneural') %>%
+  dplyr::mutate(order = (rank(eucledian.dist)) - 1) %>%
+  dplyr::mutate(x = order / (nrow(.) - 1))
+
+plt.p.c <- env.test$pairs %>%
+  dplyr::filter(`NMF:123456.PCA.SVM.class.R1` == 'Proneural') %>%
+  dplyr::filter(`NMF:123456.PCA.SVM.class.R2` == 'Classical') %>%
+  dplyr::mutate(order = (rank(eucledian.dist)) - 1) %>%
+  dplyr::mutate(x = order / (nrow(.) - 1))
+
+plt.p.m <- env.test$pairs %>%
+  dplyr::filter(`NMF:123456.PCA.SVM.class.R1` == 'Proneural') %>%
+  dplyr::filter(`NMF:123456.PCA.SVM.class.R2` == 'Mesenchymal') %>%
+  dplyr::mutate(order = (rank(eucledian.dist)) - 1) %>%
+  dplyr::mutate(x = order / (nrow(.) - 1))
+
+plt.p <- rbind(plt.p.c , plt.p.p, plt.p.m) %>%
+  dplyr::mutate(x = x - 0.5) %>%
+  dplyr::mutate(x = x *  0.4)  %>%
+  dplyr::mutate(type = factor(paste0('to\n', `NMF:123456.PCA.SVM.class.R2`), levels = c("to\nClassical","to\nMesenchymal","to\nProneural"))) %>%
+  dplyr::mutate(x = x + as.numeric(as.factor(type))) %>%
+  dplyr::mutate(dataset = as.factor(ifelse(dataset.R1 == "GSAM", "G-SAM" , "GLASS"))) %>%
+  dplyr::mutate(facet = "Proneural")
+
+
+plt.m.m <- env.test$pairs %>%
+  dplyr::filter(`NMF:123456.PCA.SVM.class.R1` == 'Mesenchymal') %>%
+  dplyr::filter(`NMF:123456.PCA.SVM.class.R2` == 'Mesenchymal') %>%
+  dplyr::mutate(order = (rank(eucledian.dist)) - 1) %>%
+  dplyr::mutate(x = order / (nrow(.) - 1))
+
+plt.m.c <- env.test$pairs %>%
+  dplyr::filter(`NMF:123456.PCA.SVM.class.R1` == 'Mesenchymal') %>%
+  dplyr::filter(`NMF:123456.PCA.SVM.class.R2` == 'Classical') %>%
+  dplyr::mutate(order = (rank(eucledian.dist)) - 1) %>%
+  dplyr::mutate(x = order / (nrow(.) - 1))
+
+plt.m.p <- env.test$pairs %>%
+  dplyr::filter(`NMF:123456.PCA.SVM.class.R1` == 'Mesenchymal') %>%
+  dplyr::filter(`NMF:123456.PCA.SVM.class.R2` == 'Proneural') %>%
+  dplyr::mutate(order = (rank(eucledian.dist)) - 1) %>%
+  dplyr::mutate(x = order / (nrow(.) - 1))
+
+plt.m <- rbind(plt.m.c , plt.m.p, plt.m.m) %>%
+  dplyr::mutate(x = x - 0.5) %>%
+  dplyr::mutate(x = x *  0.4) %>%
+  dplyr::mutate(type = factor(paste0('to\n', `NMF:123456.PCA.SVM.class.R2`), levels = c("to\nClassical","to\nMesenchymal","to\nProneural"))) %>%
+  dplyr::mutate(x = x + as.numeric(as.factor(type))) %>%
+  dplyr::mutate(dataset = as.factor(ifelse(dataset.R1 == "GSAM", "G-SAM" , "GLASS"))) %>%
+  dplyr::mutate(facet ="Mesenchymal")
+
+
+plt <- rbind(plt.c, plt.m, plt.p) %>%
+  dplyr::mutate(stable =   `NMF:123456.PCA.SVM.class.R1` == `NMF:123456.PCA.SVM.class.R2`)
+
+
+ggplot(plt, aes(x=type, y=eucledian.dist , group = type)) +
+  ylim(0, 4.3) +
+  geom_violin(width=1.105, aes(fill = stable)) +
+  geom_boxplot(width=0.1,outlier.shape = NA,alpha=0.5)  +
+  geom_point(aes(x=x, col = dataset),cex=2) +
+  labs(x = NULL, y = "Eucledian distance in PNC space", col = "Dataset") +
+  youri_gg_theme +
+  theme(  axis.text.x = element_text(angle = 0, hjust = 0.5)) +
+  facet_grid(rows = vars(facet), space="free_x") +
+  scale_fill_manual(values = c('TRUE'='gray95', 'FALSE'='white'))
+
+
+ggsave('output/figures/paper_subtypes_nmf_eucledian_dists_stable_unstable.pdf',width=8 ,height=6*1.5)
 
 
 
@@ -866,8 +1103,8 @@ ggsave('output/figures/paper_subtypes_nmf_eucledian_dists_stable_unstable.pdf',w
 
 resolution <- 250 # 1000 x 1000 data points
 
-off_x <- (max(plt.single$`NMF:123456.PC1`) - min(plt.single$`NMF:123456.PC1`)) * 0.05
-off_y <- (max(plt.single$`NMF:123456.PC2`) - min(plt.single$`NMF:123456.PC2`)) * 0.05
+off_x <- (max(plt.single$`NMF:123456.PC1`) - min(plt.single$`NMF:123456.PC1`)) * 0.025
+off_y <- (max(plt.single$`NMF:123456.PC2`) - min(plt.single$`NMF:123456.PC2`)) * 0.025
 
 
 range_pc1 = seq(from = min(plt.single$`NMF:123456.PC1`) - off_x, to = max(plt.single$`NMF:123456.PC1`) + off_x, length.out = resolution)
@@ -882,6 +1119,164 @@ nmf.pca.lda.countours <- predict(s150.pca.nmf.subtype.classifier.svm , newdata =
   dplyr::mutate(type="Contour")
 
 rm(resolution, off_x, off_y, range_pc1, range_pc2, range_df)
+
+
+# Figure S1E ----
+
+
+plt <- rbind(plt.single %>%
+               dplyr::select(c(`NMF:123456.PC1`, `NMF:123456.PC2`, 'subtype.public', sid.label, dataset)) %>%
+               dplyr::mutate(type = "Patient Sample") %>%
+               dplyr::rename(class = subtype.public),
+             nmf.pca.lda.countours %>% dplyr::mutate(sid.label = NA, dataset=NA))
+
+
+
+ggplot(plt  , aes(x = `NMF:123456.PC1`, y = `NMF:123456.PC2`, col=class, label = sid.label)) + 
+  geom_raster(data = subset(plt, type == "Contour"), aes(fill = factor(class)), alpha=0.1) +
+  geom_point(data = subset(plt, type == "Patient Sample" ), aes(fill = class), col="black", 
+             pch=21, size=2.5) +
+  geom_contour(data= subset(plt, type == "Contour"), aes(z=as.numeric(class)),
+               colour="gray40",
+               size=0.25,
+               lty=2,breaks=c(1.5,2.5)) +
+  youri_gg_theme +
+  labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features",
+       col='Sub-type',fill="Sub-type") +
+  scale_color_manual(values = subtype_colors, guide = guide_legend(title = NULL, title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75)) + 
+  scale_fill_manual(values = subtype_colors)
+
+
+ggsave("output/figures/Figure_S1_E.png", width=12 * 0.4,height=10 * 0.4)
+
+
+
+# Figure S1F ----
+
+
+plt <- rbind(plt.single %>%
+               dplyr::mutate(svm.status = ifelse(subtype.public == `NMF:123456.PCA.SVM.class`, "positive", 'negative')) %>% 
+               dplyr::select(c(`NMF:123456.PC1`, `NMF:123456.PC2`, 'NMF:123456.PCA.SVM.class', sid.label, dataset, svm.status)) %>%
+               dplyr::mutate(type = "Patient Sample") %>%
+               dplyr::rename(class = `NMF:123456.PCA.SVM.class`),
+             nmf.pca.lda.countours %>% dplyr::mutate(sid.label = NA, dataset=NA, svm.status = NA))
+
+
+
+ggplot(plt  , aes(x = `NMF:123456.PC1`, y = `NMF:123456.PC2`, col=class, label = sid.label)) + 
+  #geom_raster(data = subset(plt, type == "Contour"), aes(fill = factor(class)), alpha=0.1, na.rm = T) +
+  geom_point(data = subset(plt, type == "Patient Sample" ), aes(fill = class), col="black", 
+             pch=21, size=2.5) +
+  geom_point(data = subset(plt, type == "Patient Sample" & svm.status == 'negative' ),
+             col = 'black', pch=19, size=0.7) +
+  geom_contour(data= subset(plt, type == "Contour"), aes(z=as.numeric(as.factor(class))),
+               colour="gray40",
+               size=0.25,
+               na.rm = T,
+               lty=2,breaks=c(1.5,2.5)) +
+  youri_gg_theme +
+  labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features",
+       col='Sub-type',fill="Sub-type") +
+  scale_color_manual(values = subtype_colors, guide = guide_legend(title = NULL, title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75)) + 
+  scale_fill_manual(values = subtype_colors)
+
+
+ggsave("output/figures/Figure_S1_F.png", width=12 * 0.4,height=10 * 0.4)
+
+
+
+# Figure 2 ABC: 3 GITS panels ----
+
+
+
+plt <- plt.single %>%
+  dplyr::left_join(plt.paired %>% dplyr::select(c("pid", `NMF:123456.PCA.SVM.status` )) , by=c('pid'='pid')) %>%
+  dplyr::mutate(resection = gsub("R3","R2",resection)) %>% # of these 2 patients [G-SM-R056-2 & GLSS-HF-3081] the 2nd was not available in the seq data []
+  dplyr::mutate(resection = gsub("R4","R2",resection)) %>% # of this patient [GLSS-HF-2869] the 2nd and 3rd were not available in the seq data
+  dplyr::mutate(primary.classical = pid %in% (plt.single %>% dplyr::filter(`NMF:123456.PCA.SVM.class` == "Classical" & resection == "R1") %>% dplyr::pull(pid))) %>%
+  dplyr::mutate(primary.mesenchymal = pid %in% (plt.single %>% dplyr::filter(`NMF:123456.PCA.SVM.class` == "Mesenchymal" & resection == "R1") %>% dplyr::pull(pid))) %>%
+  dplyr::mutate(primary.proneural = pid %in% (plt.single %>% dplyr::filter(`NMF:123456.PCA.SVM.class` == "Proneural" & resection == "R1") %>% dplyr::pull(pid))) %>%
+  dplyr::mutate(complete.pair= pid %in% (plt.single %>% dplyr::filter(resection == "R1") %>% dplyr::pull(pid)) &
+                  pid %in% (plt.single %>% dplyr::filter(resection %in% c("R2","R3","R4")) %>% dplyr::pull(pid))                  
+  ) %>%
+  dplyr::arrange(pid, resection) %>%
+  dplyr::mutate(`NMF:123456.PCA.SVM.status` = as.character(`NMF:123456.PCA.SVM.status`) ) %>%
+  dplyr::mutate(`NMF:123456.PCA.SVM.status` = ifelse(is.na(`NMF:123456.PCA.SVM.status`), 'NA', `NMF:123456.PCA.SVM.status`))
+
+
+
+
+
+ggplot(plt , aes(x = `NMF:123456.PC1`, y = `NMF:123456.PC2`, group=pid,  col = `NMF:123456.PCA.SVM.status`, label=pid)) +
+  geom_raster(data = nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.SVM.status' = NA, pid=NA, GBM.transcriptional.subtype.Synapse.status=NA) ,  aes(fill = factor(class)), alpha=0.075) +
+  geom_contour(data=  nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.SVM.status' = NA, pid=NA, GBM.transcriptional.subtype.Synapse.status=NA) , aes(z=as.numeric(class)), colour="gray40", size=0.25, lty=2,breaks=c(1.5,2.5)) +
+  geom_point(data = plt %>% dplyr::filter(primary.classical & complete.pair & resection == "R1"), aes(fill = `NMF:123456.PCA.SVM.class`), size=2.5, alpha=0.8, col="black",pch=21) +
+  geom_point(data = plt %>% dplyr::filter(!primary.classical | !complete.pair), size=2.5, alpha=0.15, col="black",pch=21, fill='gray80') +
+  geom_path(
+    data = plt %>% dplyr::filter(pid %in% .$pid[duplicated(.$pid)]) %>%
+      dplyr::filter(primary.classical == T),
+    arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.135, "inches")) , alpha = 0.8 ) +
+  youri_gg_theme +
+  labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", col=NULL,fill="Sub-type") +
+  scale_color_manual(values=c('Stable'= rgb(0,0.75,0), 'Transition' = 'gray30','NA'='#cc00cc')) +
+  scale_fill_manual(values=c('Stable'= rgb(0,0.75,0), 'Transition' = 'gray30','NA'='#cc00cc')) +
+  scale_fill_manual(values = subtype_colors)
+
+
+ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_SVM-reclassification_SVM-countours_classical.pdf',width=7,height=7)
+
+
+
+
+
+
+ggplot(plt , aes(x = `NMF:123456.PC1`, y = `NMF:123456.PC2`, group=pid,  col = `NMF:123456.PCA.SVM.status`, label=pid)) +
+  geom_point()
+
+  geom_raster(data = nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.SVM.status' = NA, pid=NA, GBM.transcriptional.subtype.Synapse.status=NA) ,  aes(fill = factor(class)), alpha=0.075) +
+  geom_contour(data=  nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.SVM.status' = NA, pid=NA, GBM.transcriptional.subtype.Synapse.status=NA) , aes(z=as.numeric(class)), colour="gray40", size=0.25, lty=2,breaks=c(1.5,2.5)) +
+  geom_point(data = plt %>% dplyr::filter(primary.mesenchymal & complete.pair & resection == "R1"), aes(fill = `NMF:123456.PCA.SVM.class`), size=2.5, alpha=0.8, col="black",pch=21) +
+  geom_point(data = plt %>% dplyr::filter(!primary.mesenchymal | !complete.pair), size=2.5, alpha=0.15, col="black",pch=21, fill='gray80') +
+  geom_path(
+    data = plt %>% dplyr::filter(pid %in% .$pid[duplicated(.$pid)]) %>%
+      dplyr::filter(primary.mesenchymal == T),
+    arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.135, "inches")) , alpha = 0.8 ) +
+  youri_gg_theme +
+  #coord_equal() +
+  labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", col=NULL,fill="Sub-type") +
+  scale_color_manual(values=c('Stable'= rgb(0,0.75,0), 'Transition' = 'gray30','NA'='#cc00cc')) +
+  scale_fill_manual(values=c('Stable'= rgb(0,0.75,0), 'Transition' = 'gray30','NA'='#cc00cc')) +
+  scale_fill_manual(values = subtype_colors)
+
+
+ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_SVM-reclassification_SVM-countours_mesenchymal.pdf',width=7,height=7)
+
+
+
+
+
+ggplot(plt , aes(x = `NMF:123456.PC1`, y = `NMF:123456.PC2`, group=pid,  col = `NMF:123456.PCA.SVM.status`, label=pid)) +
+  geom_raster(data = nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.SVM.status' = NA, pid=NA, GBM.transcriptional.subtype.Synapse.status=NA) ,  aes(fill = factor(class)), alpha=0.075) +
+  geom_contour(data=  nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.SVM.status' = NA, pid=NA, GBM.transcriptional.subtype.Synapse.status=NA) , aes(z=as.numeric(class)), colour="gray40", size=0.25, lty=2,breaks=c(1.5,2.5)) +
+  geom_point(data = plt %>% dplyr::filter(primary.proneural & complete.pair & resection == "R1"), aes(fill = `NMF:123456.PCA.SVM.class`), size=2.5, alpha=0.8, col="black",pch=21) +
+  geom_point(data = plt %>% dplyr::filter(!primary.proneural | !complete.pair), size=2.5, alpha=0.15, col="black",pch=21, fill='gray80') +
+  geom_path(
+    data = plt %>% dplyr::filter(pid %in% .$pid[duplicated(.$pid)]) %>%
+      dplyr::filter(primary.proneural == T),
+    arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.135, "inches")) , alpha = 0.8 ) +
+  youri_gg_theme +
+  #coord_equal() +
+  labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", col=NULL,fill="Sub-type") +
+  scale_color_manual(values=c('Stable'= rgb(0,0.75,0), 'Transition' = 'gray30','NA'='#cc00cc')) +
+  scale_fill_manual(values=c('Stable'= rgb(0,0.75,0), 'Transition' = 'gray30','NA'='#cc00cc')) +
+  scale_fill_manual(values = subtype_colors)
+
+
+ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_SVM-reclassification_SVM-countours_proneural.pdf',width=7,height=7)
+
+
+
+
 
 
 
@@ -944,13 +1339,16 @@ plt <- rbind(plt.single %>%
                dplyr::rename(class = `NMF:123456.PCA.SVM.class`),
              nmf.pca.lda.countours)
 
-ggplot(plt, aes(x = `NMF:123456.PC1`, y = `NMF:123456.PC2`, col = class)) + 
+ggplot(plt, aes(x = `NMF:123456.PC1`, y = `NMF:123456.PC2`, fill = class)) + 
   geom_raster(data = subset(plt, type == "Contour"), aes(fill = factor(class)), alpha=0.1) +
   geom_contour(data= subset(plt, type == "Contour"), aes(z=as.numeric(class)),
                colour="gray40",
                size=0.25,
-               lty=2,breaks=c(1.5,2.5)) +
-  geom_point(data = subset(plt, type == "Patient Sample"), size=1.5) +
+               na.rm = T,
+               lty=2,
+               breaks=c(1.5,2.5)
+               ) +
+  geom_point(data = subset(plt, type == "Patient Sample"), size=1.8, pch=21, lwd=0.5, col="gray20") +
   youri_gg_theme +
   labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", col='Subtype by GlioVis [majority call] / GLASS consortium',fill="LDA countour") +
   scale_color_manual(values = subtype_colors, guide = guide_legend(title = NULL, title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75)) + 
@@ -958,7 +1356,8 @@ ggplot(plt, aes(x = `NMF:123456.PC1`, y = `NMF:123456.PC2`, col = class)) +
 
 
 
-#ggsave('output/figures/paper_GLASS_subtypes_nmf_S150G_PC1_PC2_LDA-reclassification_LDA-countours.png',width=7,height=7.2)
+ggsave('output/figures/paper_GLASS_subtypes_nmf_S150G_PC1_PC2_LDA-reclassification_LDA-countours.png',width=7,height=7.2)
+ggsave('output/figures/paper_GLASS_subtypes_nmf_S150G_PC1_PC2_LDA-reclassification_LDA-countours.pdf',width=7,height=7.2)
 
 
 
@@ -970,52 +1369,53 @@ plt <- plt.single %>%
   dplyr::mutate(resection = gsub("R3","R2",resection)) %>% # of these 2 patients [G-SM-R056-2 & GLSS-HF-3081] the 2nd was not available in the seq data []
   dplyr::mutate(resection = gsub("R4","R2",resection)) %>% # of this patient [GLSS-HF-2869] the 2nd and 3rd were not available in the seq data
   dplyr::mutate(primary.classical = pid %in% (plt.single %>% dplyr::filter(`NMF:123456.PCA.SVM.class` == "Classical" & resection == "R1") %>% dplyr::pull(pid))) %>%
-  dplyr::arrange(pid, resection)
+  dplyr::mutate(complete.pair= pid %in% (plt.single %>% dplyr::filter(resection == "R1") %>% dplyr::pull(pid)) &
+                               pid %in% (plt.single %>% dplyr::filter(resection %in% c("R2","R3","R4")) %>% dplyr::pull(pid))                  
+                ) %>%
+  dplyr::arrange(pid, resection) %>%
+  dplyr::mutate(`NMF:123456.PCA.SVM.status` = as.character(`NMF:123456.PCA.SVM.status`) ) %>%
+  dplyr::mutate(`NMF:123456.PCA.SVM.status` = ifelse(is.na(`NMF:123456.PCA.SVM.status`), 'NA', `NMF:123456.PCA.SVM.status`))
   # %>%  dplyr::filter(pid %in% c('GLSS-SM-R056', 'GLSS-HF-3081', 'GLSS-HF-2869')  ) << R3 R4
 
-
-plt.gsam <- ggplot(plt %>% dplyr::filter(dataset == "GSAM") , aes(x = `NMF:123456.PC1`, y = -`NMF:123456.PC2`, group=pid, col = `NMF:123456.PCA.SVM.status`, label=pid)) + 
-  geom_raster(data = nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.SVM.status' = NA, pid=NA, GBM.transcriptional.subtype.Synapse.status=NA) , aes(fill = factor(class)), alpha=0.1) +
-  geom_contour(data=  nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.SVM.status' = NA, pid=NA, GBM.transcriptional.subtype.Synapse.status=NA) , aes(z=as.numeric(class)),
-               colour="gray40", size=0.25, lty=2,breaks=c(1.5,2.5)) +
-  geom_point(data = plt %>% dplyr::filter(dataset == "GSAM") %>% dplyr::filter(`NMF:123456.PCA.SVM.class` != "Classical" ), size=1.0, col="gray80") +
-  geom_point(data = plt %>% dplyr::filter(dataset == "GSAM") %>% dplyr::filter(`NMF:123456.PCA.SVM.class` == "Classical" & resection == "R2" & `NMF:123456.PCA.SVM.status` != "stable" ), size=1.0, col="gray80") +
-  geom_point(data = plt %>% dplyr::filter(dataset == "GSAM") %>% dplyr::filter(`NMF:123456.PCA.SVM.class` == "Classical" & resection == "R1"), size=1.5, alpha=0.8) +
-  geom_path(
-    data = plt  %>% dplyr::filter(dataset == "GSAM") %>% dplyr::filter(pid %in% .$pid[duplicated(.$pid)]) %>%
-      dplyr::filter(primary.classical == T),
-    arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.125, "inches")) , alpha = 0.8 ) + 
-  youri_gg_theme +
-  labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", col=NULL,fill="SVM class", title="G-SAM") +
-  scale_color_manual(values=c('Stable'= rgb(0,0.75,0), 'Transition' = 'black','NA'='purple')) +
-  scale_fill_manual(values = subtype_colors)
-
-
-plt.glass <- ggplot(plt  %>% dplyr::filter(dataset != "GSAM"), aes(x = `NMF:123456.PC1`, y = -`NMF:123456.PC2`, group=pid, col = `NMF:123456.PCA.SVM.status`, label=pid)) + 
-  geom_raster(data = nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.SVM.status' = NA, pid=NA, GBM.transcriptional.subtype.Synapse.status=NA) , aes(fill = factor(class)), alpha=0.1) +
-  geom_contour(data=  nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.SVM.status' = NA, pid=NA, GBM.transcriptional.subtype.Synapse.status=NA) , aes(z=as.numeric(class)),
-               colour="gray40", size=0.25, lty=2,breaks=c(1.5,2.5)) +
-  geom_point(data = plt %>% dplyr::filter(dataset != "GSAM") %>% dplyr::filter(`NMF:123456.PCA.SVM.class` != "Classical" ), size=1.0, col="gray80") +
-  geom_point(data = plt %>% dplyr::filter(dataset != "GSAM") %>% dplyr::filter(`NMF:123456.PCA.SVM.class` == "Classical" & resection == "R2" & `NMF:123456.PCA.SVM.status` != "stable" ), size=1.0, col="gray80") +
-  geom_point(data = plt %>% dplyr::filter(dataset != "GSAM") %>% dplyr::filter(`NMF:123456.PCA.SVM.class` == "Classical" & resection == "R1"), size=1.5, alpha=0.8) +
-  geom_path(
-    data = plt  %>% dplyr::filter(dataset != "GSAM")%>% dplyr::filter(pid %in% .$pid[duplicated(.$pid)]) %>%
-      dplyr::filter(primary.classical == T),
-    arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.125, "inches")) , alpha = 0.8 ) + 
-  youri_gg_theme +
-  labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", col=NULL,fill="SVM class", title="GLASS GBM") +
-  scale_color_manual(values=c('Stable'= rgb(0,0.75,0), 'Transition' = 'black','NA'='purple')) +
-  scale_fill_manual(values = subtype_colors)
-
-
-plt.gsam + plt.glass
-
-
-
+# 
+# plt.gsam <- ggplot(plt %>% dplyr::filter(dataset == "GSAM") , aes(x = `NMF:123456.PC1`, y = -`NMF:123456.PC2`, group=pid, col = `NMF:123456.PCA.SVM.status`, label=pid)) + 
+#   geom_raster(data = nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.SVM.status' = NA, pid=NA, GBM.transcriptional.subtype.Synapse.status=NA) , aes(fill = factor(class)), alpha=0.1) +
+#   geom_contour(data=  nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.SVM.status' = NA, pid=NA, GBM.transcriptional.subtype.Synapse.status=NA) , aes(z=as.numeric(class)),
+#                colour="gray40", size=0.25, lty=2,breaks=c(1.5,2.5)) +
+#   geom_point(data = plt %>% dplyr::filter(dataset == "GSAM") %>% dplyr::filter(`NMF:123456.PCA.SVM.class` != "Classical" ), size=1.0, col="gray80") +
+#   geom_point(data = plt %>% dplyr::filter(dataset == "GSAM") %>% dplyr::filter(`NMF:123456.PCA.SVM.class` == "Classical" & resection == "R2" & `NMF:123456.PCA.SVM.status` != "stable" ), size=1.0, col="gray80") +
+#   geom_point(data = plt %>% dplyr::filter(dataset == "GSAM") %>% dplyr::filter(`NMF:123456.PCA.SVM.class` == "Classical" & resection == "R1"), size=1.5, alpha=0.8) +
+#   geom_path(
+#     data = plt  %>% dplyr::filter(dataset == "GSAM") %>% dplyr::filter(pid %in% .$pid[duplicated(.$pid)]) %>%
+#       dplyr::filter(primary.classical == T),
+#     arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.125, "inches")) , alpha = 0.8 ) + 
+#   youri_gg_theme +
+#   labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", col=NULL,fill="SVM class", title="G-SAM") +
+#   scale_color_manual(values=c('Stable'= rgb(0,0.75,0), 'Transition' = 'black','NA'='purple')) +
+#   scale_fill_manual(values = subtype_colors)
+# 
+# 
+# plt.glass <- ggplot(plt  %>% dplyr::filter(dataset != "GSAM"), aes(x = `NMF:123456.PC1`, y = -`NMF:123456.PC2`, group=pid, col = `NMF:123456.PCA.SVM.status`, label=pid)) + 
+#   geom_raster(data = nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.SVM.status' = NA, pid=NA, GBM.transcriptional.subtype.Synapse.status=NA) , aes(fill = factor(class)), alpha=0.1) +
+#   geom_contour(data=  nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.SVM.status' = NA, pid=NA, GBM.transcriptional.subtype.Synapse.status=NA) , aes(z=as.numeric(class)),
+#                colour="gray40", size=0.25, lty=2,breaks=c(1.5,2.5)) +
+#   geom_point(data = plt %>% dplyr::filter(dataset != "GSAM") %>% dplyr::filter(`NMF:123456.PCA.SVM.class` != "Classical" ), size=1.0, col="gray80") +
+#   geom_point(data = plt %>% dplyr::filter(dataset != "GSAM") %>% dplyr::filter(`NMF:123456.PCA.SVM.class` == "Classical" & resection == "R2" & `NMF:123456.PCA.SVM.status` != "stable" ), size=1.0, col="gray80") +
+#   geom_point(data = plt %>% dplyr::filter(dataset != "GSAM") %>% dplyr::filter(`NMF:123456.PCA.SVM.class` == "Classical" & resection == "R1"), size=1.5, alpha=0.8) +
+#   geom_path(
+#     data = plt  %>% dplyr::filter(dataset != "GSAM")%>% dplyr::filter(pid %in% .$pid[duplicated(.$pid)]) %>%
+#       dplyr::filter(primary.classical == T),
+#     arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.125, "inches")) , alpha = 0.8 ) + 
+#   youri_gg_theme +
+#   labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", col=NULL,fill="SVM class", title="GLASS GBM") +
+#   scale_color_manual(values=c('Stable'= rgb(0,0.75,0), 'Transition' = 'black','NA'='purple')) +
+#   scale_fill_manual(values = subtype_colors)
+# 
+# 
+# plt.gsam + plt.glass
+# ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_SVM-reclassification_SVM-countours_classical.png',width=15,height=6.5)
 
 
-
-ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_SVM-reclassification_SVM-countours_classical.png',width=15,height=6.5)
 
 
 
@@ -1131,7 +1531,50 @@ ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_SVM-reclassification_SVM
 
 
 
-# KNN Bootstrapping ~ estimate by chance ----
+## PCA:1+2(NMF:1+2+3) + LDA countors + LDA labels [final?] ----
+
+
+
+plt <- plt.single %>%
+  dplyr::left_join(plt.paired %>% dplyr::select(c("pid", `NMF:123456.PCA.SVM.status` ,`NMF:123456.PCA.SVM.class.R1`)) , by=c('pid'='pid')) %>%
+  dplyr::mutate(primary.mesenchymal = pid %in% (plt.single %>% dplyr::pull(pid))) %>%
+  dplyr::mutate(resection = gsub("R3","R2",resection)) %>% # of these 2 patients [G-SM-R056-2 & GLSS-HF-3081] the 2nd was not available in the seq data []
+  dplyr::mutate(resection = gsub("R4","R2",resection)) %>% # of this patient [GLSS-HF-2869] the 2nd and 3rd were not available in the seq data
+  dplyr::arrange(pid, resection) %>%
+  dplyr::mutate(facet = ifelse( (!is.na(`NMF:123456.PCA.SVM.class.R1`) & `NMF:123456.PCA.SVM.class.R1` == "Classical") | (`NMF:123456.PCA.SVM.class` == "Classical" & resection == "R1") , "Classical" , "?" ) ) %>%
+  dplyr::mutate(facet = ifelse( (!is.na(`NMF:123456.PCA.SVM.class.R1`) & `NMF:123456.PCA.SVM.class.R1` == "Mesenchymal") | (`NMF:123456.PCA.SVM.class` == "Mesenchymal" & resection == "R1") , "Mesenchymal" , facet ) ) %>%
+  dplyr::mutate(facet = ifelse( (!is.na(`NMF:123456.PCA.SVM.class.R1`) & `NMF:123456.PCA.SVM.class.R1` == "Proneural") | (`NMF:123456.PCA.SVM.class` == "Proneural" & resection == "R1") , "Proneural" , facet ) ) %>%
+  dplyr::mutate(facet = ifelse(is.na(`NMF:123456.PCA.SVM.class.R1`) & resection == "R2" , "no R1 present" , facet )) %>%
+  dplyr::filter(facet != "no R1 present")
+
+
+
+ggplot(plt  , aes(x = `NMF:123456.PC1`, y = -`NMF:123456.PC2`, group=pid, col = `NMF:123456.PCA.SVM.status`, label=pid)) + 
+  geom_raster(data = nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.SVM.status' = NA, pid=NA, GBM.transcriptional.subtype.Synapse.status=NA) , aes(fill = factor(class)), alpha=0.1) +
+  geom_contour(data=  nmf.pca.lda.countours %>% dplyr::mutate('NMF:123456.PCA.SVM.status' = NA, pid=NA, GBM.transcriptional.subtype.Synapse.status=NA) , aes(z=as.numeric(class)),
+               colour="gray40", size=0.25, lty=2,breaks=c(1.5,2.5)) +
+  #geom_point(data = plt %>% dplyr::filter(dataset == "GSAM") %>% dplyr::filter(`NMF:123456.PCA.SVM.class` != "Mesenchymal" ), size=1.0, col="gray80") +
+  #geom_point(data = plt %>% dplyr::filter(dataset == "GSAM") %>% dplyr::filter(resection == "R2" & `NMF:123456.PCA.SVM.status` != "stable" ), size=1.0, col="gray80") +
+  geom_point(data = plt %>% dplyr::filter(dataset == "GSAM") %>% dplyr::filter(resection == "R1"), size=1.5, alpha=0.8) +
+  geom_path(
+    data = plt  %>% dplyr::filter(dataset == "GSAM") %>% dplyr::filter(pid %in% .$pid[duplicated(.$pid)]) %>%
+      dplyr::filter(primary.mesenchymal == T),
+    arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.125, "inches")) , alpha = 0.8 ) + 
+  youri_gg_theme +
+  labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", col=NULL,fill="SVM class", title=NULL) +
+  scale_color_manual(values=c('Stable'= rgb(0,0.75,0), 'Transition' = 'black','NA'='purple')) +
+  scale_fill_manual(values = subtype_colors) +
+  facet_grid(cols = vars(facet)) +
+  theme(strip.background = element_blank(), strip.text = element_blank())
+ 
+
+
+ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_SVM-reclassification_SVM-countours_facet.pdf',width=16.7,height=6.5)
+
+
+
+
+# KNN Bootstrapping ~ estimate by chance 
 
 k = 20
 df = data.frame()
@@ -1219,12 +1662,69 @@ df.2 %>% filter(`NMF:123456.PCA.SVM.class.R1` == "Mesenchymal" & dataset.R1 == '
 
 #df.2 %>% filter( dataset.R1 == 'GSAM' & `NMF:123456.PCA.SVM.status`  == "Stable") %>% nrow()
 
+## Figure S1E
 
 
-# plot per-group eucledian distance between pairs?
 
 
-# KNN Bootstrapping 2 ~ estimate by chance ----
+
+# Figure 2: STAR / Arrow plots ----
+
+
+
+plt <- data.frame()
+for(i in 1:nrow(plt.paired)) {
+  slice <- plt.paired[i,]
+  
+  line <- data.frame(x = c(slice$`NMF:123456.PC1.n.R1`,
+                           slice$`NMF:123456.PC1.n.R2`),
+                    y = c(slice$`NMF:123456.PC2.n.R1`,
+                          slice$`NMF:123456.PC2.n.R2`),
+                    resection = c('R1','R2'),
+                    group = slice$pid,
+                    init.subtype = slice$`NMF:123456.PCA.SVM.class.R1`,
+                    rec.subtype = slice$`NMF:123456.PCA.SVM.class.R2`)
+  
+  line2 <- line %>%
+    dplyr::mutate(x = x - line$x[1] ) %>%
+    dplyr::mutate(y = y - line$y[1] )
+  
+  plt <- plt %>%
+    rbind(line2)
+  
+  rm(slice, line, line2)
+}
+
+
+
+m <- plt %>%
+  dplyr::group_by(init.subtype, resection) %>%
+  dplyr::summarise(x = mean(x), y=mean(y)) %>%
+  dplyr::ungroup() %>%
+  dplyr::mutate(group = "Mean")
+
+
+
+ggplot(plt, aes(x=x, y=y, group=group, col=init.subtype)) +
+  geom_line(alpha=0.75, lwd=1) +
+  geom_point(data = plt %>% dplyr::filter(resection == "R2") , aes(fill=rec.subtype), col="black", pch=21, cex=1.8) +
+  geom_line(data=m, col="gray20", lty=1, lwd=0.8, show.legend=F) +
+  geom_point(data = m %>% dplyr::filter(resection == "R2") , fill = "white", col="black", pch=21, cex=2.1) +
+  labs(x="Centered GITS space traversal", y="Centered GITS space traversal") +
+  xlim(-max(c(abs(plt$x),abs(plt$y))),max(c(abs(plt$x),abs(plt$y)))) +
+  ylim(-max(c(abs(plt$x),abs(plt$y))),max(c(abs(plt$x),abs(plt$y)))) +
+  youri_gg_theme +
+  facet_grid(cols = vars(init.subtype)) +
+  coord_equal() +
+  scale_color_manual(values = subtype_colors, guide = guide_legend(title = "Initial subtype", title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75)) +
+  scale_fill_manual(values = subtype_colors, guide = guide_legend(title = "Sub-type recurrence", title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75))
+
+
+#ggsave("output/figures/centered_eucledian_distance_traversal_pnc.png",height=10 * 1.1,width=4)
+ggsave("output/figures/centered_eucledian_distance_traversal_pnc.pdf",width=10 * 1.1,height=4)
+
+
+# KNN Bootstrapping ~ estimate by chance ----
 
 # Bij deze bootstrapping zoeken we van de KNN de richtingen/angles
 # En gebruiken bootstrappen we de eucledian distances van alle samples
@@ -1257,6 +1757,16 @@ change_length_line <- function(x1, y1, x2, y2, length_new) {
 }
 
 
+
+nn = round((nrow(plt.paired) - 1) / 10) # 9
+bootstrap_n = 2 * nn #1 # 25 # bootstrap iterations per sample-pair
+
+df.A = data.frame()
+df.B = data.frame()
+
+
+## A: test with KNN angles and all distances ----
+
 # plot(c(-4,4), c(-4,4), type="n")
 # points(1,1, pch=19)
 # points(-2,-3, pch=19)
@@ -1272,9 +1782,6 @@ change_length_line <- function(x1, y1, x2, y2, length_new) {
 
 
 
-nn = round((nrow(plt.paired) - 1) / 20) # 9
-bootstrap_n = 2 * nn #1 # 25 # bootstrap iterations per sample-pair
-df = data.frame()
 for(p in 1:nrow(plt.paired) ) { # for pair
   #p = 21 
   #p = 23
@@ -1307,7 +1814,7 @@ for(p in 1:nrow(plt.paired) ) { # for pair
     # take length from overall subsamples
     random_length <- plt.paired %>% # run once with `knn` and once with `plt.paired`?
       dplyr::slice(sample(1 : dplyr::n() )) %>%
-      dplyr::pull(eucledian.dist) %>%
+      dplyr::pull(eucledian.dist) %>% 
       purrr::pluck(1)
 
     # generate new length using samples length and samples angle
@@ -1345,7 +1852,7 @@ for(p in 1:nrow(plt.paired) ) { # for pair
               dplyr::rename(`NMF:123456.PC2` = y.orig) )
     
     # still storing co-ordinates in normalised form
-    df <- rbind(df, data.frame(x = bootstrapped_line$x[2],
+    df.A <- rbind(df.A, data.frame(x = bootstrapped_line$x[2],
                y = bootstrapped_line$y[2],
                pid = target$pid,
                neighbour = neighbour$pid,
@@ -1360,22 +1867,22 @@ for(p in 1:nrow(plt.paired) ) { # for pair
 ## plot new labels (normalised)
 ## this confirms if un-normalisation went o.k.
 
-plot(plt.single$`NMF:123456.PC1.n` ,
-     plt.single$`NMF:123456.PC2.n`, pch=19 , col = as.numeric(as.factor(plt.single$`NMF:123456.PCA.SVM.class`)) + 1 , cex=0.5)
+# plot(plt.single$`NMF:123456.PC1.n` ,
+#      plt.single$`NMF:123456.PC2.n`, pch=19 , col = as.numeric(as.factor(plt.single$`NMF:123456.PCA.SVM.class`)) + 1 , cex=0.5)
+# 
+# points(df %>% dplyr::filter(class == "Mesenchymal") %>% dplyr::pull(x),
+#        df %>% dplyr::filter(class == "Mesenchymal") %>% dplyr::pull(y),
+#        pch = 1, col="green", cex=0.2)
+# points(df %>% dplyr::filter(class == "Classical") %>% dplyr::pull(x),
+#        df %>% dplyr::filter(class == "Classical") %>% dplyr::pull(y),
+#        pch = 2, col="red", cex=0.2)
+# points(df %>% dplyr::filter(class == "Proneural") %>% dplyr::pull(x),
+#        df %>% dplyr::filter(class == "Proneural") %>% dplyr::pull(y),
+#        pch = 3, cex=0.2, col="blue")
 
-points(df %>% dplyr::filter(class == "Mesenchymal") %>% dplyr::pull(x),
-       df %>% dplyr::filter(class == "Mesenchymal") %>% dplyr::pull(y),
-       pch = 1, col="green", cex=0.2)
-points(df %>% dplyr::filter(class == "Classical") %>% dplyr::pull(x),
-       df %>% dplyr::filter(class == "Classical") %>% dplyr::pull(y),
-       pch = 2, col="red", cex=0.2)
-points(df %>% dplyr::filter(class == "Proneural") %>% dplyr::pull(x),
-       df %>% dplyr::filter(class == "Proneural") %>% dplyr::pull(y),
-       pch = 3, cex=0.2, col="blue")
 
 
-
-df <- df %>%
+df.A.integrated <- df.A %>%
   dplyr::group_by(pid) %>% 
   dplyr::summarise(n.cl  = sum(class == "Classical"),
                    n.mes = sum(class == "Mesenchymal"),
@@ -1389,25 +1896,791 @@ df <- df %>%
 
 
 
-df %>% filter(`NMF:123456.PCA.SVM.class.R1` == "Classical" & dataset.R1 == 'GSAM') %>% dplyr::pull(p.cl) %>% sum()
-df %>% filter(`NMF:123456.PCA.SVM.class.R1` == "Mesenchymal" & dataset.R1 == 'GSAM') %>% dplyr::pull(p.mes) %>% sum()
-df %>% filter(`NMF:123456.PCA.SVM.class.R1` == "Proneural" & dataset.R1 == 'GSAM') %>% dplyr::pull(p.pn) %>% sum()
+## B: test with KNN angles and KNN distances ----
+
+
+for(p in 1:nrow(plt.paired) ) { # for pair
+  #p = 21 
+  #p = 23
+  target = plt.paired[p,]
+  
+  
+  # find k closest R1's for angles in close proximity
+  knn <- plt.paired[- p,] %>%
+    dplyr::mutate(ed =  sqrt(  (`NMF:123456.PC1.n.R1` - target$`NMF:123456.PC1.n.R1`)^2 +
+                                 (`NMF:123456.PC2.n.R1` - target$`NMF:123456.PC2.n.R1`)^2 ) ) %>%
+    dplyr::arrange(ed) %>%
+    top_n(nn, -ed)
+  
+  
+  #lines(c(target$`NMF:123456.PC1.n.R1`,target$`NMF:123456.PC1.n.R2`), c(target$`NMF:123456.PC2.n.R1` , target$`NMF:123456.PC2.n.R2`) , lwd=1.5 , col = rgb(0,0,0,0.15))
+  #points(target$`NMF:123456.PC1.n.R1` , target$`NMF:123456.PC2.n.R1` , pch=1,cex=0.6 , col = rgb(0,0,0,0.75)  )
+  #points(target$`NMF:123456.PC1.n.R2` , target$`NMF:123456.PC2.n.R2` , pch=4,cex=0.6 ,  col = rgb(0,0,0,0.75)  )
+  
+  
+  for(i in 1:bootstrap_n) {
+    #lines(c(knn$`NMF:123456.PC1.n.R1`,knn$`NMF:123456.PC1.n.R2`), c(knn$`NMF:123456.PC2.n.R1` , knn$`NMF:123456.PC2.n.R2`) , lwd=1.5 , col = rgb(0,0,1,0.15))
+    #points(knn$`NMF:123456.PC1.n.R1` , knn$`NMF:123456.PC2.n.R1` , pch=1,cex=0.6 , col = rgb(0,0,1,0.75)  )
+    #points(knn$`NMF:123456.PC1.n.R2` , knn$`NMF:123456.PC2.n.R2` , pch=4,cex=0.6 ,  col = rgb(0,0,1,0.75)  )
+    
+    
+    # Take the angle from local subsampling
+    neighbour <- knn %>% # RANDOM SHUFFLE `MET TERUGLEGGEN` want bootstrappen!!!
+      dplyr::slice(sample(1 : dplyr::n() ) [1] )
+    
+    # take length from overall subsamples
+    random_length <- knn %>% # run once with `knn` and once with `plt.paired`?
+      dplyr::slice(sample(1 : dplyr::n() )) %>%
+      dplyr::pull(eucledian.dist) %>%
+      purrr::pluck(1)
+    
+    # generate new length using samples length and samples angle
+    bootstrapped_line <- change_length_line(neighbour$`NMF:123456.PC1.n.R1`,
+                                            neighbour$`NMF:123456.PC2.n.R1`,
+                                            
+                                            neighbour$`NMF:123456.PC1.n.R2`,
+                                            neighbour$`NMF:123456.PC2.n.R2`,
+                                            
+                                            random_length)
+    
+    
+    
+    # fit to target's R1
+    bootstrapped_line$x = bootstrapped_line$x + (target$`NMF:123456.PC1.n.R1` - neighbour$`NMF:123456.PC1.n.R1`)
+    bootstrapped_line$y = bootstrapped_line$y + (target$`NMF:123456.PC2.n.R1` - neighbour$`NMF:123456.PC2.n.R1`)
+    
+    
+    
+    #lines(bootstrapped_line$x, bootstrapped_line$y, lwd=2, lty=3, col="red")
+    #points(bootstrapped_line$x[1], bootstrapped_line$y[1],  col="red")
+    #points(bootstrapped_line$x[2], bootstrapped_line$y[2],  col="red")
+    
+    
+    # @todo UN/SCALE-NORMALISE this before classification
+    bootstrapped_line <- bootstrapped_line %>%
+      dplyr::mutate(x.orig = (x + attr(`scale.NMF:123456.PC1`,'scaled:center')) * attr(`scale.NMF:123456.PC1`,'scaled:scale') ) %>%
+      dplyr::mutate(y.orig = (y + attr(`scale.NMF:123456.PC2`,'scaled:center')) * attr(`scale.NMF:123456.PC2`,'scaled:scale') )
+    
+    
+    class <- predict(s150.pca.nmf.subtype.classifier.svm , newdata = bootstrapped_line %>%
+                       dplyr::filter(point == "new end") %>%
+                       dplyr::mutate(point = NULL, x = NULL , y=  NULL) %>%
+                       dplyr::rename(`NMF:123456.PC1` = x.orig) %>%
+                       dplyr::rename(`NMF:123456.PC2` = y.orig) )
+    
+    # still storing co-ordinates in normalised form
+    df.B <- rbind(df.B, data.frame(x = bootstrapped_line$x[2],
+                                   y = bootstrapped_line$y[2],
+                                   pid = target$pid,
+                                   neighbour = neighbour$pid,
+                                   class = class ))
+    
+  }
+}
+
+
+
+
+df.B.integrated <- df.B %>%
+  dplyr::group_by(pid) %>% 
+  dplyr::summarise(n.cl  = sum(class == "Classical"),
+                   n.mes = sum(class == "Mesenchymal"),
+                   n.pn  = sum(class == "Proneural")) %>%
+  dplyr::mutate(p.cl  = n.cl  / (n.cl + n.mes + n.pn) ,
+                p.mes = n.mes / (n.cl + n.mes + n.pn) ,
+                p.pn  = n.pn  / (n.cl + n.mes + n.pn) ) %>%
+  dplyr::left_join(plt.paired %>%
+                     dplyr::select(c('pid','dataset.R1','NMF:123456.PCA.SVM.status','NMF:123456.PCA.SVM.class.R1','NMF:123456.PCA.SVM.class.R2') )
+                   , by=c('pid'='pid'))
+
+
+## C: alleen bootstrappen lengtes (Alle) ----
+
+## D: alleen bootstrappen lengtes (binnen zelfde subtype R1) ----
+
+
+
+## visualisation ----
+
+
+library(diagram)
+help(curvedarrow)
+
+curvedarrow <- function(from, to, lwd=2, lty=1, lcol="black", arr.col=lcol, 
+                        arr.pos=0.5, curve=1, dr=0.01, endhead=FALSE, segment = c(0,1), ...)   {
+  
+  dpos  <- to-from
+  angle <- atan(dpos[2]/dpos[1])*180/pi         # angle between both
+  if (is.nan(angle)) return()
+  mid   <- 0.5*(to+from)                        # midpoint of ellipsoid arrow
+  dst   <- dist(rbind(to, from))                # distance from-to
+  ry    <- curve*dst                            # small radius of ellepsoid
+  aFrom<-0                                      # angle to and from
+  aTo<-pi
+  if ( from[1] <= to[1]) {
+    aFrom <- pi
+    aTo <- 2*pi
+  }
+  
+  if (segment [1] != 0)
+    From <- segment[1] * aTo + (1-segment[1]) * aFrom
+  else
+    From <- aFrom
+  
+  if (segment [2] != 1)
+    To <- segment[2] * aTo + (1-segment[2]) * aFrom
+  else
+    To <- aTo
+  
+  meanpi <- arr.pos * aTo + (1-arr.pos) * aFrom
+  if (endhead) To <- meanpi
+  
+  
+  plotellipse(rx=dst/2,  ry=ry, mid=mid, angle=angle, from = From, to = To,
+              lwd=lwd, lty=lty, lcol=lcol)
+  ell <- getellipse(rx=dst/2, ry=ry, mid=mid, angle=angle,
+                    from=1.001*meanpi, to=0.999*meanpi, dr= 0.002)       #Changed from -0.002
+  Arrows(ell[1,1], ell[1,2], ell[nrow(ell),1], ell[nrow(ell),2],
+         code=1, lcol=lcol, arr.col=arr.col, ...)
+  curvedarrow <- c(ell[nrow(ell),1], ell[nrow(ell),2])
+}
+
+
+
+O.cc <- plt.paired %>%  filter(`NMF:123456.PCA.SVM.class.R1` == "Classical" ) %>%  filter(`NMF:123456.PCA.SVM.class.R2` == "Classical" ) %>% nrow()
+O.cm <- plt.paired %>%  filter(`NMF:123456.PCA.SVM.class.R1` == "Classical" ) %>%  filter(`NMF:123456.PCA.SVM.class.R2` == "Mesenchymal" ) %>% nrow()
+O.cp <- plt.paired %>%  filter(`NMF:123456.PCA.SVM.class.R1` == "Classical" ) %>%  filter(`NMF:123456.PCA.SVM.class.R2` == "Proneural" ) %>% nrow()
+
+O.mc <- plt.paired %>%  filter(`NMF:123456.PCA.SVM.class.R1` == "Mesenchymal" ) %>%  filter(`NMF:123456.PCA.SVM.class.R2` == "Classical" ) %>% nrow()
+O.mm <- plt.paired %>%  filter(`NMF:123456.PCA.SVM.class.R1` == "Mesenchymal" ) %>%  filter(`NMF:123456.PCA.SVM.class.R2` == "Mesenchymal" ) %>% nrow()
+O.mp <- plt.paired %>%  filter(`NMF:123456.PCA.SVM.class.R1` == "Mesenchymal" ) %>%  filter(`NMF:123456.PCA.SVM.class.R2` == "Proneural" ) %>% nrow()
+
+O.pc <- plt.paired %>%  filter(`NMF:123456.PCA.SVM.class.R1` == "Proneural" ) %>%  filter(`NMF:123456.PCA.SVM.class.R2` == "Classical" ) %>% nrow()
+O.pm <- plt.paired %>%  filter(`NMF:123456.PCA.SVM.class.R1` == "Proneural" ) %>%  filter(`NMF:123456.PCA.SVM.class.R2` == "Mesenchymal" ) %>% nrow()
+O.pp <- plt.paired %>%  filter(`NMF:123456.PCA.SVM.class.R1` == "Proneural" ) %>%  filter(`NMF:123456.PCA.SVM.class.R2` == "Proneural" ) %>% nrow()
+
+
+A.cc <- df.A.integrated %>% filter(`NMF:123456.PCA.SVM.class.R1` == "Classical" ) %>% dplyr::pull(p.cl) %>% sum() %>% round(1)
+A.cm <- df.A.integrated %>% filter(`NMF:123456.PCA.SVM.class.R1` == "Classical" ) %>% dplyr::pull(p.mes) %>% sum() %>% round(1)
+A.cp <- df.A.integrated %>% filter(`NMF:123456.PCA.SVM.class.R1` == "Classical" ) %>% dplyr::pull(p.pn) %>% sum() %>% round(1)
+
+A.mm <- df.A.integrated %>% filter(`NMF:123456.PCA.SVM.class.R1` == "Mesenchymal" ) %>% dplyr::pull(p.mes) %>% sum() %>% round(1)
+A.mc <- df.A.integrated %>% filter(`NMF:123456.PCA.SVM.class.R1` == "Mesenchymal" ) %>% dplyr::pull(p.cl) %>% sum() %>% round(1)
+A.mp <- df.A.integrated %>% filter(`NMF:123456.PCA.SVM.class.R1` == "Mesenchymal" ) %>% dplyr::pull(p.pn) %>% sum() %>% round(1)
+
+A.pp <- df.A.integrated %>% filter(`NMF:123456.PCA.SVM.class.R1` == "Proneural" ) %>% dplyr::pull(p.pn) %>% sum() %>% round(1)
+A.pc <- df.A.integrated %>% filter(`NMF:123456.PCA.SVM.class.R1` == "Proneural" ) %>% dplyr::pull(p.cl) %>% sum() %>% round(1)
+A.pm <- df.A.integrated %>% filter(`NMF:123456.PCA.SVM.class.R1` == "Proneural" ) %>% dplyr::pull(p.mes) %>% sum() %>% round(1)
+
+
+B.cc <- df.B.integrated %>% filter(`NMF:123456.PCA.SVM.class.R1` == "Classical" ) %>% dplyr::pull(p.cl) %>% sum() %>% round(1)
+B.cm <- df.B.integrated %>% filter(`NMF:123456.PCA.SVM.class.R1` == "Classical" ) %>% dplyr::pull(p.mes) %>% sum() %>% round(1)
+B.cp <- df.B.integrated %>% filter(`NMF:123456.PCA.SVM.class.R1` == "Classical" ) %>% dplyr::pull(p.pn) %>% sum() %>% round(1)
+
+B.mm <- df.B.integrated %>% filter(`NMF:123456.PCA.SVM.class.R1` == "Mesenchymal" ) %>% dplyr::pull(p.mes) %>% sum() %>% round(1)
+B.mc <- df.B.integrated %>% filter(`NMF:123456.PCA.SVM.class.R1` == "Mesenchymal" ) %>% dplyr::pull(p.cl) %>% sum() %>% round(1)
+B.mp <- df.B.integrated %>% filter(`NMF:123456.PCA.SVM.class.R1` == "Mesenchymal" ) %>% dplyr::pull(p.pn) %>% sum() %>% round(1)
+
+B.pp <- df.B.integrated %>% filter(`NMF:123456.PCA.SVM.class.R1` == "Proneural" ) %>% dplyr::pull(p.pn) %>% sum() %>% round(1)
+B.pc <- df.B.integrated %>% filter(`NMF:123456.PCA.SVM.class.R1` == "Proneural" ) %>% dplyr::pull(p.cl) %>% sum() %>% round(1)
+B.pm <- df.B.integrated %>% filter(`NMF:123456.PCA.SVM.class.R1` == "Proneural" ) %>% dplyr::pull(p.mes) %>% sum() %>% round(1)
 
 
 
 
 
-#df.2 %>% filter(`NMF:123456.PCA.SVM.class.R1` == "Classical" & dataset.R1 == 'GSAM') %>% dplyr::pull(p.cl) %>% sum()
-#df.2 %>% filter(`NMF:123456.PCA.SVM.class.R1` == "Classical" & dataset.R1 == 'GSAM') %>% dplyr::pull(p.mes) %>% sum()
-#df.2 %>% filter(`NMF:123456.PCA.SVM.class.R1` == "Classical" & dataset.R1 == 'GSAM') %>% dplyr::pull(p.pn) %>% sum()
+par(mfrow=c(1,3))
+
+### Orig ----
+plot(c(-1,1)* 1.25 , c(-1,1) * 1.25 , type='n' , main="Original data")
+
+curvedarrow( c(0 - 0.12, 0.66 ) , c(0 + 0.12, 0.66), curve = -1.5)# CL -> CL
+text(0, 1.2, O.cc)
+curvedarrow( c(0, 0.66) , c(-0.66, -0.66), curve = -0.001)#        CL -> MES
+text(-0.25, -0.1, O.cm)
+curvedarrow( c(-0.66, -0.66),  c(0, 0.66)  , curve = -0.2)#      MES -> CL
+text(-0.75, 0.1, O.mc)
+
+curvedarrow( c(0.66 - 0.12, -0.66 ) , c(0.66 + 0.12, -0.66), curve = 1.5)# PN -> PN
+text(0.66, -1.2, O.pp)
+curvedarrow( c(0, 0.66) , c(0.66, -0.66), curve = -0.2)#         CL -> PN
+text(0.25, -0.1, O.pc)
+curvedarrow( c(0.66, -0.66),  c(0, 0.66)  , curve = -0.001)#       PN -> CL
+text(0.75, 0.1, O.cp)
+
+curvedarrow( c(-0.66 - 0.12, -0.66 ) , c(-0.66 + 0.12, -0.66), curve = 1.5)# MES -> MES
+text(-0.66, -1.2, O.mm)
+curvedarrow( c(-0.66, -0.66) , c(0.66, -0.66), curve = -0.001)#    MES -> PL
+text(0, -0.55, O.mp)
+curvedarrow( c(0.66, -0.66) , c(-0.66, -0.66), curve = -0.2)#    PL -> MES
+text(0, -1.05, O.pm)
+
+# labels
+points(0, 0.66, cex = 8, pch=19, col="white")
+points(0, 0.66, cex = 8, col="black")
+text(0, 0.66, "CL", col="black")
+
+points(-0.66, -0.66, cex = 8, pch=19, col="white")
+points(-0.66, -0.66, cex = 8, col="black")
+text(-0.66, -0.66, "MES", col="black")
+
+points(0.66, -0.66, cex = 8, pch=19, col="white")
+points(0.66, -0.66, cex = 8, col="black")
+text(0.66, -0.66, "PN", col="black")
 
 
-df.2 %>% filter(`NMF:123456.PCA.SVM.class.R1` == "Mesenchymal" & dataset.R1 == 'GSAM') %>% dplyr::pull(p.mes) %>% sum()
-df.2 %>% filter(`NMF:123456.PCA.SVM.class.R1` == "Mesenchymal" & dataset.R1 == 'GSAM') %>% dplyr::pull(p.cl) %>% sum()
-df.2 %>% filter(`NMF:123456.PCA.SVM.class.R1` == "Mesenchymal" & dataset.R1 == 'GSAM') %>% dplyr::pull(p.pn) %>% sum()
+### A ----
+
+plot(c(-1,1)* 1.25 , c(-1,1) * 1.25 , type='n' , main="Bootstrap A (KNN angle, random dist)")
+
+curvedarrow( c(0 - 0.12, 0.66 ) , c(0 + 0.12, 0.66), curve = -1.5)# CL -> CL
+text(0, 1.2, A.cc)
+curvedarrow( c(0, 0.66) , c(-0.66, -0.66), curve = -0.001)#        CL -> MES
+text(-0.25, -0.1, A.cm)
+curvedarrow( c(-0.66, -0.66),  c(0, 0.66)  , curve = -0.2)#      MES -> CL
+text(-0.75, 0.1, A.mc)
+
+curvedarrow( c(0.66 - 0.12, -0.66 ) , c(0.66 + 0.12, -0.66), curve = 1.5)# PN -> PN
+text(0.66, -1.2, A.pp)
+curvedarrow( c(0, 0.66) , c(0.66, -0.66), curve = -0.2)#         CL -> PN
+text(0.25, -0.1, A.pc)
+curvedarrow( c(0.66, -0.66),  c(0, 0.66)  , curve = -0.001)#       PN -> CL
+text(0.75, 0.1, A.cp)
+
+curvedarrow( c(-0.66 - 0.12, -0.66 ) , c(-0.66 + 0.12, -0.66), curve = 1.5)# MES -> MES
+text(-0.66, -1.2, A.mm)
+curvedarrow( c(-0.66, -0.66) , c(0.66, -0.66), curve = -0.001)#    MES -> PL
+text(0, -0.55, A.mp)
+curvedarrow( c(0.66, -0.66) , c(-0.66, -0.66), curve = -0.2)#    PL -> MES
+text(0, -1.05, A.pm)
+
+
+# labels
+points(0, 0.66, cex = 8, pch=19, col="white")
+points(0, 0.66, cex = 8, col="black")
+text(0, 0.66, "CL", col="black")
+
+points(-0.66, -0.66, cex = 8, pch=19, col="white")
+points(-0.66, -0.66, cex = 8, col="black")
+text(-0.66, -0.66, "MES", col="black")
+
+points(0.66, -0.66, cex = 8, pch=19, col="white")
+points(0.66, -0.66, cex = 8, col="black")
+text(0.66, -0.66, "PN", col="black")
 
 
 
+### B ----
+
+plot(c(-1,1)* 1.25 , c(-1,1) * 1.25 , type='n' , main="Bootstrap B (KNN angle, KNN dist)")
+
+curvedarrow( c(0 - 0.12, 0.66 ) , c(0 + 0.12, 0.66), curve = -1.5)# CL -> CL
+text(0, 1.2, B.cc)
+curvedarrow( c(0, 0.66) , c(-0.66, -0.66), curve = -0.001)#        CL -> MES
+text(-0.25, -0.1, B.cm)
+curvedarrow( c(-0.66, -0.66),  c(0, 0.66)  , curve = -0.2)#      MES -> CL
+text(-0.75, 0.1, B.mc)
+
+curvedarrow( c(0.66 - 0.12, -0.66 ) , c(0.66 + 0.12, -0.66), curve = 1.5)# PN -> PN
+text(0.66, -1.2, B.pp)
+curvedarrow( c(0, 0.66) , c(0.66, -0.66), curve = -0.2)#         CL -> PN
+text(0.25, -0.1, B.pc)
+curvedarrow( c(0.66, -0.66),  c(0, 0.66)  , curve = -0.001)#       PN -> CL
+text(0.75, 0.1, B.cp)
+
+curvedarrow( c(-0.66 - 0.12, -0.66 ) , c(-0.66 + 0.12, -0.66), curve = 1.5)# MES -> MES
+text(-0.66, -1.2, B.mm)
+curvedarrow( c(-0.66, -0.66) , c(0.66, -0.66), curve = -0.001)#    MES -> PL
+text(0, -0.55, B.mp)
+curvedarrow( c(0.66, -0.66) , c(-0.66, -0.66), curve = -0.2)#    PL -> MES
+text(0, -1.05, B.pm)
+
+
+# labels
+points(0, 0.66, cex = 8, pch=19, col="white")
+points(0, 0.66, cex = 8, col="black")
+text(0, 0.66, "CL", col="black")
+
+points(-0.66, -0.66, cex = 8, pch=19, col="white")
+points(-0.66, -0.66, cex = 8, col="black")
+text(-0.66, -0.66, "MES", col="black")
+
+points(0.66, -0.66, cex = 8, pch=19, col="white")
+points(0.66, -0.66, cex = 8, col="black")
+text(0.66, -0.66, "PN", col="black")
+
+
+# Figure 2: Proportional distances ----
+
+
+# 
+# plot(plt.single$`NMF:123456.PC1` ,
+#      plt.single$`NMF:123456.PC2`, pch=19 , col = as.numeric(as.factor(plt.single$`NMF:123456.PCA.SVM.class`)) + 1 , cex=0.5)
+
+
+
+df <- data.frame()
+res <- 150 # resolution
+for(p in 1:nrow(plt.paired) ) { # for pair
+  
+  #p <- which(plt.paired$pid == "AZF")
+  
+  target <- plt.paired[p,]
+  d <- sqrt((target$`NMF:123456.PC1.R1` - target$`NMF:123456.PC1.R2`)^2 +
+    (target$`NMF:123456.PC2.R1` - target$`NMF:123456.PC2.R2`)^2) # dist
+  
+  # lines(
+  #   c(target$`NMF:123456.PC1.R1`, target$`NMF:123456.PC1.R2`),
+  #   c(target$`NMF:123456.PC2.R1`, target$`NMF:123456.PC2.R2`)
+  # )
+  
+  df.classification <- data.frame('pid' = target$pid,
+                                  `NMF:123456.PC1` = target$`NMF:123456.PC1.R1`,
+                                  `NMF:123456.PC2` = target$`NMF:123456.PC2.R1`,
+                                  frac = 0)
+
+  for(r in 1:res) {
+    pct <- r / (res+1)
+
+    # generate new length using samples length and samples angle
+    bootstrapped_line <- change_length_line(target$`NMF:123456.PC1.R1`,
+                                            target$`NMF:123456.PC2.R1`,
+                                            
+                                            target$`NMF:123456.PC1.R2`,
+                                            target$`NMF:123456.PC2.R2`,
+                                            
+                                            d * pct)
+    
+    #lines(
+    #  c(bootstrapped_line$x[1], bootstrapped_line$x[2]),
+    #  c(bootstrapped_line$y[1], bootstrapped_line$y[2])
+    #)
+    #points(bootstrapped_line$x[2], bootstrapped_line$y[2],col=as.numeric(class) + 1, lwd=2,cex=1.6)
+    
+    df.classification <- df.classification %>% 
+      rbind(data.frame(pid = target$pid,
+                       `NMF:123456.PC1` = bootstrapped_line$x[2],
+                       `NMF:123456.PC2` = bootstrapped_line$y[2],
+                       frac = pct) )
+  }
+
+  df.classification <- df.classification %>%
+    rbind(data.frame(pid = target$pid,
+                     `NMF:123456.PC1` = target$`NMF:123456.PC1.R2`,
+                     `NMF:123456.PC2` = target$`NMF:123456.PC2.R2`,
+                     frac = 1))
+  
+  df.classification$class <- predict(s150.pca.nmf.subtype.classifier.svm , newdata = df.classification %>% 
+                                       dplyr::mutate(frac=NULL, pid=NULL) )
+  
+  df <- df %>% rbind(df.classification)
+
+}
+
+df <- df %>%
+  dplyr::mutate(pid = as.factor(pid)) %>%
+  dplyr::mutate(class = as.factor(class))
+  
+# df %>%
+#   dplyr::filter(pid == levels(df$pid)[2]) # == AAC
+
+
+
+
+
+
+df.paired <- data.frame()
+for(ppid in unique(df$pid)) {
+  #ppid = "EBV"
+  target <- df %>%
+    dplyr::filter(`pid` == ppid) %>%
+    dplyr::arrange(frac)
+  
+  l <- length(unique(target$class))
+  
+  out <- data.frame(pid = ppid,
+                   init = 0,
+                   init.class = target$class[1],
+                   split = NA,
+                   end = 1,
+                   end.class = target$class[nrow(target)])
+
+  for(k in 1:nrow(target)) {
+    slice = target[k,]
+    
+    if(is.na(out$split) & slice$class != out$init.class) {
+      out$split = (target[k,]$frac + target[k - 1,]$frac) / 2
+      #print("!!")
+    }
+  }
+  
+  df.paired <- rbind(out, df.paired)
+}
+df.paired <- df.paired %>%
+  dplyr::mutate(init = NULL,
+                init.class = NULL,
+                end = NULL,
+                end.class = NULL) %>%
+  dplyr::left_join(plt.paired , by = c('pid' = 'pid'))
+
+
+
+
+
+# maak ggplot
+plt <- data.frame()
+for(i in 1:nrow(df.paired)){
+  slice = df.paired[i,]
+  
+  if(is.na( slice$split )) {
+    dist <- slice$eucledian.dist
+    
+    plt <- rbind(plt, 
+                 data.frame(
+                   pid = slice$pid,
+                   group = slice$pid,
+                   pos = 0,
+                   subtype = slice$`NMF:123456.PCA.SVM.class.R1`,
+                   subtype.init = slice$`NMF:123456.PCA.SVM.class.R1` , 
+                   d = dist,
+                   type="lpad")
+    )
+    
+    plt <- rbind(plt, 
+                 data.frame(
+                   pid = slice$pid,
+                   group = slice$pid,
+                   pos = slice$eucledian.dist,
+                   subtype = slice$`NMF:123456.PCA.SVM.class.R1`,
+                   subtype.init = slice$`NMF:123456.PCA.SVM.class.R1` , 
+                   d = dist,
+                   type="lpad")
+    )
+    
+    
+    dist <- - slice$eucledian.dist
+    plt <- rbind(plt, 
+                 data.frame(
+                   pid = slice$pid,
+                   group = slice$pid,
+                   pos = -slice$eucledian.dist,
+                   subtype = slice$`NMF:123456.PCA.SVM.class.R1`,
+                   subtype.init = slice$`NMF:123456.PCA.SVM.class.R1` , 
+                   d = dist,
+                   type="rpad")
+    )
+    
+    plt <- rbind(plt, 
+                 data.frame(
+                   pid = slice$pid,
+                   group = slice$pid,
+                   pos = 0,
+                   subtype = slice$`NMF:123456.PCA.SVM.class.R1`,
+                   subtype.init = slice$`NMF:123456.PCA.SVM.class.R1` , 
+                   d = dist,
+                   type="rpad")
+    )
+    
+    
+  } else  {
+    dist <- slice$eucledian.dist
+    
+    
+    plt <- rbind(plt,
+                 data.frame(
+                   pid = slice$pid,
+                   group = paste0(slice$pid , "-R1"),
+                   pos = 0,
+                   subtype = slice$`NMF:123456.PCA.SVM.class.R1`,
+                   subtype.init = slice$`NMF:123456.PCA.SVM.class.R1`,
+                   d = dist,
+                   type="lpad"
+                 ))
+    plt <- rbind(plt,
+                 data.frame(
+                   pid = slice$pid,
+                   group = paste0(slice$pid , "-R1"),
+                   pos = (1 - slice$split) *  slice$eucledian.dist,
+                   subtype = slice$`NMF:123456.PCA.SVM.class.R1`,
+                   subtype.init = slice$`NMF:123456.PCA.SVM.class.R1`,
+                   d = dist,
+                   type="lpad"
+                 ))
+    
+    plt <- rbind(plt,
+                 data.frame(
+                   pid = slice$pid,
+                   group = paste0(slice$pid , "-R2"),
+                   pos = (1 - slice$split) *  slice$eucledian.dist,
+                   subtype = slice$`NMF:123456.PCA.SVM.class.R2`,
+                   subtype.init = slice$`NMF:123456.PCA.SVM.class.R1`,
+                   d = dist,
+                   type="lpad"
+                 ))
+    plt <- rbind(plt,
+                 data.frame(
+                   pid = slice$pid,
+                   group = paste0(slice$pid , "-R2"),
+                   pos =  slice$eucledian.dist,
+                   subtype = slice$`NMF:123456.PCA.SVM.class.R2`,
+                   subtype.init = slice$`NMF:123456.PCA.SVM.class.R1`,
+                   d = dist,
+                   type="lpad"
+                 ))
+    
+    
+    
+    dist <- (slice$split) * slice$eucledian.dist
+    plt <- rbind(plt,
+                 data.frame(
+                   pid = slice$pid,
+                   group = paste0(slice$pid , "-R1"),
+                   pos = - (1 - slice$split) *  slice$eucledian.dist,
+                   subtype = slice$`NMF:123456.PCA.SVM.class.R1`,
+                   subtype.init = slice$`NMF:123456.PCA.SVM.class.R1`,
+                   d = dist,
+                   type="rpad"
+                 ))
+    plt <- rbind(plt,
+                 data.frame(
+                   pid = slice$pid,
+                   group = paste0(slice$pid , "-R1"),
+                   pos = 0,
+                   subtype = slice$`NMF:123456.PCA.SVM.class.R1`,
+                   subtype.init = slice$`NMF:123456.PCA.SVM.class.R1`,
+                   d = dist,
+                   type="rpad"
+                 ))
+    
+    plt <- rbind(plt,
+                 data.frame(
+                   pid = slice$pid,
+                   group = paste0(slice$pid , "-R2"),
+                   pos = 0,
+                   subtype = slice$`NMF:123456.PCA.SVM.class.R2`,
+                   subtype.init = slice$`NMF:123456.PCA.SVM.class.R1`,
+                   d = dist,
+                   type="rpad"
+                 ))
+    plt <- rbind(plt,
+                 data.frame(
+                   pid = slice$pid,
+                   group = paste0(slice$pid , "-R2"),
+                   pos =  (slice$split) *  slice$eucledian.dist,
+                   subtype = slice$`NMF:123456.PCA.SVM.class.R2`,
+                   subtype.init = slice$`NMF:123456.PCA.SVM.class.R1`,
+                   d = dist,
+                   type="rpad"
+                 ))
+    
+  }
+}
+
+
+
+p1 <- ggplot(plt %>% dplyr::filter(type == "lpad"), aes(x = pos , y = reorder(pid, d), col = subtype, group=group)) +
+  geom_point(cex=1) +
+  geom_path(lwd = 1.2) + 
+  facet_grid(rows = vars(subtype.init), cols=vars(type), scales = "free", space="free_y") + 
+  labs(x = "Traversal distance GITS space",
+       y=NULL,
+       col = "Distance within Subtype space") +
+  theme_light() +
+  theme(
+    text = element_text(family = 'Helvetica'),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = 'bottom',
+    plot.title = element_text(face = "bold", size = rel(1.2), hjust = 0.5),
+    axis.text.y = element_text(size = 6)
+  ) +
+  theme(strip.background = element_blank(), strip.text = element_blank()) +
+  scale_color_manual(values = subtype_colors, guide = guide_legend(title = NULL, title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75))
+
+
+p2 <- ggplot(plt %>% dplyr::filter(type == "rpad"), aes(x = pos , y = reorder(pid, d), col = subtype, group=group)) +
+  geom_point(cex=1.1) +
+  geom_path(lwd = 1.2) + 
+  facet_grid(rows = vars(subtype.init), cols=vars(type), scales = "free", space="free_y") + 
+  labs(x = "Traversal distance GITS space",
+       y=NULL,
+       col = "Distance within Subtype space") +
+  theme_light() +
+  theme(
+    text = element_text(family = 'Helvetica'),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = 'bottom',
+    plot.title = element_text(face = "bold", size = rel(1.2), hjust = 0.5),
+    axis.text.y = element_text(size = 6)
+  ) +
+  theme(strip.background = element_blank(), strip.text = element_blank()) +
+  scale_color_manual(values = subtype_colors, guide = guide_legend(title = NULL, title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75))
+
+p1 + p2
+
+
+
+
+#ggsave("output/figures/eucledian_distance_traversal_pnc.png",height=8*1.3,width=8*1.4)
+ggsave("output/figures/eucledian_distance_traversal_pnc.pdf",height=8*1.3,width=8*2.0)
+
+
+
+## santoesha style plot ----
+
+
+
+
+plt.prop <- data.frame()
+
+tmp <-  df %>% dplyr::left_join(plt.paired %>%
+                          dplyr::select(c('pid',`NMF:123456.PCA.SVM.class.R1`, eucledian.dist)),
+                          by=c('pid'='pid'))
+
+for(ppid in unique(tmp$pid)) {
+  print(ppid)
+  
+  
+  tmp.2 <- tmp %>% dplyr::filter(pid == ppid)
+
+  
+  last_class <- tmp.2[1,]$class
+  last_frac <- tmp.2[1,]$frac
+  
+  for(i in 2:nrow(tmp.2))  {
+    #print(i)
+    if(tmp.2[i - 1,]$class != tmp.2[i,]$class ) {
+       split <-  (tmp.2[i -1 ,]$frac + tmp.2[i  ,]$frac) / 2
+      
+       #print(paste0("(",i,") ", last_class, " -> ", tmp.2[i - 1,]$class))
+      
+       plt.prop <- plt.prop %>%
+         rbind(data.frame(
+           pid = tmp.2[i,]$pid,
+           
+           from_class = last_class,
+           to_class = tmp.2[i - 1,]$class,
+
+           from_frac = last_frac  ,
+           to_frac = split ,
+           delta_frac =  split - last_frac,
+           steps = (split - last_frac) / (1/151),
+           
+           eucl_dist = tmp.2[i,]$eucledian.dist ,
+           delta_eucl_dist = tmp.2[i,]$eucledian.dist * (split - last_frac)
+         ))
+      
+      last_class <- tmp.2[i - 1 ,]$class
+      last_frac <- split
+    }
+    
+    if ( tmp.2[i,]$frac == 1.0) {
+      #print(paste0("(",i,") ", last_class, " -> ", tmp.2[i - 1,]$class))
+      
+      plt.prop <- plt.prop %>%
+        rbind(data.frame(
+          pid = tmp.2[i,]$pid,
+          
+          from_class = last_class,
+          to_class = tmp.2[i ,]$class,
+          
+          from_frac = last_frac  ,
+          to_frac = tmp.2[i ,]$frac ,
+          delta_frac =  tmp.2[i ,]$frac   - last_frac,
+          steps = (tmp.2[i ,]$frac   - last_frac) / (1/151),
+          
+          eucl_dist = tmp.2[i,]$eucledian.dist ,
+          delta_eucl_dist = tmp.2[i,]$eucledian.dist * (tmp.2[i ,]$frac   - last_frac)
+        ))
+      
+    }
+  }
+  
+  #tmp.2
+  #plt.prop
+  
+  test <- plt.prop %>%
+    dplyr::filter(pid == ppid)
+  
+  stopifnot(sum(test$steps ) == 151)
+  stopifnot(sum(test$delta_frac) == 1)
+}
+
+
+
+
+
+
+
+
+
+
+
+links <- data.frame() %>%
+  rbind(data.frame( from = "CL", to = "CL" , weight = 
+                      plt.prop %>% dplyr::filter(from_class == "Classical" & to_class == "Classical") %>%
+                      dplyr::pull(delta_eucl_dist) %>% sum )) %>%
+  rbind(data.frame( from = "CL", to = "MES" , weight = 
+                      plt.prop %>% dplyr::filter(from_class == "Classical" & to_class == "Mesenchymal") %>%
+                      dplyr::pull(delta_eucl_dist) %>% sum )) %>%
+  rbind(data.frame( from = "CL", to = "PN" , weight = 
+                      plt.prop %>% dplyr::filter(from_class == "Classical" & to_class == "Proneural") %>%
+                      dplyr::pull(delta_eucl_dist) %>% sum )) %>%
+
+  rbind(data.frame( from = "MES", to = "CL" , weight = 
+                    plt.prop %>% dplyr::filter(from_class == "Mesenchymal" & to_class == "Classical") %>%
+                    dplyr::pull(delta_eucl_dist) %>% sum )) %>%
+  rbind(data.frame( from = "MES", to = "MES" , weight = 
+                      plt.prop %>% dplyr::filter(from_class == "Mesenchymal" & to_class == "Mesenchymal") %>%
+                      dplyr::pull(delta_eucl_dist) %>% sum )) %>%
+  rbind(data.frame( from = "MES", to = "PN" , weight = 
+                      plt.prop %>% dplyr::filter(from_class == "Mesenchymal" & to_class == "Proneural") %>%
+                      dplyr::pull(delta_eucl_dist) %>% sum )) %>%
+
+  rbind(data.frame( from = "PN", to = "CL" , weight = 
+                    plt.prop %>% dplyr::filter(from_class == "Proneural" & to_class == "Classical") %>%
+                    dplyr::pull(delta_eucl_dist) %>% sum )) %>%
+  rbind(data.frame( from = "PN", to = "MES" , weight = 
+                      plt.prop %>% dplyr::filter(from_class == "Proneural" & to_class == "Mesenchymal") %>%
+                      dplyr::pull(delta_eucl_dist) %>% sum )) %>%
+  rbind(data.frame( from = "PN", to = "PN" , weight = 
+                      plt.prop %>% dplyr::filter(from_class == "Proneural" & to_class == "Proneural") %>%
+                      dplyr::pull(delta_eucl_dist) %>% sum ))
+
+links[links$from == "CL",]$weight <- links[links$from == "CL",]$weight / (plt.prop %>% dplyr::filter(from_class == "Classical" & from_frac == 0) %>% nrow())
+links[links$from == "MES",]$weight <- links[links$from == "MES",]$weight / (plt.prop %>% dplyr::filter(from_class == "Classical" & from_frac == 0) %>% nrow())
+links[links$from == "PN",]$weight <- links[links$from == "PN",]$weight / (plt.prop %>% dplyr::filter(from_class == "Classical" & from_frac == 0) %>% nrow())
+
+links <- links %>%
+  dplyr::mutate(weight = round(weight,2))
+
+  
+    #dplyr::mutate(weight=round(weight/sum(weight),3) * 100)
+
+#Real values
+#links <- data.frame(from=c(rep(c("CL"),3),rep(c("MES"),3),rep(c("PN"),3)), to=c(rep(c("CL","MES","PN"),3)))
+#links <- links %>% dplyr::group_by(from) %>% dplyr::mutate(thickness=round(weight/sum(weight),2))
+
+nodes <- data.frame(id=c("CL","MES","PN"),
+                    subtype=c("Classical","Mesenchymal","Proneural"),
+                    size=c(10,8,9))
+net <- graph_from_data_frame(d=links, vertices=nodes, directed=T)
+net <- simplify(net, remove.multiple = F, remove.loops = F)
+#E(net)$width <- E(net)$thickness*6
+#E(net)$size <- E(net)$size*0.75
+
+plot(net,
+     edge.arrow.size=.4,
+     diag=T,
+     edge.label = E(net)$weight,
+     arrow.mode=3,
+     edge.curved=.2,
+     edge.color="gray70",
+     vertex.color="coral",
+     vertex.label.font=2,
+     edge.label.font=1,
+     edge.label.cex=1.3,
+     edge.label.color="blue",
+)
 
 
 
