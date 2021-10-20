@@ -361,11 +361,6 @@ dim(results.out)
 # rm(tmp)
 # dim(results.out)
 
-### Add extra-cellular matrix genes ----
-
-# DE-genes associated with extra-cellular matrix:
-# "CPZ", "GPR78", "FNDC1", "OGN", "OMD", "ASS1", "CILP2", "CRABP2", "CLMP", "GIT8D2", "TNNT3", "PTGFR", "WNT5B", "PERP", "MRC1L1", "MLPH", "MME", "C5orf46", "TWIST2", "DPT", "COL10A1", "FBN1", "TPSAB1", "TPSB2", "KRT8", "COL1A1", "COL1A2", "ADAMTS2", "COL5A1", "MMP11", "COL12A1", "MFAP2", "IRX3", "COL8A2", "MFAP4", "MFAP5"
-
 
 ### TCGA / Wang / Verhaak 2017 subtype signature ----
 
@@ -449,6 +444,16 @@ results.out <- results.out %>%
   dplyr::mutate(neftel.meta.module.G1.S = hugo_symbol %in% neftel.meta.modules.G1.S.tt2)  %>%
   dplyr::mutate(neftel.meta.module.G2.M = hugo_symbol %in% neftel.meta.modules.G2.M.tt2) 
 
+
+
+### GO:0005201 extracellular matrix structural constituent ----
+
+
+results.out <- results.out %>%
+  dplyr::mutate(EM.struct.constituent = ensembl_id %in%
+  (read.csv('data/GO0005201_extracellular_matrix_structural_constituent.csv') %>%
+      dplyr::pull(converted_alias))
+  )
 
 
 
@@ -858,6 +863,24 @@ results.out <- results.out %>%
 # Import (quick) ----
 
 results.out <- readRDS(file = 'tmp/results.out.Rds')
+
+# stats ----
+
+# n significant G-SAM
+
+
+stat <- results.out %>%
+  dplyr::mutate(direction.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res > 0 , "up", "down") ) %>%
+  dplyr::mutate(direction.glass.tpc.res = ifelse(log2FoldChange.glass.tpc.res > 0 , "up", "down") )
+
+
+stat %>%
+  dplyr::filter(padj.gsam.tpc.res <= 0.01 & abs(log2FoldChange.gsam.tpc.res) > 0.5 & direction.gsam.tpc.res == direction.glass.tpc.res) %>%
+  dim
+
+stat %>%
+  dplyr::filter(padj.glass.tpc.res <= 0.01 & abs(log2FoldChange.glass.tpc.res) > 0.5 & direction.gsam.tpc.res == direction.glass.tpc.res) %>%
+  dim
 
 
 
@@ -1866,6 +1889,9 @@ plot(b$tpc, b$gen, col=ifelse(b$res == "R1",2,4), pch=19)
 
 # plots ----
 
+
+
+
 ## 1 :: gene-set corr plot ----
 
 # to find whether the scRNA-seq clusters are (largely) identical to verhaak etc.
@@ -2319,24 +2345,25 @@ plt <- rbind(
     dplyr::mutate(dataset = "(B) GLASS"))
 
 
-ggplot(plt, aes(x = resection, y = tumour.percentage.dna, col=resection)) +
+ggplot(plt, aes(x = resection, y = tumour.percentage.dna, fill=resection)) +
   facet_grid(cols=vars(dataset), scales = "free", space="free_y") + 
-  geom_violin(draw_quantiles = c(0.5), col="black") +
-  geom_jitter( position=position_jitter(0.2), size=0.9) +
+  geom_violin(draw_quantiles = c(0.6), col="black", alpha=0.2) +
+  geom_jitter( position=position_jitter(0.2), size=2.5, pch=21, col="black") +
   ylim(0, 100) +
-  labs(x = NULL, col = NULL, y = "Tumour cell percentage" ) +
+  labs(x = NULL, col = NA, y = "Tumor cell percentage" ) +
   geom_signif(
     comparisons = list(c("Primary Res." ,  "Recurrent Res.")),
     test="wilcox.test",
     col="black"
   ) + 
-  job_gg_theme 
+  scale_fill_manual(values =  resection_colors ) +
+  job_gg_theme
 
 
 
 
 # @TODO include Wilcox pvalues
-ggsave('output/figures/figure-tcp_estimate.png', width = 5.7 * 1.4, height = 4.3 * 1.3)
+ggsave('output/figures/figure-tcp_estimate.pdf', width = 5.7 * 1.4, height = 4.3 * 1.1)
 
 
 
@@ -2400,6 +2427,11 @@ ggplot(plt, aes(x = log2FoldChange.gsam.res ,
 
 
 ## 4 :: [E:1] :: FC res x corr TPC G-SAM  [diag; chr7 ; chr10 ] ----
+
+
+results.out %>%
+  dplyr::filter(hugo_symbol %in% c('SMAD5','SETD5')) %>%
+  dplyr::select(c('hugo_symbol', 'estimate.gsam.cor.tpc', 'estimate.glass.cor.tpc'))
 
 
 plt <- results.out %>%
@@ -2483,7 +2515,7 @@ p3 <- ggplot(plt, aes(x = log2FoldChange.gsam.res ,
 p1 / p2 / p3
 
 
-ggsave('output/figures/paper_dge_log2FoldChange.res_x_statistic.cor.tpc.png', width = 5.7 * 1.4 , height = 4 * 1.4 * 3)
+ggsave('output/figures/figure-DGE_log2FoldChange.res_x_statistic.cor.tpc.png', width = 5.7 * 1.4 , height = 4 * 1.4 * 3)
 
 
 
@@ -2571,7 +2603,7 @@ p1 + p2
 # ---
 
 
-p1 <- ggplot(plt, aes(x = log2FoldChange.gsam.res ,
+p3 <- ggplot(plt, aes(x = log2FoldChange.gsam.res ,
                       y =  statistic.gsam.cor.tpc,
                       shape = is.limited.gsam.res ,
                       size = is.limited.gsam.res  ,
@@ -2593,7 +2625,7 @@ p1 <- ggplot(plt, aes(x = log2FoldChange.gsam.res ,
   xlim(-2.5,2.5) +
   ylim(-16.5,16.5)
 
-p2 <- ggplot(plt, aes(x = log2FoldChange.gsam.tpc.res ,
+p4 <- ggplot(plt, aes(x = log2FoldChange.gsam.tpc.res ,
                       y =  statistic.gsam.cor.tpc,
                       shape = is.limited.gsam.tpc.res ,
                       size = is.limited.gsam.tpc.res  ,
@@ -2615,7 +2647,256 @@ p2 <- ggplot(plt, aes(x = log2FoldChange.gsam.tpc.res ,
   xlim(-2.5,2.5) +
   ylim(-16.5,16.5)
 
-p1 + p2
+(p3 + p4) / (p1 + p2)
+
+
+
+ggsave("output/figures/figure-DE_with_tcp_correction_gsam.png",width = 5.7 * 1.4  * 2, height = 4 * 1.4 * 2 )
+
+## Figure 3D-G ----
+
+
+plt <- results.out %>%
+  dplyr::filter(!is.na(statistic.gsam.cor.tpc)) %>% # TPC correlation G-SAM
+  dplyr::filter(!is.na(statistic.glass.cor.tpc)) %>% # TPC correlation GLASS
+  dplyr::filter(!is.na(log2FoldChange.gsam.res)) %>%
+  dplyr::filter(!is.na(log2FoldChange.gsam.tpc.res)) %>%
+  dplyr::filter(!is.na(log2FoldChange.glass.res)) %>%
+  dplyr::filter(!is.na(log2FoldChange.glass.tpc.res)) %>%
+  dplyr::mutate(is.limited.gsam.res = as.character(abs(log2FoldChange.gsam.res) > 2.5)) %>% # change pch to something that is limited
+  dplyr::mutate(log2FoldChange.gsam.res = ifelse(log2FoldChange.gsam.res > 2.5, 2.5 , log2FoldChange.gsam.res)) %>%
+  dplyr::mutate(log2FoldChange.gsam.res = ifelse(log2FoldChange.gsam.res < -2.5, -2.5 , log2FoldChange.gsam.res)) %>%
+  dplyr::mutate(is.limited.gsam.tpc.res = as.character(abs(log2FoldChange.gsam.tpc.res) > 2.5)) %>% # change pch to something that is limited
+  dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res > 2.5, 2.5 , log2FoldChange.gsam.tpc.res)) %>%
+  dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res < -2.5, -2.5 , log2FoldChange.gsam.tpc.res)) %>%
+  dplyr::mutate(is.limited.glass.res = as.character(abs(log2FoldChange.glass.res) > 2.5)) %>% # change pch to something that is limited
+  dplyr::mutate(log2FoldChange.glass.res = ifelse(log2FoldChange.glass.res > 2.5, 2.5 , log2FoldChange.glass.res)) %>%
+  dplyr::mutate(log2FoldChange.glass.res = ifelse(log2FoldChange.glass.res < -2.5, -2.5 , log2FoldChange.glass.res)) %>%
+  dplyr::mutate(is.limited.glass.tpc.res = as.character(abs(log2FoldChange.glass.tpc.res) > 2.5)) %>% # change pch to something that is limited
+  dplyr::mutate(log2FoldChange.glass.tpc.res = ifelse(log2FoldChange.glass.tpc.res > 2.5, 2.5 , log2FoldChange.glass.tpc.res)) %>%
+  dplyr::mutate(log2FoldChange.glass.tpc.res = ifelse(log2FoldChange.glass.tpc.res < -2.5, -2.5 , log2FoldChange.glass.tpc.res)) 
+
+plt.expanded <- rbind(
+  plt %>%
+    dplyr::rename(log2FoldChange = log2FoldChange.gsam.res) %>%
+    dplyr::rename(padj = padj.gsam.res) %>%
+    dplyr::rename(cor.stat = statistic.gsam.cor.tpc) %>%
+    dplyr::rename(is.limited = is.limited.gsam.res) %>%
+    dplyr::mutate(dataset = "G-SAM") %>%
+    dplyr::mutate(DESeq2.tcp.corrected = F) %>%
+    dplyr::select(log2FoldChange, cor.stat, is.limited, dataset, DESeq2.tcp.corrected, padj)
+  ,
+  plt %>%
+    dplyr::rename(log2FoldChange = log2FoldChange.gsam.tpc.res) %>%
+    dplyr::rename(padj = padj.gsam.tpc.res) %>%
+    dplyr::rename(cor.stat = statistic.gsam.cor.tpc) %>%
+    dplyr::rename(is.limited = is.limited.gsam.tpc.res) %>%
+    dplyr::mutate(dataset = "G-SAM") %>%
+    dplyr::mutate(DESeq2.tcp.corrected = T) %>%
+    dplyr::select(log2FoldChange, cor.stat, is.limited, dataset, DESeq2.tcp.corrected, padj)
+  ,
+  plt %>%
+    dplyr::rename(log2FoldChange = log2FoldChange.glass.res) %>%
+    dplyr::rename(padj = padj.glass.res) %>%
+    dplyr::rename(cor.stat = statistic.glass.cor.tpc) %>%
+    dplyr::rename(is.limited = is.limited.glass.res) %>%
+    dplyr::mutate(dataset = "GLASS") %>%
+    dplyr::mutate(DESeq2.tcp.corrected = F) %>%
+    dplyr::select(log2FoldChange, cor.stat, is.limited, dataset, DESeq2.tcp.corrected, padj)
+  ,
+  plt %>%
+    dplyr::rename(log2FoldChange = log2FoldChange.glass.tpc.res) %>%
+    dplyr::rename(padj = padj.glass.tpc.res) %>%
+    dplyr::rename(cor.stat = statistic.glass.cor.tpc) %>%
+    dplyr::rename(is.limited = is.limited.glass.tpc.res) %>%
+    dplyr::mutate(dataset = "GLASS") %>%
+    dplyr::mutate(DESeq2.tcp.corrected = T) %>%
+    dplyr::select(log2FoldChange, cor.stat, is.limited, dataset, DESeq2.tcp.corrected, padj)
+  ) %>%
+  dplyr::mutate(DESeq2.tcp.corrected = ifelse(DESeq2.tcp.corrected == T, "Tumor cell-% corrected" , "Tumor cell-% uncorrected")) %>%
+  dplyr::mutate(DESeq2.tcp.corrected = factor(DESeq2.tcp.corrected, levels=
+                                                c("Tumor cell-% uncorrected" , "Tumor cell-% corrected"))) %>%
+  dplyr::mutate(is.limited = is.limited == 'TRUE') 
+
+
+ggplot(plt.expanded, aes(x = log2FoldChange ,
+                y =  cor.stat,
+                shape = is.limited ,
+                col = is.limited ,
+                #size = is.limited  ,
+                fill = dataset  ) ) +
+  facet_grid(rows = vars(dataset), cols=vars(DESeq2.tcp.corrected), scales = "free") +
+  geom_hline(yintercept = 0, col="gray60",lwd=0.5) +
+  geom_vline(xintercept = 0, col="gray60",lwd=0.5) +
+  geom_point(size=2.2) +
+  geom_smooth(data = subset(plt.expanded, padj > 0.05 &  is.limited == FALSE),method="lm",
+              se = FALSE,  formula=y ~ x, orientation="y", col="#ff2929", show.legend=F ) +
+  scale_shape_manual(values = c('TRUE'= 23, 'FALSE' = 21)   )  +
+  scale_color_manual(values = c('FALSE' = '#00000040', 'TRUE' = '#000000aa')) +
+  scale_fill_manual(values = dataset_colors <- c('G-SAM' = '#e6935622', 'GLASS' = '#69a4d522') ) + 
+  youri_gg_theme + 
+  labs(x = "log2FC R1 vs. R2 (unpaired)",
+       y="Correlation t-statistic with tumour percentage",
+       shape = "Truncated at x-axis",
+       size="Truncated at x-axis",
+       col="Truncated at x-axis") +
+  xlim(-2.5,2.5)
+
+
+ggsave("output/figures/DESeq2_x_tumor_cell_percentage.pdf", width = 5.7 * 2, height = 4 * 2)
+
+
+## Figure 4AB ----
+
+
+
+plt <- results.out %>%
+  dplyr::filter(!is.na(statistic.gsam.cor.tpc)) %>% # TPC correlation G-SAM
+  dplyr::filter(!is.na(statistic.glass.cor.tpc)) %>% # TPC correlation GLASS
+  dplyr::filter(!is.na(log2FoldChange.gsam.res)) %>%
+  dplyr::filter(!is.na(log2FoldChange.glass.res)) %>%
+  dplyr::mutate(is.limited.gsam.res = as.character(abs(log2FoldChange.gsam.res) > 2.5)) %>% # change pch to something that is limited
+  dplyr::mutate(log2FoldChange.gsam.res = ifelse(log2FoldChange.gsam.res > 2.5, 2.5 , log2FoldChange.gsam.res)) %>%
+  dplyr::mutate(log2FoldChange.gsam.res = ifelse(log2FoldChange.gsam.res < -2.5, -2.5 , log2FoldChange.gsam.res)) %>%
+  dplyr::mutate(is.limited.glass.res = as.character(abs(log2FoldChange.glass.res) > 2.5)) %>% # change pch to something that is limited
+  dplyr::mutate(log2FoldChange.glass.res = ifelse(log2FoldChange.glass.res > 2.5, 2.5 , log2FoldChange.glass.res)) %>%
+  dplyr::mutate(log2FoldChange.glass.res = ifelse(log2FoldChange.glass.res < -2.5, -2.5 , log2FoldChange.glass.res)) %>%
+  dplyr::mutate(is.mg.or.tam = !is.na(McKenzie_celltype_top_human_specificity) & McKenzie_celltype_top_human_specificity == "microglia/TAM") 
+
+
+
+plt.expanded <- rbind(
+  plt %>%
+    dplyr::rename(log2FoldChange = log2FoldChange.gsam.res) %>%
+    dplyr::rename(padj = padj.gsam.res) %>%
+    dplyr::rename(cor.stat = statistic.gsam.cor.tpc) %>%
+    dplyr::rename(is.limited = is.limited.gsam.res) %>%
+    dplyr::mutate(dataset = "G-SAM") %>%
+    dplyr::mutate(DESeq2.tcp.corrected = F) %>%
+    dplyr::select(log2FoldChange, cor.stat, is.limited, dataset, DESeq2.tcp.corrected, padj, is.mg.or.tam)
+  ,
+  plt %>%
+    dplyr::rename(log2FoldChange = log2FoldChange.glass.res) %>%
+    dplyr::rename(padj = padj.glass.res) %>%
+    dplyr::rename(cor.stat = statistic.glass.cor.tpc) %>%
+    dplyr::rename(is.limited = is.limited.glass.res) %>%
+    dplyr::mutate(dataset = "GLASS") %>%
+    dplyr::mutate(DESeq2.tcp.corrected = F) %>%
+    dplyr::select(log2FoldChange, cor.stat, is.limited, dataset, DESeq2.tcp.corrected, padj, is.mg.or.tam)
+) %>%
+  dplyr::mutate(is.limited = is.limited == 'TRUE') %>%
+  dplyr::mutate(col = case_when(
+    is.mg.or.tam == F ~ "no-mg-or-tam",
+    is.mg.or.tam == T ~ dataset
+  ))
+
+
+ggplot(plt.expanded, aes(x = log2FoldChange ,
+                         y =  cor.stat,
+                         shape = is.limited ,
+                         col =  is.limited ,
+                         #size = is.limited  ,
+                         fill = col  ) ) +
+  facet_grid(cols = vars(dataset), scales = "free") +
+  geom_hline(yintercept = 0, col="gray60",lwd=0.5) +
+  geom_vline(xintercept = 0, col="gray60",lwd=0.5) +
+  geom_point(size=2.2, data = subset(plt.expanded, `is.mg.or.tam` == F)) +
+  geom_point(size=2.2, data = subset(plt.expanded, `is.mg.or.tam` == T)) +
+  geom_smooth(data = subset(plt.expanded, padj > 0.05 &  is.limited == FALSE),
+              aes(group=1),
+              method="lm",
+              se = FALSE,  formula=y ~ x, orientation="y", col="#ff2929", show.legend=F ) +
+  scale_shape_manual(values = c('TRUE'= 23, 'FALSE' = 21)   )  +
+  scale_color_manual(values = c('FALSE' = '#00000040', 'TRUE' = '#000000aa')) +
+  scale_fill_manual(values = dataset_colors <- c('G-SAM' = '#e69356', 'GLASS' = '#69a4d5', 'no-mg-or-tam'='white') ) + 
+  youri_gg_theme + 
+  labs(x = "log2FC R1 vs. R2 (unpaired)",
+       y="Correlation t-statistic with tumour percentage",
+       shape = "Truncated at x-axis",
+       size="Truncated at x-axis",
+       col="Truncated at x-axis") +
+  xlim(-2.5,2.5)
+
+ggsave('output/figures/geiser_plot_mckenzy_immune_tam.pdf', height=5.75 * 1.1,width=12 * 1.1)
+
+
+
+## Figure 6 [EM] ----
+
+
+
+plt <- results.out %>%
+  dplyr::filter(!is.na(statistic.gsam.cor.tpc)) %>% # TPC correlation G-SAM
+  dplyr::filter(!is.na(statistic.glass.cor.tpc)) %>% # TPC correlation GLASS
+  dplyr::filter(!is.na(log2FoldChange.gsam.res)) %>%
+  dplyr::filter(!is.na(log2FoldChange.glass.res)) %>%
+  dplyr::mutate(is.limited.gsam.res = as.character(abs(log2FoldChange.gsam.res) > 2.5)) %>% # change pch to something that is limited
+  dplyr::mutate(log2FoldChange.gsam.res = ifelse(log2FoldChange.gsam.res > 2.5, 2.5 , log2FoldChange.gsam.res)) %>%
+  dplyr::mutate(log2FoldChange.gsam.res = ifelse(log2FoldChange.gsam.res < -2.5, -2.5 , log2FoldChange.gsam.res)) %>%
+  dplyr::mutate(is.limited.glass.res = as.character(abs(log2FoldChange.glass.res) > 2.5)) %>% # change pch to something that is limited
+  dplyr::mutate(log2FoldChange.glass.res = ifelse(log2FoldChange.glass.res > 2.5, 2.5 , log2FoldChange.glass.res)) %>%
+  dplyr::mutate(log2FoldChange.glass.res = ifelse(log2FoldChange.glass.res < -2.5, -2.5 , log2FoldChange.glass.res)) %>%
+  dplyr::mutate(is.em = !is.na(EM.struct.constituent) & EM.struct.constituent == T)
+
+
+
+plt.expanded <- rbind(
+  plt %>%
+    dplyr::rename(log2FoldChange = log2FoldChange.gsam.res) %>%
+    dplyr::rename(padj = padj.gsam.res) %>%
+    dplyr::rename(cor.stat = statistic.gsam.cor.tpc) %>%
+    dplyr::rename(is.limited = is.limited.gsam.res) %>%
+    dplyr::mutate(dataset = "G-SAM") %>%
+    dplyr::mutate(DESeq2.tcp.corrected = F) %>%
+    dplyr::select(log2FoldChange, cor.stat, is.limited, dataset, DESeq2.tcp.corrected, padj, is.em)
+  ,
+  plt %>%
+    dplyr::rename(log2FoldChange = log2FoldChange.glass.res) %>%
+    dplyr::rename(padj = padj.glass.res) %>%
+    dplyr::rename(cor.stat = statistic.glass.cor.tpc) %>%
+    dplyr::rename(is.limited = is.limited.glass.res) %>%
+    dplyr::mutate(dataset = "GLASS") %>%
+    dplyr::mutate(DESeq2.tcp.corrected = F) %>%
+    dplyr::select(log2FoldChange, cor.stat, is.limited, dataset, DESeq2.tcp.corrected, padj, is.em)
+) %>%
+  dplyr::mutate(is.limited = is.limited == 'TRUE') %>%
+  dplyr::mutate(col = case_when(
+    is.em == F ~ "no-EM",
+    is.em == T ~ dataset
+  ))
+
+
+ggplot(plt.expanded, aes(x = log2FoldChange ,
+                         y =  cor.stat,
+                         shape = is.limited ,
+                         col =  is.limited ,
+                         #size = is.limited  ,
+                         fill = col  ) ) +
+  facet_grid(cols = vars(dataset), scales = "free") +
+  geom_hline(yintercept = 0, col="gray60",lwd=0.5) +
+  geom_vline(xintercept = 0, col="gray60",lwd=0.5) +
+  geom_point(size=2.2, data = subset(plt.expanded, `is.em` == F)) +
+  geom_point(size=2.2, data = subset(plt.expanded, `is.em` == T)) +
+  geom_smooth(data = subset(plt.expanded, padj > 0.05 &  is.limited == FALSE),
+              aes(group=1),
+              method="lm",
+              se = FALSE,  formula=y ~ x, orientation="y", col="#ff2929", show.legend=F ) +
+  scale_shape_manual(values = c('TRUE'= 23, 'FALSE' = 21)   )  +
+  scale_color_manual(values = c('FALSE' = '#00000040', 'TRUE' = '#000000aa')) +
+  scale_fill_manual(values = dataset_colors <- c('G-SAM' = '#e69356', 'GLASS' = '#69a4d5', 'no-EM'='white') ) + 
+  youri_gg_theme + 
+  labs(x = "log2FC R1 vs. R2 (unpaired)",
+       y="Correlation t-statistic with tumour percentage",
+       shape = "Truncated at x-axis",
+       size="Truncated at x-axis",
+       col="Truncated at x-axis") +
+  xlim(-2.5,2.5)
+
+
+ggsave('output/figures/geiser_plot_mckenzy_immune_tam.pdf', height=5.75 * 1.1,width=12 * 1.1)
+
+
+
 
 
 
@@ -2947,7 +3228,8 @@ plt <- results.out %>%
   dplyr::mutate(is.limited.gsam.tpc.res = as.character(abs(log2FoldChange.gsam.tpc.res) > 3)) %>% # change pch to something that is limited
   dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res > 3, 3 , log2FoldChange.gsam.tpc.res)) %>%
   dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res < -3, -3 , log2FoldChange.gsam.tpc.res)) %>%
-  dplyr::mutate(significant = padj.gsam.tpc.res < 0.01 & lfcSE.gsam.tpc.res < 0.3 & abs(log2FoldChange.gsam.tpc.res) > 0.5 ) %>%
+  #dplyr::mutate(significant = padj.gsam.tpc.res < 0.01 & lfcSE.gsam.tpc.res < 0.3 & abs(log2FoldChange.gsam.tpc.res) > 0.5 ) %>%
+  dplyr::mutate(significant = padj.gsam.tpc.res <= 0.01 & abs(log2FoldChange.gsam.tpc.res) > 0.5 ) %>%
   #dplyr::mutate(show.label = significant & abs(log2FoldChange.gsam.tpc.res) > 1.5) %>%
   dplyr::mutate(show.label.neuronal.label = hugo_symbol %in% c("RBFOX3", "SATB2", "SLC17A7", "RORB", "GAD1", "GAD2", "SST", "LHX6","ADARB2","VIP")) %>%
   dplyr::mutate(show.label.neuronal = hugo_symbol %in% c("RELN","VIP","GAD2","SYNPR","GAD1","CNR1","SYT1","SCG2","TAC3","GABRG2","GABRA1","STMN2","DLX1","KCNC2","TMEM130","RAB3C","SST","VSTM2A","SNAP25","ROBO2","CALB2","KIT","CNTNAP2","GABRB2","FSTL5","NRXN3","SYT4","GRIA1","VSNL1","INA","NPY","GRIN2A","IGF1","PENK","ELAVL2","MYT1L","KCNQ5","MEG3","NRIP3","CHGB","CLSTN2","SCN2A","RAB3B","ZMAT4","NELL1","PNOC","ERBB4","SPHKAP","C11ORF87","ADARB2","SLC4A10","KIAA1324","GRIN2B","BCL11A","CELF4","PNMA2","DISP2","NYAP2","SV2B","SERPINI1","SLC2A13","RGS8","RTN1","NAP1L2","CCK","C8ORF34","DYNC1I1","SRRM4","RBFOX1","SLC12A5","NDRG4","ZNF804A","LPPR4","SLITRK4","GPR158","NDNF","KCNJ3","PCSK2","CADPS","OLFM3","GABBR2","SULT4A1","GLRA2","SYT13","CACNA2D1","GDA","SYNGR3","MAL2","PGM2L1","SLC7A14","GPR83","FRMPD4","NELL2","RGS4","CSRNP3","DCX","ATP1A3","ST8SIA3","UCHL1","GAP43")) %>%
@@ -3130,7 +3412,8 @@ plt <- results.out %>%
     #"ACAP1","ARHGAP15","ARHGAP25","C1orf38","CCR2","CCR7","CD2","CD247","CD27","CD28","CD38","CD3D","CD3E","CD3G","CD40","CD48","CD52","CD52","CD53","CD6","CD86","CD8A","CFH","CFHR1","CLEC2D","CORO1A","CSF2RB","CST7","CYBB","DOCK2","DOK2","EVI2B","F5","FAM65B","GIMAP4","GIMAP5","GIMAP5","GIMAP6","GLYR1","SEPT6","GPR171","GPR18","GPSM3","GVINP1","GZMK","HCLS1","ICOS","IFFO1","IGHA1","IGHA2","IGHD","IGHG1","IGHG3","IGHG4","IGHM","IGHV4-31","LOC100133862","IGHG1","IGHM","LOC100133862","IGHM","IGHM","IGHM","LOC100133862","IGKV1-5","IGKV4-1","IGLL5","IGLV2-11","IL10RA","IL16","IL2RB","IL2RG","IL7R","INPP5D","IRF4","ITGA4","ITK","ITM2C","KLRD1","KLRK1","LAT","SPNS1","LAX1","LCK","LCK","LCP2","LILRB1","LPXN","LST1","LST1","LY9","MAL","MFNG","MGC29506","MS4A1","NCF4","NCKAP1L","PAX5","PIK3CD","PLAC8","PLEK","PLEK","PRKCB","PRKCQ","PTPRC","PTPRCAP","PVRIG","SASH3","SELL","SELPLG","SH2D1A","SIRPG","SIT1","SLAMF1","STAT4","STK10","STK10","TARP","TARP","TRGC2","TARP","TRGC2","TARP","TRGC2","TBX21","TCL1A","TNFRSF4","TRAC","TRAC","TRAC","TRAJ17","TRAV20","TRAF3IP3","TRAT1","TRBC1","TRBC1","TRBC1","TRBC2","VAMP5","XCL1","XCL1","XCL2"
     #"IL2RG","CXCR6","CD3D","CD2","ITGAL","TAGAP","CIITA","HLA-DRA","PTPRC","CXCL9","CCL5","NKG7","GZMA","PRF1","CCR5","CD3E","GZMK","IFNG","HLA-E","GZMB","PDCD1","SLAMF6","CXCL13","CXCL10","IDO1","LAG3","STAT1","CXCL11"
     
-    "PDGFRA", "PDGFRB","CSPG4", "ACTA2"
+    #"PDGFRA", "PDGFRB","CSPG4", "ACTA2"
+    "GPR34", "MME"
   ))
 
 p1 <- ggplot(plt, aes(x=log2FoldChange.gsam.res ,
@@ -3170,7 +3453,13 @@ plt <- results.out %>%
     #"IL2RG","CXCR6","CD3D","CD2","ITGAL","TAGAP","CIITA","HLA-DRA","PTPRC","CXCL9","CCL5","NKG7","GZMA","PRF1","CCR5","CD3E","GZMK","IFNG","HLA-E","GZMB","PDCD1","SLAMF6","CXCL13","CXCL10","IDO1","LAG3","STAT1","CXCL11"
     
     # Bcell
-    "IGG","IGG1","CD27","CD38","CD78","CD138","CD319","IL-6","CD138","IGA","IGG","IGE","IGA1","IGG1","IGE1","CD20","CD27","CD40","CD80","PDCD1LG2"
+    #"IGG","IGG1","CD27","CD38","CD78","CD138","CD319","IL-6","CD138","IGA","IGG","IGE","IGA1","IGG1","IGE1","CD20","CD27","CD40","CD80","PDCD1LG2"
+    
+    # MG
+    #"TMEM119", "CD33",
+    
+    "GPR34", "MME"
+    #Fcer1g, Gpr34, Adora3, C1qb, C3, Ly86, P2ry13, Tbxas1, and Tlr7
   ))
 
 
@@ -3336,7 +3625,6 @@ ggsave("/tmp/gabra.png",height=10 * 1.3,width=4.5 * 1.3)
 
 
 
-
 plt <- results.out %>%
   dplyr::mutate(log2FoldChange.gsam.res = NULL) %>% # force using corrected 
   dplyr::mutate(log2FoldChange.glass.res = NULL) %>% # force using corrected 
@@ -3344,6 +3632,9 @@ plt <- results.out %>%
   dplyr::mutate(is.limited.gsam.tpc.res = as.character(abs(log2FoldChange.gsam.tpc.res) > 3)) %>% # change pch to something that is limited
   dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res > 3, 3 , log2FoldChange.gsam.tpc.res)) %>%
   dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res < -3, -3 , log2FoldChange.gsam.tpc.res)) %>%
+
+  dplyr::mutate(direction.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res > 0 , "up", "down") ) %>%
+  dplyr::mutate(direction.glass.tpc.res = ifelse(log2FoldChange.glass.tpc.res > 0 , "up", "down") ) %>%
   dplyr::mutate(significant = 
                   padj.gsam.tpc.res < 0.01 &
                   abs(log2FoldChange.gsam.tpc.res) > 0.5 & #padj.glass.tpc.res < 0.05
@@ -3357,7 +3648,7 @@ plt <- results.out %>%
   dplyr::mutate(show.label.other = hugo_symbol %in% c( 
     "TP53", "PIK3CA","PIK3R1","NF1","SPTA1","GABRA6","ABCC6","CXCL12",
     "LTBP4", "TGFB1","PREX1","MSH6", "MSH2", "MLH1","VEGFA", "PTPN11",
-    "STAT3","DCC", "MGMT", "PTCH1"
+    "STAT3","DCC", "MGMT", "PTCH1","VEGFA","GLI1"
   )) %>%
   dplyr::mutate(show.label.losses = hugo_symbol %in% c(
     "CDKN2A","CDKN2B","PTEN","RB1","NF1","QKI","CDKN2C","TP53","MTAP","ELAVL2","PARK2"
@@ -3366,6 +3657,8 @@ plt <- results.out %>%
 
 p1a <- ggplot(plt, aes(x=log2FoldChange.gsam.tpc.res , y=statistic.gsam.cor.tpc , col=significant, label = hugo_symbol )) + 
   geom_point(data=subset(plt, significant != T),cex=0.35) +
+  geom_vline(xintercept = c(-0.5,0.5), lty=1, lwd=2, col="#FFFFFF88") +
+  geom_vline(xintercept = c(-0.5,0.5), lty=2, col="red") +
   geom_point(data=subset(plt, significant == T),cex=0.45) +
   geom_point(data=subset(plt, show.label.other == T & significant == F ),col="black",cex=0.65) +
   geom_point(data=subset(plt, show.label.other == T & significant == T ),col="red",cex=0.65) +
@@ -3378,6 +3671,8 @@ p1a <- ggplot(plt, aes(x=log2FoldChange.gsam.tpc.res , y=statistic.gsam.cor.tpc 
   youri_gg_theme + xlim(-3, 3)
 p1b <- ggplot(plt, aes(x=log2FoldChange.glass.tpc.res , y=statistic.glass.cor.tpc , col=significant, label = hugo_symbol )) + 
   geom_point(data=subset(plt, significant != T),cex=0.35) +
+  geom_vline(xintercept = c(-0.5,0.5), lty=1, lwd=2, col="#FFFFFF88") +
+  geom_vline(xintercept = c(-0.5,0.5), lty=2, col="red") +
   geom_point(data=subset(plt, significant == T),cex=0.45) +
   geom_point(data=subset(plt, show.label.other == T & significant == F ),col="black",cex=0.65) +
   geom_point(data=subset(plt, show.label.other == T & significant == T ),col="red",cex=0.65) +
@@ -3392,6 +3687,8 @@ p1b <- ggplot(plt, aes(x=log2FoldChange.glass.tpc.res , y=statistic.glass.cor.tp
 
 p2a <- ggplot(plt, aes(x=log2FoldChange.gsam.tpc.res , y=statistic.gsam.cor.tpc , col=significant, label = hugo_symbol )) + 
   geom_point(data=subset(plt, significant != T),cex=0.35) +
+  geom_vline(xintercept = c(-0.5,0.5), lty=1, lwd=2, col="#FFFFFF88") +
+  geom_vline(xintercept = c(-0.5,0.5), lty=2, col="red") +
   geom_point(data=subset(plt, significant == T),cex=0.45) +
   geom_point(data=subset(plt, show.label.gains == T & significant == F ),col="black",cex=0.65) +
   geom_point(data=subset(plt, show.label.gains == T & significant == T ),col="red",cex=0.65) +
@@ -3404,6 +3701,8 @@ p2a <- ggplot(plt, aes(x=log2FoldChange.gsam.tpc.res , y=statistic.gsam.cor.tpc 
   youri_gg_theme + xlim(-3, 3)
 p2b <- ggplot(plt, aes(x=log2FoldChange.glass.tpc.res , y=statistic.glass.cor.tpc , col=significant, label = hugo_symbol )) + 
   geom_point(data=subset(plt, significant != T),cex=0.35) +
+  geom_vline(xintercept = c(-0.5,0.5), lty=1, lwd=2, col="#FFFFFF88") +
+  geom_vline(xintercept = c(-0.5,0.5), lty=2, col="red") +
   geom_point(data=subset(plt, significant == T),cex=0.45) +
   geom_point(data=subset(plt, show.label.gains == T & significant == F ),col="black",cex=0.65) +
   geom_point(data=subset(plt, show.label.gains == T & significant == T ),col="red",cex=0.65) +
@@ -3419,6 +3718,8 @@ p2b <- ggplot(plt, aes(x=log2FoldChange.glass.tpc.res , y=statistic.glass.cor.tp
 
 p3a <- ggplot(plt, aes(x=log2FoldChange.gsam.tpc.res , y=statistic.gsam.cor.tpc , col=significant, label = hugo_symbol )) + 
   geom_point(data=subset(plt, significant != T),cex=0.35) +
+  geom_vline(xintercept = c(-0.5,0.5), lty=1, lwd=2, col="#FFFFFF88") +
+  geom_vline(xintercept = c(-0.5,0.5), lty=2, col="red") +
   geom_point(data=subset(plt, significant == T),cex=0.45) +
   geom_point(data=subset(plt, show.label.losses == T & significant == F ),col="black",cex=0.65) +
   geom_point(data=subset(plt, show.label.losses == T & significant == T ),col="red",cex=0.65) +
@@ -3431,6 +3732,8 @@ p3a <- ggplot(plt, aes(x=log2FoldChange.gsam.tpc.res , y=statistic.gsam.cor.tpc 
   youri_gg_theme + xlim(-3, 3)
 p3b <- ggplot(plt, aes(x=log2FoldChange.glass.tpc.res , y=statistic.glass.cor.tpc , col=significant, label = hugo_symbol )) + 
   geom_point(data=subset(plt, significant != T),cex=0.35) +
+  geom_vline(xintercept = c(-0.5,0.5), lty=1, lwd=2, col="#FFFFFF88") +
+  geom_vline(xintercept = c(-0.5,0.5), lty=2, col="red") +
   geom_point(data=subset(plt, significant == T),cex=0.45) +
   geom_point(data=subset(plt, show.label.losses == T & significant == F ),col="black",cex=0.65) +
   geom_point(data=subset(plt, show.label.losses == T & significant == T ),col="red",cex=0.65) +
@@ -3446,7 +3749,158 @@ p3b <- ggplot(plt, aes(x=log2FoldChange.glass.tpc.res , y=statistic.glass.cor.tp
 (p2a + p1a + p3a) / (p2b + p1b + p3b) 
 
 
-ggsave("output/figures/figure-DGE_corr_de_glioblastoma_relevant_genes.png", width=15,height=10)
+ggsave("output/figures/figure-DGE_glioblastoma_relevant_genes.png", width=15,height=10)
+
+
+## Figure S2 CDE-FGH? oncogenes ----
+
+
+plt <- results.out %>%
+  dplyr::mutate(log2FoldChange.gsam.res = NULL) %>% # force using corrected 
+  dplyr::mutate(log2FoldChange.glass.res = NULL) %>% # force using corrected 
+  dplyr::filter(!is.na(log2FoldChange.gsam.tpc.res)  & !is.na(statistic.gsam.cor.tpc) ) %>%
+  dplyr::mutate(is.limited.gsam.tpc.res = as.character(abs(log2FoldChange.gsam.tpc.res) > 3)) %>% # change pch to something that is limited
+  dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res > 3, 3 , log2FoldChange.gsam.tpc.res)) %>%
+  dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res < -3, -3 , log2FoldChange.gsam.tpc.res)) %>%
+  
+  dplyr::mutate(direction.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res > 0 , "up", "down") ) %>%
+  dplyr::mutate(direction.glass.tpc.res = ifelse(log2FoldChange.glass.tpc.res > 0 , "up", "down") ) %>%
+  dplyr::mutate(significant = 
+                  padj.gsam.tpc.res < 0.01 &
+                  abs(log2FoldChange.gsam.tpc.res) > 0.5 & #padj.glass.tpc.res < 0.05
+                  abs(log2FoldChange.glass.tpc.res) > 0.5 & 
+                  direction.gsam.tpc.res == direction.glass.tpc.res #lfcSE.gsam.tpc.res < 0.3 &
+  ) %>%
+  dplyr::mutate(show.label.gains = hugo_symbol %in% c(
+    "AKT1","AKT3","EGFR", "PDGFRA","MET", "PIK3C2B", "MDM2","MDM4", "CDK4",
+    "CDK6","SOX2","FGFR3","MYCN","MYC","CCND1","CCND2","BMI1" # gains
+  )) %>%
+  dplyr::mutate(show.label.other = hugo_symbol %in% c( 
+    "TP53", "PIK3CA","PIK3R1","NF1","SPTA1","GABRA6","ABCC6","CXCL12",
+    "LTBP4", "TGFB1","PREX1","MSH6", "MSH2", "MLH1","VEGFA", "PTPN11",
+    "STAT3","DCC", "MGMT", "PTCH1","VEGFA","GLI1"
+  )) %>%
+  dplyr::mutate(show.label.losses = hugo_symbol %in% c(
+    "CDKN2A","CDKN2B","PTEN","RB1","NF1","QKI","CDKN2C","TP53","MTAP","ELAVL2","PARK2"
+  ))
+
+
+
+plt.expanded <- rbind(
+  plt %>% 
+    dplyr::rename(cor.tpc = statistic.gsam.cor.tpc) %>%
+    dplyr::rename(log2FoldChange = log2FoldChange.gsam.tpc.res) %>%
+    dplyr::rename(show.label = show.label.gains) %>% 
+    dplyr::mutate(marker.genes = "Gains") %>%
+    dplyr::mutate(dataset = "G-SAM") %>%
+    dplyr::select(hugo_symbol, cor.tpc, log2FoldChange, show.label, dataset, significant, marker.genes)
+  ,
+  plt %>% 
+    dplyr::rename(cor.tpc = statistic.gsam.cor.tpc) %>%
+    dplyr::rename(log2FoldChange = log2FoldChange.gsam.tpc.res) %>%
+    dplyr::rename(show.label = show.label.other) %>% 
+    dplyr::mutate(marker.genes = "Other") %>%
+    dplyr::mutate(dataset = "G-SAM") %>%
+    dplyr::select(hugo_symbol, cor.tpc, log2FoldChange, show.label, dataset, significant, marker.genes)
+  ,
+  plt %>% 
+    dplyr::rename(cor.tpc = statistic.gsam.cor.tpc) %>%
+    dplyr::rename(log2FoldChange = log2FoldChange.gsam.tpc.res) %>%
+    dplyr::rename(show.label = show.label.losses) %>% 
+    dplyr::mutate(marker.genes = "Losses") %>%
+    dplyr::mutate(dataset = "G-SAM") %>%
+    dplyr::select(hugo_symbol, cor.tpc, log2FoldChange, show.label, dataset, significant, marker.genes)
+  ,
+  plt %>% 
+    dplyr::rename(cor.tpc = statistic.glass.cor.tpc) %>%
+    dplyr::rename(log2FoldChange = log2FoldChange.glass.tpc.res) %>%
+    dplyr::rename(show.label = show.label.gains) %>% 
+    dplyr::mutate(marker.genes = "Gains") %>%
+    dplyr::mutate(dataset = "GLASS") %>%
+    dplyr::select(hugo_symbol, cor.tpc, log2FoldChange, show.label, dataset, significant, marker.genes)
+  ,
+  plt %>% 
+    dplyr::rename(cor.tpc = statistic.glass.cor.tpc) %>%
+    dplyr::rename(log2FoldChange = log2FoldChange.glass.tpc.res) %>%
+    dplyr::rename(show.label = show.label.other) %>% 
+    dplyr::mutate(marker.genes = "Other") %>%
+    dplyr::mutate(dataset = "GLASS") %>%
+    dplyr::select(hugo_symbol, cor.tpc, log2FoldChange, show.label, dataset, significant, marker.genes)
+  ,
+  plt %>% 
+    dplyr::rename(cor.tpc = statistic.glass.cor.tpc) %>%
+    dplyr::rename(log2FoldChange = log2FoldChange.glass.tpc.res) %>%
+    dplyr::rename(show.label = show.label.losses) %>% 
+    dplyr::mutate(marker.genes = "Losses") %>%
+    dplyr::mutate(dataset = "GLASS") %>%
+    dplyr::select(hugo_symbol, cor.tpc, log2FoldChange, show.label, dataset, significant, marker.genes)
+) %>%
+  dplyr::mutate(status = case_when(show.label == F & significant == F ~ "other",
+                                   show.label == F & significant == T ~ "significant",
+                                   show.label == T & significant == F ~ "show label",
+                                   show.label == T & significant == T ~ "label & show significant")) %>%
+  dplyr::filter(!is.na(cor.tpc) & !is.na(log2FoldChange)) %>%
+  dplyr::mutate(marker.genes = factor(marker.genes, levels = c("Gains", "Other", "Losses"))) %>%
+  dplyr::mutate(limited = abs(log2FoldChange) > 2.5) %>%
+  dplyr::mutate(log2FoldChange = ifelse(limited & log2FoldChange < 0, -2.5, log2FoldChange)) %>%
+  dplyr::mutate(log2FoldChange = ifelse(limited & log2FoldChange > 0, 2.5, log2FoldChange)) %>% 
+  dplyr::mutate(limited = as.character(limited))
+
+
+
+ggplot()
+
+
+
+w## Figure S2 AB chr7, chr10, PTEN + EGFR ----
+
+
+
+plt <- results.out %>%
+  dplyr::mutate(mark.chr7 = chr == "chr7") %>%
+  dplyr::mutate(mark.chr10 = chr == "chr10") %>%
+  dplyr::mutate(show.label.chr7 = grepl("EGFR",hugo_symbol)) %>%
+  dplyr::mutate(show.label.chr10 = grepl("PTEN|MGMT",hugo_symbol)) # TET1 really interesting
+
+# plt <- plt %>% 
+#   dplyr::mutate(show.label.chr10 = chr=="chr10" & statistic.gsam.cor.tpc > 2.5)
+
+
+plt.expanded <- rbind(
+  plt %>% 
+    dplyr::mutate(status = case_when(show.label.chr7 == T ~ "chr7 label", mark.chr7 == T ~ "chr7", TRUE ~ "other")) %>% 
+    dplyr::mutate(panel = "chr7 genes") %>%
+    dplyr::select(hugo_symbol, statistic.gsam.cor.tpc, log2FoldChange.gsam.res, status, panel, chr)
+  ,
+  plt %>% 
+    dplyr::mutate(status = case_when(show.label.chr10 == T ~ "chr10 label", mark.chr10 == T ~ "chr10", TRUE ~ "other")) %>% 
+    dplyr::mutate(panel = "chr10 genes") %>%
+    dplyr::select(hugo_symbol, statistic.gsam.cor.tpc, log2FoldChange.gsam.res, status, panel, chr)
+) %>%
+  dplyr::filter(!is.na(statistic.gsam.cor.tpc) & !is.na(log2FoldChange.gsam.res)) %>%
+  dplyr::mutate(limited = abs(log2FoldChange.gsam.res) > 2.5) %>%
+  dplyr::mutate(log2FoldChange.gsam.res = ifelse(limited & log2FoldChange.gsam.res < 0, -2.5, log2FoldChange.gsam.res)) %>%
+  dplyr::mutate(log2FoldChange.gsam.res = ifelse(limited & log2FoldChange.gsam.res > 0, 2.5, log2FoldChange.gsam.res)) %>%
+  dplyr::mutate(panel = factor(panel, levels = c('chr7 genes', 'chr10 genes') ))
+
+
+
+ggplot(plt.expanded, aes(x = log2FoldChange.gsam.res, y = statistic.gsam.cor.tpc, shape=limited,
+                         fill = status, col = status, label=hugo_symbol)) +
+  facet_grid(cols = vars(panel), scales = "free") +
+  geom_point(data = subset(plt.expanded, status == "other"), size=1.8, col="#00000044") +
+  geom_point(data = subset(plt.expanded, status %in% c("chr7", "chr10")), size=2.5, col="black") +
+  geom_point(data = subset(plt.expanded, grepl("label", status)), size=2.75, fill="red", col="black") +
+  geom_text_repel(data=subset(plt.expanded, status == "chr7 label"),  size=2.5 , nudge_x = -3.1, direction = "y", hjust = "right", segment.size=0.35) + 
+  geom_text_repel(data=subset(plt.expanded, status == "chr10 label"),  size=2.5 ,nudge_x = 3.1, direction = "y", hjust = "left", segment.size=0.35) + 
+  scale_shape_manual(values = c('TRUE' = 23, 'FALSE' = 21)) +
+  scale_fill_manual(values=c('chr7'='#6ba6e5AA','chr10'='#eab509','other'='white' , "chr10 label"='red',"chr7 label"='red')) + 
+  scale_color_manual(values=c('chr7'='#6ba6e5AA','chr10'='#eab509','other'='white' , "chr10 label"='red',"chr7 label"='red')) + 
+  youri_gg_theme +
+  xlim(-2.75, 2.75)
+
+
+ggsave("output/figures/paper_dge_chr7_chr10_geiser_uncorrected.png",width=10,height=6)
 
 
 
@@ -3726,6 +4180,60 @@ cor_cor_plot(plt, labels)
 ggsave("output/figures/paper_dge_corrplot_expression_gene_per_patient.png",width = 1200 * 2, height = 900 * 2 ,units="px" )
 
 
+
+## gli1/MGMT plots ----
+
+# 
+# 
+# plt <- gsam.gene.expression.all.vst %>%
+#   as.data.frame %>%
+#   tibble::rownames_to_column('gid') %>%
+#   dplyr::filter(grepl('GLI1|MGMT',gid)) %>%
+#   tibble::column_to_rownames('gid') %>%
+#   t() %>% 
+#   as.data.frame() %>%
+#   tibble::rownames_to_column('sid') %>%
+#   dplyr::rename(GLI1.vst = `ENSG00000111087.10_4|GLI1|chr12:57853568-57866051(+)`) %>%
+#   dplyr::rename(MGMT.vst = `ENSG00000170430.10_4|MGMT|chr10:131265454-131569247(+)`) %>%
+#   dplyr::mutate(pid = gsub("^(...).*$","\\1",sid)) %>%
+#   dplyr::mutate(resection = gsub("^...(.).*$","R\\1",sid)) %>%
+#   dplyr::left_join(
+#     gsam.patient.metadata %>%
+#       dplyr::select(studyID, treatedWithTMZ, nCyclesTMZ,daysToLastCycleTMZ),
+#     by = c('pid'='studyID')
+#   ) %>%
+#   dplyr::mutate(order =  match(1:nrow(.), order(resection, treatedWithTMZ, GLI1.vst)))
+# 
+# 
+# ggplot(plt, aes(x = reorder(sid, order), y = GLI1.vst, col=treatedWithTMZ)) +
+#   geom_point()
+# 
+# ggplot(plt, aes(x = resection, y = GLI1.vst, col=treatedWithTMZ, group=pid)) +
+#   facet_grid(cols = vars(treatedWithTMZ), scales = "free") +
+#   geom_point() +
+#   geom_line()
+# 
+# ggplot(plt, aes(x = nCyclesTMZ, y = GLI1.vst, col=treatedWithTMZ, group=pid)) +
+#   facet_grid(cols = vars(resection), scales = "free") +
+#   geom_point() +
+#   geom_line()
+# 
+# 
+# ggplot(plt, aes(x = nCyclesTMZ, y = MGMT.vst, col=treatedWithTMZ, group=pid)) +
+#   facet_grid(cols = vars(resection), scales = "free") +
+#   geom_point() +
+#   geom_line()
+# 
+# 
+# ggplot(plt, aes(x = daysToLastCycleTMZ, y = GLI1.vst, col=treatedWithTMZ, group=pid)) +
+#   facet_grid(cols = vars(resection), scales = "free") +
+#   geom_point() +
+#   geom_line()
+# 
+# ggplot(plt, aes(x = daysToLastCycleTMZ, y = MGMT.vst, col=treatedWithTMZ, group=pid)) +
+#   facet_grid(cols = vars(resection), scales = "free") +
+#   geom_point() +
+#   geom_line()
 
 
 
@@ -4052,7 +4560,13 @@ p2 <- ggplot(plt, aes(x=log2FoldChange.glass.tpc.res ,
   youri_gg_theme + 
   xlim(-3, 3)
 
-p1 + p2
+p1 / p2
+
+
+
+ggsave("output/figures/figure-DGE_all_corrected.png",  width = 5.7 * 1.4 , height = 4 * 1.4 * 2)
+
+
 
 
 
@@ -4081,6 +4595,8 @@ labels <- results.out %>%
   dplyr::mutate(Patel.Complete.Immune.response = ifelse(!is.na(patel.scRNAseq.cluster) & patel.scRNAseq.cluster == "Complete/Immune response" , T, F) ) %>% 
   dplyr::mutate(Patel.Hypoxia = ifelse(!is.na(patel.scRNAseq.cluster) & patel.scRNAseq.cluster == "Hypoxia" , T, F) ) %>% 
   
+  dplyr::rename(`Extracellular Matrix` = EM.struct.constituent) %>%
+  
   dplyr::mutate(significant = 
                   padj.gsam.tpc.res < 0.01 &
                   abs(log2FoldChange.gsam.tpc.res) > 0.5 &
@@ -4089,7 +4605,7 @@ labels <- results.out %>%
   
   dplyr::filter(significant == T) %>%
   dplyr::select(c('gid', 'hugo_symbol' , 'McKenzie_celltype_top_human_specificity', 'direction_up', 'direction_down',
-                  TCGA.CL, TCGA.MES, TCGA.PN , Patel.Cell.cycle, Patel.Complete.Immune.response, Patel.Hypoxia))
+                  TCGA.CL, TCGA.MES, TCGA.PN , Patel.Cell.cycle, Patel.Complete.Immune.response, Patel.Hypoxia, `Extracellular Matrix`))
   #%>% dplyr::slice_head(n=50)
 
 
@@ -4125,6 +4641,7 @@ labels <- labels %>%
                     direction_up + direction_down + 
                     TCGA.CL + TCGA.MES + TCGA.PN +
                     Patel.Cell.cycle + Patel.Complete.Immune.response + Patel.Hypoxia +
+                    `Extracellular Matrix` +
                     gid ~ `McKenzie_celltype_top_human_specificity`, fill = NA,fun.aggregate = as.logical) %>%
   dplyr::mutate('NA'=NULL) %>% 
   
@@ -4134,6 +4651,8 @@ labels <- labels %>%
   dplyr::mutate(TCGA.CL = ifelse(TCGA.CL , F, NA) ) %>%
   dplyr::mutate(TCGA.MES = ifelse(TCGA.MES , F, NA) ) %>%
   dplyr::mutate(TCGA.PN = ifelse(TCGA.PN , F, NA) ) %>%
+  
+  dplyr::mutate(`Extracellular Matrix` = ifelse(`Extracellular Matrix` , F, NA) ) %>%
 
   dplyr::mutate(Patel.Cell.cycle = ifelse(Patel.Cell.cycle , F, NA) ) %>%
   dplyr::mutate(Patel.Complete.Immune.response = ifelse(Patel.Complete.Immune.response , F, NA) ) %>%
@@ -4173,11 +4692,22 @@ stopifnot(labels %>% dplyr::filter(neuron == T) %>% nrow == n_neuron)
 stopifnot(labels %>% dplyr::filter(oligodendrocyte == T) %>% nrow == n_oligodendrocyte)
 
 
+# 
+# cor_cor_plot(plt, labels, method="average")
+# ggsave("output/figures/cor_ward.average.png", height=30, width=30) # then average, then ward.D1?
+# 
+# cor_cor_plot(plt, labels, method="complete")
+# ggsave("output/figures/cor_ward.complete.png", height=30, width=30) # then average, then ward.D1?
 
 cor_cor_plot(plt, labels, method="ward.D2")
-#ggsave("output/figures/cor_ward.D2.pdf", height=30, width=30) # then average, then ward.D1?
-ggsave("output/figures/cor_ward.D2.png", height=30, width=30) # then average, then ward.D1?
+#ggsave("output/figures/cor_ward.D2x.pdf", height=30, width=30) # then average, then ward.D1?
+ggsave("output/figures/cor_ward.D2x.svg", height=30, width=30) # then average, then ward.D1?
 
+
+# 
+# cor_cor_plot(plt, labels, method="ward")
+# ggsave("output/figures/cor_ward.D1x.png", height=30, width=30) # then average, then ward.D1?
+# 
 
 
 
@@ -4199,7 +4729,8 @@ plt <- results.out %>%
   dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res > 3, 3 , log2FoldChange.gsam.tpc.res)) %>%
   dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res < -3, -3 , log2FoldChange.gsam.tpc.res)) %>%
   
-  dplyr::mutate(significant = padj.gsam.tpc.res < 0.01 & lfcSE.gsam.tpc.res < 0.3 & abs(log2FoldChange.gsam.tpc.res) > 0.5 ) %>%
+  #dplyr::mutate(significant = padj.gsam.tpc.res < 0.01 & lfcSE.gsam.tpc.res < 0.3 & abs(log2FoldChange.gsam.tpc.res) > 0.5 ) %>%
+  dplyr::mutate(significant = padj.gsam.tpc.res <= 0.01 & abs(log2FoldChange.gsam.tpc.res) > 0.5 ) %>%
   dplyr::mutate(show.label = 
                   !is.na(padj.gsam.res) &  padj.gsam.res < 0.01 &
                   !is.na(padj.glass.res) & padj.glass.res < 0.01)
@@ -5271,17 +5802,31 @@ rm(plt)
 ## plot MGMT ----
 
 
-plt <- data.frame(MGMT = as.numeric(gsam.gene.expression.all.vst %>%
-                                      as.data.frame() %>%
-                                      dplyr::filter(grepl("TP53\\|", rownames(.)))) ,
-                  res = gsub("^...(.).*$","R\\1",colnames( gsam.gene.expression.all.vst)))
+plt <- gsam.rnaseq.expression.vst %>%
+  as.data.frame() %>%
+  dplyr::filter(grepl("MGMT\\|", rownames(.))) %>% 
+  t() %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column('pid') %>%
+  dplyr::rename(MGMT.vst = 'ENSG00000170430.10_4|MGMT|chr10:131265454-131569247(+)') %>%
+  dplyr::mutate(res = gsub("^...(.).*$","R\\1", pid)) %>%
+  dplyr::filter(pid %in% colnames(gsam.gene.expression.all))
 
-ggplot(plt, aes(x = res, y = MGMT)) + 
+
+#                  res = gsub("^...(.).*$","R\\1",colnames( gsam.rnaseq.expression.vst))) %>%
+#dplyr::select(colnames(gsam.gene.expression.all))
+
+ggplot(plt, aes(x = res, y = MGMT.vst)) + 
   geom_violin() + 
   geom_jitter(shape=16, position=position_jitter(0.2)) +
   labs(y = "MGMT relative expression")
 
-rm(plt)
+
+wilcox.test(
+  plt %>% dplyr::filter(res == "R1") %>% dplyr::pull(MGMT.vst),
+  plt %>% dplyr::filter(res == "R2") %>% dplyr::pull(MGMT.vst)
+)
+
 
 
 
@@ -5557,6 +6102,16 @@ results.out %>%
   dplyr::select(c(gid, ensembl_id, hugo_symbol, statistic.gsam.cor.tpc)) %>%
   dplyr::slice_head(n=50) %>%
   dplyr::pull(ensembl_id)
+
+
+
+
+df %>%
+  tibble::rownames_to_column('loc') %>% 
+  dplyr::mutate(chr = as.character(gsub("^(chr[^:]):.+$","\\1",loc) ))  %>%
+  dplyr::mutate(start = as.numeric(   gsub("^chr[^:]:([0-9]+).+$","\\1",loc)   )) %>%
+  dplyr::arrange(chr, start)
+
 
 
 
