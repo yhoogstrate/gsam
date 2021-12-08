@@ -1138,6 +1138,8 @@ head(Idents(object_1), 50)
 
 object_1 <- RunUMAP(object_1, dims = 1:15)
 object_1@meta.data$pt = sapply(strsplit(rownames(object_1@meta.data), "[.]"), "[", 1)
+
+
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "seurat_clusters")
 
 
@@ -1189,7 +1191,7 @@ FeaturePlot(object = object_1, features = "TRIM24")
 FeaturePlot(object = object_1, features = "OLIG1")
 
 
-#### 2. TAM/mg/monocytes (+)----
+#### 2A. TAM/mg/monocytes (+)----
 
 
 FeaturePlot(object = object_1, features = c("CD163")) # TAM/mg
@@ -1197,6 +1199,16 @@ FeaturePlot(object = object_1, features = "CD14") # TAM/mg
 FeaturePlot(object = object_1, features = c("ITGB2"))
 FeaturePlot(object = object_1, features = c("C1QC"))
 
+
+#### 2B. Til/T-cell (-) ----
+
+FeaturePlot(object = object_1, features = "CD3D")
+FeaturePlot(object = object_1, features = "CD2")
+FeaturePlot(object = object_1, features = "TRBC2")
+
+# FeaturePlot(object = object_1, features = "CACHD1")
+# FeaturePlot(object = object_1, features = "BMPR1B")
+# FeaturePlot(object = object_1, features = "GPR37L1")
 
 
 #### 3. Neurons (-) ----
@@ -1206,9 +1218,9 @@ FeaturePlot(object = object_1, features = "RBFOX1")
 FeaturePlot(object = object_1, features = "DDN")
 FeaturePlot(object = object_1, features = "TNNT2")
 FeaturePlot(object = object_1, features = "TMEM130")
-FeaturePlot(object = object_1, features = "GABRG2")
-#FeaturePlot(object = object_1, features = "GABRA1")
-FeaturePlot(object = object_1, features = "GABRB2")
+# FeaturePlot(object = object_1, features = "GABRG2")
+# FeaturePlot(object = object_1, features = "GABRA1")
+# FeaturePlot(object = object_1, features = "GABRB2")
 
 
 #### 4. Oligodendrocytes (-) ----
@@ -1233,15 +1245,13 @@ FeaturePlot(object = object_1, features = "PDGFRB")
 FeaturePlot(object = object_1, features = "CD248")
 
 
-#### 6. Til/T-cell (?) ----
+#### 6. other cluster(s) ----
 
-FeaturePlot(object = object_1, features = "CD3D")
-FeaturePlot(object = object_1, features = "CD2")
-FeaturePlot(object = object_1, features = "TRBC2")
+FeaturePlot(object = object_1, features = "COL1A1")
+FeaturePlot(object = object_1, features = "VEGFA")
+FeaturePlot(object = object_1, features = "NDRG1")
 
-# FeaturePlot(object = object_1, features = "CACHD1")
-# FeaturePlot(object = object_1, features = "BMPR1B")
-# FeaturePlot(object = object_1, features = "GPR37L1")
+
 
 
 #### C4 (up) ----
@@ -1296,14 +1306,12 @@ FeaturePlot(object = object_1, features =  "PERP" )
 FeaturePlot(object = object_1, features =  "CCL8" )
 
 
-### Find DE genes voor SC8 ----
+### Find DE genes voor 5 ----
 
-dge <- FindMarkers(object_1, ident.1 = '8')
+dge <- FindMarkers(object_1, ident.1 = '5')
+head(dge,15)
 
-FeaturePlot(object = object_1, features = "CD248") # defines separate cluster - fibroblast marker
-FeaturePlot(object = object_1, features = "RGS5") # defines separate cluster
-FeaturePlot(object = object_1, features = "SPP1") # among most defining 
-
+C4
 
 
 ### InferCNV plot ----
@@ -1444,7 +1452,7 @@ FeaturePlot(object = object_1, features = "TRIM24")
 FeaturePlot(object = object_1, features = "OLIG1")
 
 
-#### 2. TAM/mg/monocytes (+)----
+#### 2A. TAM/mg/monocytes (+)----
 
 
 FeaturePlot(object = object_1, features = c("CD163")) # TAM/mg
@@ -1452,6 +1460,11 @@ FeaturePlot(object = object_1, features = "CD14") # TAM/mg
 FeaturePlot(object = object_1, features = c("ITGB2"))
 FeaturePlot(object = object_1, features = c("C1QC"))
 
+#### 2B. Til/T-cell (-) ----
+
+# FeaturePlot(object = object_1, features = "CD3D")
+# FeaturePlot(object = object_1, features = "CD2")
+FeaturePlot(object = object_1, features = "TRBC2")
 
 
 #### 3. Neurons (-) ----
@@ -1464,6 +1477,7 @@ FeaturePlot(object = object_1, features = "TMEM130")
 FeaturePlot(object = object_1, features = "GABRG2")
 #FeaturePlot(object = object_1, features = "GABRA1")
 FeaturePlot(object = object_1, features = "GABRB2")
+
 
 
 #### 4. Oligodendrocytes (+) ----
@@ -1545,10 +1559,18 @@ FeaturePlot(object = object_1, features = "BMPR1B")
 FeaturePlot(object = object_1, features = "GPR37L1")
 
 
+# scRNA HGG levi ----
+
+## A :: H09-1815 ----
+
+sid <- 'GSM2758472_PJ017'
+object_1 <- Read10X(data.dir = paste0("data/scRNA/GSE103224/",sid))
+object_1 <- CreateSeuratObject(counts = object_1, min.cells = 3, min.features = 200, project = "glioma")
 
 
-# read GSE117891, GSE131928 ----
 
-# read GSE117891, GSE131928 ----
+# GSE117891 ----
+
+# GSE131928 ----
 
 # further processing ----
