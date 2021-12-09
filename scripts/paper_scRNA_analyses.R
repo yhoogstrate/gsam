@@ -50,7 +50,7 @@ annotations.sub <- annotation.genes[, c("symbol","seq_name","gene_seq_start","ge
 write.table(annotations.sub, file = "data/scRNA/GSE103224/annotation_genes.txt", sep = "\t", row.names = FALSE, col.names = FALSE, quote=F)
 
 
-# GSE103224 ----
+# GSE103224 :: Yuan J. et. al ----
 
 if(file.exists("tmp/GSE103224.scRNA.counts.Rds")) {
   GSE103224 <- readRDS("tmp/GSE103224.scRNA.counts.Rds")
@@ -285,7 +285,7 @@ FeaturePlot(object = object_1, features = "TRIM24")
 FeaturePlot(object = object_1, features = "OLIG1")
 
 
-#### 2. TAM/mg/monocytes (+)----
+#### 2A. TAM/mg/monocytes (+) ----
 
 
 FeaturePlot(object = object_1, features = c("CD163")) # TAM/mg
@@ -293,6 +293,11 @@ FeaturePlot(object = object_1, features = "CD14") # TAM/mg
 FeaturePlot(object = object_1, features = c("ITGB2"))
 FeaturePlot(object = object_1, features = c("C1QC"))
 
+#### 2B. Til/T-cell (+) ----
+
+FeaturePlot(object = object_1, features = "CD3D")
+FeaturePlot(object = object_1, features = "TRBC2")
+FeaturePlot(object = object_1, features = "CD2")
 
 
 #### 3. Neurons (-) ----
@@ -318,9 +323,11 @@ FeaturePlot(object = object_1, features = "TMEM144")
 
 #### 5A. Endothelial (?) ----
 
+FeaturePlot(object = object_1, features = "ABCB1")
 FeaturePlot(object = object_1, features = "CD34")
 FeaturePlot(object = object_1, features = "FLT4")
 FeaturePlot(object = object_1, features = "TIE1") # meh
+FeaturePlot(object = object_1, features = "ITGA1") # endo + peri?
 
 
 #### 5B. Pericytes (3 cells ?) ----
@@ -500,7 +507,7 @@ FeaturePlot(object = object_1, features = "TRIM24")
 FeaturePlot(object = object_1, features = "OLIG1")
 
 
-#### 2. TAM/mg/monocytes (+)----
+#### 2A. TAM/mg/monocytes (+) ----
 
 
 FeaturePlot(object = object_1, features = c("CD163")) # TAM/mg
@@ -509,11 +516,16 @@ FeaturePlot(object = object_1, features = c("ITGB2"))
 FeaturePlot(object = object_1, features = c("C1QC"))
 
 
+#### 2B. Til/T-cell (+) ----
+
+FeaturePlot(object = object_1, features = "CD3D")
+FeaturePlot(object = object_1, features = "TRBC2")
+FeaturePlot(object = object_1, features = "CD2")
 
 #### 3. Neurons (-) ----
 
 FeaturePlot(object = object_1, features = "RBFOX3")
-FeaturePlot(object = object_1, features = "GABRG2")
+# FeaturePlot(object = object_1, features = "GABRG2")
 
 # FeaturePlot(object = object_1, features = "RBFOX1")
 # FeaturePlot(object = object_1, features = "DDN")
@@ -533,9 +545,11 @@ FeaturePlot(object = object_1, features = "TMEM144")
 
 #### 5A. Endothelial (+) ----
 
+FeaturePlot(object = object_1, features = "ABCB1")
 FeaturePlot(object = object_1, features = "CD34")
 FeaturePlot(object = object_1, features = "FLT4")
-FeaturePlot(object = object_1, features = "TIE1")
+FeaturePlot(object = object_1, features = "TIE1") # meh
+FeaturePlot(object = object_1, features = "ITGA1") # endo + peri?
 
 
 #### 5B. Pericytes (+ heel dicht met endothelial?) ----
@@ -604,7 +618,7 @@ FeaturePlot(object = object_1, features =  "CCL8" )
 
 
 
-## D :: GSM2758474_PJ025 :: T,MG,EN,PE ----
+## D :: GSM2758474_PJ025 :: T,MG,TC ----
 # Glioblastoma, WHO grade IV, idh1 status: wt, EGFR-ampli
 
 sid <- 'GSM2758474_PJ025'
@@ -671,6 +685,8 @@ levels(object_1$seurat_clusters) <- gsub("^12$","Endothelial",levels(object_1$se
 
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "seurat_clusters")
 
+tmp2 = FindMarkers(object = object_1, ident.1 = 10)
+
 
 #### 1. Tumor (+) ----
 
@@ -711,13 +727,19 @@ FeaturePlot(object = object_1, features = "TRIM24")
 FeaturePlot(object = object_1, features = "OLIG1")
 
 
-#### 2. TAM/mg/monocytes (+)----
+#### 2A. TAM/mg/monocytes (+) ----
 
 
 FeaturePlot(object = object_1, features = c("CD163")) # TAM/mg
 FeaturePlot(object = object_1, features = "CD14") # TAM/mg
 FeaturePlot(object = object_1, features = c("ITGB2"))
 FeaturePlot(object = object_1, features = c("C1QC"))
+
+#### 2B. Til/T-cell (+) ----
+
+FeaturePlot(object = object_1, features = "CD3D")
+FeaturePlot(object = object_1, features = "TRBC2")
+FeaturePlot(object = object_1, features = "CD2")
 
 
 #### 3. Neurons (-) ----
@@ -742,9 +764,11 @@ FeaturePlot(object = object_1, features = "TMEM144")
 
 #### 5A. Endothelial (+) ----
 
+FeaturePlot(object = object_1, features = "ABCB1")
 FeaturePlot(object = object_1, features = "CD34")
 FeaturePlot(object = object_1, features = "FLT4")
-FeaturePlot(object = object_1, features = "TIE1")
+FeaturePlot(object = object_1, features = "TIE1") # meh
+FeaturePlot(object = object_1, features = "ITGA1") # endo + peri?
 
 
 #### 5B. Pericytes (+ very strong) ----
@@ -919,6 +943,7 @@ head(Idents(object_1), 50)
 
 object_1 <- RunUMAP(object_1, dims = 1:25)
 object_1@meta.data$pt = sapply(strsplit(rownames(object_1@meta.data), "[.]"), "[", 1)
+
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "seurat_clusters")
 
 
@@ -1007,9 +1032,11 @@ FeaturePlot(object = object_1, features = "TMEM144")
 
 #### 5A. Endothelial (-) ----
 
+FeaturePlot(object = object_1, features = "ABCB1")
 FeaturePlot(object = object_1, features = "CD34")
 FeaturePlot(object = object_1, features = "FLT4")
-FeaturePlot(object = object_1, features = "TIE1")
+FeaturePlot(object = object_1, features = "TIE1") # meh
+FeaturePlot(object = object_1, features = "ITGA1") # endo + peri?
 
 
 #### 5B. Pericytes (?small cluster?) ----
@@ -1233,9 +1260,11 @@ FeaturePlot(object = object_1, features = "TMEM144")
 
 #### 5A. Endothelial (+) ----
 
+FeaturePlot(object = object_1, features = "ABCB1")
 FeaturePlot(object = object_1, features = "CD34")
 FeaturePlot(object = object_1, features = "FLT4")
-FeaturePlot(object = object_1, features = "TIE1")
+FeaturePlot(object = object_1, features = "TIE1") # meh
+FeaturePlot(object = object_1, features = "ITGA1") # endo + peri?
 
 
 #### 5B. Pericytes (+) ----
@@ -1490,9 +1519,11 @@ FeaturePlot(object = object_1, features = "TMEM144")
 
 #### 5A. Endothelial (+) ----
 
+FeaturePlot(object = object_1, features = "ABCB1")
 FeaturePlot(object = object_1, features = "CD34")
 FeaturePlot(object = object_1, features = "FLT4")
-FeaturePlot(object = object_1, features = "TIE1")
+FeaturePlot(object = object_1, features = "TIE1") # meh
+FeaturePlot(object = object_1, features = "ITGA1") # endo + peri?
 
 
 #### 5B. Pericytes (+) ----
@@ -1553,24 +1584,632 @@ FeaturePlot(object = object_1, features =  "PERP" )
 #FeaturePlot(object = object_1, features =  "CCL8" )
 
 
-# til/t-cell
-FeaturePlot(object = object_1, features = "CACHD1")
-FeaturePlot(object = object_1, features = "BMPR1B")
-FeaturePlot(object = object_1, features = "GPR37L1")
-
 
 # scRNA HGG levi ----
 
-## A :: H09-1815 ----
+## A :: Sample_Y ----
 
 sid <- 'GSM2758472_PJ017'
-object_1 <- Read10X(data.dir = paste0("data/scRNA/GSE103224/",sid))
-object_1 <- CreateSeuratObject(counts = object_1, min.cells = 3, min.features = 200, project = "glioma")
+object_1 <- Read10X(data.dir = "/home/youri/projects/gsam/data/scRNA_glim/Glioma_Y_and_O/Levi2_Glioma_Y/outs/raw_feature_bc_matrix")
+object_1 <- CreateSeuratObject(counts = object_1,
+                               min.cells = 3,
+                               min.features = 200,
+                               project = "glioma_glim")
+mito.features_object1 <- grep(pattern = "^MT-", x=rownames(x=object_1), value=T)
+percent.mito_object1 <- Matrix::colSums(x = GetAssayData(object = object_1, slot="counts")[mito.features_object1,]) / Matrix::colSums(x = GetAssayData(object = object_1, slot = "counts"))
+object_1[["percent.mito"]] <- percent.mito_object1
+VlnPlot(object = object_1, features = c("nFeature_RNA", "nCount_RNA", "percent.mito"), ncol = 3, pt.size = 0.01, group.by = "orig.ident") 
+
+    
+ggplot(object_1@meta.data, aes(y=`nFeature_RNA`, x=orig.ident)) +
+  geom_jitter(cex=0.01) +
+  geom_hline(yintercept = 1400,col="red") +
+  geom_hline(yintercept = 4500,col="red")
+
+ggplot(object_1@meta.data, aes(y=`nCount_RNA`, x=orig.ident)) +
+  geom_jitter(cex=0.01)  +
+  geom_hline(yintercept = 2200,col="red") +
+  geom_hline(yintercept = 14000,col="red")
+  #scale_y_log10()
+
+object_1 <- subset(x = object_1, subset = 
+                     nFeature_RNA > 1400 &
+                     nFeature_RNA < 4500 & 
+                     nCount_RNA > 2200 &
+                     nCount_RNA < 14000 &
+                     percent.mito < 0.025)
+
+object_1 <- NormalizeData(object = object_1, normalization.method = "LogNormalize", scale.factor = 1e4)
+object_1 <- FindVariableFeatures(object = object_1, selection.method = "vst", nfeatures = 2000)
+object_1[["state"]] <- "P1" 
+
+
+top10 <- head(VariableFeatures(object_1), 10)
+
+
+# plot variable features with and without labels
+
+plot1 <- VariableFeaturePlot(object_1)
+plot2 <- LabelPoints(plot = plot1, points = top10, repel = TRUE)
+#CombinePlots(plots = list(plot1, plot2))     
+plot1
+plot2
+
+### scaling of data ----
+#Shifts the expression of each gene, so that the mean expression across cells is 0
+#Scales the expression of each gene, so that the variance across cells is 1
+#This step gives equal weight in downstream analyses, so that highly-expressed genes do not dominate
+#The results of this are stored in pbmc[["RNA"]]@scale.data
+
+all.genes <- rownames(object_1)
+object_1 <- ScaleData(object_1, features = all.genes)
+
+### PCA plot ---
+
+object_1 <- RunPCA(object_1, features = VariableFeatures(object = object_1))
+print(object_1[["pca"]], dims = 1:5, nfeatures = 5)
+VizDimLoadings(object_1, dims = 1:2, reduction = "pca")
+DimPlot(object_1, reduction = "pca")
+
+#### estimation of the number of principle components in your dataset
+
+ElbowPlot(object_1, ndims = 45)
+
+### cluster the cells ----
+
+object_1 <- FindNeighbors(object_1, dims = 1:40)
+object_1 <- FindClusters(object_1, resolution = 0.8, algorithm=1)
+head(Idents(object_1), 20)
+
+### UMAP clustering ----
+
+object_1 <- RunUMAP(object_1, dims = 1:40)
+object_1@meta.data$pt = sapply(strsplit(rownames(object_1@meta.data), "[.]"), "[", 1)
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "seurat_clusters")
+
+levels(object_1$seurat_clusters) <- gsub("^21$","Neuron",levels(object_1$seurat_clusters))
+levels(object_1$seurat_clusters) <- gsub("^14$","Immune + T-cell",levels(object_1$seurat_clusters))
+levels(object_1$seurat_clusters) <- gsub("^12$","Oligodendrocytes",levels(object_1$seurat_clusters))
+levels(object_1$seurat_clusters) <- gsub("^16$","Endothelial",levels(object_1$seurat_clusters))
+levels(object_1$seurat_clusters) <- gsub("^15$","Pericytes",levels(object_1$seurat_clusters))
+levels(object_1$seurat_clusters) <- gsub("^3$","Tumor",levels(object_1$seurat_clusters))
+levels(object_1$seurat_clusters) <- gsub("^7$","Tumor/Dividing",levels(object_1$seurat_clusters))
+levels(object_1$seurat_clusters) <- gsub("^20$","Astrocyte",levels(object_1$seurat_clusters))
+levels(object_1$seurat_clusters) <- gsub("^18$","Tumor/Apoptosis?",levels(object_1$seurat_clusters))
+
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "seurat_clusters")
+
+
+tmp.17 <- FindMarkers(object_1, ident.1 = 17)
+head(tmp.17,20)
+
+tmp.22 <- FindMarkers(object_1, ident.1 = 22)
+head(tmp.22,20)
+
+
+
+
+
+
+#### 1. Tumor (+) ----
+
+FeaturePlot(object = object_1, features = "ETV1") # Tumor
+FeaturePlot(object = object_1, features = "CDK4") # Tumor
+FeaturePlot(object = object_1, features = "EGFR", max.cutoff = 4) # Tumor
+
+FeaturePlot(object = object_1, features = "S100B") # Tumor/AC
+FeaturePlot(object = object_1, features = "GFAP") # Tumor/AC
+FeaturePlot(object = object_1, features = "OLIG1") # Tumor/OPC+NPC1
+FeaturePlot(object = object_1, features = "VIM") # Tumor/MES
+
+
+FeaturePlot(object = object_1, features = c("HSPA1A","HSPA1B","VEGFA")) # Apoptotic Tumor?
+
+#### 2. Astrocyte (+) ----
+
+FeaturePlot(object = object_1, features = "STMN2") # Tumor
+FeaturePlot(object = object_1, features = "ETNPPL") # Tumor
+
+
+# succes met vinden van een marker
+FeaturePlot(object = object_1, features = c("EGFR","OLIG1","TMPO","VIM","STMN2",   "AURKB")) # Tumor
+FeaturePlot(object = object_1, features = c("TMPO")) # G2/M
+
+
+
+# GFAP en ANXA1 astro markers?
+
+FeaturePlot(object = object_1, features = "ANXA1") # Tumor / Neuronal? weinig in GFAP-neg tumor cellen?
+FeaturePlot(object = object_1, features = "ANXA2") # Tumor
+
+FeaturePlot(object = object_1, features = "SOCS2") # Tumor?
+FeaturePlot(object = object_1, features = "SOX2")
+FeaturePlot(object = object_1, features = "VIM") # niet alleen in tumor cellen (!)
+
+FeaturePlot(object = object_1, features = "PTPZ1")
+FeaturePlot(object = object_1, features = "PTEN")
+FeaturePlot(object = object_1, features = "SETD5")
+FeaturePlot(object = object_1, features = "SMAD5")
+FeaturePlot(object = object_1, features = "TRIM24")
+
+FeaturePlot(object = object_1, features = "OLIG1")
+
+
+#### 3A. TAM/mg/monocytes (+)----
+
+
+FeaturePlot(object = object_1, features = c("CD163")) # TAM/mg
+FeaturePlot(object = object_1, features = c("P2RY12")) # specifiek MG, niet Mac?
+FeaturePlot(object = object_1, features = "CD14") # TAM/mg
+FeaturePlot(object = object_1, features = c("ITGB2"))
+FeaturePlot(object = object_1, features = c("C1QC"))
+
+
+#### 3B. Til/T-cell (+) ----
+
+FeaturePlot(object = object_1, features = "CD2")
+FeaturePlot(object = object_1, features = "CD3D")
+FeaturePlot(object = object_1, features = "TRBC2")
+
+
+#### 4. Neurons (+) ----
+
+DotPlot(object = object_1, features = c("EGFR", "GFAP","MOG", "PLP1", "TMEM144", 
+                                        "RBFOX1", "RBFOX2", "RBFOX3", "CD2",
+                                        "CD3D", "P2RY12", "CD163", "ABCB1", "RGS5"
+                                        ))+ 
+  theme(axis.text.x = element_text(angle = 45, hjust=1))
+
+
+FeaturePlot(object = object_1, features = "RBFOX3")
+FeaturePlot(object = object_1, features = "RBFOX1")
+FeaturePlot(object = object_1, features = "RBFOX2") # NPC2 ~ Neftel
+FeaturePlot(object = object_1, features = "DDN")
+FeaturePlot(object = object_1, features = "TNNT2")
+FeaturePlot(object = object_1, features = "TMEM130")
+FeaturePlot(object = object_1, features = "GABRG2")
+#FeaturePlot(object = object_1, features = "GABRA1")
+FeaturePlot(object = object_1, features = "GABRB2")
+
+
+
+#### 5. Oligodendrocytes (+) ----
+
+FeaturePlot(object = object_1, features = "MOG")
+#FeaturePlot(object = object_1, features = "OPALIN") # - clear small cluster
+FeaturePlot(object = object_1, features = "PLP1")
+FeaturePlot(object = object_1, features = "TMEM144")
+
+
+#### 6A. Endothelial (+) ----
+
+FeaturePlot(object = object_1, features = "ABCB1")
+FeaturePlot(object = object_1, features = "CD34")
+FeaturePlot(object = object_1, features = "FLT4")
+FeaturePlot(object = object_1, features = "TIE1") # meh
+FeaturePlot(object = object_1, features = "ITGA1") # endo + peri?
+
+
+#### 6B. Pericytes (+) ----
+
+FeaturePlot(object = object_1, features = "RGS5")
+FeaturePlot(object = object_1, features = "PDGFRB")
+FeaturePlot(object = object_1, features = "CD248")
+
+
+#### C4 (up) ----
+
+FeaturePlot(object = object_1, features = C4A)
+FeaturePlot(object = object_1, features = C4B)
+
+
+#### C5 (down) ----
+
+
+FeaturePlot(object = object_1, features = C5)
+
+
+#### C6 (up) ----
+
+VlnPlot(object = object_1, features = C6, stack = T, sort = T)
+
+DotPlot(object = object_1, features = C6) + 
+  theme(axis.text.x = element_text(angle = 45, hjust=1))
+
+VlnPlot(object = object_1, features = C6, stack = T, sort = T)
+
+FeaturePlot(object = object_1, features = C6)
+
+FeaturePlot(object = object_1, features =  "CRABP2" )
+FeaturePlot(object = object_1, features =  "CLIP2" )
+#FeaturePlot(object = object_1, features =  "DPT" )
+FeaturePlot(object = object_1, features =  "FGF7" )
+#FeaturePlot(object = object_1, features =  "COL10A1" )
+FeaturePlot(object = object_1, features =  "FBN1" )
+FeaturePlot(object = object_1, features =  "GLT8D2" )
+FeaturePlot(object = object_1, features =  "IRX3" )
+FeaturePlot(object = object_1, features =  "MFAP5" )
+FeaturePlot(object = object_1, features =  "MFAP4" )
+# FeaturePlot(object = object_1, features =  "COL8A2" )
+# FeaturePlot(object = object_1, features =  "FNDC1" )
+FeaturePlot(object = object_1, features =  "MMP11" )
+FeaturePlot(object = object_1, features =  "MFAP2" )
+FeaturePlot(object = object_1, features =  "COL1A2" ) # high in pericytes
+FeaturePlot(object = object_1, features =  "COL1A1" ) # high in pericytes
+FeaturePlot(object = object_1, features =  "COL5A1" )
+# FeaturePlot(object = object_1, features =  "ADAMTS2" )
+# FeaturePlot(object = object_1, features =  "TPSB2" )
+# FeaturePlot(object = object_1, features =  "KRT8" )
+# FeaturePlot(object = object_1, features =  "OMD" )
+FeaturePlot(object = object_1, features =  "OGN" )
+FeaturePlot(object = object_1, features =  "MME" )
+# FeaturePlot(object = object_1, features =  "MLPH" )
+# FeaturePlot(object = object_1, features =  "MRC1L1" )
+# FeaturePlot(object = object_1, features =  "PTGFR" )
+# FeaturePlot(object = object_1, features =  "TWIST2" )
+# FeaturePlot(object = object_1, features =  "C5orf46" )
+# FeaturePlot(object = object_1, features =  "TNNT3" )
+FeaturePlot(object = object_1, features =  "ASS1" )
+FeaturePlot(object = object_1, features =  "PERP" )
+# FeaturePlot(object = object_1, features =  "KLHDC7B" )
+#FeaturePlot(object = object_1, features =  "CCL8" )
+
 
 
 
 # GSE117891 ----
 
-# GSE131928 ----
+# GSE131928 :: Neftel ----
 
-# further processing ----
+## convert to 10X/seurat ----
+
+tmp <- read.table("data/scRNA/GSE131928_Neftel/GSM3828673_10X_GBM_IDHwt_processed_TPM.tsv",
+                  header=T, 
+                  stringsAsFactors=F) %>%
+  tibble::column_to_rownames('GENE')
+
+tmp <- tmp %>% dplyr::filter(rowSums(.) > 0)
+
+tmp.genes  <- rownames(tmp)
+tmp.cell.ids <- colnames(tmp)
+
+
+
+
+# export each
+for(sample in unique(gsub("^X([0-9]+).*$","\\1",tmp.cell.ids ))) {
+  print(paste0("Exporting ",sample))
+  
+  tmp.subset <- tmp %>%
+    as.data.frame() %>%
+    dplyr::select(contains(sample))
+  print(dim(tmp))
+  
+  tmp.cell.ids.subset <- colnames(tmp.subset)
+  
+  write10xCounts(path        = paste0("data/scRNA/GSE131928_Neftel/", sample),
+                 x           = tmp.subset %>% as.matrix() %>% as("dgTMatrix"),
+                 barcodes    = tmp.cell.ids.subset , 
+#                 gene.id     = tmp.genes,
+                 gene.symbol = tmp.genes)
+  
+  rm(GSE103224.subset, GSE103224.cell.ids.subset, sample)
+  gc()
+}
+
+
+
+# load table and make 10X-like files
+
+object_1 <- Read10X(data.dir = "/home/youri/projects/gsam/data/scRNA/GSE131928_Neftel/10x_obj_2/DropUtils")
+
+## 102 :: ----
+## 105 :: ----
+## 114 :: ----
+## 115 :: ----
+## 118 :: ----
+## 124 :: ----
+## 125 :: ----
+## 126 :: ----
+## 143 :: ----
+
+
+
+# EGAS00001004422 :: Couturier :: T,MG,OD,PE,T(mitotic) ----
+
+## BT363 ----
+
+object_1 <- Read10X(data.dir = "data/scRNA/EGAS00001004422_Couturier/filtered/BT363_1of2.filtered_gene_matrices/")
+object_1 <- CreateSeuratObject(counts = object_1, min.cells = 3, min.features = 200, project="Couturier")
+
+object_1.tmp <- Read10X(data.dir = "data/scRNA/EGAS00001004422_Couturier/filtered/BT363_2of2.filtered_gene_matrices/")
+object_1.tmp <- CreateSeuratObject(counts = object_1.tmp, min.cells = 3, min.features = 200, project="Couturier")
+
+object_1.m <- merge(object_1, y=object_1.tmp, add.cell.ids = c("1of2","2of2"), project="Couturier")
+
+rm(object_1, object_1.tmp)
+object_1 <- object_1.m
+rm(object_1.m)
+
+
+
+
+mito.features_object1 <- grep(pattern = "^MT-", x=rownames(x=object_1), value=T)
+percent.mito_object1 <- Matrix::colSums(x = GetAssayData(object = object_1, slot="counts")[mito.features_object1,]) / Matrix::colSums(x = GetAssayData(object = object_1, slot = "counts"))
+object_1[["percent.mito"]] <- percent.mito_object1
+VlnPlot(object = object_1, features = c("nFeature_RNA", "nCount_RNA", "percent.mito"), ncol = 3, pt.size = 0.01, group.by = "orig.ident") 
+
+
+
+ggplot(object_1@meta.data, aes(y=`nFeature_RNA`, x=orig.ident)) +
+  geom_jitter(cex=0.01) +
+  geom_hline(yintercept = 700,col="red") +
+  geom_hline(yintercept = 5250,col="red")
+
+
+ggplot(object_1@meta.data, aes(y=`nCount_RNA`, x=orig.ident)) +
+  geom_jitter(cex=0.01)  +
+  geom_hline(yintercept = 1000,col="red") +
+  geom_hline(yintercept = 20000,col="red") # + scale_y_log10()
+
+
+
+object_1 <- subset(x = object_1, subset = 
+                     nFeature_RNA > 700 &
+                     nFeature_RNA < 5250 & 
+                     nCount_RNA > 1000 &
+                     nCount_RNA < 20000 &
+                     percent.mito < 0.15)
+
+object_1 <- NormalizeData(object = object_1, normalization.method = "LogNormalize", scale.factor = 1e4)
+object_1 <- FindVariableFeatures(object = object_1, selection.method = "vst", nfeatures = 2000)
+object_1[["state"]] <- "P1" 
+
+
+top10 <- head(VariableFeatures(object_1), 10)
+
+
+# plot variable features with and without labels
+
+plot1 <- VariableFeaturePlot(object_1)
+plot2 <- LabelPoints(plot = plot1, points = top10, repel = TRUE)
+#CombinePlots(plots = list(plot1, plot2))     
+plot1
+plot2
+
+### scaling of data ----
+#Shifts the expression of each gene, so that the mean expression across cells is 0
+#Scales the expression of each gene, so that the variance across cells is 1
+#This step gives equal weight in downstream analyses, so that highly-expressed genes do not dominate
+#The results of this are stored in pbmc[["RNA"]]@scale.data
+
+all.genes <- rownames(object_1)
+object_1 <- ScaleData(object_1, features = all.genes)
+
+### PCA plot ---
+
+object_1 <- RunPCA(object_1, features = VariableFeatures(object = object_1))
+print(object_1[["pca"]], dims = 1:5, nfeatures = 5)
+VizDimLoadings(object_1, dims = 1:2, reduction = "pca")
+DimPlot(object_1, reduction = "pca")
+
+#### estimation of the number of principle components in your dataset
+
+ElbowPlot(object_1, ndims = 45)
+
+### cluster the cells ----
+
+object_1 <- FindNeighbors(object_1, dims = 1:40)
+object_1 <- FindClusters(object_1, resolution = 1, algorithm=1)
+head(Idents(object_1), 20)
+
+### UMAP clustering ----
+
+object_1 <- RunUMAP(object_1, dims = 1:40)
+object_1@meta.data$pt = sapply(strsplit(rownames(object_1@meta.data), "[.]"), "[", 1)
+
+
+levels(object_1$seurat_clusters) <- gsub("^(0|1|2|3|4|5|8|10|11|12|14)$",paste0("Tumor.\\1"),levels(object_1$seurat_clusters))
+levels(object_1$seurat_clusters) <- gsub("^(7|13)$","Oligodendrocytes.\\1",levels(object_1$seurat_clusters))
+levels(object_1$seurat_clusters) <- gsub("^(6|9)$","Tam/MG.\\1",levels(object_1$seurat_clusters))
+levels(object_1$seurat_clusters) <- gsub("^15$","Endothelial",levels(object_1$seurat_clusters))
+levels(object_1$seurat_clusters) <- gsub("^16$","Pericytes",levels(object_1$seurat_clusters))
+
+
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "seurat_clusters")
+
+
+
+
+
+
+#### 0. Combined ----
+
+# tmp <- FindMarkers(object_1, ident.1 = 9)
+# head(tmp, 20)
+
+
+# DotPlot(object = object_1, features = c("EGFR", "GFAP","MOG", "PLP1", "TMEM144", 
+#                                         "RBFOX1", "RBFOX2", "RBFOX3", "CD2",
+#                                         "CD3D", "P2RY12", "CD163", "ABCB1", "RGS5"
+# ))+ 
+#   theme(axis.text.x = element_text(angle = 45, hjust=1))
+
+
+#### 1. Tumor (+) ----
+
+FeaturePlot(object = object_1, features = "ETV1") # Tumor
+FeaturePlot(object = object_1, features = "CDK4") # Tumor
+FeaturePlot(object = object_1, features = "EGFR", max.cutoff = 4) # Tumor
+
+FeaturePlot(object = object_1, features = "S100B") # Tumor/AC
+FeaturePlot(object = object_1, features = "GFAP") # Tumor/AC
+FeaturePlot(object = object_1, features = "OLIG1") # Tumor/OPC+NPC1
+FeaturePlot(object = object_1, features = "VIM") # Tumor/MES
+
+FeaturePlot(object = object_1, features = c("HSPA1A","HSPA1B","VEGFA")) # Apoptotic Tumor?
+
+
+# succes met vinden van een marker
+FeaturePlot(object = object_1, features = c("EGFR","OLIG1","TMPO","VIM","STMN2",   "AURKB")) # Tumor
+
+# cluster 9:
+# [1] "KIF2C"  "NUF2"   "ASPM"   "NEK2"   "CENPA"  "CKAP2L" "SGOL1"  "CENPE"  "CCNA2"  "PBK"    "MKI67"  "CDCA3"  "NUSAP1" "CCNB2"  "KIF23" 
+# [16] "FAM64A" "AURKB"  "TOP2A"  "TPX2"   "CDC20" 
+# mitosis genes
+
+FeaturePlot(object = object_1, features = c("KIF2C", "NUF2", "OLIG1", "VIM", "S100B", "GFAP","NDRG1","RBFOX2"))
+FeaturePlot(object = object_1, features = c("RRM2","PCNA","KIAA0101")) # G1/S
+FeaturePlot(object = object_1, features = c("CCNB1","CDC20","CCNB2")) # G2/M
+FeaturePlot(object = object_1, features = c("TMPO")) # G2/M
+
+
+FeaturePlot(object = object_1, features = "ANXA1") # Tumor / Neuronal? weinig in GFAP-neg tumor cellen?
+FeaturePlot(object = object_1, features = "ANXA2") # Tumor
+
+FeaturePlot(object = object_1, features = "SOCS2") # Tumor?
+FeaturePlot(object = object_1, features = "SOX2")
+FeaturePlot(object = object_1, features = "VIM") # niet alleen in tumor cellen (!)
+
+FeaturePlot(object = object_1, features = "PTPZ1")
+FeaturePlot(object = object_1, features = "PTEN")
+FeaturePlot(object = object_1, features = "SETD5")
+FeaturePlot(object = object_1, features = "SMAD5")
+FeaturePlot(object = object_1, features = "TRIM24")
+
+
+
+#### 2. Astrocyte (-) ----
+
+
+FeaturePlot(object = object_1, features = "STMN2") # Tumor
+FeaturePlot(object = object_1, features = "ETNPPL") # Tumor
+
+
+
+#### 3A. TAM/mg/monocytes (+)----
+
+
+FeaturePlot(object = object_1, features = c("CD163")) # TAM/mg
+FeaturePlot(object = object_1, features = c("P2RY12")) # specifiek MG, niet Mac?
+FeaturePlot(object = object_1, features = "CD14") # TAM/mg
+FeaturePlot(object = object_1, features = c("ITGB2"))
+FeaturePlot(object = object_1, features = c("C1QC"))
+
+
+#### 3B. Til/T-cell (-) ----
+
+FeaturePlot(object = object_1, features = "CD2")
+FeaturePlot(object = object_1, features = "CD3D")
+FeaturePlot(object = object_1, features = "TRBC2")
+
+
+#### 4. Neurons (-) ----
+
+
+FeaturePlot(object = object_1, features = "RBFOX3")
+FeaturePlot(object = object_1, features = "RBFOX1")
+FeaturePlot(object = object_1, features = "RBFOX2") # NPC2 ~ Neftel
+FeaturePlot(object = object_1, features = "DDN")
+FeaturePlot(object = object_1, features = "TNNT2")
+FeaturePlot(object = object_1, features = "TMEM130")
+FeaturePlot(object = object_1, features = "GABRG2")
+#FeaturePlot(object = object_1, features = "GABRA1")
+FeaturePlot(object = object_1, features = "GABRB2")
+
+
+
+#### 5. Oligodendrocytes (+) ----
+
+FeaturePlot(object = object_1, features = "MOG")
+#FeaturePlot(object = object_1, features = "OPALIN") # - clear small cluster
+FeaturePlot(object = object_1, features = "PLP1")
+FeaturePlot(object = object_1, features = "TMEM144")
+
+
+#### 6A. Endothelial (-) ----
+
+FeaturePlot(object = object_1, features = "ABCB1")
+FeaturePlot(object = object_1, features = "CD34")
+FeaturePlot(object = object_1, features = "FLT4")
+FeaturePlot(object = object_1, features = "TIE1") # meh
+FeaturePlot(object = object_1, features = "ITGA1") # endo + peri?
+
+
+#### 6B. Pericytes (+) ----
+
+FeaturePlot(object = object_1, features = "RGS5")
+FeaturePlot(object = object_1, features = "PDGFRB")
+FeaturePlot(object = object_1, features = "CD248")
+
+
+
+#### C4 (up) ----
+
+FeaturePlot(object = object_1, features = C4A)
+FeaturePlot(object = object_1, features = C4B)
+
+DotPlot(object = object_1, features = c(C4A, C4B))
+VlnPlot(object = object_1, features = c(C4A, C4B), group.by = "seurat_clusters",stack=T)
+RidgePlot(object = object_1, features = c(C4A, C4B), group.by = "seurat_clusters",stack=T)
+
+
+#### C5 (down) ----
+
+
+FeaturePlot(object = object_1, features = C5)
+
+
+DotPlot(object = object_1, features = c(C5), group.by = "seurat_clusters")
+RidgePlot(object = object_1, features = c(C5), group.by = "seurat_clusters",stack=T)
+VlnPlot(object = object_1, features = c(C5), group.by = "seurat_clusters",stack=T)
+
+
+
+#### C6 (up) ----
+
+FeaturePlot(object = object_1, features = C6)
+
+
+DotPlot(object = object_1, features = c(C6), group.by = "seurat_clusters")
+RidgePlot(object = object_1, features = c(C6), group.by = "seurat_clusters",stack=T)
+VlnPlot(object = object_1, features = c(C6), group.by = "seurat_clusters",stack=T)
+
+
+
+
+FeaturePlot(object = object_1, features =  "CRABP2" )
+FeaturePlot(object = object_1, features =  "CLIP2" )
+#FeaturePlot(object = object_1, features =  "DPT" )
+FeaturePlot(object = object_1, features =  "FGF7" )
+#FeaturePlot(object = object_1, features =  "COL10A1" )
+FeaturePlot(object = object_1, features =  "FBN1" )
+FeaturePlot(object = object_1, features =  "GLT8D2" )
+FeaturePlot(object = object_1, features =  "IRX3" )
+FeaturePlot(object = object_1, features =  "MFAP5" )
+FeaturePlot(object = object_1, features =  "MFAP4" )
+# FeaturePlot(object = object_1, features =  "COL8A2" )
+# FeaturePlot(object = object_1, features =  "FNDC1" )
+FeaturePlot(object = object_1, features =  "MMP11" )
+FeaturePlot(object = object_1, features =  "MFAP2" )
+FeaturePlot(object = object_1, features =  "COL1A2" ) # high in pericytes
+FeaturePlot(object = object_1, features =  "COL1A1" ) # high in pericytes
+FeaturePlot(object = object_1, features =  "COL5A1" )
+# FeaturePlot(object = object_1, features =  "ADAMTS2" )
+# FeaturePlot(object = object_1, features =  "TPSB2" )
+# FeaturePlot(object = object_1, features =  "KRT8" )
+# FeaturePlot(object = object_1, features =  "OMD" )
+FeaturePlot(object = object_1, features =  "OGN" )
+FeaturePlot(object = object_1, features =  "MME" )
+# FeaturePlot(object = object_1, features =  "MLPH" )
+# FeaturePlot(object = object_1, features =  "MRC1L1" )
+# FeaturePlot(object = object_1, features =  "PTGFR" )
+# FeaturePlot(object = object_1, features =  "TWIST2" )
+# FeaturePlot(object = object_1, features =  "C5orf46" )
+# FeaturePlot(object = object_1, features =  "TNNT3" )
+FeaturePlot(object = object_1, features =  "ASS1" )
+FeaturePlot(object = object_1, features =  "PERP" )
+# FeaturePlot(object = object_1, features =  "KLHDC7B" )
+#FeaturePlot(object = object_1, features =  "CCL8" )
+
+
