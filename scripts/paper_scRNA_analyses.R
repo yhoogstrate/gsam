@@ -2086,7 +2086,11 @@ object_1 <- Read10X(data.dir = "/home/youri/projects/gsam/data/scRNA/GSE131928_N
 # https://www.nature.com/articles/s41467-020-17186-5
 # https://www.frontiersin.org/articles/10.3389/fonc.2021.683007/full
 
-## BT322 ----
+## BT322 [>95% tumor] ----
+
+rm(object_1)
+gc()
+
 sid <- "BT322.filtered_gene_matrices"
 object_1 <- Read10X(data.dir = paste0("data/scRNA/EGAS00001004422_Couturier/filtered/",sid,"/"))
 object_1 <- CreateSeuratObject(counts = object_1, min.cells = 3, min.features = 200, project="Couturier")
@@ -2099,20 +2103,21 @@ VlnPlot(object = object_1, features = c("nFeature_RNA", "nCount_RNA", "percent.m
 
 ggplot(object_1@meta.data, aes(y=`nFeature_RNA`, x=orig.ident)) +
   geom_jitter(cex=0.01) +
-  geom_hline(yintercept = 300,col="red") +
-  geom_hline(yintercept = 4500,col="red")
+  geom_hline(yintercept = 1900,col="red") +
+  geom_hline(yintercept = 8000,col="red")
+
 
 ggplot(object_1@meta.data, aes(y=`nCount_RNA`, x=orig.ident)) +
   geom_jitter(cex=0.01)  +
   geom_hline(yintercept = 500,col="red") +
-  geom_hline(yintercept = 20000,col="red") # + scale_y_log10()
+  geom_hline(yintercept = 55000,col="red") # + scale_y_log10()
 
 
 object_1 <- subset(x = object_1, subset =
-                     nFeature_RNA > 300 &
-                     nFeature_RNA < 4500 &
+                     nFeature_RNA > 1900 &
+                     nFeature_RNA < 8000 &
                      nCount_RNA > 500 &
-                     nCount_RNA < 20000 &
+                     nCount_RNA < 55000 &
                      percent.mito < 0.2)
 
 
@@ -2149,22 +2154,86 @@ DimPlot(object_1, reduction = "pca")
 
 #### estimation of the number of principle components in your dataset
 
-ElbowPlot(object_1, ndims = 45)
+ElbowPlot(object_1, ndims = 55)
 
-object_1 <- FindNeighbors(object_1, dims = 1:30)
+object_1 <- FindNeighbors(object_1, dims = 1:45)
 object_1 <- FindClusters(object_1, resolution = 1, algorithm=1)
 head(Idents(object_1), 20)
 
 ### UMAP clustering ----
 
-object_1 <- RunUMAP(object_1, dims = 1:30)
+object_1 <- RunUMAP(object_1, dims = 1:45)
 object_1@meta.data$pt = sapply(strsplit(rownames(object_1@meta.data), "[.]"), "[", 1)
 
 # levels(object_1$seurat_clusters) <- gsub("^(14)$",paste0("TAM/microglia"),levels(object_1$seurat_clusters))
 
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters")
 
+
+
+#### 1. Tumor (+) ----
+
+FeaturePlot(object = object_1, features = "ETV1") # Tumor
+FeaturePlot(object = object_1, features = "CDK4") # Tumor
+FeaturePlot(object = object_1, features = "EGFR") # Tumor
+
+FeaturePlot(object = object_1, features = "S100B") # Tumor/AC
+FeaturePlot(object = object_1, features = "GFAP") # Tumor/AC
+FeaturePlot(object = object_1, features = "OLIG1") # Tumor/OPC+NPC1
+FeaturePlot(object = object_1, features = "VIM") # Tumor/MES
+
+# succes met vinden van een marker
+FeaturePlot(object = object_1, features = c("EGFR","OLIG1","TMPO","VIM","STMN2",   "AURKB")) # Tumor
+
+#### 2. Astrocyte (???) ----
+
+FeaturePlot(object = object_1, features = "STMN2") # Tumor
+FeaturePlot(object = object_1, features = "ETNPPL") # Tumor
+
+#### 3A. TAM/mg/monocytes (-)----
+
+FeaturePlot(object = object_1, features = c("CD163")) # TAM/mg
+FeaturePlot(object = object_1, features = c("P2RY12")) # specifiek MG, niet Mac?
+FeaturePlot(object = object_1, features = "CD14") # TAM/mg
+FeaturePlot(object = object_1, features = c("ITGB2"))
+FeaturePlot(object = object_1, features = c("C1QC"))
+
+
+#### 3B. Til/T-cell (-) ----
+
+FeaturePlot(object = object_1, features = "CD2")
+FeaturePlot(object = object_1, features = "CD3D")
+FeaturePlot(object = object_1, features = "TRBC2")
+
+
+#### 4. Neurons (-) ----
+
+
+FeaturePlot(object = object_1, features = "RBFOX3")
+
+
+#### 5. Oligodendrocytes (-) ----
+
+FeaturePlot(object = object_1, features = "TMEM144")
+
+
+#### 6A. Endothelial (-) ----
+
+FeaturePlot(object = object_1, features = "CD34")
+
+
+#### 6B. Pericytes (?) ----
+
+FeaturePlot(object = object_1, features = "RGS5")
+FeaturePlot(object = object_1, features = "CD248")
+
+
+
 ## BT324-GSC ----
+
+rm(object_1, sid)
+gc()
+
 sid <- "BT324-GSC.filtered_gene_matrices"
 object_1 <- Read10X(data.dir = paste0("data/scRNA/EGAS00001004422_Couturier/filtered/",sid,"/"))
 object_1 <- CreateSeuratObject(counts = object_1, min.cells = 3, min.features = 200, project="Couturier")
@@ -2177,21 +2246,22 @@ VlnPlot(object = object_1, features = c("nFeature_RNA", "nCount_RNA", "percent.m
 
 ggplot(object_1@meta.data, aes(y=`nFeature_RNA`, x=orig.ident)) +
   geom_jitter(cex=0.01) +
-  geom_hline(yintercept = 300,col="red") +
-  geom_hline(yintercept = 4500,col="red")
+  geom_hline(yintercept = 1250,col="red") +
+  geom_hline(yintercept = 6750,col="red")
+
 
 ggplot(object_1@meta.data, aes(y=`nCount_RNA`, x=orig.ident)) +
   geom_jitter(cex=0.01)  +
   geom_hline(yintercept = 500,col="red") +
-  geom_hline(yintercept = 20000,col="red") # + scale_y_log10()
+  geom_hline(yintercept = 35000,col="red") # + scale_y_log10()
 
 
 object_1 <- subset(x = object_1, subset =
-                     nFeature_RNA > 300 &
-                     nFeature_RNA < 4500 &
+                     nFeature_RNA > 1250 &
+                     nFeature_RNA < 6750 &
                      nCount_RNA > 500 &
-                     nCount_RNA < 20000 &
-                     percent.mito < 0.2)
+                     nCount_RNA < 35000 &
+                     percent.mito < 0.15)
 
 
 object_1 <- NormalizeData(object = object_1, normalization.method = "LogNormalize", scale.factor = 1e4)
@@ -2229,13 +2299,13 @@ DimPlot(object_1, reduction = "pca")
 
 ElbowPlot(object_1, ndims = 45)
 
-object_1 <- FindNeighbors(object_1, dims = 1:30)
+object_1 <- FindNeighbors(object_1, dims = 1:40)
 object_1 <- FindClusters(object_1, resolution = 1, algorithm=1)
 head(Idents(object_1), 20)
 
 ### UMAP clustering ----
 
-object_1 <- RunUMAP(object_1, dims = 1:30)
+object_1 <- RunUMAP(object_1, dims = 1:40)
 object_1@meta.data$pt = sapply(strsplit(rownames(object_1@meta.data), "[.]"), "[", 1)
 
 # levels(object_1$seurat_clusters) <- gsub("^(14)$",paste0("TAM/microglia"),levels(object_1$seurat_clusters))
@@ -2243,7 +2313,9 @@ object_1@meta.data$pt = sapply(strsplit(rownames(object_1@meta.data), "[.]"), "[
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters")
 
 
+
 ## BT326-GSC ----
+
 sid <- "BT326-GSC.filtered_gene_matrices"
 object_1 <- Read10X(data.dir = paste0("data/scRNA/EGAS00001004422_Couturier/filtered/",sid,"/"))
 object_1 <- CreateSeuratObject(counts = object_1, min.cells = 3, min.features = 200, project="Couturier")
