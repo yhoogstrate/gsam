@@ -2086,7 +2086,9 @@ object_1 <- Read10X(data.dir = "/home/youri/projects/gsam/data/scRNA/GSE131928_N
 # https://www.nature.com/articles/s41467-020-17186-5
 # https://www.frontiersin.org/articles/10.3389/fonc.2021.683007/full
 
-## BT326-GSC :: 95-100% tumor -----
+
+
+## BT322 [95-100% tumor] -----
 
 rm(object_1)
 gc()
@@ -2118,7 +2120,7 @@ object_1 <- subset(x = object_1, subset =
                      nFeature_RNA < 8000 &
                      nCount_RNA > 500 &
                      nCount_RNA < 55000 &
-                     percent.mito < 0.2)
+                     percent.mito < 0.175)
 
 
 object_1 <- NormalizeData(object = object_1, normalization.method = "LogNormalize", scale.factor = 1e4)
@@ -2156,77 +2158,26 @@ DimPlot(object_1, reduction = "pca")
 
 ElbowPlot(object_1, ndims = 55)
 
-object_1 <- FindNeighbors(object_1, dims = 1:45)
+object_1 <- FindNeighbors(object_1, dims = 1:30)
 object_1 <- FindClusters(object_1, resolution = 1, algorithm=1)
 head(Idents(object_1), 20)
 
 ### UMAP clustering ----
 
-object_1 <- RunUMAP(object_1, dims = 1:45)
+object_1 <- RunUMAP(object_1, dims = 1:30)
 object_1@meta.data$pt = sapply(strsplit(rownames(object_1@meta.data), "[.]"), "[", 1)
 
-# levels(object_1$seurat_clusters) <- gsub("^(14)$",paste0("TAM/microglia"),levels(object_1$seurat_clusters))
+levels(object_1$seurat_clusters) <- gsub("^(14)$",paste0("Oligodendrocyte"),levels(object_1$seurat_clusters))
 
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters")
 
 
-
-#### 1. Tumor (+) ----
-
-FeaturePlot(object = object_1, features = "ETV1") # Tumor
-FeaturePlot(object = object_1, features = "CDK4") # Tumor
-FeaturePlot(object = object_1, features = "EGFR") # Tumor
-
-FeaturePlot(object = object_1, features = "S100B") # Tumor/AC
-FeaturePlot(object = object_1, features = "GFAP") # Tumor/AC
-FeaturePlot(object = object_1, features = "OLIG1") # Tumor/OPC+NPC1
-FeaturePlot(object = object_1, features = "VIM") # Tumor/MES
-
-# succes met vinden van een marker
-FeaturePlot(object = object_1, features = c("EGFR","OLIG1","TMPO","VIM","STMN2",   "AURKB")) # Tumor
-
-#### 2. Astrocyte (???) ----
-
-FeaturePlot(object = object_1, features = "STMN2") # Tumor
-FeaturePlot(object = object_1, features = "ETNPPL") # Tumor
-
-#### 3A. TAM/mg/monocytes (-)----
-
-FeaturePlot(object = object_1, features = c("CD163")) # TAM/mg
-FeaturePlot(object = object_1, features = c("P2RY12")) # specifiek MG, niet Mac?
-FeaturePlot(object = object_1, features = "CD14") # TAM/mg
-FeaturePlot(object = object_1, features = c("ITGB2"))
-FeaturePlot(object = object_1, features = c("C1QC"))
-
-
-#### 3B. Til/T-cell (-) ----
-
-FeaturePlot(object = object_1, features = "CD2")
-FeaturePlot(object = object_1, features = "CD3D")
-FeaturePlot(object = object_1, features = "TRBC2")
-
-
-#### 4. Neurons (-) ----
-
-
-FeaturePlot(object = object_1, features = "RBFOX3")
+tmp.14 <- FindMarkers(object_1, ident.1 = 14)
 
 
 #### 5. Oligodendrocytes (-) ----
 
-FeaturePlot(object = object_1, features = "TMEM144")
-
-
-#### 6A. Endothelial (-) ----
-
-FeaturePlot(object = object_1, features = "CD34")
-
-
-#### 6B. Pericytes (?) ----
-
-FeaturePlot(object = object_1, features = "RGS5")
-FeaturePlot(object = object_1, features = "CD248")
-
+FeaturePlot(object = object_1, features = c("TMEM125","TMEM144"))
 
 
 ## BT324-GSC :: T,MG,OD ----
@@ -2315,10 +2266,11 @@ levels(object_1$seurat_clusters) <- gsub("^(15)$",paste0("Monocyte?"),levels(obj
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters")
 
 
-tmp.13.14 <- FindMarkers(object_1, ident.1 = c(13,14)) # GPR85,NEUROD2,MMRN1,BHLHE22,SYT1,LINC01088,FGF13,COL5A2,NEUROD6,EPHB6,PDE1C,CPNE6,CACNA1E,PRKAG2-AS1,NPTX1,SNCA,CLMP
-tmp.15 <- FindMarkers(object_1, ident.1 = 15) # LAMP3,IRF4,CCL22,CCR7,CRIP1,LSP1,EHF,CST7,LY75,AJ006998.2,NR4A3,CD70,ETV3,RGS1,CSF2RA,CCL17,EBI3,SAMSN1,CCL19,SYNPO2
-tmp.17 <- FindMarkers(object_1, ident.1 = 17) # IFITM1,CXCL9,CXCL11,BATF2,GBP5,USP30-AS1,GBP4,APOL1,CXCL10,ETV7,IL33,GBP1,CR1L,SOCS1,OASL,FAM43A,HAPLN3,SPOCD1,IFIT3,STEAP1
-tmp.18 <- FindMarkers(object_1, ident.1 = 18) # MYCL,SNIP1,TRIT1,MYCBP,C1orf109,RP5-864K19.4,INPP5B,GNL2,DNALI1,YRDC,MANEAL,RRAGC,SF3A3,FHL3,MT1E,RHBDL2,PABPC4,UTP11L,POU3F1,PPIE
+# tmp.13.14 <- FindMarkers(object_1, ident.1 = c(13,14)) # GPR85,NEUROD2,MMRN1,BHLHE22,SYT1,LINC01088,FGF13,COL5A2,NEUROD6,EPHB6,PDE1C,CPNE6,CACNA1E,PRKAG2-AS1,NPTX1,SNCA,CLMP
+# tmp.15 <- FindMarkers(object_1, ident.1 = 15) # LAMP3,IRF4,CCL22,CCR7,CRIP1,LSP1,EHF,CST7,LY75,AJ006998.2,NR4A3,CD70,ETV3,RGS1,CSF2RA,CCL17,EBI3,SAMSN1,CCL19,SYNPO2
+# tmp.17 <- FindMarkers(object_1, ident.1 = 17) # IFITM1,CXCL9,CXCL11,BATF2,GBP5,USP30-AS1,GBP4,APOL1,CXCL10,ETV7,IL33,GBP1,CR1L,SOCS1,OASL,FAM43A,HAPLN3,SPOCD1,IFIT3,STEAP1
+# tmp.18 <- FindMarkers(object_1, ident.1 = 18) # MYCL,SNIP1,TRIT1,MYCBP,C1orf109,RP5-864K19.4,INPP5B,GNL2,DNALI1,YRDC,MANEAL,RRAGC,SF3A3,FHL3,MT1E,RHBDL2,PABPC4,UTP11L,POU3F1,PPIE
+
 
 
 #### 1. Tumor (+) ----
@@ -2380,8 +2332,7 @@ FeaturePlot(object = object_1, features = "CD248")
 
 
 
-
-## BT326-GSC :: 95-100% tumor ----
+## BT326-GSC [95-100% tumor] ----
 
 rm(object_1, sid)
 gc()
@@ -2482,12 +2433,138 @@ FeaturePlot(object = object_1, features = "ETNPPL") # Tumor
 FeaturePlot(object = object_1, features = "TMEM144")
 
 
-## BT333 :: 100% tumor? ----
+## BT333-GSC [95-100% tumor?] ----
+
 
 rm(object_1)
 gc()
 
-object_1 <- Read10X(data.dir = "data/scRNA/EGAS00001004422_Couturier/filtered/BT333.filtered_gene_matrices/")
+sid <- 'BT333-GSC.filtered_gene_matrices'
+object_1 <- Read10X(data.dir = paste0("data/scRNA/EGAS00001004422_Couturier/filtered/",sid,"/"))
+object_1 <- CreateSeuratObject(counts = object_1, min.cells = 3, min.features = 200, project="Couturier")
+
+
+mito.features_object1 <- grep(pattern = "^MT-", x=rownames(x=object_1), value=T)
+percent.mito_object1 <- Matrix::colSums(x = GetAssayData(object = object_1, slot="counts")[mito.features_object1,]) / Matrix::colSums(x = GetAssayData(object = object_1, slot = "counts"))
+object_1[["percent.mito"]] <- percent.mito_object1
+VlnPlot(object = object_1, features = c("nFeature_RNA", "nCount_RNA", "percent.mito"), ncol = 3, pt.size = 0.01, group.by = "orig.ident") 
+
+
+
+ggplot(object_1@meta.data, aes(y=`nFeature_RNA`, x=orig.ident)) +
+  geom_jitter(cex=0.01) +
+  geom_hline(yintercept = 1950,col="red") +
+  geom_hline(yintercept = 7000,col="red")
+
+
+ggplot(object_1@meta.data, aes(y=`nCount_RNA`, x=orig.ident)) +
+  geom_jitter(cex=0.01)  +
+  geom_hline(yintercept = 1000,col="red") +
+  geom_hline(yintercept = 40000,col="red") # + scale_y_log10()
+
+
+object_1 <- subset(x = object_1, subset =
+                     nFeature_RNA > 1950 &
+                     nFeature_RNA < 7000 &
+                     nCount_RNA > 1000 &
+                     nCount_RNA < 40000 &
+                     percent.mito < 0.15)
+
+object_1 <- NormalizeData(object = object_1, normalization.method = "LogNormalize", scale.factor = 1e4)
+object_1 <- FindVariableFeatures(object = object_1, selection.method = "vst", nfeatures = 2000)
+object_1[["state"]] <- "P1" 
+
+
+top10 <- head(VariableFeatures(object_1), 10)
+
+
+# plot variable features with and without labels
+
+plot1 <- VariableFeaturePlot(object_1)
+plot2 <- LabelPoints(plot = plot1, points = top10, repel = TRUE)
+#CombinePlots(plots = list(plot1, plot2))     
+plot1
+plot2
+
+
+# scaling of data
+#Shifts the expression of each gene, so that the mean expression across cells is 0
+#Scales the expression of each gene, so that the variance across cells is 1
+#This step gives equal weight in downstream analyses, so that highly-expressed genes do not dominate
+#The results of this are stored in pbmc[["RNA"]]@scale.data
+
+all.genes <- rownames(object_1)
+object_1 <- ScaleData(object_1, features = all.genes)
+
+### PCA plot ---
+
+object_1 <- RunPCA(object_1, features = VariableFeatures(object = object_1))
+print(object_1[["pca"]], dims = 1:5, nfeatures = 5)
+VizDimLoadings(object_1, dims = 1:2, reduction = "pca")
+DimPlot(object_1, reduction = "pca")
+
+#### estimation of the number of principle components in your dataset
+
+ElbowPlot(object_1, ndims = 45)
+
+# cluster the cells
+
+
+object_1 <- FindNeighbors(object_1, dims = 1:35)
+object_1 <- FindClusters(object_1, resolution = 1, algorithm=1)
+head(Idents(object_1), 20)
+
+
+### UMAP clustering ----
+
+object_1 <- RunUMAP(object_1, dims = 1:35)
+object_1@meta.data$pt = sapply(strsplit(rownames(object_1@meta.data), "[.]"), "[", 1)
+
+levels(object_1$seurat_clusters) <- gsub("^(0|1|2|3|4|5|6|7|8|9|10|13)$",paste0("Tumor.\\1"),levels(object_1$seurat_clusters))
+
+levels(object_1$seurat_clusters) <- gsub("^(11)$",paste0("TAM/Microglia"),levels(object_1$seurat_clusters))
+levels(object_1$seurat_clusters) <- gsub("^(12)$",paste0("Oligodendrocytes"),levels(object_1$seurat_clusters))
+
+
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters")
+
+
+#### 1. Tumor (+) ----
+
+FeaturePlot(object = object_1, features = "ETV1") # Tumor
+FeaturePlot(object = object_1, features = "CDK4") # Tumor
+FeaturePlot(object = object_1, features = "EGFR") # Tumor
+
+FeaturePlot(object = object_1, features = "S100B") # Tumor/AC
+FeaturePlot(object = object_1, features = "GFAP") # Tumor/AC
+FeaturePlot(object = object_1, features = "OLIG1") # Tumor/OPC+NPC1
+FeaturePlot(object = object_1, features = "VIM") # Tumor/MES
+
+# succes met vinden van een marker
+FeaturePlot(object = object_1, features = c("EGFR","OLIG1","TMPO","VIM","STMN2","ETNPPL",   "AURKB")) # Tumor
+
+
+#### 3A. TAM/mg/monocytes (-)----
+
+FeaturePlot(object = object_1, features = c("CD163")) # TAM/mg
+FeaturePlot(object = object_1, features = c("P2RY12")) # specifiek MG, niet Mac?
+FeaturePlot(object = object_1, features = "CD14") # TAM/mg
+FeaturePlot(object = object_1, features = c("ITGB2"))
+FeaturePlot(object = object_1, features = c("C1QC"))
+
+#### 5. Oligodendrocytes (-) ----
+
+FeaturePlot(object = object_1, features = "TMEM144")
+
+
+## BT333 Total [95-100% tumor?] ----
+
+
+rm(object_1)
+gc()
+
+sid <- 'BT333.filtered_gene_matrices'
+object_1 <- Read10X(data.dir = paste0("data/scRNA/EGAS00001004422_Couturier/filtered/",sid,"/"))
 #object_1 <- Read10X(data.dir = "data/scRNA/EGAS00001004422_Couturier/filtered/BT333-GSC.filtered_gene_matrices/")
 object_1 <- CreateSeuratObject(counts = object_1, min.cells = 3, min.features = 200, project="Couturier")
 
@@ -4731,7 +4808,7 @@ FeaturePlot(object = object_1, features = "CD14") # TAM/mg
 FeaturePlot(object = object_1, features = "RGS5")
 
 
-## BT402 ----
+## BT402 [95-100% tumor] ----
 
 rm(sid, object_1)
 gc()
@@ -4749,7 +4826,8 @@ VlnPlot(object = object_1, features = c("nFeature_RNA", "nCount_RNA", "percent.m
 ggplot(object_1@meta.data, aes(y=`nFeature_RNA`, x=orig.ident)) +
   geom_jitter(cex=0.01) +
   geom_hline(yintercept = 300,col="red") +
-  geom_hline(yintercept = 4500,col="red")
+  geom_hline(yintercept = 4750,col="red")
+
 
 ggplot(object_1@meta.data, aes(y=`nCount_RNA`, x=orig.ident)) +
   geom_jitter(cex=0.01)  +
@@ -4759,7 +4837,7 @@ ggplot(object_1@meta.data, aes(y=`nCount_RNA`, x=orig.ident)) +
 
 object_1 <- subset(x = object_1, subset =
                      nFeature_RNA > 300 &
-                     nFeature_RNA < 4500 &
+                     nFeature_RNA < 4700 &
                      nCount_RNA > 500 &
                      nCount_RNA < 20000 &
                      percent.mito < 0.2)
@@ -4804,6 +4882,7 @@ object_1 <- FindNeighbors(object_1, dims = 1:30)
 object_1 <- FindClusters(object_1, resolution = 1, algorithm=1)
 head(Idents(object_1), 20)
 
+
 ### UMAP clustering ----
 
 object_1 <- RunUMAP(object_1, dims = 1:30)
@@ -4816,7 +4895,11 @@ DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "se
 
 
 
-## BT407 ----
+## BT407 [95-100% tumor] ----
+
+rm(sid, object_1)
+gc()
+
 
 sid <- "BT407.filtered_gene_matrices"
 object_1 <- Read10X(data.dir = paste0("data/scRNA/EGAS00001004422_Couturier/filtered/",sid,"/"))
@@ -4827,24 +4910,24 @@ percent.mito_object1 <- Matrix::colSums(x = GetAssayData(object = object_1, slot
 object_1[["percent.mito"]] <- percent.mito_object1
 VlnPlot(object = object_1, features = c("nFeature_RNA", "nCount_RNA", "percent.mito"), ncol = 3, pt.size = 0.01, group.by = "orig.ident") 
 
-
-ggplot(object_1@meta.data, aes(y=`nFeature_RNA`, x=orig.ident)) +
-  geom_jitter(cex=0.01) +
-  geom_hline(yintercept = 300,col="red") +
-  geom_hline(yintercept = 4500,col="red")
-
-ggplot(object_1@meta.data, aes(y=`nCount_RNA`, x=orig.ident)) +
-  geom_jitter(cex=0.01)  +
-  geom_hline(yintercept = 500,col="red") +
-  geom_hline(yintercept = 20000,col="red") # + scale_y_log10()
-
-
-object_1 <- subset(x = object_1, subset =
-                     nFeature_RNA > 300 &
-                     nFeature_RNA < 4500 &
-                     nCount_RNA > 500 &
-                     nCount_RNA < 20000 &
-                     percent.mito < 0.2)
+# 
+# ggplot(object_1@meta.data, aes(y=`nFeature_RNA`, x=orig.ident)) +
+#   geom_jitter(cex=0.01) +
+#   geom_hline(yintercept = 300,col="red") +
+#   geom_hline(yintercept = 4500,col="red")
+# 
+# ggplot(object_1@meta.data, aes(y=`nCount_RNA`, x=orig.ident)) +
+#   geom_jitter(cex=0.01)  +
+#   geom_hline(yintercept = 500,col="red") +
+#   geom_hline(yintercept = 20000,col="red") # + scale_y_log10()
+# 
+# 
+# object_1 <- subset(x = object_1, subset =
+#                      nFeature_RNA > 300 &
+#                      nFeature_RNA < 4500 &
+#                      nCount_RNA > 500 &
+#                      nCount_RNA < 20000 &
+#                      percent.mito < 0.2)
 
 
 object_1 <- NormalizeData(object = object_1, normalization.method = "LogNormalize", scale.factor = 1e4)
@@ -4882,6 +4965,7 @@ DimPlot(object_1, reduction = "pca")
 
 ElbowPlot(object_1, ndims = 45)
 
+
 object_1 <- FindNeighbors(object_1, dims = 1:30)
 object_1 <- FindClusters(object_1, resolution = 1, algorithm=1)
 head(Idents(object_1), 20)
@@ -4898,7 +4982,10 @@ DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "se
 
 
 
-## BT409 ----
+## BT409 [95-100% tumor] ----
+
+rm(sid, object_1)
+gc()
 
 sid <- "BT409.filtered_gene_matrices"
 object_1 <- Read10X(data.dir = paste0("data/scRNA/EGAS00001004422_Couturier/filtered/",sid,"/"))
@@ -4910,23 +4997,24 @@ object_1[["percent.mito"]] <- percent.mito_object1
 VlnPlot(object = object_1, features = c("nFeature_RNA", "nCount_RNA", "percent.mito"), ncol = 3, pt.size = 0.01, group.by = "orig.ident") 
 
 
-ggplot(object_1@meta.data, aes(y=`nFeature_RNA`, x=orig.ident)) +
-  geom_jitter(cex=0.01) +
-  geom_hline(yintercept = 300,col="red") +
-  geom_hline(yintercept = 4500,col="red")
-
-ggplot(object_1@meta.data, aes(y=`nCount_RNA`, x=orig.ident)) +
-  geom_jitter(cex=0.01)  +
-  geom_hline(yintercept = 500,col="red") +
-  geom_hline(yintercept = 20000,col="red") # + scale_y_log10()
-
-
-object_1 <- subset(x = object_1, subset =
-                     nFeature_RNA > 300 &
-                     nFeature_RNA < 4500 &
-                     nCount_RNA > 500 &
-                     nCount_RNA < 20000 &
-                     percent.mito < 0.2)
+# ggplot(object_1@meta.data, aes(y=`nFeature_RNA`, x=orig.ident)) +
+#   geom_jitter(cex=0.01) +
+#   geom_hline(yintercept = 300,col="red") +
+#   geom_hline(yintercept = 4500,col="red")
+# 
+# 
+# ggplot(object_1@meta.data, aes(y=`nCount_RNA`, x=orig.ident)) +
+#   geom_jitter(cex=0.01)  +
+#   geom_hline(yintercept = 500,col="red") +
+#   geom_hline(yintercept = 20000,col="red") # + scale_y_log10()
+# 
+# 
+# object_1 <- subset(x = object_1, subset =
+#                      nFeature_RNA > 300 &
+#                      nFeature_RNA < 4500 &
+#                      nCount_RNA > 500 &
+#                      nCount_RNA < 20000 &
+#                      percent.mito < 0.2)
 
 
 object_1 <- NormalizeData(object = object_1, normalization.method = "LogNormalize", scale.factor = 1e4)
@@ -4976,6 +5064,55 @@ object_1@meta.data$pt = sapply(strsplit(rownames(object_1@meta.data), "[.]"), "[
 # levels(object_1$seurat_clusters) <- gsub("^(14)$",paste0("TAM/microglia"),levels(object_1$seurat_clusters))
 
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters")
+
+
+
+#### 1. Tumor (?) ----
+
+FeaturePlot(object = object_1, features = c("EGFR","OLIG1","TMPO","VIM","STMN2",   "AURKB")) # Tumor
+
+
+FeaturePlot(object = object_1, features = "ANXA1") # Tumor / Neuronal? weinig in GFAP-neg tumor cellen?
+FeaturePlot(object = object_1, features = "ANXA2") # Tumor
+
+FeaturePlot(object = object_1, features = "SOCS2") # Tumor?
+FeaturePlot(object = object_1, features = "SOX2")
+FeaturePlot(object = object_1, features = "VIM") # niet alleen in tumor cellen (!)
+
+FeaturePlot(object = object_1, features = "PTPZ1")
+FeaturePlot(object = object_1, features = "PTEN")
+FeaturePlot(object = object_1, features = "SETD5")
+FeaturePlot(object = object_1, features = "SMAD5")
+FeaturePlot(object = object_1, features = "TRIM24")
+
+
+#### 2. Astrocyte (-) ----
+
+
+FeaturePlot(object = object_1, features = "STMN2")
+FeaturePlot(object = object_1, features = "ETNPPL")
+
+
+
+#### 3A. TAM/mg/monocytes (+)----
+
+FeaturePlot(object = object_1, features = c("CD163")) # TAM/mg
+FeaturePlot(object = object_1, features = c("P2RY12")) # specifiek MG, niet Mac?
+FeaturePlot(object = object_1, features = "CD14") # TAM/mg
+FeaturePlot(object = object_1, features = c("ITGB2"))
+FeaturePlot(object = object_1, features = c("C1QC"))
+
+
+
+
+
+#### 5. Oligodendrocytes (?) ----
+
+
+FeaturePlot(object = object_1, features = "TMEM144")
+FeaturePlot(object = object_1, features = "MOG")
+FeaturePlot(object = object_1, features = "OPALIN")
+FeaturePlot(object = object_1, features = "PLP1")
 
 
 
