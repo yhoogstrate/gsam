@@ -6288,7 +6288,7 @@ DimPlot(object_1, reduction = "pca")
 
 ElbowPlot(object_1, ndims = 45)
 
-d <- 23
+d <- 22
 object_1 <- FindNeighbors(object_1, dims = 1:d)
 object_1 <- FindClusters(object_1, resolution = 1, algorithm=1)
 head(Idents(object_1), 20)
