@@ -3988,105 +3988,15 @@ DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "se
 
 
 
-## BT368 Total [95-100% tumor?] ----
-
+## BT368 Total [95-100% tumor?] <geen scheiding, per pericytes, vraag levi voor hulp?> ----
 
 rm(object_1)
 gc()
+
 
 sid <- "BT368.filtered_gene_matrices"
 object_1 <- Read10X(data.dir = paste0("data/scRNA/EGAS00001004422_Couturier/filtered/",sid,"/"))
 object_1 <- CreateSeuratObject(counts = object_1, min.cells = 3, min.features = 200, project="Couturier")
-
-mito.features_object1 <- grep(pattern = "^MT-", x=rownames(x=object_1), value=T)
-percent.mito_object1 <- Matrix::colSums(x = GetAssayData(object = object_1, slot="counts")[mito.features_object1,]) / Matrix::colSums(x = GetAssayData(object = object_1, slot = "counts"))
-object_1[["percent.mito"]] <- percent.mito_object1
-VlnPlot(object = object_1, features = c("nFeature_RNA", "nCount_RNA", "percent.mito"), ncol = 3, pt.size = 0.01, group.by = "orig.ident") 
-
-
-ggplot(object_1@meta.data, aes(y=`nFeature_RNA`, x=orig.ident)) +
-  geom_jitter(cex=0.01) +
-  geom_hline(yintercept = 1300,col="red") +
-  geom_hline(yintercept = 5500,col="red")
-
-
-ggplot(object_1@meta.data, aes(y=`nCount_RNA`, x=orig.ident)) +
-  geom_jitter(cex=0.01)  +
-  geom_hline(yintercept = 500,col="red") +
-  geom_hline(yintercept = 25000,col="red") # + scale_y_log10()
-
-
-object_1 <- subset(x = object_1, subset =
-                     nFeature_RNA > 1300 &
-                     nFeature_RNA < 5500 &
-                     nCount_RNA > 500 &
-                     nCount_RNA < 25000 &
-                     percent.mito < 0.2)
-
-
-object_1 <- NormalizeData(object = object_1, normalization.method = "LogNormalize", scale.factor = 1e4)
-object_1 <- FindVariableFeatures(object = object_1, selection.method = "vst", nfeatures = 2000)
-object_1[["state"]] <- "P1" 
-
-
-top10 <- head(VariableFeatures(object_1), 10)
-
-
-# plot variable features with and without labels
-
-plot1 <- VariableFeaturePlot(object_1)
-plot2 <- LabelPoints(plot = plot1, points = top10, repel = TRUE)
-#CombinePlots(plots = list(plot1, plot2))     
-plot1
-plot2
-
-
-#Shifts the expression of each gene, so that the mean expression across cells is 0
-#Scales the expression of each gene, so that the variance across cells is 1
-#This step gives equal weight in downstream analyses, so that highly-expressed genes do not dominate
-#The results of this are stored in pbmc[["RNA"]]@scale.data
-
-all.genes <- rownames(object_1)
-object_1 <- ScaleData(object_1, features = all.genes)
-
-
-object_1 <- RunPCA(object_1, features = VariableFeatures(object = object_1))
-print(object_1[["pca"]], dims = 1:5, nfeatures = 5)
-VizDimLoadings(object_1, dims = 1:2, reduction = "pca")
-DimPlot(object_1, reduction = "pca")
-
-#### estimation of the number of principle components in your dataset
-ElbowPlot(object_1, ndims = 45)
-
-
-object_1 <- FindNeighbors(object_1, dims = 1:30)
-object_1 <- FindClusters(object_1, resolution = 1, algorithm=1)
-head(Idents(object_1), 20)
-
-
-
-### UMAP clustering ----
-object_1 <- RunUMAP(object_1, dims = 1:30)
-object_1@meta.data$pt = sapply(strsplit(rownames(object_1@meta.data), "[.]"), "[", 1)
-
-# levels(object_1$seurat_clusters) <- gsub("^(14)$",paste0("TAM/microglia"),levels(object_1$seurat_clusters))
-
-DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters")
-
-
-
-tmp.3.7.8 <- FindMarkers(object_1, ident.1 = c(3,7,8))
-
-
-
-## BT368 Total <geen scheiding, per pericytes, vraag levi voor hulp?> ----
-
-rm(object_1)
-gc()
-
-object_1 <- Read10X(data.dir = "data/scRNA/EGAS00001004422_Couturier/filtered/BT368.filtered_gene_matrices/")
-object_1 <- CreateSeuratObject(counts = object_1, min.cells = 3, min.features = 200, project="Couturier")
-
 
 mito.features_object1 <- grep(pattern = "^MT-", x=rownames(x=object_1), value=T)
 percent.mito_object1 <- Matrix::colSums(x = GetAssayData(object = object_1, slot="counts")[mito.features_object1,]) / Matrix::colSums(x = GetAssayData(object = object_1, slot = "counts"))
@@ -4318,14 +4228,14 @@ FeaturePlot(object = object_1, features = C6)
 
 
 
-## BT389 [100% tumor] ----
+## BT389 [95-100% tumor, low res] ----
 
 rm(object_1)
 gc()
 
-object_1 <- Read10X(data.dir = "data/scRNA/EGAS00001004422_Couturier/filtered/BT389.filtered_gene_matrices/")
+sid <- "BT389.filtered_gene_matrices"
+object_1 <- Read10X(data.dir = paste0("data/scRNA/EGAS00001004422_Couturier/filtered/",sid,"/"))
 object_1 <- CreateSeuratObject(counts = object_1, min.cells = 3, min.features = 200, project="Couturier")
-
 
 mito.features_object1 <- grep(pattern = "^MT-", x=rownames(x=object_1), value=T)
 percent.mito_object1 <- Matrix::colSums(x = GetAssayData(object = object_1, slot="counts")[mito.features_object1,]) / Matrix::colSums(x = GetAssayData(object = object_1, slot = "counts"))
@@ -4545,6 +4455,7 @@ VlnPlot(object = object_1, features = c(C5), group.by = "seurat_clusters",stack=
 
 FeaturePlot(object = object_1, features = C5)
 
+
 ## BT390 :: T,MG++,TC,OD of 2e tum-clone? CNV nodig ----
 
 sid <- "BT390.filtered_gene_matrices"
@@ -4586,7 +4497,6 @@ top10 <- head(VariableFeatures(object_1), 10)
 
 
 # plot variable features with and without labels
-
 plot1 <- VariableFeaturePlot(object_1)
 plot2 <- LabelPoints(plot = plot1, points = top10, repel = TRUE)
 #CombinePlots(plots = list(plot1, plot2))     
@@ -4609,12 +4519,13 @@ VizDimLoadings(object_1, dims = 1:2, reduction = "pca")
 DimPlot(object_1, reduction = "pca")
 
 #### estimation of the number of principle components in your dataset
-
 ElbowPlot(object_1, ndims = 45)
+
 
 object_1 <- FindNeighbors(object_1, dims = 1:30)
 object_1 <- FindClusters(object_1, resolution = 1, algorithm=1)
 head(Idents(object_1), 20)
+
 
 ### UMAP clustering ----
 
@@ -4628,6 +4539,8 @@ levels(object_1$seurat_clusters) <- gsub("^(13)$",paste0("T-Cells"),levels(objec
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters")
 
 
+# tmp.3.5.7 <- FindMarkers(object_1, ident.1 = c(3,5,7))
+head(tmp.3.5.7, 20) # STMN1
 
 
 #### 1. Tumor (?) ----
@@ -4783,7 +4696,7 @@ FeaturePlot(object = object_1, features = C6)
 
 
 
-## BT397 [1+2/2] :: MG+++,TC+,T,OD,EN-,PE- ----
+## BT397 [1+2/2] :: MG+++,TC+,T,OD,EN-,PE- :: mooie ----
 
 
 rm(object_1)
@@ -4994,6 +4907,51 @@ FeaturePlot(object = object_1, features = "RGS5")
 FeaturePlot(object = object_1, features = "PDGFRB")
 FeaturePlot(object = object_1, features = "CD248")
 
+
+#### C3 (up) ----
+
+f <- C3
+DotPlot(object = object_1, features = f, group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+
+#### C4 (up) ----
+
+f <- c(C4A, C4B)
+DotPlot(object = object_1, features = f, group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+
+VlnPlot(object = object_1, features = f, group.by = "seurat_clusters",stack=T)
+RidgePlot(object = object_1, features = f, group.by = "seurat_clusters",stack=T)
+
+
+FeaturePlot(object = object_1, features = C4A)
+FeaturePlot(object = object_1, features = C4B)
+
+
+#### C5 (down) ----
+
+DotPlot(object = object_1, features = c(C5), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+RidgePlot(object = object_1, features = c(C5), group.by = "seurat_clusters",stack=T)
+VlnPlot(object = object_1, features = c(C5), group.by = "seurat_clusters",stack=T)
+
+FeaturePlot(object = object_1, features = C5)
+
+
+
+#### C6 (up) :: corr met Endo+Pericytes ----
+
+
+f <- c(C6 , c("RGS5", "PDGFRB", "CD248") )
+f <- C6
+
+DotPlot(object = object_1, features = f, group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+
+RidgePlot(object = object_1, features = f, group.by = "seurat_clusters",stack=T)
+VlnPlot(object = object_1, features = f, group.by = "seurat_clusters",stack=T)
+
+FeaturePlot(object = object_1, features = C6)
 
 
 
