@@ -7230,7 +7230,7 @@ FeaturePlot(object = object_1, features = C5)
 
 
 
-#### C6 (up) ----
+#### C6 (up) :: (-) ----
 
 
 
@@ -7447,6 +7447,7 @@ FeaturePlot(object = object_1, features = "S100B") # Tumor/AC
 FeaturePlot(object = object_1, features = "GFAP") # Tumor/AC
 FeaturePlot(object = object_1, features = "OLIG1") # Tumor/OPC+NPC1
 FeaturePlot(object = object_1, features = "VIM") # Tumor/MES
+FeaturePlot(object = object_1, features = "PRKG2") # Tumor/MES
 
 FeaturePlot(object = object_1, features = c("HSPA1A","HSPA1B","VEGFA")) # Apoptotic Tumor?
 FeaturePlot(object = object_1, features = c("RRM2","PCNA","KIAA0101")) # G1/S
@@ -7705,7 +7706,7 @@ FeaturePlot(object = object_1, features = C5)
 
 
 
-## GSM4119529_SF9259[R] ----
+## GSM4119529_SF9259[R] :: T-,OD++,TM ----
 
 #@todo pooling of the 2?
 
@@ -7731,25 +7732,25 @@ object_1[["percent.mito"]] <- percent.mito_object1
 VlnPlot(object = object_1, features = c("nFeature_RNA", "nCount_RNA", "percent.mito"), ncol = 3, pt.size = 0.01, group.by = "orig.ident") 
 
 
-ggplot(object_1@meta.data, aes(y=`nFeature_RNA`, x=orig.ident)) +
-  geom_jitter(cex=0.01) +
-  geom_hline(yintercept = 2000,col="red") +
-  geom_hline(yintercept = 6500,col="red")
-
-
-ggplot(object_1@meta.data, aes(y=`nCount_RNA`, x=orig.ident)) +
-  geom_jitter(cex=0.01)  +
-  geom_hline(yintercept = 4500,col="red") +
-  geom_hline(yintercept = 22500,col="red") # + scale_y_log10()
-
-
-
-object_1 <- subset(x = object_1, subset =
-                     nFeature_RNA > 2000 &
-                     nFeature_RNA < 6500 &
-                     nCount_RNA > 4500 &
-                     nCount_RNA < 22500 &
-                     percent.mito < 0.2)
+# ggplot(object_1@meta.data, aes(y=`nFeature_RNA`, x=orig.ident)) +
+#   geom_jitter(cex=0.01) +
+#   geom_hline(yintercept = 2000,col="red") +
+#   geom_hline(yintercept = 6500,col="red")
+# 
+# 
+# ggplot(object_1@meta.data, aes(y=`nCount_RNA`, x=orig.ident)) +
+#   geom_jitter(cex=0.01)  +
+#   geom_hline(yintercept = 4500,col="red") +
+#   geom_hline(yintercept = 22500,col="red") # + scale_y_log10()
+# 
+# 
+# 
+# object_1 <- subset(x = object_1, subset =
+#                      nFeature_RNA > 2000 &
+#                      nFeature_RNA < 6500 &
+#                      nCount_RNA > 4500 &
+#                      nCount_RNA < 22500 &
+#                      percent.mito < 0.2)
 
 
 object_1 <- NormalizeData(object = object_1, normalization.method = "LogNormalize", scale.factor = 1e4)
@@ -7780,7 +7781,7 @@ DimPlot(object_1, reduction = "pca")
 
 ElbowPlot(object_1, ndims = 45)
 
-d <- 25
+d <- 20
 object_1 <- FindNeighbors(object_1, dims = 1:d)
 object_1 <- FindClusters(object_1, resolution = 1, algorithm=1)
 head(Idents(object_1), 20)
@@ -7790,10 +7791,22 @@ head(Idents(object_1), 20)
 object_1 <- RunUMAP(object_1, dims = 1:d)
 object_1@meta.data$pt = sapply(strsplit(rownames(object_1@meta.data), "[.]"), "[", 1)
 
-# levels(object_1$seurat_clusters) <- gsub("^(5)$",paste0("Oligodendrocytes"),levels(object_1$seurat_clusters))
+
+levels(object_1$seurat_clusters) <- gsub("^(0|1|3|4|10|7|5)$",paste0("Oligodendrocytes.\\1"),levels(object_1$seurat_clusters))
+levels(object_1$seurat_clusters) <- gsub("^(6)$",paste0("Tumor.\\1"),levels(object_1$seurat_clusters))
+levels(object_1$seurat_clusters) <- gsub("^(9)$",paste0("Tumor OPC.\\1"),levels(object_1$seurat_clusters))
+levels(object_1$seurat_clusters) <- gsub("^(2|8)$",paste0("TAM/MG.\\1"),levels(object_1$seurat_clusters))
+
 
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters")
 
+
+
+
+tmp.9 <- FindMarkers(object_1, ident.1 = 9)
+head(tmp.9, 25)
+
+FeaturePlot(object = object_1, features = "BCAN") # Tumor
 
 
 ## GSM4119530_SF9259[S] ----
