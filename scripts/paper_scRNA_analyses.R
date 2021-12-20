@@ -6709,3 +6709,155 @@ VlnPlot(object = object_1, features = c(C6), group.by = "seurat_clusters",stack=
 FeaturePlot(object = object_1, features = C6[1:6])
 
 
+
+## GSM4119522_SF10127 ---
+# tissue: glioma
+# progression: Primary
+# genotype/variation: GBM
+# age: 44
+# gender: Female
+
+rm(sid, object_1)
+gc()
+
+sid <- 'GSM4119522_SF10127'
+object_1 <- Read10X(data.dir = paste0("data/scRNA/GSE138794_Diaz/",sid,"/"))
+object_1 <- CreateSeuratObject(counts = object_1, min.cells = 3, min.features = 200, project="Diaz")
+
+
+## SF11979 ----
+# tissue: glioma
+# progression: Primary
+# genotype/variation: IDHR132H WT GBM
+# age: 76
+# gender: Female
+
+rm(sid, object_1)
+gc()
+
+sid <- 'GSM4119523_SF11979sn'
+object_1 <- Read10X(data.dir = paste0("data/scRNA/GSE138794_Diaz/",sid,"/"))
+object_1 <- CreateSeuratObject(counts = object_1, min.cells = 3, min.features = 200, project="Diaz")
+
+
+
+## GSM4119524_SF12090 ----
+# tissue: glioma
+# progression: Primary
+# genotype/variation: IDHR132H WT GBM
+# age: 61
+# gender: Male
+
+rm(sid, object_1)
+gc()
+
+sid <- 'GSM4119524_SF12090'
+object_1 <- Read10X(data.dir = paste0("data/scRNA/GSE138794_Diaz/",sid,"/"))
+object_1 <- CreateSeuratObject(counts = object_1, min.cells = 3, min.features = 200, project="Diaz")
+
+
+
+
+## GSM4119525_SF12264 ----
+# tissue: glioma
+# progression: Primary
+# genotype/variation: GBM
+# age: 51
+# gender: Female
+
+rm(sid, object_1)
+gc()
+
+sid <- 'GSM4119525_SF12264'
+object_1 <- Read10X(data.dir = paste0("data/scRNA/GSE138794_Diaz/",sid,"/"))
+object_1 <- CreateSeuratObject(counts = object_1, min.cells = 3, min.features = 200, project="Diaz")
+
+
+
+
+## GSM4119526_SF4400 ----
+# tissue: glioma
+# progression: Primary
+# genotype/variation: GBM
+# age: 51
+# gender: Female
+
+
+
+rm(sid, object_1)
+gc()
+
+sid <- 'GSM4119526_SF4400'
+object_1 <- Read10X(data.dir = paste0("data/scRNA/GSE138794_Diaz/",sid,"/"))
+object_1 <- CreateSeuratObject(counts = object_1, min.cells = 3, min.features = 200, project="Diaz")
+
+
+
+## GSM4119527_SF4297 ----
+# tissue: glioma
+# progression: Primary
+# genotype/variation: GBM
+# age: 39
+# gender: Male
+
+rm(sid, object_1)
+gc()
+
+sid <- 'GSM4119527_SF4297'
+object_1 <- Read10X(data.dir = paste0("data/scRNA/GSE138794_Diaz/",sid,"/"))
+object_1 <- CreateSeuratObject(counts = object_1, min.cells = 3, min.features = 200, project="Diaz")
+
+
+
+## GSM4119528_SF6996 ----
+# tissue: glioma
+# progression: Primary
+# genotype/variation: GBM
+# age: 40
+# gender: Female
+
+
+rm(sid, object_1)
+gc()
+
+sid <- 'GSM4119528_SF6996'
+object_1 <- Read10X(data.dir = paste0("data/scRNA/GSE138794_Diaz/",sid,"/"))
+object_1 <- CreateSeuratObject(counts = object_1, min.cells = 3, min.features = 200, project="Diaz")
+
+
+
+
+
+## GSM4119529_SF9259[R] ----
+# tissue: glioma
+# progression: Primary
+# genotype/variation: GBM
+# age: 73
+# gender: Male
+
+
+rm(sid, object_1)
+gc()
+
+sid <- 'GSM4119529_SF9259R'
+object_1 <- Read10X(data.dir = paste0("data/scRNA/GSE138794_Diaz/",sid,"/"))
+object_1 <- CreateSeuratObject(counts = object_1, min.cells = 3, min.features = 200, project="Diaz")
+
+
+
+## GSM4119530_SF9259[S] ----
+# tissue: glioma
+# progression: Primary
+# genotype/variation: GBM
+# age: 73
+# gender: Male
+
+rm(sid, object_1)
+gc()
+
+sid <- 'GSM4119530_SF9259S'
+object_1 <- Read10X(data.dir = paste0("data/scRNA/GSE138794_Diaz/",sid,"/"))
+object_1 <- CreateSeuratObject(counts = object_1, min.cells = 3, min.features = 200, project="Diaz")
+
+
+
