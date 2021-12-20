@@ -7809,7 +7809,7 @@ head(tmp.9, 25)
 FeaturePlot(object = object_1, features = "BCAN") # Tumor
 
 
-## GSM4119530_SF9259[S] ----
+## GSM4119530_SF9259[S] :: T,OD+,MG [HQ] ----
 # tissue: glioma
 # progression: Primary
 # genotype/variation: GBM
@@ -7831,26 +7831,26 @@ percent.mito_object1 <- Matrix::colSums(x = GetAssayData(object = object_1, slot
 object_1[["percent.mito"]] <- percent.mito_object1
 VlnPlot(object = object_1, features = c("nFeature_RNA", "nCount_RNA", "percent.mito"), ncol = 3, pt.size = 0.01, group.by = "orig.ident") 
 
-
-ggplot(object_1@meta.data, aes(y=`nFeature_RNA`, x=orig.ident)) +
-  geom_jitter(cex=0.01) +
-  geom_hline(yintercept = 2000,col="red") +
-  geom_hline(yintercept = 6500,col="red")
-
-
-ggplot(object_1@meta.data, aes(y=`nCount_RNA`, x=orig.ident)) +
-  geom_jitter(cex=0.01)  +
-  geom_hline(yintercept = 4500,col="red") +
-  geom_hline(yintercept = 22500,col="red") # + scale_y_log10()
-
-
-
-object_1 <- subset(x = object_1, subset =
-                     nFeature_RNA > 2000 &
-                     nFeature_RNA < 6500 &
-                     nCount_RNA > 4500 &
-                     nCount_RNA < 22500 &
-                     percent.mito < 0.2)
+# 
+# ggplot(object_1@meta.data, aes(y=`nFeature_RNA`, x=orig.ident)) +
+#   geom_jitter(cex=0.01) +
+#   geom_hline(yintercept = 2000,col="red") +
+#   geom_hline(yintercept = 6500,col="red")
+# 
+# 
+# ggplot(object_1@meta.data, aes(y=`nCount_RNA`, x=orig.ident)) +
+#   geom_jitter(cex=0.01)  +
+#   geom_hline(yintercept = 4500,col="red") +
+#   geom_hline(yintercept = 22500,col="red") # + scale_y_log10()
+# 
+# 
+# 
+# object_1 <- subset(x = object_1, subset =
+#                      nFeature_RNA > 2000 &
+#                      nFeature_RNA < 6500 &
+#                      nCount_RNA > 4500 &
+#                      nCount_RNA < 22500 &
+#                      percent.mito < 0.2)
 
 
 object_1 <- NormalizeData(object = object_1, normalization.method = "LogNormalize", scale.factor = 1e4)
@@ -7881,7 +7881,7 @@ DimPlot(object_1, reduction = "pca")
 
 ElbowPlot(object_1, ndims = 45)
 
-d <- 25
+d <- 15
 object_1 <- FindNeighbors(object_1, dims = 1:d)
 object_1 <- FindClusters(object_1, resolution = 1, algorithm=1)
 head(Idents(object_1), 20)
