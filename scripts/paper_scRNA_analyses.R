@@ -47,7 +47,7 @@ annotations.sub <- annotation.genes[, c("symbol","seq_name","gene_seq_start","ge
   dplyr::filter(!duplicated(symbol)) %>%
   dplyr::filter(seq_name %in% c('chr1','chr2','chr3','chr4','chr5','chr6','chr7','chr8','chr9','chr10','chr11','chr12','chr13','chr14','chr15','chr16','chr17','chr18','chr19','chr20','chr21','chr22','chr23','chrX','chrY'))
 
-write.table(annotations.sub, file = "data/scRNA/GSE103224/annotation_genes.txt", sep = "\t", row.names = FALSE, col.names = FALSE, quote=F)
+write.table(annotations.sub, file = "data/scRNA/GSE103224_Yuan/annotation_genes.txt", sep = "\t", row.names = FALSE, col.names = FALSE, quote=F)
 
 
 # GSE103224 :: Yuan J. et. al ----
@@ -56,35 +56,35 @@ if(file.exists("tmp/GSE103224.scRNA.counts.Rds")) {
   GSE103224 <- readRDS("tmp/GSE103224.scRNA.counts.Rds")
 } else {
   # diagnosis: Glioblastoma, WHO grade IV - idh1 status: R132H
-  #a <- read.delim("data/scRNA/GSE103224/GSM2758471_PJ016.filtered.matrix.txt", stringsAsFactors = F,header=F) %>% 
+  #a <- read.delim("data/scRNA/GSE103224_Yuan/GSM2758471_PJ016.filtered.matrix.txt", stringsAsFactors = F,header=F) %>% 
   #`colnames<-`(c("ENS", "HGNC", paste0("GSM2758471.cell.",(1:(ncol(.)-2))+2) ))
   
   # Glioblastoma, WHO grade IV, idh1 status: wt, EGFR-ampli
-  b <- read.delim("data/scRNA/GSE103224/GSM2758472_PJ017.filtered.matrix.txt", stringsAsFactors = F,header=F) %>% 
+  b <- read.delim("data/scRNA/GSE103224_Yuan/GSM2758472_PJ017.filtered.matrix.txt", stringsAsFactors = F,header=F) %>% 
   `colnames<-`(c("ENS", "HGNC", paste0("GSM2758472_PJ017.cell.",(1:(ncol(.)-2))+2) ))
   
   # Glioblastoma, WHO grade IV, idh1 status: wt, EGFR-non ampli
-  c <- read.delim("data/scRNA/GSE103224/GSM2758473_PJ018.filtered.matrix.txt", stringsAsFactors = F,header=F) %>% 
+  c <- read.delim("data/scRNA/GSE103224_Yuan/GSM2758473_PJ018.filtered.matrix.txt", stringsAsFactors = F,header=F) %>% 
   `colnames<-`(c("ENS", "HGNC", paste0("GSM2758473_PJ018.cell.",(1:(ncol(.)-2))+2) ))
   
   # Glioblastoma, WHO grade IV, idh1 status: wt, EGFR-ampli
-  d <- read.delim("data/scRNA/GSE103224/GSM2758474_PJ025.filtered.matrix.txt", stringsAsFactors = F,header=F) %>% 
+  d <- read.delim("data/scRNA/GSE103224_Yuan/GSM2758474_PJ025.filtered.matrix.txt", stringsAsFactors = F,header=F) %>% 
   `colnames<-`(c("ENS", "HGNC", paste0("GSM2758474_PJ025.cell.",(1:(ncol(.)-2))+2) ))
   
   # Anaplastic Astrocytoma, WHO grade III, IDH-wt, EGFR-non ampli
-  #e <- read.delim("data/scRNA/GSE103224/GSM2758475_PJ030.filtered.matrix.txt", stringsAsFactors = F,header=F) %>% 
+  #e <- read.delim("data/scRNA/GSE103224_Yuan/GSM2758475_PJ030.filtered.matrix.txt", stringsAsFactors = F,header=F) %>% 
   #`colnames<-`(c("ENS", "HGNC", paste0("GSM2758475.cell.",(1:(ncol(.)-2))+2) ))
   
   # GBM RECURRENT - IDH-wt, EGFR ampli
-  f <- read.delim("data/scRNA/GSE103224/GSM2758476_PJ032.filtered.matrix.txt", stringsAsFactors = F,header=F) %>% 
+  f <- read.delim("data/scRNA/GSE103224_Yuan/GSM2758476_PJ032.filtered.matrix.txt", stringsAsFactors = F,header=F) %>% 
   `colnames<-`(c("ENS", "HGNC", paste0("GSM2758476_PJ032.cell.",(1:(ncol(.)-2))+2) ))
   
   # Glioblastoma, recurrent, dh1 status: wt, egfr status: amplified in initial resection
-  g <- read.delim("data/scRNA/GSE103224/GSM2758477_PJ035.filtered.matrix.txt", stringsAsFactors = F,header=F) %>% 
+  g <- read.delim("data/scRNA/GSE103224_Yuan/GSM2758477_PJ035.filtered.matrix.txt", stringsAsFactors = F,header=F) %>% 
   `colnames<-`(c("ENS", "HGNC", paste0("GSM2758477_PJ035.cell.",(1:(ncol(.)-2))+2) ))
   
   # Glioblastoma, WHO grade IV, IDH-wt, EGFR-non ampli
-  h <- read.delim("data/scRNA/GSE103224/GSM2940098_PJ048.filtered.matrix.txt", stringsAsFactors = F,header=F) %>% 
+  h <- read.delim("data/scRNA/GSE103224_Yuan/GSM2940098_PJ048.filtered.matrix.txt", stringsAsFactors = F,header=F) %>% 
     `colnames<-`(c("ENS", "HGNC", paste0("GSM2940098_PJ048.cell.",(1:(ncol(.)-2))+2) ))
   
   
@@ -152,7 +152,7 @@ for(sample in unique(gsub(".cell.+$","",GSE103224.cell.ids ))) {
 
   GSE103224.cell.ids.subset <- colnames(GSE103224.subset)
   
-  write10xCounts(path        = paste0("/home/youri/projects/gsam/data/scRNA/GSE103224/", sample),
+  write10xCounts(path        = paste0("/home/youri/projects/gsam/data/scRNA/GSE103224_Yuan/", sample),
                  x           = GSE103224.subset %>% as.matrix() %>% as("dgTMatrix"),
                  barcodes    = GSE103224.cell.ids.subset , 
                  gene.id     = GSE103224.genes$ENS,
@@ -171,7 +171,7 @@ gc()
 # Glioblastoma, WHO grade IV, idh1 status: wt, EGFR-ampli
 
 sid <- 'GSM2758472_PJ017'
-object_1 <- Read10X(data.dir = paste0("data/scRNA/GSE103224/",sid))
+object_1 <- Read10X(data.dir = paste0("data/scRNA/GSE103224_Yuan/",sid))
 object_1 <- CreateSeuratObject(counts = object_1, min.cells = 3, min.features = 200, project = "glioma")
 
 mito.features_object1 <- grep(pattern = "^MT-", x=rownames(x=object_1), value=T)
@@ -410,7 +410,7 @@ FeaturePlot(object = object_1, features =  "CCL8" )
 # Glioblastoma, WHO grade IV, idh1 status: wt, EGFR-non ampli
 
 sid <- 'GSM2758473_PJ018'
-object_1 <- Read10X(data.dir = paste0("data/scRNA/GSE103224/",sid))
+object_1 <- Read10X(data.dir = paste0("data/scRNA/GSE103224_Yuan/",sid))
 object_1 <- CreateSeuratObject(counts = object_1, min.cells = 3, min.features = 200, project = "glioma")
 
 mito.features_object1 <- grep(pattern = "^MT-", x=rownames(x=object_1), value=T)
@@ -654,7 +654,7 @@ FeaturePlot(object = object_1, features =  "CCL8" )
 # Glioblastoma, WHO grade IV, idh1 status: wt, EGFR-ampli
 
 sid <- 'GSM2758474_PJ025'
-object_1 <- Read10X(data.dir = paste0("data/scRNA/GSE103224/",sid))
+object_1 <- Read10X(data.dir = paste0("data/scRNA/GSE103224_Yuan/",sid))
 object_1 <- CreateSeuratObject(counts = object_1, min.cells = 3, min.features = 200, project = "glioma")
 
 mito.features_object1 <- grep(pattern = "^MT-", x=rownames(x=object_1), value=T)
@@ -919,7 +919,7 @@ FeaturePlot(object = object_1, features = "GFAP")
 # GBM RECURRENT - IDH-wt, EGFR ampli
 
 sid <- "GSM2758476_PJ032"
-object_1 <- Read10X(data.dir = paste0("data/scRNA/GSE103224/",sid))
+object_1 <- Read10X(data.dir = paste0("data/scRNA/GSE103224_Yuan/",sid))
 object_1 <- CreateSeuratObject(counts = object_1, min.cells = 3, min.features = 200, project = "glioma")
 
 mito.features_object1 <- grep(pattern = "^MT-", x=rownames(x=object_1), value=T)
@@ -1139,7 +1139,7 @@ FeaturePlot(object = object_1, features =  "CCL8" )
 
 
 sid <- 'GSM2758477_PJ035'
-object_1 <- Read10X(data.dir = paste0("data/scRNA/GSE103224/",sid))
+object_1 <- Read10X(data.dir = paste0("data/scRNA/GSE103224_Yuan/",sid))
 object_1 <- CreateSeuratObject(counts = object_1, min.cells = 3, min.features = 200, project = "glioma")
 
 mito.features_object1 <- grep(pattern = "^MT-", x=rownames(x=object_1), value=T)
@@ -1208,13 +1208,13 @@ levels(object_1$seurat_clusters) <- gsub("^7$","Pericytes",levels(object_1$seura
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "seurat_clusters")
 
 
-# ids <- read.table(paste0('data/scRNA/GSE103224/',sid,'/barcodes.tsv'))
+# ids <- read.table(paste0('data/scRNA/GSE103224_Yuan/',sid,'/barcodes.tsv'))
 # write.table(object_1$seurat_clusters %>%
 #               data.frame(stringsAsFactors = F) %>%
 #               tibble::rownames_to_column('cell') %>%
 #               dplyr::rename(cluster = '.') %>% 
 #               dplyr::mutate(cluster = paste0('SeuratCluster',cluster)) ,
-#             file = paste0('data/scRNA/GSE103224/',sid,'/seurat_cluster_annotations.txt'),
+#             file = paste0('data/scRNA/GSE103224_Yuan/',sid,'/seurat_cluster_annotations.txt'),
 #             row.names = F, col.names = F, sep = "\t",quote = FALSE)
 # 
 
@@ -1413,15 +1413,15 @@ C4
 
 
 # write.table(object_1@assays$RNA@counts %>% as.data.frame(stringsAsFactors=F),
-#   file = paste0("data/scRNA/GSE103224/",sid,'/matrix.only-included-cells.txt'),
+#   file = paste0("data/scRNA/GSE103224_Yuan/",sid,'/matrix.only-included-cells.txt'),
 #   row.names = T, col.names = T, sep = "\t",quote = FALSE )
 
 
-infercnv_obj <- CreateInfercnvObject(raw_counts_matrix=paste0("data/scRNA/GSE103224/",sid,'/matrix.only-included-cells.txt'),
-                                     annotations_file=paste0("data/scRNA/GSE103224/",sid,'/seurat_cluster_annotations.txt'),
-                                     gene_order_file='data/scRNA/GSE103224/annotation_genes.txt',
-                                     #annotations_file=system.file("extdata", "data/scRNA/GSE103224/GSM2758477_PJ035/seurat_cluster_annotations.txt", package = "infercnv"),
-                                     #gene_order_file=system.file("extdata", "data/scRNA/GSE103224/annotation_genes.txt", package = "infercnv"),
+infercnv_obj <- CreateInfercnvObject(raw_counts_matrix=paste0("data/scRNA/GSE103224_Yuan/",sid,'/matrix.only-included-cells.txt'),
+                                     annotations_file=paste0("data/scRNA/GSE103224_Yuan/",sid,'/seurat_cluster_annotations.txt'),
+                                     gene_order_file='data/scRNA/GSE103224_Yuan/annotation_genes.txt',
+                                     #annotations_file=system.file("extdata", "data/scRNA/GSE103224_Yuan/GSM2758477_PJ035/seurat_cluster_annotations.txt", package = "infercnv"),
+                                     #gene_order_file=system.file("extdata", "data/scRNA/GSE103224_Yuan/annotation_genes.txt", package = "infercnv"),
                                      ref_group_names=c("SeuratCluster7","SeuratCluster8","SeuratCluster4")) 
 
 
@@ -1438,7 +1438,7 @@ infercnv_obj = infercnv::run(infercnv_obj,
 # Glioblastoma, WHO grade IV, IDH-wt, EGFR-non ampli
 
 sid <- 'GSM2940098_PJ048'
-object_1 <- Read10X(data.dir = paste0("data/scRNA/GSE103224/",sid))
+object_1 <- Read10X(data.dir = paste0("data/scRNA/GSE103224_Yuan/",sid))
 object_1 <- CreateSeuratObject(counts = object_1, min.cells = 3, min.features = 200, project = "glioma")
 
 mito.features_object1 <- grep(pattern = "^MT-", x=rownames(x=object_1), value=T)
