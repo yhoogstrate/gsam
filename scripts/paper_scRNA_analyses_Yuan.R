@@ -916,7 +916,12 @@ FeaturePlot(object = object_1, features = "GFAP")
 
 
 ## F :: GSM2758476_PJ032 :: T,MG ----
-# GBM RECURRENT - IDH-wt, EGFR ampli
+# age: 63
+# gender: Female
+# location: left temporal
+# diagnosis: Glioblastoma, recurrent
+# idh1 status: wt
+# egfr status: amplified in recurrent tumor
 
 sid <- "GSM2758476_PJ032"
 object_1 <- Read10X(data.dir = paste0("data/scRNA/GSE103224_Yuan/",sid))
