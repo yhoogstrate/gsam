@@ -176,12 +176,23 @@ FeaturePlot(object = object_1, features = c("KIF2C","NUF2","ASPM","NEK2","CENPA"
 FeaturePlot(object = object_1, features = c("EGFR","OLIG1","TMPO","VIM","STMN2",   "AURKB")) # Tumor
 
 
-#### 2. Astrocyte (+) ----
+
+#### 2. Astrocyte (-) ----
 
 
 FeaturePlot(object = object_1, features = "STMN2") # Tumor
 FeaturePlot(object = object_1, features = "ETNPPL") # Tumor
 
+FeaturePlot(object = object_1, features = "GPR98")
+FeaturePlot(object = object_1, features = "AQP4")
+FeaturePlot(object = object_1, features = "BMPR1B")
+FeaturePlot(object = object_1, features = "ETNPPL")
+FeaturePlot(object = object_1, features = "GJB6")
+FeaturePlot(object = object_1, features = "GJA1")
+FeaturePlot(object = object_1, features = "FGFR3")
+FeaturePlot(object = object_1, features = "SLC25A18")
+FeaturePlot(object = object_1, features = "SLC1A2")
+FeaturePlot(object = object_1, features = "SDC4")
 
 
 #### 3A. TAM/mg/monocytes (+)----
@@ -199,6 +210,9 @@ FeaturePlot(object = object_1, features = c("C1QC"))
 FeaturePlot(object = object_1, features = "CD2")
 FeaturePlot(object = object_1, features = "CD3D")
 FeaturePlot(object = object_1, features = "TRBC2")
+FeaturePlot(object = object_1, features = "TRAC")
+FeaturePlot(object = object_1, features = "ICOS")
+FeaturePlot(object = object_1, features = "GZMA")
 
 
 #### 4. Neurons (-) ----
@@ -662,6 +676,9 @@ DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "se
 
 
 
+tmp.t.cells <- FindMarkers(object_1, ident.1 = 13)
+head(tmp.t.cells,25)
+
 # tmp.3.6.7 <- FindMarkers(object_1, ident.1 = c(3,6,7))
 head(tmp.3.6.7, n=20)
 
@@ -724,6 +741,9 @@ FeaturePlot(object = object_1, features = c("C1QC"))
 FeaturePlot(object = object_1, features = "CD2")
 FeaturePlot(object = object_1, features = "CD3D")
 FeaturePlot(object = object_1, features = "TRBC2")
+FeaturePlot(object = object_1, features = "TRAC")
+FeaturePlot(object = object_1, features = "ICOS")
+FeaturePlot(object = object_1, features = "GZMA")
 
 
 #### 4. Neurons (-) ----
@@ -1071,6 +1091,10 @@ FeaturePlot(object = object_1, features = c("C1QC"))
 FeaturePlot(object = object_1, features = "CD2")
 FeaturePlot(object = object_1, features = "CD3D")
 FeaturePlot(object = object_1, features = "TRBC2")
+FeaturePlot(object = object_1, features = "TRAC")
+FeaturePlot(object = object_1, features = "ICOS")
+FeaturePlot(object = object_1, features = "GZMA")
+
 
 
 #### 4. Neurons (-) ----
@@ -1457,6 +1481,10 @@ FeaturePlot(object = object_1, features = c("C1QC"))
 FeaturePlot(object = object_1, features = "CD2")
 FeaturePlot(object = object_1, features = "CD3D")
 FeaturePlot(object = object_1, features = "TRBC2")
+FeaturePlot(object = object_1, features = "TRAC")
+FeaturePlot(object = object_1, features = "ICOS")
+FeaturePlot(object = object_1, features = "GZMA")
+
 
 
 #### 4. Neurons (-) ----

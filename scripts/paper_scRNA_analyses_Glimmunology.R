@@ -152,12 +152,6 @@ FeaturePlot(object = object_1, features = "VIM") # Tumor/MES
 
 FeaturePlot(object = object_1, features = c("HSPA1A","HSPA1B","VEGFA")) # Apoptotic Tumor?
 
-#### 2. Astrocyte (+) ----
-
-FeaturePlot(object = object_1, features = "STMN2") # Tumor
-FeaturePlot(object = object_1, features = "ETNPPL") # Tumor
-
-
 # succes met vinden van een marker
 FeaturePlot(object = object_1, features = c("EGFR","OLIG1","TMPO","VIM","STMN2",   "AURKB")) # Tumor
 FeaturePlot(object = object_1, features = c("TMPO")) # G2/M
@@ -208,8 +202,25 @@ FeaturePlot(object = object_1, features = "TRIM24")
 FeaturePlot(object = object_1, features = "OLIG1")
 
 
-#### 3A. TAM/mg/monocytes (+)----
+#### 2. Astrocyte (+) ----
 
+FeaturePlot(object = object_1, features = "STMN2") # Tumor
+FeaturePlot(object = object_1, features = "ETNPPL") # Tumor
+
+FeaturePlot(object = object_1, features = "GPR98")
+FeaturePlot(object = object_1, features = "AQP4")
+FeaturePlot(object = object_1, features = "BMPR1B")
+FeaturePlot(object = object_1, features = "ETNPPL")
+FeaturePlot(object = object_1, features = "GJB6")
+FeaturePlot(object = object_1, features = "GJA1")
+FeaturePlot(object = object_1, features = "FGFR3")
+FeaturePlot(object = object_1, features = "SLC25A18")
+FeaturePlot(object = object_1, features = "SLC1A2")
+FeaturePlot(object = object_1, features = "SDC4")
+
+
+
+#### 3A. TAM/mg/monocytes (+)----
 
 FeaturePlot(object = object_1, features = c("CD163")) # TAM/mg
 FeaturePlot(object = object_1, features = c("P2RY12")) # specifiek MG, niet Mac?
@@ -218,11 +229,30 @@ FeaturePlot(object = object_1, features = c("ITGB2"))
 FeaturePlot(object = object_1, features = c("C1QC"))
 
 
-#### 3B. Til/T-cell (+) ----
+
+#### 3B. Til/T-cell ----
 
 FeaturePlot(object = object_1, features = "CD2")
 FeaturePlot(object = object_1, features = "CD3D")
 FeaturePlot(object = object_1, features = "TRBC2")
+FeaturePlot(object = object_1, features = "TRAC")
+FeaturePlot(object = object_1, features = "ICOS")
+FeaturePlot(object = object_1, features = "GZMA")
+
+
+#### 3C. Hematopoietic stem cells? ----
+
+
+FeaturePlot(object = object_1, features = "HBG1") # Tumor
+FeaturePlot(object = object_1, features = "HBG2") # Tumor
+
+
+#### 3D. ? Mono/Leukocyte ?? ----
+
+
+# These are cluster-13 DE genes, of which some at genecards seem related to leukocytes?
+FeaturePlot(object = object_1, features = c("LAMP3","IRF4","NCCRP1","CRIP1","SYNPO2","CCR7","EHF","CCL22","VTN","LSP1","CDX2"))
+
 
 
 #### 4. Neurons (+) ----
@@ -292,17 +322,46 @@ FeaturePlot(object = object_1, features = C3)
 
 #### C4 (up) ----
 
-FeaturePlot(object = object_1, features = C4A)
-FeaturePlot(object = object_1, features = C4B)
+
+f <- c(C4A,C4B)
+DotPlot(object = object_1, features = c(f), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+FeaturePlot(object = object_1, features = C4A[1:4])
+FeaturePlot(object = object_1, features = C4A[5:8])
+FeaturePlot(object = object_1, features = C4A[9:12])
+FeaturePlot(object = object_1, features = C4A[13:16])
+FeaturePlot(object = object_1, features = C4A[17:19])
+
+FeaturePlot(object = object_1, features = C4B[1:4])
+FeaturePlot(object = object_1, features = C4B[5:9])
+
 
 
 #### C5 (down) ----
 
+f <- C5
+DotPlot(object = object_1, features = c(f), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
-FeaturePlot(object = object_1, features = C5)
+
+FeaturePlot(object = object_1, features = C5[1:4])
+FeaturePlot(object = object_1, features = C5[5:8])
+FeaturePlot(object = object_1, features = C5[9:12])
+FeaturePlot(object = object_1, features = C5[13:16])
 
 
 #### C6 (up) ----
+
+
+DotPlot(object = object_1, features = C6, group.by = "seurat_clusters") + 
+  theme(axis.text.x = element_text(angle = 45, hjust=1))
+
+
+VlnPlot(object = object_1, features = C6, stack = T, sort = T)
+VlnPlot(object = object_1, features = C6, stack = T, sort = T)
+
+FeaturePlot(object = object_1, features = C6)
+
+
 
 VlnPlot(object = object_1, features = C6, stack = T, sort = T)
 

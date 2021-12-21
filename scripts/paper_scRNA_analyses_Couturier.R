@@ -213,7 +213,7 @@ object_1@meta.data$pt = sapply(strsplit(rownames(object_1@meta.data), "[.]"), "[
 
 levels(object_1$seurat_clusters) <- gsub("^(16)$",paste0("Oligodendrocytes"),levels(object_1$seurat_clusters))
 levels(object_1$seurat_clusters) <- gsub("^(4|9)$",paste0("TAM/microglia"),levels(object_1$seurat_clusters))
-levels(object_1$seurat_clusters) <- gsub("^(15)$",paste0("Monocyte?"),levels(object_1$seurat_clusters))
+levels(object_1$seurat_clusters) <- gsub("^(15)$",paste0("Mono/Leukocyte?"),levels(object_1$seurat_clusters)) # zelfde cluster als in 363-GSC
 
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters")
 
@@ -237,10 +237,23 @@ FeaturePlot(object = object_1, features = c("EGFR","OLIG1","TMPO","VIM","STMN2",
 
 #### 2. Astrocyte (???) ----
 
+
 FeaturePlot(object = object_1, features = "STMN2") # Tumor
 FeaturePlot(object = object_1, features = "ETNPPL") # Tumor
 
-#### 3A. TAM/mg/monocytes (-)----
+FeaturePlot(object = object_1, features = "GPR98")
+FeaturePlot(object = object_1, features = "AQP4")
+FeaturePlot(object = object_1, features = "BMPR1B")
+FeaturePlot(object = object_1, features = "ETNPPL")
+FeaturePlot(object = object_1, features = "GJB6")
+FeaturePlot(object = object_1, features = "GJA1")
+FeaturePlot(object = object_1, features = "FGFR3")
+FeaturePlot(object = object_1, features = "SLC25A18")
+FeaturePlot(object = object_1, features = "SLC1A2")
+FeaturePlot(object = object_1, features = "SDC4")
+
+
+#### 3A. TAM/mg/monocytes (+)----
 
 FeaturePlot(object = object_1, features = c("CD163")) # TAM/mg
 FeaturePlot(object = object_1, features = c("P2RY12")) # specifiek MG, niet Mac?
@@ -249,11 +262,29 @@ FeaturePlot(object = object_1, features = c("ITGB2"))
 FeaturePlot(object = object_1, features = c("C1QC"))
 
 
-#### 3B. Til/T-cell (-) ----
+
+#### 3B. Til/T-cell ----
 
 FeaturePlot(object = object_1, features = "CD2")
 FeaturePlot(object = object_1, features = "CD3D")
 FeaturePlot(object = object_1, features = "TRBC2")
+FeaturePlot(object = object_1, features = "TRAC")
+FeaturePlot(object = object_1, features = "ICOS")
+FeaturePlot(object = object_1, features = "GZMA")
+
+
+#### 3C. Hematopoietic stem cells? ----
+
+
+FeaturePlot(object = object_1, features = "HBG1") # Tumor
+FeaturePlot(object = object_1, features = "HBG2") # Tumor
+
+
+#### 3D. ? Mono/Leukocyte ?? ----
+
+
+# These are cluster-13 DE genes, of which some at genecards seem related to leukocytes?
+FeaturePlot(object = object_1, features = c("LAMP3","IRF4","NCCRP1","CRIP1","SYNPO2","CCR7","EHF","CCL22","VTN","LSP1","CDX2"))
 
 
 #### 4. Neurons (-) ----
@@ -277,6 +308,47 @@ FeaturePlot(object = object_1, features = "CD34")
 FeaturePlot(object = object_1, features = "RGS5")
 FeaturePlot(object = object_1, features = "CD248")
 
+
+#### C4 (up) ----
+
+
+f <- c(C4A,C4B)
+DotPlot(object = object_1, features = c(f), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+FeaturePlot(object = object_1, features = C4A[1:4])
+FeaturePlot(object = object_1, features = C4A[5:8])
+FeaturePlot(object = object_1, features = C4A[9:12])
+FeaturePlot(object = object_1, features = C4A[13:16])
+FeaturePlot(object = object_1, features = C4A[17:19])
+
+FeaturePlot(object = object_1, features = C4B[1:4])
+FeaturePlot(object = object_1, features = C4B[5:9])
+
+
+
+#### C5 (down) ----
+
+f <- C5
+DotPlot(object = object_1, features = c(f), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+
+FeaturePlot(object = object_1, features = C5[1:4])
+FeaturePlot(object = object_1, features = C5[5:8])
+FeaturePlot(object = object_1, features = C5[9:12])
+FeaturePlot(object = object_1, features = C5[13:16])
+
+
+#### C6 (up) ----
+
+
+DotPlot(object = object_1, features = C6, group.by = "seurat_clusters") + 
+  theme(axis.text.x = element_text(angle = 45, hjust=1))
+
+
+VlnPlot(object = object_1, features = C6, stack = T, sort = T)
+VlnPlot(object = object_1, features = C6, stack = T, sort = T)
+
+FeaturePlot(object = object_1, features = C6)
 
 
 ## BT326-GSC [95-100% tumor] ----
@@ -818,7 +890,6 @@ object_1@meta.data$pt = sapply(strsplit(rownames(object_1@meta.data), "[.]"), "[
 levels(object_1$seurat_clusters) <- gsub("^(1|4|11)$",paste0("Endothelial\n+Pericytes.\\1"),levels(object_1$seurat_clusters))
 levels(object_1$seurat_clusters) <- gsub("^(13)$",paste0("TAM/microglia\n+T-cell"),levels(object_1$seurat_clusters))
 levels(object_1$seurat_clusters) <- gsub("^(8)$",paste0("Oligodendrocytes"),levels(object_1$seurat_clusters))
-
 levels(object_1$seurat_clusters) <- gsub("^(0|2|3|5|6|7|9|10|12)$",paste0("Tumor.\\1"),levels(object_1$seurat_clusters))
 
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters")
@@ -848,12 +919,25 @@ FeaturePlot(object = object_1, features = c("TMPO")) # G2/M
 #### 2. Astrocyte (-) ----
 
 
+
+
 FeaturePlot(object = object_1, features = "STMN2") # Tumor
 FeaturePlot(object = object_1, features = "ETNPPL") # Tumor
 
+FeaturePlot(object = object_1, features = "GPR98")
+FeaturePlot(object = object_1, features = "AQP4")
+FeaturePlot(object = object_1, features = "BMPR1B")
+FeaturePlot(object = object_1, features = "ETNPPL")
+FeaturePlot(object = object_1, features = "GJB6")
+FeaturePlot(object = object_1, features = "GJA1")
+FeaturePlot(object = object_1, features = "FGFR3")
+FeaturePlot(object = object_1, features = "SLC25A18")
+FeaturePlot(object = object_1, features = "SLC1A2")
+FeaturePlot(object = object_1, features = "SDC4")
+
+
 
 #### 3A. TAM/mg/monocytes (+)----
-
 
 FeaturePlot(object = object_1, features = c("CD163")) # TAM/mg
 FeaturePlot(object = object_1, features = c("P2RY12")) # specifiek MG, niet Mac?
@@ -862,11 +946,28 @@ FeaturePlot(object = object_1, features = c("ITGB2"))
 FeaturePlot(object = object_1, features = c("C1QC"))
 
 
-#### 3B. Til/T-cell (+) ----
+
+#### 3B. Til/T-cell ----
 
 FeaturePlot(object = object_1, features = "CD2")
 FeaturePlot(object = object_1, features = "CD3D")
 FeaturePlot(object = object_1, features = "TRBC2")
+FeaturePlot(object = object_1, features = "TRAC")
+FeaturePlot(object = object_1, features = "ICOS")
+FeaturePlot(object = object_1, features = "GZMA")
+
+
+#### 3C. Hematopoietic stem cells? ----
+
+
+FeaturePlot(object = object_1, features = "HBG1") # Tumor
+
+
+#### 3D. ? Leukocyte ?? ----
+
+
+# These are cluster-13 DE genes, of which some at genecards seem related to leukocytes?
+FeaturePlot(object = object_1, features = c("LAMP3","IRF4","NCCRP1","CRIP1","SYNPO2","CCR7","EHF","CCL22","VTN","LSP1","CDX2"))
 
 
 #### 4. Neurons (-) ----
@@ -915,11 +1016,6 @@ FeaturePlot(object = object_1, features = "RGS5")
 FeaturePlot(object = object_1, features = "PDGFRB")
 FeaturePlot(object = object_1, features = "CD248")
 
-#### C3 - C6 ----
-
-
-DotPlot(object = object_1, features = c(C3, C4A, C4B, C5, C6), group.by = "seurat_clusters") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
 
 
@@ -935,24 +1031,39 @@ FeaturePlot(object = object_1, features = C3)
 
 #### C4 (up) ----
 
-DotPlot(object = object_1, features = c(C4A,C4B))
 
-FeaturePlot(object = object_1, features = C4A)
-FeaturePlot(object = object_1, features = C4B)
+f <- c(C4A,C4B)
+DotPlot(object = object_1, features = c(f), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+FeaturePlot(object = object_1, features = C4A[1:4])
+FeaturePlot(object = object_1, features = C4A[5:8])
+FeaturePlot(object = object_1, features = C4A[9:12])
+FeaturePlot(object = object_1, features = C4A[13:16])
+FeaturePlot(object = object_1, features = C4A[17:19])
+
+FeaturePlot(object = object_1, features = C4B[1:4])
+FeaturePlot(object = object_1, features = C4B[5:9])
+
 
 
 #### C5 (down) ----
 
+f <- C5
+DotPlot(object = object_1, features = c(f), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
-DotPlot(object = object_1, features = C5)
-FeaturePlot(object = object_1, features = C5)
+
+FeaturePlot(object = object_1, features = C5[1:4])
+FeaturePlot(object = object_1, features = C5[5:8])
+FeaturePlot(object = object_1, features = C5[9:12])
+FeaturePlot(object = object_1, features = C5[13:16])
 
 
 #### C6 (up) ----
 
 
-DotPlot(object = object_1, features = C6) + 
+DotPlot(object = object_1, features = C6, group.by = "seurat_clusters") + 
   theme(axis.text.x = element_text(angle = 45, hjust=1))
+
 
 VlnPlot(object = object_1, features = C6, stack = T, sort = T)
 VlnPlot(object = object_1, features = C6, stack = T, sort = T)
@@ -1155,14 +1266,16 @@ object_1@meta.data$pt = sapply(strsplit(rownames(object_1@meta.data), "[.]"), "[
 levels(object_1$seurat_clusters) <- gsub("^(0|1|2|4|5|6|7|8|10|11|12)$",paste0("Tumor.\\1"),levels(object_1$seurat_clusters))
 levels(object_1$seurat_clusters) <- gsub("^(9)$",paste0("Oligodendrocytes"),levels(object_1$seurat_clusters))
 levels(object_1$seurat_clusters) <- gsub("^(3)$",paste0("TAM/microglia next to T-cell"),levels(object_1$seurat_clusters))
-# levels(object_1$seurat_clusters) <- gsub("^(13)$",paste0("Pericytes.\\1"),levels(object_1$seurat_clusters))
+levels(object_1$seurat_clusters) <- gsub("^(13)$",paste0("?Leukocyte?.\\1"),levels(object_1$seurat_clusters))
 
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters")
 
 
-tmp.13 <- FindMarkers(object_1, ident.1 = 13)
-head(tmp.13, 20) # LAMP3,IRF4,NCCRP1,CRIP1,SYNPO2,CCR7,EHF,CCL22,VTN,LSP1,CDX2,IDO1,TRAF3IP3,RP11-290F5.1,ANXA3,RP1-28O10.1,RP11-66B24.4,AP003774.1,NR4A3,CCL17
-FeaturePlot(object = object_1, features = "LAMP3")
+
+
+#tmp.13 <- FindMarkers(object_1, ident.1 = 13)
+#head(tmp.13, 20) # LAMP3,IRF4,NCCRP1,CRIP1,SYNPO2,CCR7,EHF,CCL22,VTN,LSP1,CDX2,IDO1,TRAF3IP3,RP11-290F5.1,ANXA3,RP1-28O10.1,RP11-66B24.4,AP003774.1,NR4A3,CCL17
+#FeaturePlot(object = object_1, features = "LAMP3")
 
 
 #### 1. Tumor (+) ----
@@ -1211,13 +1324,26 @@ FeaturePlot(object = object_1, features = "TRIM24")
 #### 2. Astrocyte (???) ----
 
 
+
+
 FeaturePlot(object = object_1, features = "STMN2") # Tumor
 FeaturePlot(object = object_1, features = "ETNPPL") # Tumor
+
+FeaturePlot(object = object_1, features = "GPR98")
+FeaturePlot(object = object_1, features = "AQP4")
+FeaturePlot(object = object_1, features = "BMPR1B")
+FeaturePlot(object = object_1, features = "ETNPPL")
+FeaturePlot(object = object_1, features = "GJB6")
+FeaturePlot(object = object_1, features = "GJA1")
+FeaturePlot(object = object_1, features = "FGFR3")
+FeaturePlot(object = object_1, features = "SLC25A18")
+FeaturePlot(object = object_1, features = "SLC1A2")
+FeaturePlot(object = object_1, features = "SDC4")
+
 
 
 
 #### 3A. TAM/mg/monocytes (+)----
-
 
 FeaturePlot(object = object_1, features = c("CD163")) # TAM/mg
 FeaturePlot(object = object_1, features = c("P2RY12")) # specifiek MG, niet Mac?
@@ -1226,18 +1352,30 @@ FeaturePlot(object = object_1, features = c("ITGB2"))
 FeaturePlot(object = object_1, features = c("C1QC"))
 
 
-#### 3B. Til/T-cell (-) ----
+
+#### 3B. Til/T-cell ----
 
 FeaturePlot(object = object_1, features = "CD2")
 FeaturePlot(object = object_1, features = "CD3D")
 FeaturePlot(object = object_1, features = "TRBC2")
+FeaturePlot(object = object_1, features = "TRAC")
+FeaturePlot(object = object_1, features = "ICOS")
+FeaturePlot(object = object_1, features = "GZMA")
 
 
-#### 3C. ? Leukocyte ?? ----
+#### 3C. Hematopoietic stem cells? ----
+
+
+FeaturePlot(object = object_1, features = "HBG1") # Tumor
+
+
+#### 3D. ? Leukocyte ?? ----
 
 
 # These are cluster-13 DE genes, of which some at genecards seem related to leukocytes?
 FeaturePlot(object = object_1, features = c("LAMP3","IRF4","NCCRP1","CRIP1","SYNPO2","CCR7","EHF","CCL22","VTN","LSP1","CDX2"))
+
+
 
 # FeaturePlot(object = object_1, features = c("CD19", "CD20", "CD34", "CD38")) # b-cell markers?
 
@@ -1264,44 +1402,53 @@ FeaturePlot(object = object_1, features = "CD34")
 FeaturePlot(object = object_1, features = "RGS5")
 FeaturePlot(object = object_1, features = "CD248")
 
+
 #### C4 (up) ----
 
+f <- c(C4A,C4B)
+DotPlot(object = object_1, features = c(f), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
-DotPlot(object = object_1, features = c(C4A, C4B))
+FeaturePlot(object = object_1, features = C4A[1:4])
+FeaturePlot(object = object_1, features = C4A[5:8])
+FeaturePlot(object = object_1, features = C4A[9:12])
+FeaturePlot(object = object_1, features = C4A[13:16])
+FeaturePlot(object = object_1, features = C4A[17:19])
 
-
-VlnPlot(object = object_1, features = c(C4A, C4B), group.by = "seurat_clusters",stack=T)
-RidgePlot(object = object_1, features = c(C4A, C4B), group.by = "seurat_clusters",stack=T)
-
-FeaturePlot(object = object_1, features = C4A)
-FeaturePlot(object = object_1, features = C4B)
+FeaturePlot(object = object_1, features = C4B[1:4])
+FeaturePlot(object = object_1, features = C4B[5:9])
 
 
 
 #### C5 (down) ----
 
-
-DotPlot(object = object_1, features = c(C5), group.by = "seurat_clusters")
-
-RidgePlot(object = object_1, features = c(C5), group.by = "seurat_clusters",stack=T)
-VlnPlot(object = object_1, features = c(C5), group.by = "seurat_clusters",stack=T)
-
-FeaturePlot(object = object_1, features = C5)
+f <- C5
+DotPlot(object = object_1, features = c(f), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
 
+FeaturePlot(object = object_1, features = C5[1:4])
+FeaturePlot(object = object_1, features = C5[5:8])
+FeaturePlot(object = object_1, features = C5[9:12])
+FeaturePlot(object = object_1, features = C5[13:16])
 
 #### C6 (up) ----
 
 
+
 f <- c(C6 , c("RGS5", "PDGFRB", "CD248") )
+
+
 f <- C6
 
 DotPlot(object = object_1, features = f, group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-
-RidgePlot(object = object_1, features = f, group.by = "seurat_clusters",stack=T)
-VlnPlot(object = object_1, features = f, group.by = "seurat_clusters",stack=T)
+RidgePlot(object = object_1, features = c(C6), group.by = "seurat_clusters",stack=T)
+VlnPlot(object = object_1, features = c(C6), group.by = "seurat_clusters",stack=T)
 
 FeaturePlot(object = object_1, features = C6)
+
+FeaturePlot(object = object_1, features = C6[1:8])
+FeaturePlot(object = object_1, features = C6[9:16])
+FeaturePlot(object = object_1, features = C6[17:24])
+FeaturePlot(object = object_1, features = C6[25:33])
 
 
 
@@ -1399,6 +1546,7 @@ head(Idents(object_1), 20)
 
 
 ### UMAP clustering ----
+
 object_1 <- RunUMAP(object_1, dims = 1:40)
 object_1@meta.data$pt = sapply(strsplit(rownames(object_1@meta.data), "[.]"), "[", 1)
 
@@ -1463,8 +1611,23 @@ FeaturePlot(object = object_1, features = "TRIM24")
 #### 2. Astrocyte (-) ----
 
 
+
+
 FeaturePlot(object = object_1, features = "STMN2") # Tumor
 FeaturePlot(object = object_1, features = "ETNPPL") # Tumor
+
+FeaturePlot(object = object_1, features = "GPR98")
+FeaturePlot(object = object_1, features = "AQP4")
+FeaturePlot(object = object_1, features = "BMPR1B")
+FeaturePlot(object = object_1, features = "ETNPPL")
+FeaturePlot(object = object_1, features = "GJB6")
+FeaturePlot(object = object_1, features = "GJA1")
+FeaturePlot(object = object_1, features = "FGFR3")
+FeaturePlot(object = object_1, features = "SLC25A18")
+FeaturePlot(object = object_1, features = "SLC1A2")
+FeaturePlot(object = object_1, features = "SDC4")
+
+
 
 
 
@@ -1478,11 +1641,21 @@ FeaturePlot(object = object_1, features = c("ITGB2"))
 FeaturePlot(object = object_1, features = c("C1QC"))
 
 
-#### 3B. Til/T-cell (-) ----
+#### 3B. Til/T-cell ----
 
 FeaturePlot(object = object_1, features = "CD2")
 FeaturePlot(object = object_1, features = "CD3D")
 FeaturePlot(object = object_1, features = "TRBC2")
+FeaturePlot(object = object_1, features = "TRAC")
+FeaturePlot(object = object_1, features = "ICOS")
+FeaturePlot(object = object_1, features = "GZMA")
+
+
+#### 3C. Hematopoietic stem cells? ----
+
+
+FeaturePlot(object = object_1, features = "HBG1") # Tumor
+
 
 
 #### 4. Neurons (-) ----
@@ -1522,7 +1695,7 @@ FeaturePlot(object = object_1, features = "ITGA1") # endo + peri?
 
 FeaturePlot(object = object_1, features = "RGS5")
 FeaturePlot(object = object_1, features = "PDGFRB")
-FeaturePlot(object = object_1, features = "CD248")
+FeaturePlot(object = object_1, features = "CD248",pt.size=0.04)
 
 
 
@@ -1663,7 +1836,7 @@ plot1
 plot2
 
 
-### scaling of data ----
+### scaling of data
 #Shifts the expression of each gene, so that the mean expression across cells is 0
 #Scales the expression of each gene, so that the variance across cells is 1
 #This step gives equal weight in downstream analyses, so that highly-expressed genes do not dominate
@@ -1684,7 +1857,7 @@ DimPlot(object_1, reduction = "pca")
 ElbowPlot(object_1, ndims = 45)
 
 
-### cluster the cells ----
+### cluster the cells
 
 object_1 <- FindNeighbors(object_1, dims = 1:40)
 object_1 <- FindClusters(object_1, resolution = 1, algorithm=1)
@@ -1754,13 +1927,24 @@ FeaturePlot(object = object_1, features = "TRIM24")
 #### 2. Astrocyte (+) ----
 
 
+
 FeaturePlot(object = object_1, features = "STMN2") # Tumor
 FeaturePlot(object = object_1, features = "ETNPPL") # Tumor
+
+FeaturePlot(object = object_1, features = "GPR98")
+FeaturePlot(object = object_1, features = "AQP4")
+FeaturePlot(object = object_1, features = "BMPR1B")
+FeaturePlot(object = object_1, features = "ETNPPL")
+FeaturePlot(object = object_1, features = "GJB6")
+FeaturePlot(object = object_1, features = "GJA1")
+FeaturePlot(object = object_1, features = "FGFR3")
+FeaturePlot(object = object_1, features = "SLC25A18")
+FeaturePlot(object = object_1, features = "SLC1A2")
+FeaturePlot(object = object_1, features = "SDC4")
 
 
 
 #### 3A. TAM/mg/monocytes (+)----
-
 
 FeaturePlot(object = object_1, features = c("CD163")) # TAM/mg
 FeaturePlot(object = object_1, features = c("P2RY12")) # specifiek MG, niet Mac?
@@ -1769,11 +1953,22 @@ FeaturePlot(object = object_1, features = c("ITGB2"))
 FeaturePlot(object = object_1, features = c("C1QC"))
 
 
-#### 3B. Til/T-cell (1 of 2?) ----
+
+#### 3B. Til/T-cell ----
 
 FeaturePlot(object = object_1, features = "CD2")
 FeaturePlot(object = object_1, features = "CD3D")
 FeaturePlot(object = object_1, features = "TRBC2")
+FeaturePlot(object = object_1, features = "TRAC")
+FeaturePlot(object = object_1, features = "ICOS")
+FeaturePlot(object = object_1, features = "GZMA")
+
+
+#### 3C. Hematopoietic stem cells? ----
+
+
+FeaturePlot(object = object_1, features = "HBG1") # Tumor
+
 
 
 #### 4. Neurons (-) ----
@@ -1819,25 +2014,30 @@ FeaturePlot(object = object_1, features = "CD248")
 
 #### C4 (up) ----
 
-FeaturePlot(object = object_1, features = C4A)
-FeaturePlot(object = object_1, features = C4B)
+f <- c(C4A,C4B)
+DotPlot(object = object_1, features = c(f), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
-DotPlot(object = object_1, features = c(C4A, C4B))
-VlnPlot(object = object_1, features = c(C4A, C4B), group.by = "seurat_clusters",stack=T)
-RidgePlot(object = object_1, features = c(C4A, C4B), group.by = "seurat_clusters",stack=T)
+FeaturePlot(object = object_1, features = C4A[1:4])
+FeaturePlot(object = object_1, features = C4A[5:8])
+FeaturePlot(object = object_1, features = C4A[9:12])
+FeaturePlot(object = object_1, features = C4A[13:16])
+FeaturePlot(object = object_1, features = C4A[17:19])
+
+FeaturePlot(object = object_1, features = C4B[1:4])
+FeaturePlot(object = object_1, features = C4B[5:9])
+
 
 
 #### C5 (down) ----
 
-
-FeaturePlot(object = object_1, features = C5)
-
-
-DotPlot(object = object_1, features = c(C5), group.by = "seurat_clusters")
-RidgePlot(object = object_1, features = c(C5), group.by = "seurat_clusters",stack=T)
-VlnPlot(object = object_1, features = c(C5), group.by = "seurat_clusters",stack=T)
+f <- C5
+DotPlot(object = object_1, features = c(f), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
 
+FeaturePlot(object = object_1, features = C5[1:4])
+FeaturePlot(object = object_1, features = C5[5:8])
+FeaturePlot(object = object_1, features = C5[9:12])
+FeaturePlot(object = object_1, features = C5[13:16])
 
 #### C6 (up) ----
 
@@ -1851,6 +2051,11 @@ RidgePlot(object = object_1, features = c(C6), group.by = "seurat_clusters",stac
 VlnPlot(object = object_1, features = c(C6), group.by = "seurat_clusters",stack=T)
 
 FeaturePlot(object = object_1, features = C6)
+
+FeaturePlot(object = object_1, features = C6[1:8])
+FeaturePlot(object = object_1, features = C6[9:16])
+FeaturePlot(object = object_1, features = C6[17:24])
+FeaturePlot(object = object_1, features = C6[25:33])
 
 
 
@@ -2488,6 +2693,8 @@ levels(object_1$seurat_clusters) <- gsub("^(1|4|9|8|6)$",paste0("TAM/microglia.\
 levels(object_1$seurat_clusters) <- gsub("^(0|11|2|10|12)$",paste0("Tumor.\\1"),levels(object_1$seurat_clusters))
 levels(object_1$seurat_clusters) <- gsub("^(13)$",paste0("T-Cells"),levels(object_1$seurat_clusters))
 
+levels(object_1$seurat_clusters) <- gsub("^(3|5|7)$",paste0("Oligodendrocyte/Tumor?.\\1"),levels(object_1$seurat_clusters))
+
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters")
 
 
@@ -2516,7 +2723,7 @@ FeaturePlot(object = object_1, features = c("KIF2C","NUF2","ASPM","NEK2","CENPA"
 
 
 # succes met vinden van een marker
-FeaturePlot(object = object_1, features = c("EGFR","OLIG1","TMPO","VIM","STMN2",   "AURKB")) # Tumor
+FeaturePlot(object = object_1, features = c("GFAP","BTC","EGFR","OLIG1","TMPO","VIM","STMN2",   "AURKB")) # Tumor
 
 # cluster 9:
 # [1] "KIF2C"  "NUF2"   "ASPM"   "NEK2"   "CENPA"  "CKAP2L" "SGOL1"  "CENPE"  "CCNA2"  "PBK"    "MKI67"  "CDCA3"  "NUSAP1" "CCNB2"  "KIF23" 
@@ -2543,8 +2750,20 @@ FeaturePlot(object = object_1, features = "TRIM24")
 #### 2. Astrocyte (-) ----
 
 
-FeaturePlot(object = object_1, features = "STMN2")
+FeaturePlot(object = object_1, features = "STMN2") # Tumor
+FeaturePlot(object = object_1, features = "ETNPPL") # Tumor
+
+FeaturePlot(object = object_1, features = "GPR98")
+FeaturePlot(object = object_1, features = "AQP4")
+FeaturePlot(object = object_1, features = "BMPR1B")
 FeaturePlot(object = object_1, features = "ETNPPL")
+FeaturePlot(object = object_1, features = "GJB6")
+FeaturePlot(object = object_1, features = "GJA1")
+FeaturePlot(object = object_1, features = "FGFR3")
+FeaturePlot(object = object_1, features = "SLC25A18")
+FeaturePlot(object = object_1, features = "SLC1A2")
+FeaturePlot(object = object_1, features = "SDC4")
+
 
 
 
@@ -2557,11 +2776,21 @@ FeaturePlot(object = object_1, features = c("ITGB2"))
 FeaturePlot(object = object_1, features = c("C1QC"))
 
 
-#### 3B. Til/T-cell (10?) ----
+
+#### 3B. Til/T-cell ----
 
 FeaturePlot(object = object_1, features = "CD2")
 FeaturePlot(object = object_1, features = "CD3D")
 FeaturePlot(object = object_1, features = "TRBC2")
+FeaturePlot(object = object_1, features = "TRAC")
+FeaturePlot(object = object_1, features = "ICOS")
+FeaturePlot(object = object_1, features = "GZMA")
+
+
+#### 3C. Hematopoietic stem cells? ----
+
+
+FeaturePlot(object = object_1, features = "HBG1") # Tumor
 
 
 #### 4. Neurons (-) ----
@@ -2612,26 +2841,30 @@ DotPlot(object = object_1, features = f, group.by = "seurat_clusters") + theme(a
 
 #### C4 (up) ----
 
-f <- c(C4A, C4B)
+f <- c(C4A,C4B)
+DotPlot(object = object_1, features = c(f), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
-DotPlot(object = object_1, features = f, group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-VlnPlot(object = object_1, features = f, group.by = "seurat_clusters",stack=T)
-RidgePlot(object = object_1, features = f, group.by = "seurat_clusters",stack=T)
+FeaturePlot(object = object_1, features = C4A[1:4])
+FeaturePlot(object = object_1, features = C4A[5:8])
+FeaturePlot(object = object_1, features = C4A[9:12])
+FeaturePlot(object = object_1, features = C4A[13:16])
+FeaturePlot(object = object_1, features = C4A[17:19])
 
+FeaturePlot(object = object_1, features = C4B[1:4])
+FeaturePlot(object = object_1, features = C4B[5:9])
 
-FeaturePlot(object = object_1, features = C4A)
-FeaturePlot(object = object_1, features = C4B)
 
 
 #### C5 (down) ----
 
+f <- C5
+DotPlot(object = object_1, features = c(f), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
-DotPlot(object = object_1, features = c(C5), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-RidgePlot(object = object_1, features = c(C5), group.by = "seurat_clusters",stack=T)
-VlnPlot(object = object_1, features = c(C5), group.by = "seurat_clusters",stack=T)
 
-FeaturePlot(object = object_1, features = C5)
-
+FeaturePlot(object = object_1, features = C5[1:4])
+FeaturePlot(object = object_1, features = C5[5:8])
+FeaturePlot(object = object_1, features = C5[9:12])
+FeaturePlot(object = object_1, features = C5[13:16])
 
 
 #### C6 (up) ----
@@ -2795,12 +3028,23 @@ FeaturePlot(object = object_1, features = "SMAD5")
 FeaturePlot(object = object_1, features = "TRIM24")
 
 
+
 #### 2. Astrocyte (-) ----
 
 
-FeaturePlot(object = object_1, features = "STMN2")
-FeaturePlot(object = object_1, features = "ETNPPL")
+FeaturePlot(object = object_1, features = "STMN2") # Tumor
+FeaturePlot(object = object_1, features = "ETNPPL") # Tumor
 
+FeaturePlot(object = object_1, features = "GPR98")
+FeaturePlot(object = object_1, features = "AQP4")
+FeaturePlot(object = object_1, features = "BMPR1B")
+FeaturePlot(object = object_1, features = "ETNPPL")
+FeaturePlot(object = object_1, features = "GJB6")
+FeaturePlot(object = object_1, features = "GJA1")
+FeaturePlot(object = object_1, features = "FGFR3")
+FeaturePlot(object = object_1, features = "SLC25A18")
+FeaturePlot(object = object_1, features = "SLC1A2")
+FeaturePlot(object = object_1, features = "SDC4")
 
 
 #### 3A. TAM/mg/monocytes (+)----
@@ -2812,11 +3056,21 @@ FeaturePlot(object = object_1, features = c("ITGB2"))
 FeaturePlot(object = object_1, features = c("C1QC"))
 
 
-#### 3B. Til/T-cell (10?) ----
+
+#### 3B. Til/T-cell ----
 
 FeaturePlot(object = object_1, features = "CD2")
 FeaturePlot(object = object_1, features = "CD3D")
 FeaturePlot(object = object_1, features = "TRBC2")
+FeaturePlot(object = object_1, features = "TRAC")
+FeaturePlot(object = object_1, features = "ICOS")
+FeaturePlot(object = object_1, features = "GZMA")
+
+
+#### 3C. Hematopoietic stem cells? ----
+
+
+FeaturePlot(object = object_1, features = "HBG1") # Tumor
 
 
 #### 4. Neurons (-) ----
@@ -2865,36 +3119,39 @@ FeaturePlot(object = object_1, features = "CD248")
 f <- C3
 DotPlot(object = object_1, features = f, group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
-
 #### C4 (up) ----
 
-f <- c(C4A, C4B)
-DotPlot(object = object_1, features = f, group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+f <- c(C4A,C4B)
+DotPlot(object = object_1, features = c(f), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
+FeaturePlot(object = object_1, features = C4A[1:4])
+FeaturePlot(object = object_1, features = C4A[5:8])
+FeaturePlot(object = object_1, features = C4A[9:12])
+FeaturePlot(object = object_1, features = C4A[13:16])
+FeaturePlot(object = object_1, features = C4A[17:19])
 
-VlnPlot(object = object_1, features = f, group.by = "seurat_clusters",stack=T)
-RidgePlot(object = object_1, features = f, group.by = "seurat_clusters",stack=T)
+FeaturePlot(object = object_1, features = C4B[1:4])
+FeaturePlot(object = object_1, features = C4B[5:9])
 
-
-FeaturePlot(object = object_1, features = C4A)
-FeaturePlot(object = object_1, features = C4B)
 
 
 #### C5 (down) ----
 
-DotPlot(object = object_1, features = c(C5), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+f <- C5
+DotPlot(object = object_1, features = c(f), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
-RidgePlot(object = object_1, features = c(C5), group.by = "seurat_clusters",stack=T)
-VlnPlot(object = object_1, features = c(C5), group.by = "seurat_clusters",stack=T)
 
-FeaturePlot(object = object_1, features = C5)
-
+FeaturePlot(object = object_1, features = C5[1:4])
+FeaturePlot(object = object_1, features = C5[5:8])
+FeaturePlot(object = object_1, features = C5[9:12])
+FeaturePlot(object = object_1, features = C5[13:16])
 
 
 #### C6 (up) :: corr met Endo+Pericytes ----
 
 
 f <- c(C6 , c("RGS5", "PDGFRB", "CD248") )
+
 f <- C6
 
 DotPlot(object = object_1, features = f, group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
@@ -3403,6 +3660,61 @@ DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "se
 
 
 
+
+#### 3A. TAM/mg/monocytes ----
+
+
+FeaturePlot(object = object_1, features = c("CD163")) # TAM/mg
+FeaturePlot(object = object_1, features = c("P2RY12")) # specifiek MG, niet Mac?
+FeaturePlot(object = object_1, features = "CD14") # TAM/mg
+FeaturePlot(object = object_1, features = c("ITGB2"))
+FeaturePlot(object = object_1, features = c("C1QC"))
+
+
+#### 3B. Til/T-cell ----
+
+FeaturePlot(object = object_1, features = "CD2")
+FeaturePlot(object = object_1, features = "CD3D")
+FeaturePlot(object = object_1, features = "TRBC2")
+FeaturePlot(object = object_1, features = "TRAC")
+FeaturePlot(object = object_1, features = "ICOS")
+FeaturePlot(object = object_1, features = "GZMA")
+
+
+#### 3C. Hematopoietic stem cells? ----
+
+FeaturePlot(object = object_1, features = "HBG1") # Tumor
+
+
+
+#### C4 (up) ----
+
+f <- c(C4A,C4B)
+DotPlot(object = object_1, features = c(f), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+FeaturePlot(object = object_1, features = C4A[1:4])
+FeaturePlot(object = object_1, features = C4A[5:8])
+FeaturePlot(object = object_1, features = C4A[9:12])
+FeaturePlot(object = object_1, features = C4A[13:16])
+FeaturePlot(object = object_1, features = C4A[17:19])
+
+FeaturePlot(object = object_1, features = C4B[1:4])
+FeaturePlot(object = object_1, features = C4B[5:9])
+
+
+
+#### C5 (down) ----
+
+f <- C5
+DotPlot(object = object_1, features = c(f), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+
+FeaturePlot(object = object_1, features = C5[1:4])
+FeaturePlot(object = object_1, features = C5[5:8])
+FeaturePlot(object = object_1, features = C5[9:12])
+FeaturePlot(object = object_1, features = C5[13:16])
+
+
 #### C6 (up) ----
 
 
@@ -3473,7 +3785,7 @@ plot1
 plot2
 
 
-### scaling of data ----
+### scaling of data
 #Shifts the expression of each gene, so that the mean expression across cells is 0
 #Scales the expression of each gene, so that the variance across cells is 1
 #This step gives equal weight in downstream analyses, so that highly-expressed genes do not dominate
@@ -3493,7 +3805,7 @@ DimPlot(object_1, reduction = "pca")
 
 ElbowPlot(object_1, ndims = 45)
 
-### cluster the cells ----
+### cluster the cells
 
 k = 40
 
@@ -3509,10 +3821,8 @@ object_1@meta.data$pt = sapply(strsplit(rownames(object_1@meta.data), "[.]"), "[
 
 
 levels(object_1$seurat_clusters) <- gsub("^(13)$",paste0("OLIG/OPC"),levels(object_1$seurat_clusters))
-
 levels(object_1$seurat_clusters) <- gsub("^(14)$",paste0("Immune cells (CD163-)"),levels(object_1$seurat_clusters))
 levels(object_1$seurat_clusters) <- gsub("^(18)$",paste0("Hematopoietic stem cells?"),levels(object_1$seurat_clusters))
-
 levels(object_1$seurat_clusters) <- gsub("^(11)$",paste0("Big cluster w/ some endothelial & pericytes"),levels(object_1$seurat_clusters))
 
 
@@ -3520,21 +3830,14 @@ DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "se
 
 
 # tmp.13 <- FindMarkers(object_1, ident.1 = 13) # PDGFRA, OMG, OLIG1+2, S100B
-
 # 9 and 10 show neuro-developmental genes
-tmp.9 <- FindMarkers(object_1, ident.1 = 9) # SCGN, DLX6, DLX6-AS, DLX5, DLX2, DLX1 (last two also relate to EGFRvIII)
-tmp.10 <- FindMarkers(object_1, ident.1 = 10) # SST, NXPH1, PLS3, LHX6 , DLX2, ERBB4, DLX5
+# tmp.9 <- FindMarkers(object_1, ident.1 = 9) # SCGN, DLX6, DLX6-AS, DLX5, DLX2, DLX1 (last two also relate to EGFRvIII)
+# tmp.10 <- FindMarkers(object_1, ident.1 = 10) # SST, NXPH1, PLS3, LHX6 , DLX2, ERBB4, DLX5
+# tmp.16 <- FindMarkers(object_1, ident.1 = 16) # PTGER3, KCNIP4, EBF1, CA8, LINGO2, FGF3, PRMT8, LHX1, PCP4
 
-tmp.16 <- FindMarkers(object_1, ident.1 = 16) # PTGER3, KCNIP4, EBF1, CA8, LINGO2, FGF3, PRMT8, LHX1, PCP4
-
-
-FeaturePlot(object = object_1, features = "RBFOX2")
+# FeaturePlot(object = object_1, features = "RBFOX2")
 
 
-
-#### hemoglobin ----
-
-FeaturePlot(object = object_1, features = "HBG1") # Tumor
 
 
 #### 1. Tumor (-) ----
@@ -3556,11 +3859,19 @@ FeaturePlot(object = object_1, features = c("ITGB2"))
 FeaturePlot(object = object_1, features = c("C1QC"))
 
 
-#### 3B. Til/T-cell (1 of 2?) ----
+#### 3B. Til/T-cell ----
 
 FeaturePlot(object = object_1, features = "CD2")
 FeaturePlot(object = object_1, features = "CD3D")
 FeaturePlot(object = object_1, features = "TRBC2")
+FeaturePlot(object = object_1, features = "TRAC")
+FeaturePlot(object = object_1, features = "ICOS")
+FeaturePlot(object = object_1, features = "GZMA")
+
+
+#### 3C. Hematopoietic stem cells? ----
+
+FeaturePlot(object = object_1, features = "HBG1") # Tumor
 
 
 #### 4. Neurons (-) ----
@@ -3609,25 +3920,33 @@ FeaturePlot(object = object_1, features = "PDGFRB")
 FeaturePlot(object = object_1, features = "CD248")
 
 
+
 #### C4 (up) ----
 
-FeaturePlot(object = object_1, features = C4A)
-FeaturePlot(object = object_1, features = C4B)
+f <- c(C4A,C4B)
+DotPlot(object = object_1, features = c(f), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
-DotPlot(object = object_1, features = c(C4A, C4B))
-VlnPlot(object = object_1, features = c(C4A, C4B), group.by = "seurat_clusters",stack=T)
-RidgePlot(object = object_1, features = c(C4A, C4B), group.by = "seurat_clusters",stack=T)
+FeaturePlot(object = object_1, features = C4A[1:4])
+FeaturePlot(object = object_1, features = C4A[5:8])
+FeaturePlot(object = object_1, features = C4A[9:12])
+FeaturePlot(object = object_1, features = C4A[13:16])
+FeaturePlot(object = object_1, features = C4A[17:19])
+
+FeaturePlot(object = object_1, features = C4B[1:4])
+FeaturePlot(object = object_1, features = C4B[5:9])
+
 
 
 #### C5 (down) ----
 
+f <- C5
+DotPlot(object = object_1, features = c(f), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
-DotPlot(object = object_1, features = c(C5), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-RidgePlot(object = object_1, features = c(C5), group.by = "seurat_clusters",stack=T)
-VlnPlot(object = object_1, features = c(C5), group.by = "seurat_clusters",stack=T)
 
-FeaturePlot(object = object_1, features = C5)
-
+FeaturePlot(object = object_1, features = C5[1:4])
+FeaturePlot(object = object_1, features = C5[5:8])
+FeaturePlot(object = object_1, features = C5[9:12])
+FeaturePlot(object = object_1, features = C5[13:16])
 
 
 #### C6 (up) ----
@@ -3737,10 +4056,9 @@ object_1@meta.data$pt = sapply(strsplit(rownames(object_1@meta.data), "[.]"), "[
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters")
 
 
-tmp.15 <- FindMarkers(object_1, ident.1 = 15) # SLN,CYP26B1,MS4A8,MCHR1,GDF10,FAM43A,CCDC140,LUM,MYLK,SLITRK6,IRX3,MSX2,LCAT,KCTD12,C5orf38,ASCL2,OPRK1,EMP1,ABCA8,HLA-DRB1,
-head(tmp.15,20)
-
-FeaturePlot(object = object_1, features = "SLN")
+# tmp.15 <- FindMarkers(object_1, ident.1 = 15) # SLN,CYP26B1,MS4A8,MCHR1,GDF10,FAM43A,CCDC140,LUM,MYLK,SLITRK6,IRX3,MSX2,LCAT,KCTD12,C5orf38,ASCL2,OPRK1,EMP1,ABCA8,HLA-DRB1,
+# head(tmp.15,20)
+# FeaturePlot(object = object_1, features = "SLN")
 
 
 # some hemoglobins
@@ -3768,10 +4086,40 @@ FeaturePlot(object = object_1, features = "CD248")
 FeaturePlot(object = object_1, features = "PROM1")
 
 
+
+#### C4 (up) ----
+
+f <- c(C4A,C4B)
+DotPlot(object = object_1, features = c(f), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+FeaturePlot(object = object_1, features = C4A[1:4])
+FeaturePlot(object = object_1, features = C4A[5:8])
+FeaturePlot(object = object_1, features = C4A[9:12])
+FeaturePlot(object = object_1, features = C4A[13:16])
+FeaturePlot(object = object_1, features = C4A[17:19])
+
+FeaturePlot(object = object_1, features = C4B[1:4])
+FeaturePlot(object = object_1, features = C4B[5:9])
+
+
+
+#### C5 (down) ----
+
+f <- C5
+DotPlot(object = object_1, features = c(f), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+
+FeaturePlot(object = object_1, features = C5[1:4])
+FeaturePlot(object = object_1, features = C5[5:8])
+FeaturePlot(object = object_1, features = C5[9:12])
+FeaturePlot(object = object_1, features = C5[13:16])
+
+
+
 #### C6 ----
 
 #f <- c(C6 , c("RGS5", "PDGFRB", "CD248") )
-#f <- C6
+f <- C6
 # f <- c(C6, c("SLN","CYP26B1","MS4A8","MCHR1","GDF10","FAM43A","CCDC140")) - C15 markers
 DotPlot(object = object_1, features = c(f), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
@@ -3872,7 +4220,7 @@ object_1 <- RunUMAP(object_1, dims = 1:30)
 object_1@meta.data$pt = sapply(strsplit(rownames(object_1@meta.data), "[.]"), "[", 1)
 
 
-#levels(object_1$seurat_clusters) <- gsub("^(14)$",paste0("TAM/microglia"),levels(object_1$seurat_clusters))
+levels(object_1$seurat_clusters) <- gsub("^(14)$",paste0("TAM/microglia"),levels(object_1$seurat_clusters))
 
 
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters")
@@ -3887,11 +4235,23 @@ FeaturePlot(object = object_1, features = c("HBG1", "HBG2")) # precursor red blo
 
 
 #### 1. Tumor (-) ----
-#### 2. Astrocyte (+) ----
+
+#### 2. Astrocyte (-) ----
 
 
-FeaturePlot(object = object_1, features = "STMN2")
+FeaturePlot(object = object_1, features = "STMN2") # Tumor
+FeaturePlot(object = object_1, features = "ETNPPL") # Tumor
+
+FeaturePlot(object = object_1, features = "GPR98")
+FeaturePlot(object = object_1, features = "AQP4")
+FeaturePlot(object = object_1, features = "BMPR1B")
 FeaturePlot(object = object_1, features = "ETNPPL")
+FeaturePlot(object = object_1, features = "GJB6")
+FeaturePlot(object = object_1, features = "GJA1")
+FeaturePlot(object = object_1, features = "FGFR3")
+FeaturePlot(object = object_1, features = "SLC25A18")
+FeaturePlot(object = object_1, features = "SLC1A2")
+FeaturePlot(object = object_1, features = "SDC4")
 
 
 
@@ -3905,11 +4265,14 @@ FeaturePlot(object = object_1, features = c("ITGB2"))
 FeaturePlot(object = object_1, features = c("C1QC"))
 
 
-#### 3B. Til/T-cell (1 of 2?) ----
+#### 3B. Til/T-cell ----
 
 FeaturePlot(object = object_1, features = "CD2")
 FeaturePlot(object = object_1, features = "CD3D")
 FeaturePlot(object = object_1, features = "TRBC2")
+FeaturePlot(object = object_1, features = "TRAC")
+FeaturePlot(object = object_1, features = "ICOS")
+FeaturePlot(object = object_1, features = "GZMA")
 
 
 #### 4. Neurons (-) ----
@@ -3963,22 +4326,31 @@ FeaturePlot(object = object_1, features = "CD248")
 
 #### C4 (up) ----
 
-FeaturePlot(object = object_1, features = C4A)
-FeaturePlot(object = object_1, features = C4B)
+f <- c(C4A,C4B)
+DotPlot(object = object_1, features = c(f), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
-DotPlot(object = object_1, features = c(C4A, C4B))
-VlnPlot(object = object_1, features = c(C4A, C4B), group.by = "seurat_clusters",stack=T)
-RidgePlot(object = object_1, features = c(C4A, C4B), group.by = "seurat_clusters",stack=T)
+FeaturePlot(object = object_1, features = C4A[1:4])
+FeaturePlot(object = object_1, features = C4A[5:8])
+FeaturePlot(object = object_1, features = C4A[9:12])
+FeaturePlot(object = object_1, features = C4A[13:16])
+FeaturePlot(object = object_1, features = C4A[17:19])
+
+FeaturePlot(object = object_1, features = C4B[1:4])
+FeaturePlot(object = object_1, features = C4B[5:9])
+
 
 
 #### C5 (down) ----
 
+f <- C5
+DotPlot(object = object_1, features = c(f), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
-DotPlot(object = object_1, features = c(C5), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-RidgePlot(object = object_1, features = c(C5), group.by = "seurat_clusters",stack=T)
-VlnPlot(object = object_1, features = c(C5), group.by = "seurat_clusters",stack=T)
 
-FeaturePlot(object = object_1, features = C5)
+FeaturePlot(object = object_1, features = C5[1:4])
+FeaturePlot(object = object_1, features = C5[5:8])
+FeaturePlot(object = object_1, features = C5[9:12])
+FeaturePlot(object = object_1, features = C5[13:16])
+
 
 
 
@@ -4079,6 +4451,35 @@ object_1@meta.data$pt = sapply(strsplit(rownames(object_1@meta.data), "[.]"), "[
 # levels(object_1$seurat_clusters) <- gsub("^(14)$",paste0("TAM/microglia"),levels(object_1$seurat_clusters))
 
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters")
+
+
+
+#### C4 (up) ----
+
+f <- c(C4A,C4B)
+DotPlot(object = object_1, features = c(f), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+FeaturePlot(object = object_1, features = C4A[1:4])
+FeaturePlot(object = object_1, features = C4A[5:8])
+FeaturePlot(object = object_1, features = C4A[9:12])
+FeaturePlot(object = object_1, features = C4A[13:16])
+FeaturePlot(object = object_1, features = C4A[17:19])
+
+FeaturePlot(object = object_1, features = C4B[1:4])
+FeaturePlot(object = object_1, features = C4B[5:9])
+
+
+
+#### C5 (down) ----
+
+f <- C5
+DotPlot(object = object_1, features = c(f), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+
+FeaturePlot(object = object_1, features = C5[1:4])
+FeaturePlot(object = object_1, features = C5[5:8])
+FeaturePlot(object = object_1, features = C5[9:12])
+FeaturePlot(object = object_1, features = C5[13:16])
 
 
 #### C6 (up) ----
@@ -4183,7 +4584,36 @@ object_1@meta.data$pt = sapply(strsplit(rownames(object_1@meta.data), "[.]"), "[
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters")
 
 
-tmp.9 <- FindMarkers(object_1, ident.1 = 9) # EOMES,PPP1R17,TMEM158,PENK,NEUROD4,NHLH1,CA12,RASGRP1,SSTR2,NEUROG1,XXbac-BPG32J3.19,NRN1,MFAP4,HES6,ZDHHC22,TTYH2,PRDX1,PAX6,SMOC1,CORO1C
+# tmp.9 <- FindMarkers(object_1, ident.1 = 9) # EOMES,PPP1R17,TMEM158,PENK,NEUROD4,NHLH1,CA12,RASGRP1,SSTR2,NEUROG1,XXbac-BPG32J3.19,NRN1,MFAP4,HES6,ZDHHC22,TTYH2,PRDX1,PAX6,SMOC1,CORO1C
+
+
+
+#### C4 (up) ----
+
+f <- c(C4A,C4B)
+DotPlot(object = object_1, features = c(f), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+FeaturePlot(object = object_1, features = C4A[1:4])
+FeaturePlot(object = object_1, features = C4A[5:8])
+FeaturePlot(object = object_1, features = C4A[9:12])
+FeaturePlot(object = object_1, features = C4A[13:16])
+FeaturePlot(object = object_1, features = C4A[17:19])
+
+FeaturePlot(object = object_1, features = C4B[1:4])
+FeaturePlot(object = object_1, features = C4B[5:9])
+
+
+
+#### C5 (down) ----
+
+f <- C5
+DotPlot(object = object_1, features = c(f), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+
+FeaturePlot(object = object_1, features = C5[1:4])
+FeaturePlot(object = object_1, features = C5[5:8])
+FeaturePlot(object = object_1, features = C5[9:12])
+FeaturePlot(object = object_1, features = C5[13:16])
 
 
 #### C6 (up) ----
@@ -4289,9 +4719,10 @@ object_1@meta.data$pt = sapply(strsplit(rownames(object_1@meta.data), "[.]"), "[
 
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters")
 
+
+
 # tmp.10 <- FindMarkers(object_1, ident.1 = 10)
 head(tmp.10,20) # CDC6,E2F1,TK1,MCM3,MCM6,DTL,KIAA0101,RMI2,DSN1,LOXL1,PCNA,ZNF367,GINS2,CHAF1A,RAD51AP1,MCM4,MCM5,GPX3,HES4,CDC45,
-
 # tmp.11 <- FindMarkers(object_1, ident.1 = 11)
 head(tmp.11,20) # BCAM
 
@@ -4317,11 +4748,14 @@ FeaturePlot(object = object_1, features = c("ITGB2"))
 FeaturePlot(object = object_1, features = c("C1QC"))
 
 
-#### 3B. Til/T-cell (1 of 2?) ----
+#### 3B. Til/T-cell ----
 
 FeaturePlot(object = object_1, features = "CD2")
 FeaturePlot(object = object_1, features = "CD3D")
 FeaturePlot(object = object_1, features = "TRBC2")
+FeaturePlot(object = object_1, features = "TRAC")
+FeaturePlot(object = object_1, features = "ICOS")
+FeaturePlot(object = object_1, features = "GZMA")
 
 
 #### 4. Neurons (-) ----
@@ -4381,6 +4815,15 @@ FeaturePlot(object = object_1, features = "CD248")
 f <- c(C4A,C4B)
 DotPlot(object = object_1, features = c(f), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
+FeaturePlot(object = object_1, features = C4A[1:4])
+FeaturePlot(object = object_1, features = C4A[5:8])
+FeaturePlot(object = object_1, features = C4A[9:12])
+FeaturePlot(object = object_1, features = C4A[13:16])
+FeaturePlot(object = object_1, features = C4A[17:19])
+
+FeaturePlot(object = object_1, features = C4B[1:4])
+FeaturePlot(object = object_1, features = C4B[5:9])
+
 
 
 #### C5 (down) ----
@@ -4388,6 +4831,11 @@ DotPlot(object = object_1, features = c(f), group.by = "seurat_clusters") + them
 f <- C5
 DotPlot(object = object_1, features = c(f), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
+
+FeaturePlot(object = object_1, features = C5[1:4])
+FeaturePlot(object = object_1, features = C5[5:8])
+FeaturePlot(object = object_1, features = C5[9:12])
+FeaturePlot(object = object_1, features = C5[13:16])
 
 #### C6 (up) :: in 10 en 11! ----
 
