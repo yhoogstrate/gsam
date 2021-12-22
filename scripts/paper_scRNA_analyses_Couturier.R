@@ -796,7 +796,7 @@ VlnPlot(object = object_1, features = c(C6), group.by = "seurat_clusters",stack=
 
 ## BT338 [1+2/2] :: T+,MG-,TC-,OD,PE++ ----
 
-rm(object_1)
+rm(object_1,sid)
 gc()
 
 sid <- "BT338_1of2.filtered_gene_matrices"
@@ -844,7 +844,7 @@ object_1 <- subset(x = object_1, subset =
 
 object_1 <- NormalizeData(object = object_1, normalization.method = "LogNormalize", scale.factor = 1e4)
 object_1 <- FindVariableFeatures(object = object_1, selection.method = "vst", nfeatures = 2000)
-object_1[["state"]] <- "P1" 
+object_1[["state"]] <- as.factor(paste(gsub("_.+$","",sid),gsub("_.+$","",colnames(object_1)),sep="-"))
 
 
 top10 <- head(VariableFeatures(object_1), 10)
@@ -894,6 +894,101 @@ levels(object_1$seurat_clusters) <- gsub("^(0|2|3|5|6|7|9|10|12)$",paste0("Tumor
 
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters")
 
+
+### Prepare for integration ----
+
+
+object_1 <- FindClusters(object_1, resolution = 1)
+object_1$youri_clusters <- as.character(object_1$seurat_clusters)
+
+
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "youri_clusters") +
+  geom_hline(yintercept=-14, linetype="dashed", color = "red")
+
+
+object_1$youri_clusters <- ifelse(object_1$seurat_clusters %in% c(1,4,11),"Pericytes", object_1$youri_clusters)
+object_1$youri_clusters <- ifelse(object_1$seurat_clusters %in% c(8),"Oligodendrocytes", object_1$youri_clusters)
+object_1$youri_clusters <- ifelse(object_1$seurat_clusters %in% c(13),"TAM/MG", object_1$youri_clusters)
+object_1$youri_clusters <- ifelse(object_1$seurat_clusters %in% c(6)  & object_1@reductions$umap@cell.embeddings[,2] < -14,"T-Cells", object_1$youri_clusters)
+object_1$youri_clusters <- ifelse(object_1$seurat_clusters %in% c(0,2,3,5,6,7,9,10,12)  & object_1@reductions$umap@cell.embeddings[,2] >= -14,"Tumor", object_1$youri_clusters)
+
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "youri_clusters")
+
+
+# Peri
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "youri_clusters") +
+  geom_vline(xintercept=10, linetype="dashed", color = "red") +
+  geom_vline(xintercept=15, linetype="dashed", color = "red") +
+  geom_hline(yintercept=-4, linetype="dashed", color = "red") +
+  geom_hline(yintercept=5, linetype="dashed", color = "red")
+object_1$youri_clusters <- ifelse(
+  object_1@reductions$umap@cell.embeddings[,1] >= 10 &
+    object_1@reductions$umap@cell.embeddings[,1] <= 15 &
+    object_1@reductions$umap@cell.embeddings[,2] >= -4 &
+    object_1@reductions$umap@cell.embeddings[,2] <= 5 &
+    object_1$youri_clusters != "Pericytes", "ambiguous", object_1$youri_clusters)
+
+
+# T-cells
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "youri_clusters") +
+  geom_vline(xintercept=-2.05, linetype="dashed", color = "red") +
+  geom_vline(xintercept=-1, linetype="dashed", color = "red") +
+  geom_hline(yintercept=-20, linetype="dashed", color = "red") +
+  geom_hline(yintercept=-14, linetype="dashed", color = "red")
+object_1$youri_clusters <- ifelse(
+  object_1@reductions$umap@cell.embeddings[,1] >= -2.05 &
+    object_1@reductions$umap@cell.embeddings[,1] <= -1 &
+    object_1@reductions$umap@cell.embeddings[,2] >= -20 &
+    object_1@reductions$umap@cell.embeddings[,2] <= -14 &
+    object_1$youri_clusters != "T-Cells", "ambiguous", object_1$youri_clusters)
+
+
+# TAM/MG
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "youri_clusters") +
+  geom_vline(xintercept=-3, linetype="dashed", color = "red") +
+  geom_vline(xintercept=-2.05, linetype="dashed", color = "red") +
+  geom_hline(yintercept=-20, linetype="dashed", color = "red") +
+  geom_hline(yintercept=-14, linetype="dashed", color = "red")
+object_1$youri_clusters <- ifelse(
+  object_1@reductions$umap@cell.embeddings[,1] >= -3 &
+    object_1@reductions$umap@cell.embeddings[,1] <= -2.05 &
+    object_1@reductions$umap@cell.embeddings[,2] >= -20 &
+    object_1@reductions$umap@cell.embeddings[,2] <= -14 &
+    object_1$youri_clusters != "TAM/MG", "ambiguous", object_1$youri_clusters)
+
+# OD
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "youri_clusters") +
+  geom_vline(xintercept=-11, linetype="dashed", color = "red") +
+  geom_vline(xintercept=-7, linetype="dashed", color = "red") +
+  geom_hline(yintercept=13, linetype="dashed", color = "red") +
+  geom_hline(yintercept=18, linetype="dashed", color = "red")
+object_1$youri_clusters <- ifelse(
+  object_1@reductions$umap@cell.embeddings[,1] >= -11 &
+    object_1@reductions$umap@cell.embeddings[,1] <= -7 &
+    object_1@reductions$umap@cell.embeddings[,2] >= 13 &
+    object_1@reductions$umap@cell.embeddings[,2] <= 18 &
+    object_1$youri_clusters != "Oligodendrocyte", "ambiguous", object_1$youri_clusters)
+
+
+# Tumor
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "youri_clusters") +
+  geom_vline(xintercept=-10, linetype="dashed", color = "red") +
+  geom_vline(xintercept=3, linetype="dashed", color = "red") +
+  geom_hline(yintercept=-10, linetype="dashed", color = "red") +
+  geom_hline(yintercept=9, linetype="dashed", color = "red")
+object_1$youri_clusters <- ifelse(
+  object_1@reductions$umap@cell.embeddings[,1] >= -10 &
+    object_1@reductions$umap@cell.embeddings[,1] <= 3 &
+    object_1@reductions$umap@cell.embeddings[,2] >= -10 &
+    object_1@reductions$umap@cell.embeddings[,2] <= 9 &
+    object_1$youri_clusters != "Tumor", "ambiguous", object_1$youri_clusters)
+
+
+
+
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "youri_clusters")
+sum(object_1$youri_clusters == "ambiguous")
+object_1.BT338 <- object_1
 
 
 #### 1. Tumor (+) ----
@@ -1504,7 +1599,8 @@ object_1 <- subset(x = object_1, subset =
 
 object_1 <- NormalizeData(object = object_1, normalization.method = "LogNormalize", scale.factor = 1e4)
 object_1 <- FindVariableFeatures(object = object_1, selection.method = "vst", nfeatures = 2000)
-object_1[["state"]] <- "P1" 
+object_1[["state"]] <- as.factor(paste( gsub("_.+$","",sid) , gsub("_.+$","",colnames(object_1)), sep='-'))
+object_1[["state"]]
 
 
 top10 <- head(VariableFeatures(object_1), 10)
@@ -1562,6 +1658,124 @@ DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "se
 
 
 
+### Prepare for integration ----
+
+
+object_1 <- FindClusters(object_1, resolution = 1)
+object_1$youri_clusters <- as.character(object_1$seurat_clusters)
+
+
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "youri_clusters") +
+  geom_hline(yintercept=0.2, linetype="dashed", color = "red") +
+  geom_hline(yintercept=-0.75, linetype="dashed", color = "red")
+
+
+object_1$youri_clusters <- ifelse(object_1$seurat_clusters %in% c(6,9),"TAM/MG", object_1$youri_clusters)
+object_1$youri_clusters <- ifelse(object_1$seurat_clusters %in% c(7,13),"Oligodendrocytes", object_1$youri_clusters)
+object_1$youri_clusters <- ifelse(object_1$seurat_clusters %in% c(0:5,8,10:12,14) ,"Tumor", object_1$youri_clusters)
+object_1$youri_clusters <- ifelse(object_1$seurat_clusters %in% c(15,16) ,"Pericytes|Endothelial", object_1$youri_clusters)
+object_1$youri_clusters <- ifelse(object_1$seurat_clusters %in% c(15,16) & 
+                                    object_1@reductions$umap@cell.embeddings[,2] > 0.2
+                                  ,"Pericytes", object_1$youri_clusters)
+object_1$youri_clusters <- ifelse(object_1$seurat_clusters %in% c(15,16) & 
+                                    object_1@reductions$umap@cell.embeddings[,2] < -0.75
+                                  ,"Endothelial", object_1$youri_clusters)
+
+
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "youri_clusters")
+
+
+# Peri
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "youri_clusters") +
+  geom_vline(xintercept=12, linetype="dashed", color = "red") +
+  geom_vline(xintercept=16, linetype="dashed", color = "red") +
+  geom_hline(yintercept=0.2, linetype="dashed", color = "red") +
+  geom_hline(yintercept=1, linetype="dashed", color = "red")
+object_1$youri_clusters <- ifelse(
+  object_1@reductions$umap@cell.embeddings[,1] >= 12 &
+    object_1@reductions$umap@cell.embeddings[,1] <= 16 &
+    object_1@reductions$umap@cell.embeddings[,2] >= 0.2 &
+    object_1@reductions$umap@cell.embeddings[,2] <= 1 &
+    object_1$youri_clusters != "Pericytes", "ambiguous", object_1$youri_clusters)
+
+# Peri|Endo
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "youri_clusters") +
+  geom_vline(xintercept=12, linetype="dashed", color = "red") +
+  geom_vline(xintercept=16, linetype="dashed", color = "red") +
+  geom_hline(yintercept=-0.75, linetype="dashed", color = "red") +
+  geom_hline(yintercept=0.2, linetype="dashed", color = "red")
+object_1$youri_clusters <- ifelse(
+  object_1@reductions$umap@cell.embeddings[,1] >= 12 &
+    object_1@reductions$umap@cell.embeddings[,1] <= 16 &
+    object_1@reductions$umap@cell.embeddings[,2] >= -0.75 &
+    object_1@reductions$umap@cell.embeddings[,2] <= 0.2 &
+    object_1$youri_clusters != "Pericytes|Endothelial", "ambiguous", object_1$youri_clusters)
+
+
+# Endo
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "youri_clusters") +
+  geom_vline(xintercept=12, linetype="dashed", color = "red") +
+  geom_vline(xintercept=16, linetype="dashed", color = "red") +
+  geom_hline(yintercept=-2, linetype="dashed", color = "red") +
+  geom_hline(yintercept=-0.75, linetype="dashed", color = "red")
+object_1$youri_clusters <- ifelse(
+  object_1@reductions$umap@cell.embeddings[,1] >= 12 &
+    object_1@reductions$umap@cell.embeddings[,1] <= 16 &
+    object_1@reductions$umap@cell.embeddings[,2] >= -2 &
+    object_1@reductions$umap@cell.embeddings[,2] <= -0.75 &
+    object_1$youri_clusters != "Endothelial", "ambiguous", object_1$youri_clusters)
+
+
+
+# TAM/MG
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "youri_clusters") +
+  geom_vline(xintercept=-2, linetype="dashed", color = "red") +
+  geom_vline(xintercept=4, linetype="dashed", color = "red") +
+  geom_hline(yintercept=-18, linetype="dashed", color = "red") +
+  geom_hline(yintercept=-8, linetype="dashed", color = "red")
+object_1$youri_clusters <- ifelse(
+  object_1@reductions$umap@cell.embeddings[,1] >= -2 &
+    object_1@reductions$umap@cell.embeddings[,1] <= 4 &
+    object_1@reductions$umap@cell.embeddings[,2] >= -18 &
+    object_1@reductions$umap@cell.embeddings[,2] <= -8 &
+    object_1$youri_clusters != "TAM/MG", "ambiguous", object_1$youri_clusters)
+
+
+# OD
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "youri_clusters") +
+  geom_vline(xintercept=-15, linetype="dashed", color = "red") +
+  geom_vline(xintercept=-8, linetype="dashed", color = "red") +
+  geom_hline(yintercept=-9, linetype="dashed", color = "red") +
+  geom_hline(yintercept=-3, linetype="dashed", color = "red")
+object_1$youri_clusters <- ifelse(
+  object_1@reductions$umap@cell.embeddings[,1] >= -15 &
+    object_1@reductions$umap@cell.embeddings[,1] <= -8 &
+    object_1@reductions$umap@cell.embeddings[,2] >= -9 &
+    object_1@reductions$umap@cell.embeddings[,2] <= -3 &
+    object_1$youri_clusters != "Oligodendrocytes", "ambiguous", object_1$youri_clusters)
+
+
+
+# Tumor
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "youri_clusters") +
+  geom_vline(xintercept=-8, linetype="dashed", color = "red") +
+  geom_vline(xintercept=10, linetype="dashed", color = "red") +
+  geom_hline(yintercept=-5, linetype="dashed", color = "red") +
+  geom_hline(yintercept=10, linetype="dashed", color = "red")
+object_1$youri_clusters <- ifelse(
+  object_1@reductions$umap@cell.embeddings[,1] >= -8 &
+    object_1@reductions$umap@cell.embeddings[,1] <= 10 &
+    object_1@reductions$umap@cell.embeddings[,2] >= -5 &
+    object_1@reductions$umap@cell.embeddings[,2] <= 10 &
+    object_1$youri_clusters != "Tumor", "ambiguous", object_1$youri_clusters)
+
+
+
+
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "youri_clusters")
+sum(object_1$youri_clusters == "ambiguous")
+
+object_1.BT397 <- object_1
 
 
 
@@ -1682,7 +1896,7 @@ FeaturePlot(object = object_1, features = "PLP1")
 FeaturePlot(object = object_1, features = "TMEM144")
 
 
-#### 6A. Endothelial (-) ----
+#### 6A. Endothelial (+) ----
 
 FeaturePlot(object = object_1, features = "ABCB1")
 FeaturePlot(object = object_1, features = "CD34")
@@ -2930,7 +3144,7 @@ object_1 <- subset(x = object_1, subset =
 
 object_1 <- NormalizeData(object = object_1, normalization.method = "LogNormalize", scale.factor = 1e4)
 object_1 <- FindVariableFeatures(object = object_1, selection.method = "vst", nfeatures = 2000)
-object_1[["state"]] <- "P1" 
+object_1[["state"]] <- as.factor(paste( gsub("_.+$","",sid) , gsub("_.+$","",colnames(object_1)), sep='-'))
 
 
 top10 <- head(VariableFeatures(object_1), 10)
@@ -2980,6 +3194,99 @@ levels(object_1$seurat_clusters) <- gsub("^(18)$",paste0("Endothelial\n+ Pericyt
 
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters")
 
+
+
+### Prepare for integration ----
+
+
+object_1 <- FindClusters(object_1, resolution = 1)
+object_1$youri_clusters <- as.character(object_1$seurat_clusters)
+
+
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "youri_clusters") +
+  geom_hline(yintercept=7.5, linetype="dashed", color = "red")
+
+
+object_1$youri_clusters <- ifelse(object_1$seurat_clusters %in% c(0,1,11,7,14,2,5,8,6,10,15,3,9),"TAM/MG", object_1$youri_clusters)
+object_1$youri_clusters <- ifelse(object_1$seurat_clusters %in% c(16),"Oligodendrocytes", object_1$youri_clusters)
+object_1$youri_clusters <- ifelse(object_1$seurat_clusters %in% c(12),"T-Cells", object_1$youri_clusters)
+object_1$youri_clusters <- ifelse(object_1$seurat_clusters %in% c(13,4,17) ,"Tumor", object_1$youri_clusters)
+object_1$youri_clusters <- ifelse(object_1$seurat_clusters %in% c(18) & object_1@reductions$umap@cell.embeddings[,2] >= 7.5,"Endothelial", object_1$youri_clusters)
+object_1$youri_clusters <- ifelse(object_1$seurat_clusters %in% c(18) & object_1@reductions$umap@cell.embeddings[,2] < 7.5, "Pericytes", object_1$youri_clusters)
+
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "youri_clusters")
+
+
+# Peri
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "youri_clusters") +
+  geom_vline(xintercept=15, linetype="dashed", color = "red") +
+  geom_vline(xintercept=18, linetype="dashed", color = "red") +
+  geom_hline(yintercept=4, linetype="dashed", color = "red") +
+  geom_hline(yintercept=6, linetype="dashed", color = "red")
+object_1$youri_clusters <- ifelse(
+  object_1@reductions$umap@cell.embeddings[,1] >= 15 &
+    object_1@reductions$umap@cell.embeddings[,1] <= 18 &
+    object_1@reductions$umap@cell.embeddings[,2] >= 4 &
+    object_1@reductions$umap@cell.embeddings[,2] <= 6 &
+    object_1$youri_clusters != "Pericytes", "ambiguous", object_1$youri_clusters)
+
+
+# T-cells
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "youri_clusters") +
+  geom_vline(xintercept=5, linetype="dashed", color = "red") +
+  geom_vline(xintercept=10, linetype="dashed", color = "red") +
+  geom_hline(yintercept=-15, linetype="dashed", color = "red") +
+  geom_hline(yintercept=-7, linetype="dashed", color = "red")
+object_1$youri_clusters <- ifelse(
+  object_1@reductions$umap@cell.embeddings[,1] >= 5 &
+    object_1@reductions$umap@cell.embeddings[,1] <= 10 &
+    object_1@reductions$umap@cell.embeddings[,2] >= -15 &
+    object_1@reductions$umap@cell.embeddings[,2] <= -7 &
+    object_1$youri_clusters != "T-Cells", "ambiguous", object_1$youri_clusters)
+
+
+# TAM/MG
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "youri_clusters") +
+  geom_vline(xintercept=5, linetype="dashed", color = "red")
+object_1$youri_clusters <- ifelse(
+  object_1@reductions$umap@cell.embeddings[,1] < 5 &
+    object_1$youri_clusters != "TAM/MG", "ambiguous", object_1$youri_clusters)
+
+
+# OD
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "youri_clusters") +
+  geom_vline(xintercept=8, linetype="dashed", color = "red") +
+  geom_vline(xintercept=12, linetype="dashed", color = "red") +
+  geom_hline(yintercept=6, linetype="dashed", color = "red") +
+  geom_hline(yintercept=11, linetype="dashed", color = "red")
+object_1$youri_clusters <- ifelse(
+  object_1@reductions$umap@cell.embeddings[,1] >= 8 &
+    object_1@reductions$umap@cell.embeddings[,1] <= 12 &
+    object_1@reductions$umap@cell.embeddings[,2] >= 6 &
+    object_1@reductions$umap@cell.embeddings[,2] <= 11 &
+    object_1$youri_clusters != "Oligodendrocytes", "ambiguous", object_1$youri_clusters)
+
+
+# Tumor
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "youri_clusters") +
+  geom_vline(xintercept=10, linetype="dashed", color = "red") +
+  geom_vline(xintercept=18, linetype="dashed", color = "red") +
+  geom_hline(yintercept=-10, linetype="dashed", color = "red") +
+  geom_hline(yintercept=0, linetype="dashed", color = "red")
+object_1$youri_clusters <- ifelse(
+  object_1@reductions$umap@cell.embeddings[,1] >= 10 &
+    object_1@reductions$umap@cell.embeddings[,1] <= 18 &
+    object_1@reductions$umap@cell.embeddings[,2] >= -10 &
+    object_1@reductions$umap@cell.embeddings[,2] <= 0 &
+    object_1$youri_clusters != "Tumor", "ambiguous", object_1$youri_clusters)
+
+
+
+
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "youri_clusters")
+sum(object_1$youri_clusters == "ambiguous")
+
+object_1.BT397 <- object_1
 
 
 
@@ -4852,4 +5159,7 @@ VlnPlot(object = object_1, features = c(f), group.by = "seurat_clusters",stack=T
 
 FeaturePlot(object = object_1, features = C6[1:16])
 FeaturePlot(object = object_1, features = C6[17:33])
+
+## Combined ----
+
 

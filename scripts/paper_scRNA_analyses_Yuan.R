@@ -1089,8 +1089,9 @@ FeaturePlot(object = object_1, features = C5)
 
 #### C6 (up) ----
 
-
+f <- c(C6 , c("RGS5", "PDGFRB", "CD248") )
 f <- C6
+
 DotPlot(object_1, features=f, group.by = "seurat_clusters") +  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
 
@@ -1426,6 +1427,7 @@ FeaturePlot(object = object_1, features =  "CCL8" )
 
 
 ## G :: GSM2758477_PJ035 :: T,MG,EN,PE ----
+# Glioblastoma, IDH-wt, recurrent, egfr status: amplified in initial resection
 
 
 rm(object_1, sid)
@@ -1884,7 +1886,7 @@ object_1$youri_clusters <- ifelse(
 
 
 
-# Peri
+# Endo
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "youri_clusters") +
   geom_vline(xintercept=-21, linetype="dashed", color = "red") +
   geom_vline(xintercept=-17, linetype="dashed", color = "red")
@@ -2203,36 +2205,42 @@ FeaturePlot(object = object_1, features = C5)
 
 
 f <- C6
+
+f <- c(C6 , c("RGS5", "PDGFRB", "CD248") )
 DotPlot(object_c, features=f, group.by = "seurat_clusters") +  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
 
-RidgePlot(object = object_1, features = c(C6), group.by = "seurat_clusters",stack=T)
-VlnPlot(object = object_1, features = c(C6), group.by = "seurat_clusters",stack=T)
+VlnPlot(object = object_c, features = c(C6), group.by = "seurat_clusters",stack=T)
+RidgePlot(object = object_c, features = c(C6), group.by = "seurat_clusters",stack=T)
+
+VlnPlot(object = object_c, features = c(C6), group.by = "youri_clusters",stack=T)
+RidgePlot(object = object_c, features = c(C6), group.by = "youri_clusters",stack=T)
 
 
-FeaturePlot(object = object_1, features = C6)
+FeaturePlot(object = object_c, features = C6)
 
-FeaturePlot(object = object_1, features =  "CRABP2" )
-FeaturePlot(object = object_1, features =  "CLIP2" )
-#FeaturePlot(object = object_1, features =  "DPT" )
-FeaturePlot(object = object_1, features =  "FGF7" )
-#FeaturePlot(object = object_1, features =  "COL10A1" )
-FeaturePlot(object = object_1, features =  "FBN1" )
-FeaturePlot(object = object_1, features =  "GLT8D2" )
-FeaturePlot(object = object_1, features =  "IRX3" )
-FeaturePlot(object = object_1, features =  "MFAP5" )
-FeaturePlot(object = object_1, features =  "MFAP4" )
-# FeaturePlot(object = object_1, features =  "COL8A2" )
-# FeaturePlot(object = object_1, features =  "FNDC1" )
-FeaturePlot(object = object_1, features =  "MMP11" )
-FeaturePlot(object = object_1, features =  "MFAP2" )
-FeaturePlot(object = object_1, features =  "COL1A2" ) # high in pericytes
-FeaturePlot(object = object_1, features =  "COL1A1" ) # high in pericytes
-FeaturePlot(object = object_1, features =  "COL5A1" )
-# FeaturePlot(object = object_1, features =  "ADAMTS2" )
-# FeaturePlot(object = object_1, features =  "TPSB2" )
-# FeaturePlot(object = object_1, features =  "KRT8" )
-# FeaturePlot(object = object_1, features =  "OMD" )
-FeaturePlot(object = object_1, features =  "OGN" )
-FeaturePlot(object = object_1, features =  "MME" )
+FeaturePlot(object = object_c, features =  "CRABP2" )
+FeaturePlot(object = object_c, features =  "CLIP2" )
+FeaturePlot(object = object_c, features =  "DPT" )
+FeaturePlot(object = object_c, features =  "FGF7" )
+#FeaturePlot(object = object_c, features =  "COL10A1" )
+FeaturePlot(object = object_c, features =  "FBN1" ) # J
+FeaturePlot(object = object_c, features =  "GLT8D2" )
+FeaturePlot(object = object_c, features =  "IRX3" )
+FeaturePlot(object = object_c, features =  "MFAP5" )
+FeaturePlot(object = object_c, features =  "MFAP4" ) # tumor
+# FeaturePlot(object = object_c, features =  "COL8A2" )
+# FeaturePlot(object = object_c, features =  "FNDC1" )
+FeaturePlot(object = object_c, features =  "MMP11" ) # ja
+FeaturePlot(object = object_c, features =  "MFAP2" ) # endo
+FeaturePlot(object = object_c, features =  "COL1A2" ) # high in pericytes
+FeaturePlot(object = object_c, features =  "COL1A1" ) # high in pericytes
+FeaturePlot(object = object_c, features =  "COL5A1" )
+FeaturePlot(object = object_c, features =  "ADAMTS2" )
+FeaturePlot(object = object_c, features =  "TPSB2" )
+FeaturePlot(object = object_c, features =  "KRT8" )
+# FeaturePlot(object = object_c, features =  "OMD" )
+FeaturePlot(object = object_c, features =  "OGN" )
+FeaturePlot(object = object_c, features =  "MME" )
+
 
