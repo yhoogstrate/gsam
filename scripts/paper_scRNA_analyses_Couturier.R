@@ -5377,15 +5377,12 @@ levels(object_c$seurat_clusters) <- gsub("^(15)$","Pericytes.\\1",levels(object_
 levels(object_c$seurat_clusters) <- gsub("^(30)$","Endothelial.\\1",levels(object_c$seurat_clusters))
 levels(object_c$seurat_clusters) <- gsub("^(28)$","T-Cells.\\1",levels(object_c$seurat_clusters))
 levels(object_c$seurat_clusters) <- gsub("^(12|21)$","Oligodendrocytes.\\1",levels(object_c$seurat_clusters))
-# levels(object_c$seurat_clusters) <- gsub("^(10|16|24)$","TAM/MG.\\1",levels(object_c$seurat_clusters))
-# 
-# 
-# levels(object_c$seurat_clusters) <- gsub("^(15)$","Tumor [PJ017].\\1",levels(object_c$seurat_clusters))
-# levels(object_c$seurat_clusters) <- gsub("^(2|7|17|25)$","Tumor [PJ018].\\1",levels(object_c$seurat_clusters))
-# levels(object_c$seurat_clusters) <- gsub("^(0|1|11|12|9|22)$","Tumor [PJ025].\\1",levels(object_c$seurat_clusters))
-# levels(object_c$seurat_clusters) <- gsub("^(14)$","Tumor [PJ032].\\1",levels(object_c$seurat_clusters))
-# levels(object_c$seurat_clusters) <- gsub("^(4|8|19|21)$","Tumor [PJ035].\\1",levels(object_c$seurat_clusters))
-# levels(object_c$seurat_clusters) <- gsub("^(3|5|6|13)$","Tumor [PJ048].\\1",levels(object_c$seurat_clusters))
+levels(object_c$seurat_clusters) <- gsub("^(2|4|8|32|24|26|11|22|13)$","TAM/MG.\\1",levels(object_c$seurat_clusters))
+
+levels(object_c$seurat_clusters) <- gsub("^(0|1|7|9|6|16|26|27)$","Tumor [BT364].\\1",levels(object_c$seurat_clusters))
+levels(object_c$seurat_clusters) <- gsub("^(20|29)$","Tumor [BT397].\\1",levels(object_c$seurat_clusters))
+levels(object_c$seurat_clusters) <- gsub("^(25|17|14)$","Tumor [BT338].\\1",levels(object_c$seurat_clusters))
+levels(object_c$seurat_clusters) <- gsub("^(3|5|10|18|19|23)$","Tumor [BT364].\\1",levels(object_c$seurat_clusters))
 
 DimPlot(object_c, reduction = "umap", label = TRUE, pt.size = .8, group.by = "seurat_clusters")
 
