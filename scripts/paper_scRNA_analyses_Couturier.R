@@ -796,12 +796,17 @@ VlnPlot(object = object_1, features = c(C6), group.by = "seurat_clusters",stack=
 
 ## BT338 [1+2/2] :: T+,MG-,TC-,OD,PE++ ----
 
+
 rm(object_1,sid)
 gc()
 
 sid <- "BT338_1of2.filtered_gene_matrices"
 object_1 <- Read10X(data.dir = paste0("data/scRNA/EGAS00001004422_Couturier/filtered/",sid,"/"))
 object_1 <- CreateSeuratObject(counts = object_1, min.cells = 3, min.features = 200, project="Couturier")
+
+# RenameCells(object_1, new.names = paste0("Z_",colnames(object_1)))
+# RenameCells(object_1,add.cell.id = "Zz")
+# head(x = colnames(x = object_1))
 
 sid <- "BT338_2of2.filtered_gene_matrices"
 object_1.tmp <- Read10X(data.dir = paste0("data/scRNA/EGAS00001004422_Couturier/filtered/",sid,"/"))
@@ -845,6 +850,7 @@ object_1 <- subset(x = object_1, subset =
 object_1 <- NormalizeData(object = object_1, normalization.method = "LogNormalize", scale.factor = 1e4)
 object_1 <- FindVariableFeatures(object = object_1, selection.method = "vst", nfeatures = 2000)
 object_1[["state"]] <- as.factor(paste(gsub("_.+$","",sid),gsub("_.+$","",colnames(object_1)),sep="-"))
+object_1$dataset <- as.character(object_1$state)
 
 
 top10 <- head(VariableFeatures(object_1), 10)
@@ -989,6 +995,8 @@ object_1$youri_clusters <- ifelse(
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "youri_clusters")
 sum(object_1$youri_clusters == "ambiguous")
 object_1.BT338 <- object_1
+
+
 
 
 #### 1. Tumor (+) ----
@@ -1601,6 +1609,7 @@ object_1 <- NormalizeData(object = object_1, normalization.method = "LogNormaliz
 object_1 <- FindVariableFeatures(object = object_1, selection.method = "vst", nfeatures = 2000)
 object_1[["state"]] <- as.factor(paste( gsub("_.+$","",sid) , gsub("_.+$","",colnames(object_1)), sep='-'))
 object_1[["state"]]
+object_1$dataset <- as.character(object_1$state)
 
 
 top10 <- head(VariableFeatures(object_1), 10)
@@ -1775,7 +1784,7 @@ object_1$youri_clusters <- ifelse(
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "youri_clusters")
 sum(object_1$youri_clusters == "ambiguous")
 
-object_1.BT397 <- object_1
+object_1.BT363 <- object_1
 
 
 
@@ -1987,7 +1996,7 @@ FeaturePlot(object = object_1, features =  "PERP" )
 #FeaturePlot(object = object_1, features =  "CCL8" )
 
 
-## BT364 [1+2/2] :: T,MG,OD,AC(!) ----
+## BT364 [1+2/2] :: T,MG,OD ----
 
 
 rm(object_1)
@@ -2036,7 +2045,11 @@ object_1 <- subset(x = object_1, subset =
 
 object_1 <- NormalizeData(object = object_1, normalization.method = "LogNormalize", scale.factor = 1e4)
 object_1 <- FindVariableFeatures(object = object_1, selection.method = "vst", nfeatures = 2000)
-object_1[["state"]] <- "P1" 
+object_1[["state"]] <- as.factor(paste( gsub("_.+$","",sid) , gsub("_.+$","",colnames(object_1)), sep='-'))
+object_1[["state"]]
+object_1$dataset <- as.character(object_1$state)
+
+
 
 
 top10 <- head(VariableFeatures(object_1), 10)
@@ -2092,6 +2105,102 @@ levels(object_1$seurat_clusters) <- gsub("^(6|11|8)$","TAM/MG\\1",levels(object_
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .4, group.by = "seurat_clusters")
 
 
+### Prepare for integration ----
+
+
+object_1 <- FindClusters(object_1, resolution = 1)
+object_1$youri_clusters <- as.character(object_1$seurat_clusters)
+
+
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "youri_clusters") +
+  geom_hline(yintercept=11.5, linetype="dashed", color = "red") +
+  geom_vline(xintercept=-10.25, linetype="dashed", color = "red")
+
+
+object_1$youri_clusters <- ifelse(object_1$seurat_clusters %in% c(10,14) &
+                                    object_1@reductions$umap@cell.embeddings[,2] > 11.5, 
+                                  "Oligodendrocytes", object_1$youri_clusters)
+object_1$youri_clusters <- ifelse(object_1$seurat_clusters %in% c(14) &
+                                    object_1@reductions$umap@cell.embeddings[,2] <= 11.5, 
+                                  "Pericytes", object_1$youri_clusters)
+object_1$youri_clusters <- ifelse(object_1$seurat_clusters %in% c(13) &
+                                    object_1@reductions$umap@cell.embeddings[,1] < -10.25,
+                                  "Tumor NPC2", object_1$youri_clusters)
+object_1$youri_clusters <- ifelse(object_1$seurat_clusters %in% c(6,8,11),"TAM/MG", object_1$youri_clusters)
+object_1$youri_clusters <- ifelse(object_1$seurat_clusters %in% c(0:5,7,9,12,13,15) &
+                                    object_1@reductions$umap@cell.embeddings[,1] >= -10.25 ,"Tumor", object_1$youri_clusters)
+
+
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "youri_clusters")
+
+
+# Peri
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "youri_clusters") +
+  geom_vline(xintercept=-3, linetype="dashed", color = "red") +
+  geom_vline(xintercept=0, linetype="dashed", color = "red") +
+  geom_hline(yintercept=10, linetype="dashed", color = "red") +
+  geom_hline(yintercept=11.5, linetype="dashed", color = "red")
+object_1$youri_clusters <- ifelse(
+  object_1@reductions$umap@cell.embeddings[,1] >= -3 &
+    object_1@reductions$umap@cell.embeddings[,1] <= 0 &
+    object_1@reductions$umap@cell.embeddings[,2] >= 10 &
+    object_1@reductions$umap@cell.embeddings[,2] <= 11.5 &
+    object_1$youri_clusters != "Pericytes", "ambiguous", object_1$youri_clusters)
+
+
+
+# TAM/MG
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "youri_clusters") +
+  geom_vline(xintercept=9, linetype="dashed", color = "red") +
+  geom_vline(xintercept=17, linetype="dashed", color = "red") +
+  geom_hline(yintercept=0, linetype="dashed", color = "red") +
+  geom_hline(yintercept=7, linetype="dashed", color = "red")
+object_1$youri_clusters <- ifelse(
+  object_1@reductions$umap@cell.embeddings[,1] >= 9 &
+    object_1@reductions$umap@cell.embeddings[,1] <= 17 &
+    object_1@reductions$umap@cell.embeddings[,2] >= 0 &
+    object_1@reductions$umap@cell.embeddings[,2] <= 7 &
+    object_1$youri_clusters != "TAM/MG", "ambiguous", object_1$youri_clusters)
+
+
+# OD
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "youri_clusters") +
+  geom_vline(xintercept=-6, linetype="dashed", color = "red") +
+  geom_vline(xintercept=1, linetype="dashed", color = "red") +
+  geom_hline(yintercept=11.5, linetype="dashed", color = "red") +
+  geom_hline(yintercept=17, linetype="dashed", color = "red")
+object_1$youri_clusters <- ifelse(
+  object_1@reductions$umap@cell.embeddings[,1] >= -6 &
+    object_1@reductions$umap@cell.embeddings[,1] <= 1 &
+    object_1@reductions$umap@cell.embeddings[,2] >= 11.5 &
+    object_1@reductions$umap@cell.embeddings[,2] <= 17 &
+    object_1$youri_clusters != "Oligodendrocytes", "ambiguous", object_1$youri_clusters)
+
+
+
+# Tumor
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "youri_clusters") +
+  geom_vline(xintercept=-10.25, linetype="dashed", color = "red") +
+  geom_vline(xintercept=6.5, linetype="dashed", color = "red") +
+  geom_hline(yintercept=-9.5, linetype="dashed", color = "red") +
+  geom_hline(yintercept=5, linetype="dashed", color = "red")
+object_1$youri_clusters <- ifelse(
+  object_1@reductions$umap@cell.embeddings[,1] >= -10.25 &
+    object_1@reductions$umap@cell.embeddings[,1] <= 6.5 &
+    object_1@reductions$umap@cell.embeddings[,2] >= -9.5 &
+    object_1@reductions$umap@cell.embeddings[,2] <= 5 &
+    object_1$youri_clusters != "Tumor", "ambiguous", object_1$youri_clusters)
+
+
+
+
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "youri_clusters")
+sum(object_1$youri_clusters == "ambiguous")
+
+object_1.BT364 <- object_1
+
+
+
 
 #### 1. Tumor (+) ----
 
@@ -2140,10 +2249,8 @@ FeaturePlot(object = object_1, features = "TRIM24")
 
 #### 2. Astrocyte (+) ----
 
-
-
-FeaturePlot(object = object_1, features = "STMN2") # Tumor
-FeaturePlot(object = object_1, features = "ETNPPL") # Tumor
+# FeaturePlot(object = object_1, features = "STMN2") # Tumor
+# FeaturePlot(object = object_1, features = "ETNPPL") # Tumor
 
 FeaturePlot(object = object_1, features = "GPR98")
 FeaturePlot(object = object_1, features = "AQP4")
@@ -3145,6 +3252,8 @@ object_1 <- subset(x = object_1, subset =
 object_1 <- NormalizeData(object = object_1, normalization.method = "LogNormalize", scale.factor = 1e4)
 object_1 <- FindVariableFeatures(object = object_1, selection.method = "vst", nfeatures = 2000)
 object_1[["state"]] <- as.factor(paste( gsub("_.+$","",sid) , gsub("_.+$","",colnames(object_1)), sep='-'))
+object_1$dataset <- as.character(object_1$state)
+
 
 
 top10 <- head(VariableFeatures(object_1), 10)
@@ -4944,6 +5053,7 @@ FeaturePlot(object = object_1, features = C6[17:33])
 
 ## NSC1 CD133 :: C6 ! ----
 
+
 rm(sid, object_1)
 gc()
 
@@ -4979,7 +5089,9 @@ object_1 <- subset(x = object_1, subset =
 
 object_1 <- NormalizeData(object = object_1, normalization.method = "LogNormalize", scale.factor = 1e4)
 object_1 <- FindVariableFeatures(object = object_1, selection.method = "vst", nfeatures = 2000)
-object_1[["state"]] <- "P1" 
+object_1[["state"]] <- gsub("_cd","-CD",gsub("\\..+$","",sid))
+object_1$dataset <- as.character(object_1$state)
+
 
 
 top10 <- head(VariableFeatures(object_1), 10)
@@ -5017,6 +5129,8 @@ object_1 <- FindNeighbors(object_1, dims = 1:d)
 object_1 <- FindClusters(object_1, resolution = 1, algorithm=1)
 head(Idents(object_1), 20)
 
+
+
 ### UMAP clustering ----
 
 object_1 <- RunUMAP(object_1, dims = 1:d)
@@ -5032,6 +5146,45 @@ DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "se
 head(tmp.10,20) # CDC6,E2F1,TK1,MCM3,MCM6,DTL,KIAA0101,RMI2,DSN1,LOXL1,PCNA,ZNF367,GINS2,CHAF1A,RAD51AP1,MCM4,MCM5,GPX3,HES4,CDC45,
 # tmp.11 <- FindMarkers(object_1, ident.1 = 11)
 head(tmp.11,20) # BCAM
+
+
+### Prepare for integration ----
+
+#object_1 <- FindClusters(object_1, resolution = 1)
+object_1$youri_clusters <- 'NSC1 CD133+'
+
+
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "youri_clusters") +
+  geom_vline(xintercept=8, linetype="dashed", color = "red") +
+  geom_vline(xintercept=11, linetype="dashed", color = "red") +
+  geom_hline(yintercept=2, linetype="dashed", color = "red") +
+  geom_hline(yintercept=4, linetype="dashed", color = "red") +
+  geom_vline(xintercept=6, linetype="dashed", color = "blue") +
+  geom_vline(xintercept=8, linetype="dashed", color = "blue") +
+  geom_hline(yintercept=0, linetype="dashed", color = "blue") +
+  geom_hline(yintercept=2, linetype="dashed", color = "blue")
+
+
+object_1$youri_clusters <- ifelse(
+  object_1@reductions$umap@cell.embeddings[,1] >= 8 & 
+    object_1@reductions$umap@cell.embeddings[,1] <= 11 & 
+    object_1@reductions$umap@cell.embeddings[,2] >= 2 & 
+    object_1@reductions$umap@cell.embeddings[,2] <= 4,
+  "Pericytes", object_1$youri_clusters)
+
+object_1$youri_clusters <- ifelse(
+  object_1@reductions$umap@cell.embeddings[,1] >= 6 & 
+    object_1@reductions$umap@cell.embeddings[,1] <= 8 & 
+    object_1@reductions$umap@cell.embeddings[,2] >= 0 & 
+    object_1@reductions$umap@cell.embeddings[,2] <= 2,
+  "TAM/MG", object_1$youri_clusters)
+
+
+
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "youri_clusters")
+
+object_1.NSC1.CD133 <- object_1
+
 
 
 #### 2. Astrocyte (+) ----
@@ -5161,5 +5314,141 @@ FeaturePlot(object = object_1, features = C6[1:16])
 FeaturePlot(object = object_1, features = C6[17:33])
 
 ## Combined ----
+
+
+object_c <- merge(
+  object_1.BT338,
+  y=c(
+  object_1.BT363,
+  object_1.BT364,
+  object_1.BT397,
+  object_1.NSC1.CD133),
+  add.cell.ids = c("BT338","BT363","BT364","BT397","NSC1_CD133"))
+  
+
+# colnames(object_c)
+# levels(as.factor(object_c$dataset))
+
+
+object_c$seurat_clusters <- NULL
+object_c <- NormalizeData(object = object_c, normalization.method = "LogNormalize", scale.factor = 1e4)
+object_c <- FindVariableFeatures(object = object_c, selection.method = "vst", nfeatures = 2000)
+
+
+# top10 <- head(VariableFeatures(object_c), 10)
+plot1 <- VariableFeaturePlot(object_c)
+plot2 <- LabelPoints(plot = plot1, points = top10, repel = TRUE)
+#CombinePlots(plots = list(plot1, plot2))     
+plot1
+plot2
+
+object_c <- ScaleData(object_c, features = rownames(object_c))
+object_c <- RunPCA(object_c, features = VariableFeatures(object = object_c))
+VizDimLoadings(object_c, dims = 1:2, reduction = "pca")
+DimPlot(object_c, reduction = "pca")
+ElbowPlot(object_c, ndims=45)
+
+
+
+d <- 25
+
+
+object_c <- FindNeighbors(object_c, dims = 1:d)
+object_c <- FindClusters(object_c, resolution = 1.2, algorithm=1)
+object_c <- RunUMAP(object_c, dims = 1:d)
+
+object_c@meta.data$pt = sapply(strsplit(rownames(object_c@meta.data), "[.]"), "[", 1)
+
+# levels(object_c$seurat_clusters) <- gsub("^(18)$","Pericytes.\\1",levels(object_c$seurat_clusters))
+# levels(object_c$seurat_clusters) <- gsub("^(20)$","Endothelial.\\1",levels(object_c$seurat_clusters))
+# levels(object_c$seurat_clusters) <- gsub("^(10|16|24)$","TAM/MG.\\1",levels(object_c$seurat_clusters))
+# levels(object_c$seurat_clusters) <- gsub("^(23)$","Oligodendrocytes.\\1",levels(object_c$seurat_clusters))
+# levels(object_c$seurat_clusters) <- gsub("^(26)$","T-Cells.\\1",levels(object_c$seurat_clusters))
+# 
+# 
+# levels(object_c$seurat_clusters) <- gsub("^(15)$","Tumor [PJ017].\\1",levels(object_c$seurat_clusters))
+# levels(object_c$seurat_clusters) <- gsub("^(2|7|17|25)$","Tumor [PJ018].\\1",levels(object_c$seurat_clusters))
+# levels(object_c$seurat_clusters) <- gsub("^(0|1|11|12|9|22)$","Tumor [PJ025].\\1",levels(object_c$seurat_clusters))
+# levels(object_c$seurat_clusters) <- gsub("^(14)$","Tumor [PJ032].\\1",levels(object_c$seurat_clusters))
+# levels(object_c$seurat_clusters) <- gsub("^(4|8|19|21)$","Tumor [PJ035].\\1",levels(object_c$seurat_clusters))
+# levels(object_c$seurat_clusters) <- gsub("^(3|5|6|13)$","Tumor [PJ048].\\1",levels(object_c$seurat_clusters))
+
+DimPlot(object_c, reduction = "umap", label = TRUE, pt.size = .8, group.by = "seurat_clusters")
+
+
+# library(patchwork)
+DimPlot(object_c, reduction = "umap", label = TRUE, pt.size = .8, group.by = "youri_clusters") +
+DimPlot(object_c, reduction = "umap", label = TRUE, pt.size = .8, group.by = "dataset")
+
+
+
+#### C4 (up) ----
+
+
+f <- c(C4A,C4B)
+DotPlot(object_c, features=f, group.by = "seurat_clusters") +  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+
+DotPlot(object_c, features=f, group.by = "youri_clusters") +  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+FeaturePlot(object = object_c, features = C4A)
+FeaturePlot(object = object_c, features = C4B)
+
+
+#### C5 (down) ----
+
+
+f <- C5
+DotPlot(object_c, features=f, group.by = "seurat_clusters") +  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+
+
+DotPlot(object_c, features=f, group.by = "youri_clusters") +  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+
+FeaturePlot(object = object_1, features = C5)
+
+
+#### C6 (up) ----
+
+
+f <- c(C6 , c("RGS5", "PDGFRB", "CD248") )
+
+
+f <- C6
+DotPlot(object_c, features=f, group.by = "seurat_clusters") +  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+
+VlnPlot(object = object_c, features = c(C6), group.by = "seurat_clusters",stack=T)
+RidgePlot(object = object_c, features = c(C6), group.by = "seurat_clusters",stack=T)
+
+VlnPlot(object = object_c, features = c(C6), group.by = "youri_clusters",stack=T)
+RidgePlot(object = object_c, features = c(C6), group.by = "youri_clusters",stack=T)
+
+
+FeaturePlot(object = object_c, features = C6)
+
+FeaturePlot(object = object_c, features =  "CRABP2" )
+FeaturePlot(object = object_c, features =  "CLIP2" )
+FeaturePlot(object = object_c, features =  "DPT" )
+FeaturePlot(object = object_c, features =  "FGF7" )
+#FeaturePlot(object = object_c, features =  "COL10A1" )
+FeaturePlot(object = object_c, features =  "FBN1" ) # J
+FeaturePlot(object = object_c, features =  "GLT8D2" )
+FeaturePlot(object = object_c, features =  "IRX3" )
+FeaturePlot(object = object_c, features =  "MFAP5" )
+FeaturePlot(object = object_c, features =  "MFAP4" ) # tumor
+# FeaturePlot(object = object_c, features =  "COL8A2" )
+# FeaturePlot(object = object_c, features =  "FNDC1" )
+FeaturePlot(object = object_c, features =  "MMP11" ) # ja
+FeaturePlot(object = object_c, features =  "MFAP2" ) # endo
+FeaturePlot(object = object_c, features =  "COL1A2" ) # high in pericytes
+FeaturePlot(object = object_c, features =  "COL1A1" ) # high in pericytes
+FeaturePlot(object = object_c, features =  "COL5A1" )
+FeaturePlot(object = object_c, features =  "ADAMTS2" )
+FeaturePlot(object = object_c, features =  "TPSB2" )
+FeaturePlot(object = object_c, features =  "KRT8" )
+# FeaturePlot(object = object_c, features =  "OMD" )
+FeaturePlot(object = object_c, features =  "OGN" )
+FeaturePlot(object = object_c, features =  "MME" )
 
 
