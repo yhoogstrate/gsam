@@ -2143,6 +2143,8 @@ DimPlot(object_c, reduction = "pca")
 ElbowPlot(object_c, ndims=45)
 
 d <- 25
+
+
 object_c <- FindNeighbors(object_c, dims = 1:d)
 object_c <- FindClusters(object_c, resolution = 1.2, algorithm=1)
 object_c <- RunUMAP(object_c, dims = 1:d)
