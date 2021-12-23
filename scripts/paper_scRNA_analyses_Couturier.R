@@ -2002,10 +2002,16 @@ FeaturePlot(object = object_1, features =  "PERP" )
 rm(object_1)
 gc()
 
-object_1 <- Read10X(data.dir = "data/scRNA/EGAS00001004422_Couturier/filtered/BT364_1of2.filtered_gene_matrices/")
+
+rm(sid, object_1)
+gc()
+
+sid <- "BT364_1of2.filtered_gene_matrices"
+object_1 <- Read10X(data.dir = paste0("data/scRNA/EGAS00001004422_Couturier/filtered/",sid,"/"))
 object_1 <- CreateSeuratObject(counts = object_1, min.cells = 3, min.features = 200, project="Couturier")
 
-object_1.tmp <- Read10X(data.dir = "data/scRNA/EGAS00001004422_Couturier/filtered/BT364_2of2.filtered_gene_matrices/")
+sid <- "BT364_2of2.filtered_gene_matrices"
+object_1.tmp <- Read10X(data.dir = paste0("data/scRNA/EGAS00001004422_Couturier/filtered/",sid,"/"))
 object_1.tmp <- CreateSeuratObject(counts = object_1.tmp, min.cells = 3, min.features = 200, project="Couturier")
 
 object_1.m <- merge(object_1, y=object_1.tmp, add.cell.ids = c("1of2","2of2"), project="Couturier")
@@ -2013,6 +2019,7 @@ object_1.m <- merge(object_1, y=object_1.tmp, add.cell.ids = c("1of2","2of2"), p
 rm(object_1, object_1.tmp)
 object_1 <- object_1.m
 rm(object_1.m)
+
 
 
 mito.features_object1 <- grep(pattern = "^MT-", x=rownames(x=object_1), value=T)
@@ -5321,9 +5328,12 @@ object_c <- merge(
   y=c(
   object_1.BT363,
   object_1.BT364,
-  object_1.BT397,
-  object_1.NSC1.CD133),
-  add.cell.ids = c("BT338","BT363","BT364","BT397","NSC1_CD133"))
+  object_1.BT397
+  #,object_1.NSC1.CD133
+  ),
+  add.cell.ids = c("BT338","BT363","BT364","BT397"
+                   #,"NSC1_CD133"
+                   ))
   
 
 # colnames(object_c)
@@ -5350,7 +5360,7 @@ ElbowPlot(object_c, ndims=45)
 
 
 
-d <- 25
+d <- 26
 
 
 object_c <- FindNeighbors(object_c, dims = 1:d)
@@ -5359,11 +5369,11 @@ object_c <- RunUMAP(object_c, dims = 1:d)
 
 object_c@meta.data$pt = sapply(strsplit(rownames(object_c@meta.data), "[.]"), "[", 1)
 
-# levels(object_c$seurat_clusters) <- gsub("^(18)$","Pericytes.\\1",levels(object_c$seurat_clusters))
-# levels(object_c$seurat_clusters) <- gsub("^(20)$","Endothelial.\\1",levels(object_c$seurat_clusters))
+levels(object_c$seurat_clusters) <- gsub("^(15)$","Pericytes.\\1",levels(object_c$seurat_clusters))
+levels(object_c$seurat_clusters) <- gsub("^(30)$","Endothelial.\\1",levels(object_c$seurat_clusters))
+levels(object_c$seurat_clusters) <- gsub("^(28)$","T-Cells.\\1",levels(object_c$seurat_clusters))
+levels(object_c$seurat_clusters) <- gsub("^(12|21)$","Oligodendrocytes.\\1",levels(object_c$seurat_clusters))
 # levels(object_c$seurat_clusters) <- gsub("^(10|16|24)$","TAM/MG.\\1",levels(object_c$seurat_clusters))
-# levels(object_c$seurat_clusters) <- gsub("^(23)$","Oligodendrocytes.\\1",levels(object_c$seurat_clusters))
-# levels(object_c$seurat_clusters) <- gsub("^(26)$","T-Cells.\\1",levels(object_c$seurat_clusters))
 # 
 # 
 # levels(object_c$seurat_clusters) <- gsub("^(15)$","Tumor [PJ017].\\1",levels(object_c$seurat_clusters))
