@@ -1682,7 +1682,7 @@ DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "yo
 object_1$youri_clusters <- ifelse(object_1$seurat_clusters %in% c(6,9),"TAM/MG", object_1$youri_clusters)
 object_1$youri_clusters <- ifelse(object_1$seurat_clusters %in% c(7,13),"Oligodendrocytes", object_1$youri_clusters)
 object_1$youri_clusters <- ifelse(object_1$seurat_clusters %in% c(0:5,8,10:12,14) ,"Tumor", object_1$youri_clusters)
-object_1$youri_clusters <- ifelse(object_1$seurat_clusters %in% c(15,16) ,"Pericytes|Endothelial", object_1$youri_clusters)
+object_1$youri_clusters <- ifelse(object_1$seurat_clusters %in% c(15,16) ,"Endothelial", object_1$youri_clusters)
 object_1$youri_clusters <- ifelse(object_1$seurat_clusters %in% c(15,16) & 
                                     object_1@reductions$umap@cell.embeddings[,2] > 0.2
                                   ,"Pericytes", object_1$youri_clusters)
@@ -2132,7 +2132,7 @@ object_1$youri_clusters <- ifelse(object_1$seurat_clusters %in% c(14) &
                                   "Pericytes", object_1$youri_clusters)
 object_1$youri_clusters <- ifelse(object_1$seurat_clusters %in% c(13) &
                                     object_1@reductions$umap@cell.embeddings[,1] < -10.25,
-                                  "Tumor NPC2", object_1$youri_clusters)
+                                  "Tumor", object_1$youri_clusters) # NPC2 cluster
 object_1$youri_clusters <- ifelse(object_1$seurat_clusters %in% c(6,8,11),"TAM/MG", object_1$youri_clusters)
 object_1$youri_clusters <- ifelse(object_1$seurat_clusters %in% c(0:5,7,9,12,13,15) &
                                     object_1@reductions$umap@cell.embeddings[,1] >= -10.25 ,"Tumor", object_1$youri_clusters)
@@ -5336,8 +5336,8 @@ object_c <- merge(
                    ))
   
 
-# colnames(object_c)
-# levels(as.factor(object_c$dataset))
+levels(as.factor(object_c$dataset))
+object_c$dataset.short <- gsub("^([^-]+).+$","\\1",object_c$dataset)
 
 
 object_c$seurat_clusters <- NULL
@@ -5359,15 +5359,17 @@ DimPlot(object_c, reduction = "pca")
 ElbowPlot(object_c, ndims=45)
 
 
-
 d <- 26
+
 
 
 object_c <- FindNeighbors(object_c, dims = 1:d)
 object_c <- FindClusters(object_c, resolution = 1.2, algorithm=1)
 object_c <- RunUMAP(object_c, dims = 1:d)
-
 object_c@meta.data$pt = sapply(strsplit(rownames(object_c@meta.data), "[.]"), "[", 1)
+
+
+
 
 levels(object_c$seurat_clusters) <- gsub("^(15)$","Pericytes.\\1",levels(object_c$seurat_clusters))
 levels(object_c$seurat_clusters) <- gsub("^(30)$","Endothelial.\\1",levels(object_c$seurat_clusters))
@@ -5388,7 +5390,7 @@ DimPlot(object_c, reduction = "umap", label = TRUE, pt.size = .8, group.by = "se
 
 # library(patchwork)
 DimPlot(object_c, reduction = "umap", label = TRUE, pt.size = .8, group.by = "youri_clusters") +
-DimPlot(object_c, reduction = "umap", label = TRUE, pt.size = .8, group.by = "dataset")
+DimPlot(object_c, reduction = "umap", label = TRUE, pt.size = .8, group.by = "dataset.short")
 
 
 
