@@ -1682,12 +1682,12 @@ DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "yo
 object_1$youri_clusters <- ifelse(object_1$seurat_clusters %in% c(6,9),"TAM/MG", object_1$youri_clusters)
 object_1$youri_clusters <- ifelse(object_1$seurat_clusters %in% c(7,13),"Oligodendrocytes", object_1$youri_clusters)
 object_1$youri_clusters <- ifelse(object_1$seurat_clusters %in% c(0:5,8,10:12,14) ,"Tumor", object_1$youri_clusters)
-object_1$youri_clusters <- ifelse(object_1$seurat_clusters %in% c(15,16) ,"Endothelial", object_1$youri_clusters)
+#object_1$youri_clusters <- ifelse(object_1$seurat_clusters %in% c(15,16) ,"Endothelial", object_1$youri_clusters)
 object_1$youri_clusters <- ifelse(object_1$seurat_clusters %in% c(15,16) & 
                                     object_1@reductions$umap@cell.embeddings[,2] > 0.2
                                   ,"Pericytes", object_1$youri_clusters)
 object_1$youri_clusters <- ifelse(object_1$seurat_clusters %in% c(15,16) & 
-                                    object_1@reductions$umap@cell.embeddings[,2] < -0.75
+                                    object_1@reductions$umap@cell.embeddings[,2] < 0.2 # -0.75
                                   ,"Endothelial", object_1$youri_clusters)
 
 
@@ -1707,18 +1707,18 @@ object_1$youri_clusters <- ifelse(
     object_1@reductions$umap@cell.embeddings[,2] <= 1 &
     object_1$youri_clusters != "Pericytes", "ambiguous", object_1$youri_clusters)
 
-# Peri|Endo
-DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "youri_clusters") +
-  geom_vline(xintercept=12, linetype="dashed", color = "red") +
-  geom_vline(xintercept=16, linetype="dashed", color = "red") +
-  geom_hline(yintercept=-0.75, linetype="dashed", color = "red") +
-  geom_hline(yintercept=0.2, linetype="dashed", color = "red")
-object_1$youri_clusters <- ifelse(
-  object_1@reductions$umap@cell.embeddings[,1] >= 12 &
-    object_1@reductions$umap@cell.embeddings[,1] <= 16 &
-    object_1@reductions$umap@cell.embeddings[,2] >= -0.75 &
-    object_1@reductions$umap@cell.embeddings[,2] <= 0.2 &
-    object_1$youri_clusters != "Pericytes|Endothelial", "ambiguous", object_1$youri_clusters)
+# # Peri|Endo
+# DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "youri_clusters") +
+#   geom_vline(xintercept=12, linetype="dashed", color = "red") +
+#   geom_vline(xintercept=16, linetype="dashed", color = "red") +
+#   geom_hline(yintercept=-0.75, linetype="dashed", color = "red") +
+#   geom_hline(yintercept=0.2, linetype="dashed", color = "red")
+# object_1$youri_clusters <- ifelse(
+#   object_1@reductions$umap@cell.embeddings[,1] >= 12 &
+#     object_1@reductions$umap@cell.embeddings[,1] <= 16 &
+#     object_1@reductions$umap@cell.embeddings[,2] >= -0.75 &
+#     object_1@reductions$umap@cell.embeddings[,2] <= 0.2 &
+#     object_1$youri_clusters != "Pericytes|Endothelial", "ambiguous", object_1$youri_clusters)
 
 
 # Endo
@@ -1731,7 +1731,7 @@ object_1$youri_clusters <- ifelse(
   object_1@reductions$umap@cell.embeddings[,1] >= 12 &
     object_1@reductions$umap@cell.embeddings[,1] <= 16 &
     object_1@reductions$umap@cell.embeddings[,2] >= -2 &
-    object_1@reductions$umap@cell.embeddings[,2] <= -0.75 &
+    object_1@reductions$umap@cell.embeddings[,2] <= 0.2 & #-0.75 &
     object_1$youri_clusters != "Endothelial", "ambiguous", object_1$youri_clusters)
 
 
@@ -1778,11 +1778,13 @@ object_1$youri_clusters <- ifelse(
     object_1@reductions$umap@cell.embeddings[,2] <= 10 &
     object_1$youri_clusters != "Tumor", "ambiguous", object_1$youri_clusters)
 
+sum(object_1$youri_clusters == "ambiguous")
 
 
 
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "youri_clusters")
-sum(object_1$youri_clusters == "ambiguous")
+
+
 
 object_1.BT363 <- object_1
 
