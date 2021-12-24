@@ -5428,8 +5428,8 @@ f <- c(C6 , c("RGS5", "PDGFRB", "CD248") )
 f <- C6
 DotPlot(object_c, features=f, group.by = "seurat_clusters") +  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
-
 VlnPlot(object = object_c, features = c(C6), group.by = "seurat_clusters",stack=T)
+
 RidgePlot(object = object_c, features = c(C6), group.by = "seurat_clusters",stack=T)
 
 VlnPlot(object = object_c, features = c(C6), group.by = "youri_clusters",stack=T)
