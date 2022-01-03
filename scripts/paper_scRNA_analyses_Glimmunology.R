@@ -112,26 +112,70 @@ object_1 <- RunUMAP(object_1, dims = 1:40)
 object_1@meta.data$pt = sapply(strsplit(rownames(object_1@meta.data), "[.]"), "[", 1)
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "seurat_clusters")
 
-levels(object_1$seurat_clusters) <- gsub("^21$","Neuron",levels(object_1$seurat_clusters))
-levels(object_1$seurat_clusters) <- gsub("^(5|10|13|14)$","Immune + T-cells.\\1",levels(object_1$seurat_clusters))
-levels(object_1$seurat_clusters) <- gsub("^(4|6|12|19)$","Oligodendrocytes.\\1",levels(object_1$seurat_clusters))
-levels(object_1$seurat_clusters) <- gsub("^16$","Endothelial",levels(object_1$seurat_clusters))
-levels(object_1$seurat_clusters) <- gsub("^15$","Pericytes",levels(object_1$seurat_clusters))
-levels(object_1$seurat_clusters) <- gsub("^(0|1|2|3|9|8|11)$","Tumor.\\1",levels(object_1$seurat_clusters))
-levels(object_1$seurat_clusters) <- gsub("^7$","Tumor/Dividing",levels(object_1$seurat_clusters))
-levels(object_1$seurat_clusters) <- gsub("^17$","Tumor outlier",levels(object_1$seurat_clusters))
-levels(object_1$seurat_clusters) <- gsub("^20$","Astrocyte",levels(object_1$seurat_clusters))
-levels(object_1$seurat_clusters) <- gsub("^18$","Tumor/Apoptosis?",levels(object_1$seurat_clusters))
-levels(object_1$seurat_clusters) <- gsub("^22$","Immune cell / OD hybrid?",levels(object_1$seurat_clusters))
+# levels(object_1$seurat_clusters) <- gsub("^21$","\\1.Neuron",levels(object_1$seurat_clusters))
+# levels(object_1$seurat_clusters) <- gsub("^(5|10|13|14)$","Immune + T-cells.\\1",levels(object_1$seurat_clusters))
+# levels(object_1$seurat_clusters) <- gsub("^(4|6|12|19)$","Oligodendrocytes.\\1",levels(object_1$seurat_clusters))
+# levels(object_1$seurat_clusters) <- gsub("^16$","Endothelial",levels(object_1$seurat_clusters))
+# levels(object_1$seurat_clusters) <- gsub("^15$","Pericytes",levels(object_1$seurat_clusters))
+# levels(object_1$seurat_clusters) <- gsub("^(0|1|2|3|9|8|11)$","Tumor.\\1",levels(object_1$seurat_clusters))
+# levels(object_1$seurat_clusters) <- gsub("^7$","Tumor/Dividing",levels(object_1$seurat_clusters))
+# levels(object_1$seurat_clusters) <- gsub("^17$","Tumor outlier",levels(object_1$seurat_clusters))
+# levels(object_1$seurat_clusters) <- gsub("^20$","Astrocyte",levels(object_1$seurat_clusters))
+# levels(object_1$seurat_clusters) <- gsub("^18$","Tumor/Apoptosis?",levels(object_1$seurat_clusters))
+# levels(object_1$seurat_clusters) <- gsub("^22$","Immune cell / OD hybrid?",levels(object_1$seurat_clusters))
 
-DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "seurat_clusters")
+object_1 <- FindClusters(object_1, resolution = 0.8, algorithm=1)
+object_1$class <- as.character(object_1$seurat_clusters)
+object_1$class <- ifelse(object_1$seurat_clusters %in% c(21), "NE", object_1$class)
+object_1$class <- ifelse(object_1$seurat_clusters %in% c(5,10,13,14), "TAM/MG", object_1$class)
+object_1$class <- ifelse(object_1$seurat_clusters %in% c(4,6,12,19), "OD", object_1$class)
+object_1$class <- ifelse(object_1$seurat_clusters %in% c(16), "EN", object_1$class)
+object_1$class <- ifelse(object_1$seurat_clusters %in% c(15), "PE", object_1$class)
+object_1$class <- ifelse(object_1$seurat_clusters %in% c(0,1,2,3,9,8,11), "T", object_1$class)
+object_1$class <- ifelse(object_1$seurat_clusters %in% c(7), "T", object_1$class) # dividing
+object_1$class <- ifelse(object_1$seurat_clusters %in% c(17), "T ? Outlier?", object_1$class)
+object_1$class <- ifelse(object_1$seurat_clusters %in% c(20), "AC", object_1$class)
+object_1$class <- ifelse(object_1$seurat_clusters %in% c(18), "T ? Apoptotic?", object_1$class)
+object_1$class <- ifelse(object_1$seurat_clusters %in% c(22), "TAM/MG ~ OD Hybrid?", object_1$class)
+object_1$class <- ifelse(object_1@reductions$umap@cell.embeddings[,1] >= 10 &
+                           object_1@reductions$umap@cell.embeddings[,1] <= 11 &
+                           object_1@reductions$umap@cell.embeddings[,2] >= 1.5 &
+                           object_1@reductions$umap@cell.embeddings[,2] <= 3,
+                         "TC", object_1$class)
+object_1$seurat_clusters <- as.factor(paste0(as.character(object_1$seurat_clusters),". ",object_1$class))
+
+levels(object_1$seurat_clusters)
 
 
-tmp.17 <- FindMarkers(object_1, ident.1 = 17)
-head(tmp.17,20)
+object_1$seurat_clusters <- factor(object_1$seurat_clusters, levels=c(
+  "0. T","1. T","2. T","3. T","7. T","8. T","9. T","11. T",
+  "17. T ? Outlier?","18. T ? Apoptotic?",
+  "20. AC",
+  "21. NE",
+  "4. OD","6. OD","12. OD","19. OD",
+  "16. EN",
+  "15. PE",
+  "22. TAM/MG ~ OD Hybrid?" ,
+  "5. TAM/MG","10. TAM/MG","13. TAM/MG","14. TAM/MG",
+  "14. TC"
+))
 
-tmp.22 <- FindMarkers(object_1, ident.1 = 22)
-head(tmp.22,20)
+
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "seurat_clusters")  +
+  labs(subtitle=sid) +
+  guides(col=guide_legend(ncol=1, override.aes = list(size = 3)))
+ggsave(paste0("output/figures/scRNA/Glimmunology/",sid,"_UMAP.pdf"),width=10,height=8)
+ggsave(paste0("output/figures/scRNA/Glimmunology/",sid,"_UMAP.png"),width=12,height=10)
+
+
+
+# 
+# 
+# tmp.17 <- FindMarkers(object_1, ident.1 = 17)
+# head(tmp.17,20)
+# 
+# tmp.22 <- FindMarkers(object_1, ident.1 = 22)
+# head(tmp.22,20)
 
 
 
@@ -323,8 +367,14 @@ FeaturePlot(object = object_1, features = C3)
 #### C4 (up) ----
 
 
-f <- c(C4A,C4B)
-DotPlot(object = object_1, features = c(f), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+DotPlot(object = object_1, features = c(C4A, C4B), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(x = paste0("Features [C4] in: ",sid))
+ggsave(paste0("output/figures/scRNA/Glimmunology/",sid,"_C4.pdf"),width=6.5, height=4,scale=1.2)
+ggsave(paste0("output/figures/scRNA/Glimmunology/",sid,"_C4.png"),width=6.5, height=4,scale=1.2)
+
+
+
 
 FeaturePlot(object = object_1, features = C4A[1:4])
 FeaturePlot(object = object_1, features = C4A[5:8])
@@ -339,8 +389,12 @@ FeaturePlot(object = object_1, features = C4B[5:9])
 
 #### C5 (down) ----
 
-f <- C5
-DotPlot(object = object_1, features = c(f), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+DotPlot(object = object_1, features = c(C5),  group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(x = paste0("Features [C5] in: ",sid))
+ggsave(paste0("output/figures/scRNA/Glimmunology/",sid,"_C5.pdf"),width=6.5, height=4,scale=1.2)
+ggsave(paste0("output/figures/scRNA/Glimmunology/",sid,"_C5.png"),width=6.5, height=4,scale=1.2)
 
 
 FeaturePlot(object = object_1, features = C5[1:4])
@@ -352,8 +406,13 @@ FeaturePlot(object = object_1, features = C5[13:16])
 #### C6 (up) ----
 
 
-DotPlot(object = object_1, features = C6, group.by = "seurat_clusters") + 
-  theme(axis.text.x = element_text(angle = 45, hjust=1))
+DotPlot(object = object_1, features =list('C6'=C6 , 'Peri'=c("RGS5", "PDGFRB", "CD248") ), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(x = paste0("Features [C6] in: ",sid))
+ggsave(paste0("output/figures/scRNA/Glimmunology/",sid,"_C6.pdf"),width=7.5, height=4,scale=1.2)
+ggsave(paste0("output/figures/scRNA/Glimmunology/",sid,"_C6.png"),width=7.5, height=4,scale=1.2)
+
+
 
 
 VlnPlot(object = object_1, features = C6, stack = T, sort = T)
