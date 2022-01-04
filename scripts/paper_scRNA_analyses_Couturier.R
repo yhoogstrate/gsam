@@ -926,10 +926,12 @@ object_1$seurat_clusters <- factor(object_1$seurat_clusters, levels=c(
 ))
 
 
-DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "seurat_clusters")  +
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters") +
+  guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
   labs(subtitle=sid)
-ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_tSNE.pdf"),width=10,height=8)
-ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_tSNE.png"),width=10,height=8)
+
+ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_UMAP.pdf"),width=10,height=8)
+ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_UMAP.png"),width=10,height=8)
 
 
 
@@ -1167,8 +1169,13 @@ FeaturePlot(object = object_1, features = C3)
 #### C4 (up) ----
 
 
-f <- c(C4A,C4B)
-DotPlot(object = object_1, features = c(f), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+DotPlot(object = object_1, features = c(C4A, C4B), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(x = paste0("Features [C4] in: ",sid))
+ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C4.pdf"),width=6.5, height=4,scale=1.2)
+ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C4.png"),width=6.5, height=4,scale=1.2)
+
+
 
 FeaturePlot(object = object_1, features = C4A[1:4])
 FeaturePlot(object = object_1, features = C4A[5:8])
@@ -1183,8 +1190,12 @@ FeaturePlot(object = object_1, features = C4B[5:9])
 
 #### C5 (down) ----
 
-f <- C5
-DotPlot(object = object_1, features = c(f), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+DotPlot(object = object_1, features = c(C5),  group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(x = paste0("Features [C5] in: ",sid))
+ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C5.pdf"),width=6.5, height=4,scale=1.2)
+ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C5.png"),width=6.5, height=4,scale=1.2)
+
 
 
 FeaturePlot(object = object_1, features = C5[1:4])
@@ -1196,8 +1207,12 @@ FeaturePlot(object = object_1, features = C5[13:16])
 #### C6 (up) ----
 
 
-DotPlot(object = object_1, features = C6, group.by = "seurat_clusters") + 
-  theme(axis.text.x = element_text(angle = 45, hjust=1))
+DotPlot(object = object_1, features =list('C6'=C6 , 'Peri'=c("RGS5", "PDGFRB", "CD248") ), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(x = paste0("Features [C6] in: ",sid))
+ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C6.pdf"),width=7.5, height=4,scale=1.2)
+ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C6.png"),width=7.5, height=4,scale=1.2)
+
 
 
 VlnPlot(object = object_1, features = C6, stack = T, sort = T)
@@ -3453,9 +3468,12 @@ object_1$seurat_clusters <- factor(object_1$seurat_clusters, levels=c(
 
 
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters") +
+  guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
   labs(subtitle=sid)
-ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_tSNE.pdf"),width=10,height=8)
-ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_tSNE.png"),width=10,height=8)
+
+ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_UMAP.pdf"),width=10,height=8)
+ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_UMAP.png"),width=10,height=8)
+
 
 
 ### Prepare for integration ----
@@ -5529,27 +5547,88 @@ object_c <- FindClusters(object_c, resolution = 1.2, algorithm=1)
 object_c <- RunUMAP(object_c, dims = 1:d)
 object_c@meta.data$pt = sapply(strsplit(rownames(object_c@meta.data), "[.]"), "[", 1)
 
+#### name clusters ----
+
+object_c <- FindClusters(object_c, resolution = 1.2, algorithm=1)
+DimPlot(object_c, reduction = "umap", label = T, pt.size = .6, group.by = "seurat_clusters")
 
 
+# levels(object_c$seurat_clusters) <- gsub("^(15)$","\\1. PE",levels(object_c$seurat_clusters))
+# levels(object_c$seurat_clusters) <- gsub("^(30)$","\\1. EN",levels(object_c$seurat_clusters))
+# levels(object_c$seurat_clusters) <- gsub("^(28)$","\\1. TC",levels(object_c$seurat_clusters))
+# levels(object_c$seurat_clusters) <- gsub("^(12|21)$","\\1. OD",levels(object_c$seurat_clusters))
+# levels(object_c$seurat_clusters) <- gsub("^(2|4|8|32|24|26|11|22|13)$","\\1. TAM/MG",levels(object_c$seurat_clusters))
+# 
+# levels(object_c$seurat_clusters) <- gsub("^(0|1|7|9|6|16|26|27)$","\\1. T BT364",levels(object_c$seurat_clusters))
+# levels(object_c$seurat_clusters) <- gsub("^(20|29)$","\\1. T BT397",levels(object_c$seurat_clusters))
+# levels(object_c$seurat_clusters) <- gsub("^(25|17|14)$","\\1. T BT338",levels(object_c$seurat_clusters))
+# levels(object_c$seurat_clusters) <- gsub("^(3|5|10|18|19|23)$","\\1. T BT364",levels(object_c$seurat_clusters))
 
-levels(object_c$seurat_clusters) <- gsub("^(15)$","Pericytes.\\1",levels(object_c$seurat_clusters))
-levels(object_c$seurat_clusters) <- gsub("^(30)$","Endothelial.\\1",levels(object_c$seurat_clusters))
-levels(object_c$seurat_clusters) <- gsub("^(28)$","T-Cells.\\1",levels(object_c$seurat_clusters))
-levels(object_c$seurat_clusters) <- gsub("^(12|21)$","Oligodendrocytes.\\1",levels(object_c$seurat_clusters))
-levels(object_c$seurat_clusters) <- gsub("^(2|4|8|32|24|26|11|22|13)$","TAM/MG.\\1",levels(object_c$seurat_clusters))
+levels(object_c$seurat_clusters) <- gsub("^(25)$","\\1. TC",levels(object_c$seurat_clusters))
 
-levels(object_c$seurat_clusters) <- gsub("^(0|1|7|9|6|16|26|27)$","Tumor [BT364].\\1",levels(object_c$seurat_clusters))
-levels(object_c$seurat_clusters) <- gsub("^(20|29)$","Tumor [BT397].\\1",levels(object_c$seurat_clusters))
-levels(object_c$seurat_clusters) <- gsub("^(25|17|14)$","Tumor [BT338].\\1",levels(object_c$seurat_clusters))
-levels(object_c$seurat_clusters) <- gsub("^(3|5|10|18|19|23)$","Tumor [BT364].\\1",levels(object_c$seurat_clusters))
+levels(object_c$seurat_clusters) <- gsub("^(15)$","\\1. PE",levels(object_c$seurat_clusters))
+levels(object_c$seurat_clusters) <- gsub("^(30)$","\\1. EN",levels(object_c$seurat_clusters))
+levels(object_c$seurat_clusters) <- gsub("^(12|21)$","\\1. OD",levels(object_c$seurat_clusters))
+levels(object_c$seurat_clusters) <- gsub("^(2|4|8|32|24|26|11|22|13)$","\\1. TAM/MG",levels(object_c$seurat_clusters))
 
-DimPlot(object_c, reduction = "umap", label = TRUE, pt.size = .8, group.by = "seurat_clusters")
+levels(object_c$seurat_clusters) <- gsub("^(0|1|7|9|6|16|26|27)$","\\1. T BT364",levels(object_c$seurat_clusters))
+levels(object_c$seurat_clusters) <- gsub("^(20|29)$","\\1. T BT397",levels(object_c$seurat_clusters))
+levels(object_c$seurat_clusters) <- gsub("^(25|17|14)$","\\1. T BT338",levels(object_c$seurat_clusters))
+levels(object_c$seurat_clusters) <- gsub("^(3|5|10|18|19|23)$","\\1. T BT364",levels(object_c$seurat_clusters))
+
+levels(object_c$seurat_clusters)
+
+object_c$seurat_clusters <- factor(object_c$seurat_clusters, levels=c(
+  "0. T BT364","1. T BT364","3. T BT364","5. T BT364","6. T BT364","7. T BT364","9. T BT364" ,"10. T BT364","18. T BT364","19. T BT364","16. T BT364","27. T BT364",
+  "14. T BT338","17. T BT338","25. T BT338",
+  "20. T BT397","29. T BT397",
+  "23. T BT364",
+  "12. OD","21. OD",
+  "15. PE",
+  "30. EN",
+  "2. TAM/MG","4. TAM/MG","8. TAM/MG","11. TAM/MG","13. TAM/MG","22. TAM/MG","24. TAM/MG","26. TAM/MG",
+  "28. TC"
+))
+
+DimPlot(object_c, reduction = "umap", label = F, pt.size = .8, group.by = "youri_clusters")
+
+
+p1 <- DimPlot(object_c, reduction = "umap", label = F, pt.size = .6, group.by = "seurat_clusters",
+              cols=c(
+                rep("cornflowerblue",12),rep("darkblue",3),rep("#88CCEE",2),rep("#6699CC",1),
+                rep("orange",2),rep("seagreen",1),rep("mediumvioletred",1),rep("tan3",8),rep("magenta",1))
+              ) +
+  guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
+  labs(subtitle="Yuan dataset")
+
+p2 <- DimPlot(object_c, reduction = "umap", label = TRUE, pt.size = .8, group.by = "dataset.short")
+
+p1 + p2
 
 
 # library(patchwork)
-DimPlot(object_c, reduction = "umap", label = TRUE, pt.size = .8, group.by = "youri_clusters") +
-DimPlot(object_c, reduction = "umap", label = TRUE, pt.size = .8, group.by = "dataset.short")
 
+
+
+DimPlot(object_c, reduction = "umap", label = TRUE, pt.size = .8, group.by = "youri_clusters")  + DimPlot(object_c, reduction = "umap", label = TRUE, pt.size = .8, group.by = "dataset.short")
+
+
+
+#### 6A. Endothelial (?) ----
+
+
+FeaturePlot(object = object_c, features = "ABCB1")
+FeaturePlot(object = object_c, features = "CD34")
+FeaturePlot(object = object_c, features = "FLT4")
+FeaturePlot(object = object_c, features = "TIE1") # meh
+FeaturePlot(object = object_c, features = "ITGA1") # endo + peri?
+
+
+#### 6B. Pericytes (+) ----
+
+FeaturePlot(object = object_c, features = "RGS5")
+FeaturePlot(object = object_c, features = "PDGFRB")
+FeaturePlot(object = object_c, features = "CD248")
 
 
 #### C4 (up) ----

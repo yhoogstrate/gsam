@@ -154,9 +154,12 @@ object_1$seurat_clusters <- factor(object_1$seurat_clusters, levels=c(
 ))
 
 
-DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters")
-ggsave(paste0("output/figures/scRNA/Diaz/",sid,"_tSNE.pdf"),width=10,height=8)
-ggsave(paste0("output/figures/scRNA/Diaz/",sid,"_tSNE.png"),width=10,height=8)
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters") +
+  guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
+  labs(subtitle=sid)
+
+ggsave(paste0("output/figures/scRNA/Diaz/",sid,"_UMAP.pdf"),width=10,height=8)
+ggsave(paste0("output/figures/scRNA/Diaz/",sid,"_UMAP.png"),width=10,height=8)
 
 
 
@@ -727,30 +730,54 @@ head(Idents(object_1), 20)
 object_1 <- RunUMAP(object_1, dims = 1:d)
 object_1@meta.data$pt = sapply(strsplit(rownames(object_1@meta.data), "[.]"), "[", 1)
 
+# levels(object_1$seurat_clusters) <- gsub("^(2|9|12|8|11|4)$",paste0("\\1. T"),levels(object_1$seurat_clusters))
+# levels(object_1$seurat_clusters) <- gsub("^(5|0)$",paste0("\\1. OD"),levels(object_1$seurat_clusters))
+# levels(object_1$seurat_clusters) <- gsub("^(1|10)$",paste0("\\1. TAM/MG"),levels(object_1$seurat_clusters))
+# levels(object_1$seurat_clusters) <- gsub("^(13)$",paste0("\\1. TC"),levels(object_1$seurat_clusters))
+# levels(object_1$seurat_clusters) <- gsub("^(7)$",paste0("\\1. T + EN* + TAM/MG*"),levels(object_1$seurat_clusters))
+# levels(object_1$seurat_clusters) <- gsub("^(3|6)$",paste0("\\1. T + TC*"),levels(object_1$seurat_clusters))
 
-levels(object_1$seurat_clusters) <- gsub("^(2|9|12|8|11|4)$",paste0("\\1. T"),levels(object_1$seurat_clusters))
-levels(object_1$seurat_clusters) <- gsub("^(5|0)$",paste0("\\1. OD"),levels(object_1$seurat_clusters))
-levels(object_1$seurat_clusters) <- gsub("^(1|10)$",paste0("\\1. TAM/MG"),levels(object_1$seurat_clusters))
-levels(object_1$seurat_clusters) <- gsub("^(13)$",paste0("\\1. TC"),levels(object_1$seurat_clusters))
-levels(object_1$seurat_clusters) <- gsub("^(7)$",paste0("\\1. T + EN* + TAM/MG*"),levels(object_1$seurat_clusters))
-levels(object_1$seurat_clusters) <- gsub("^(3|6)$",paste0("\\1. T + TC*"),levels(object_1$seurat_clusters))
+object_1 <- FindClusters(object_1, resolution = 1, algorithm=1)
+object_1$class <- as.character(object_1$seurat_clusters)
+object_1$class <- ifelse(object_1$seurat_clusters %in% c(2,12,8,9,11,4,3,6,7) & 
+                           object_1@reductions$umap@cell.embeddings[,1] < 7
+                         ,"T", object_1$class)
+object_1$class <- ifelse(object_1$seurat_clusters %in% c(5,0),"OD", object_1$class)
+object_1$class <- ifelse(  object_1@reductions$umap@cell.embeddings[,1] >= 11.75 & 
+                             object_1@reductions$umap@cell.embeddings[,1] <= 13 & 
+                             object_1@reductions$umap@cell.embeddings[,2] >= 4 & 
+                             object_1@reductions$umap@cell.embeddings[,2] <= 6
+                           ,"TC", object_1$class)
+object_1$class <- ifelse(  object_1@reductions$umap@cell.embeddings[,1] >= 9 & 
+                             object_1@reductions$umap@cell.embeddings[,1] <= 11 & 
+                             object_1@reductions$umap@cell.embeddings[,2] >= 3 & 
+                             object_1@reductions$umap@cell.embeddings[,2] <= 5
+                           ,"TC", object_1$class) # other type?
+object_1$class <- ifelse(  object_1@reductions$umap@cell.embeddings[,1] >= 10 & 
+                             object_1@reductions$umap@cell.embeddings[,1] <= 17 & 
+                             object_1@reductions$umap@cell.embeddings[,2] >= -7 & 
+                             object_1@reductions$umap@cell.embeddings[,2] <= 2
+                           ,"TAM/MG", object_1$class)
+object_1$seurat_clusters <- as.factor(paste0(object_1$seurat_clusters,". ",object_1$class))
+
+levels(object_1$seurat_clusters)
 
 
 object_1$seurat_clusters <- factor(object_1$seurat_clusters, levels=c(
-  "2. T", "4. T",  "8. T", "9. T", "11. T", "12. T",
-  "3. T + TC*", "6. T + TC*",
-  "7. T + EN* + TAM/MG*",
-  "0. OD", "5. OD",
-  "13. TC",
-  "1. TAM/MG", "10. TAM/MG"
+  "2. T","3. T","4. T","6. T","7. T","8. T","9. T","11. T","12. T",
+  "0. OD","5. OD",
+  "7. TAM/MG", "1. TAM/MG", "10. TAM/MG", "3. TAM/MG",
+  "1. TC","13. TC","2. TC","3. TC","4. TC","7. TC"
 ))
 
 
 
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters") +
+  guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
+  labs(subtitle=sid)
 
-DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters")
-ggsave(paste0("output/figures/scRNA/Diaz/",sid,"_tSNE.pdf"),width=10,height=8)
-ggsave(paste0("output/figures/scRNA/Diaz/",sid,"_tSNE.png"),width=10,height=8)
+ggsave(paste0("output/figures/scRNA/Diaz/",sid,"_UMAP.pdf"),width=10,height=8)
+ggsave(paste0("output/figures/scRNA/Diaz/",sid,"_UMAP.png"),width=10,height=8)
 
 
 
@@ -1197,9 +1224,13 @@ object_1$classes <- gsub("^[0-9\\. ]+","",object_1$seurat_clusters)
 
 
 
-DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters")
-ggsave(paste0("output/figures/scRNA/Diaz/",sid,"_tSNE.pdf"),width=10,height=8)
-ggsave(paste0("output/figures/scRNA/Diaz/",sid,"_tSNE.png"),width=10,height=8)
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters") +
+  guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
+  labs(subtitle=sid)
+
+ggsave(paste0("output/figures/scRNA/Diaz/",sid,"_UMAP.pdf"),width=10,height=8)
+ggsave(paste0("output/figures/scRNA/Diaz/",sid,"_UMAP.png"),width=10,height=8)
+
 
 
 
@@ -2376,10 +2407,15 @@ object_1$seurat_clusters <- factor(object_1$seurat_clusters, levels=c(
   ))
 object_1$cell.type <- as.factor(gsub("[0-9]+\\. (.+)$","\\1",object_1$seurat_clusters))
 
+
+
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters") +
-  geom_hline(yintercept = -11.4,col="red", lty=2)
-ggsave(paste0("output/figures/scRNA/Diaz/",sid,"_tSNE.pdf"),width=10,height=8)
-ggsave(paste0("output/figures/scRNA/Diaz/",sid,"_tSNE.png"),width=10,height=8)
+  geom_hline(yintercept = -11.4,col="red", lty=2)  +
+  guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
+  labs(subtitle=sid)
+
+ggsave(paste0("output/figures/scRNA/Diaz/",sid,"_UMAP.pdf"),width=10,height=8)
+ggsave(paste0("output/figures/scRNA/Diaz/",sid,"_UMAP.png"),width=10,height=8)
 
 
 
@@ -2676,9 +2712,12 @@ object_1$seurat_clusters <- factor(object_1$seurat_clusters, levels=c(
   "9. TC (+2PE?)"))
 
 
-DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters")
-ggsave(paste0("output/figures/scRNA/Diaz/",sid,"_tSNE.pdf"),width=10,height=8)
-ggsave(paste0("output/figures/scRNA/Diaz/",sid,"_tSNE.png"),width=10,height=8)
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters") +
+  guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
+  labs(subtitle=sid)
+
+ggsave(paste0("output/figures/scRNA/Diaz/",sid,"_UMAP.pdf"),width=10,height=8)
+ggsave(paste0("output/figures/scRNA/Diaz/",sid,"_UMAP.png"),width=10,height=8)
 
 
 
