@@ -30,8 +30,6 @@ C6 <- c('CRABP2', 'CLIP2', 'DPT', 'FGF7', 'COL10A1', 'FBN1', 'GLT8D2',
         "TNNT3", "ASS1", "PERP","KLHDC7B", "CCL8")
 
 
-
-
 # generate annotation table ----
 
 # obtain gene annotation file for gene location index
@@ -51,6 +49,8 @@ write.table(annotations.sub, file = "data/scRNA/GSE103224_Yuan/annotation_genes.
 
 
 # GSE103224 :: Yuan J. et. al ----
+
+
 
 if(file.exists("tmp/GSE103224.scRNA.counts.Rds")) {
   GSE103224 <- readRDS("tmp/GSE103224.scRNA.counts.Rds")
@@ -89,7 +89,6 @@ if(file.exists("tmp/GSE103224.scRNA.counts.Rds")) {
   
   
 
-  
   
   GSE103224 <- b %>%
   dplyr::left_join(c %>% dplyr::mutate(HGNC=NULL), by=c('ENS'='ENS')) %>%
@@ -188,6 +187,10 @@ object_1 <- subset(x = object_1, subset = nFeature_RNA > 700 &
 object_1 <- NormalizeData(object = object_1, normalization.method = "LogNormalize", scale.factor = 1e4)
 object_1 <- FindVariableFeatures(object = object_1, selection.method = "vst", nfeatures = 2000)
 object_1[["state"]] <- "P1" 
+
+
+print(paste0("Median(nCount_RNA) in ",sid, " = ",round(median(object_1$nCount_RNA))))
+print(paste0("Median(nFeature_RNA) in ",sid, " = ",round(median(object_1$nFeature_RNA))))
 
 
 top10 <- head(VariableFeatures(object_1), 10)
@@ -537,6 +540,10 @@ object_1 <- subset(x = object_1, subset = nFeature_RNA > 700 &
 object_1 <- NormalizeData(object = object_1, normalization.method = "LogNormalize", scale.factor = 1e4)
 object_1 <- FindVariableFeatures(object = object_1, selection.method = "vst", nfeatures = 2000)
 object_1[["state"]] <- "P1" 
+
+
+print(paste0("Median(nCount_RNA) in ",sid, " = ",round(median(object_1$nCount_RNA))))
+print(paste0("Median(nFeature_RNA) in ",sid, " = ",round(median(object_1$nFeature_RNA))))
 
 
 top10 <- head(VariableFeatures(object_1), 10)
@@ -896,6 +903,12 @@ object_1[["state"]] <- "P1"
 
 
 top10 <- head(VariableFeatures(object_1), 10)
+
+
+print(paste0("Median(nCount_RNA) in ",sid, " = ",round(median(object_1$nCount_RNA))))
+print(paste0("Median(nFeature_RNA) in ",sid, " = ",round(median(object_1$nFeature_RNA))))
+
+
 
 # plot variable features with and without labels
 
@@ -1288,6 +1301,10 @@ object_1 <- NormalizeData(object = object_1, normalization.method = "LogNormaliz
 object_1 <- FindVariableFeatures(object = object_1, selection.method = "vst", nfeatures = 2000)
 object_1[["state"]] <- "P1" 
 
+print(paste0("Median(nCount_RNA) in ",sid, " = ",round(median(object_1$nCount_RNA))))
+print(paste0("Median(nFeature_RNA) in ",sid, " = ",round(median(object_1$nFeature_RNA))))
+
+
 
 top10 <- head(VariableFeatures(object_1), 10)
 
@@ -1557,6 +1574,12 @@ object_1[["state"]] <- "P1"
 
 
 top10 <- head(VariableFeatures(object_1), 10)
+
+
+print(paste0("Median(nCount_RNA) in ",sid, " = ",round(median(object_1$nCount_RNA))))
+print(paste0("Median(nFeature_RNA) in ",sid, " = ",round(median(object_1$nFeature_RNA))))
+
+
 
 # plot variable features with and without labels
 
@@ -1921,7 +1944,8 @@ VlnPlot(object = object_1, features = c("nFeature_RNA", "nCount_RNA", "percent.m
 #                      nCount_RNA < 6000 &
 #                      percent.mito <0.015)
 
-object_1 <- subset(x = object_1, subset = nFeature_RNA > 500 & nFeature_RNA <35000 & nCount_RNA >200 & nCount_RNA <6000 & percent.mito <0.1)
+object_1 <- subset(x = object_1, subset = nFeature_RNA > 500 & nFeature_RNA <35000 & 
+                     nCount_RNA >200 & nCount_RNA <6000 & percent.mito <0.1)
 
 object_1 <- NormalizeData(object = object_1, normalization.method = "LogNormalize", scale.factor = 1e4)
 object_1 <- FindVariableFeatures(object = object_1, selection.method = "vst", nfeatures = 2000)
@@ -1929,6 +1953,11 @@ object_1[["state"]] <- "P1"
 
 
 top10 <- head(VariableFeatures(object_1), 10)
+
+
+print(paste0("Median(nCount_RNA) in ",sid, " = ",round(median(object_1$nCount_RNA))))
+print(paste0("Median(nFeature_RNA) in ",sid, " = ",round(median(object_1$nFeature_RNA))))
+
 
 
 # plot variable features with and without labels

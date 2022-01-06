@@ -34,7 +34,7 @@ C6 <- c('CRABP2', 'CLIP2', 'DPT', 'FGF7', 'COL10A1', 'FBN1', 'GLT8D2',
 
 ## A :: Sample_Y ----
 
-sid <- 'GSM2758472_PJ017'
+sid <- 'van_Hijfte_Sample_Y'
 object_1 <- Read10X(data.dir = "/home/youri/projects/gsam/data/scRNA_glim/Glioma_Y_and_O/Levi2_Glioma_Y/outs/raw_feature_bc_matrix")
 object_1 <- CreateSeuratObject(counts = object_1,
                                min.cells = 3,
@@ -70,6 +70,11 @@ object_1[["state"]] <- "P1"
 
 
 top10 <- head(VariableFeatures(object_1), 10)
+
+
+print(paste0("Median(nCount_RNA) in ",sid, " = ",round(median(object_1$nCount_RNA))))
+print(paste0("Median(nFeature_RNA) in ",sid, " = ",round(median(object_1$nFeature_RNA))))
+
 
 
 # plot variable features with and without labels
@@ -133,10 +138,10 @@ object_1$class <- ifelse(object_1$seurat_clusters %in% c(16), "EN", object_1$cla
 object_1$class <- ifelse(object_1$seurat_clusters %in% c(15), "PE", object_1$class)
 object_1$class <- ifelse(object_1$seurat_clusters %in% c(0,1,2,3,9,8,11), "T", object_1$class)
 object_1$class <- ifelse(object_1$seurat_clusters %in% c(7), "T", object_1$class) # dividing
-object_1$class <- ifelse(object_1$seurat_clusters %in% c(17), "T ? Outlier?", object_1$class)
+object_1$class <- ifelse(object_1$seurat_clusters %in% c(17), "T ?", object_1$class) #  Outlier?
 object_1$class <- ifelse(object_1$seurat_clusters %in% c(20), "AC", object_1$class)
-object_1$class <- ifelse(object_1$seurat_clusters %in% c(18), "T ? Apoptotic?", object_1$class)
-object_1$class <- ifelse(object_1$seurat_clusters %in% c(22), "TAM/MG ~ OD Hybrid?", object_1$class)
+object_1$class <- ifelse(object_1$seurat_clusters %in% c(18), "T ?", object_1$class) # Apoptotic?
+object_1$class <- ifelse(object_1$seurat_clusters %in% c(22), "TAM/MG|OD", object_1$class)
 object_1$class <- ifelse(object_1@reductions$umap@cell.embeddings[,1] >= 10 &
                            object_1@reductions$umap@cell.embeddings[,1] <= 11 &
                            object_1@reductions$umap@cell.embeddings[,2] >= 1.5 &
@@ -149,13 +154,13 @@ levels(object_1$seurat_clusters)
 
 object_1$seurat_clusters <- factor(object_1$seurat_clusters, levels=c(
   "0. T","1. T","2. T","3. T","7. T","8. T","9. T","11. T",
-  "17. T ? Outlier?","18. T ? Apoptotic?",
+  "17. T ?","18. T ?",
   "20. AC",
   "21. NE",
   "4. OD","6. OD","12. OD","19. OD",
   "16. EN",
   "15. PE",
-  "22. TAM/MG ~ OD Hybrid?" ,
+  "22. TAM/MG|OD" ,
   "5. TAM/MG","10. TAM/MG","13. TAM/MG","14. TAM/MG",
   "14. TC"
 ))
@@ -177,7 +182,8 @@ ggsave(paste0("output/figures/scRNA/Glimmunology/",sid,"_UMAP.png"),width=12,hei
 # tmp.22 <- FindMarkers(object_1, ident.1 = 22)
 # head(tmp.22,20)
 
-
+tmp.15 <- FindMarkers(object_1, ident.1 = 15) # PE
+View(tmp.15)
 
 
 
@@ -192,6 +198,8 @@ FeaturePlot(object = object_1, features = "S100B") # Tumor/AC
 FeaturePlot(object = object_1, features = "GFAP") # Tumor/AC
 FeaturePlot(object = object_1, features = "OLIG1") # Tumor/OPC+NPC1
 FeaturePlot(object = object_1, features = "VIM") # Tumor/MES
+
+FeaturePlot(object = object_1, features = "PDGFRB") # Tumor/MES
 
 
 FeaturePlot(object = object_1, features = c("HSPA1A","HSPA1B","VEGFA")) # Apoptotic Tumor?
@@ -342,9 +350,17 @@ FeaturePlot(object = object_1, features = "ITGA1") # endo + peri?
 
 #### 6B. Pericytes (+) ----
 
-FeaturePlot(object = object_1, features = "RGS5")
-FeaturePlot(object = object_1, features = "PDGFRB")
-FeaturePlot(object = object_1, features = "CD248")
+FeaturePlot(object = object_1, features = c("RGS5","PDGFRB","CD248","PEAR1", "HEYL" , "CFH"))
+
+FeaturePlot(object = object_1, features = c("RGS5"))
+FeaturePlot(object = object_1, features = c("PDGFRB"))
+FeaturePlot(object = object_1, features = c("CD248"))
+FeaturePlot(object = object_1, features = c("PEAR1"))
+FeaturePlot(object = object_1, features = c("HEYL"))
+FeaturePlot(object = object_1, features = c("CFH"))
+
+
+
 
 #### C3 - C6 ----
 
@@ -405,7 +421,7 @@ FeaturePlot(object = object_1, features = C5[13:16])
 
 #### C6 (up) ----
 
-
+# + "PEAR1", "HEYL" , "CFH"
 DotPlot(object = object_1, features =list('C6'=C6 , 'Peri'=c("RGS5", "PDGFRB", "CD248") ), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
   labs(x = paste0("Features [C6] in: ",sid))

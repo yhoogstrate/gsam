@@ -869,6 +869,11 @@ object_1$dataset <- as.character(object_1$state)
 top10 <- head(VariableFeatures(object_1), 10)
 
 
+print(paste0("Median(nCount_RNA) in ",sid, " = ",round(median(object_1$nCount_RNA))))
+print(paste0("Median(nFeature_RNA) in ",sid, " = ",round(median(object_1$nFeature_RNA))))
+
+
+
 # plot variable features with and without labels
 
 plot1 <- VariableFeaturePlot(object_1)
@@ -933,6 +938,23 @@ DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "se
 ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_UMAP.pdf"),width=10,height=8)
 ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_UMAP.png"),width=10,height=8)
 
+
+
+
+median(object_1[,object_1$seurat_clusters == "1. PE"]$nCount_RNA) # -> strongest C6 cluster
+median(object_1[,object_1$seurat_clusters == "1. PE"]$nFeature_RNA)
+mean(object_1[,object_1$seurat_clusters == "1. PE"]$nCount_RNA)
+mean(object_1[,object_1$seurat_clusters == "1. PE"]$nFeature_RNA)
+
+median(object_1[,object_1$seurat_clusters == "4. PE"]$nCount_RNA)
+median(object_1[,object_1$seurat_clusters == "4. PE"]$nFeature_RNA)
+mean(object_1[,object_1$seurat_clusters == "4. PE"]$nCount_RNA)
+mean(object_1[,object_1$seurat_clusters == "4. PE"]$nFeature_RNA)
+
+median(object_1[,object_1$seurat_clusters == "11. PE"]$nCount_RNA)
+median(object_1[,object_1$seurat_clusters == "11. PE"]$nFeature_RNA)
+mean(object_1[,object_1$seurat_clusters == "11. PE"]$nCount_RNA)
+mean(object_1[,object_1$seurat_clusters == "11. PE"]$nFeature_RNA)
 
 
 ### Prepare for integration ----
@@ -1044,6 +1066,7 @@ FeaturePlot(object = object_1, features = "GFAP") # Tumor/AC
 FeaturePlot(object = object_1, features = "OLIG1") # Tumor/OPC+NPC1
 FeaturePlot(object = object_1, features = "VIM") # Tumor/MES
 
+FeaturePlot(object = object_1, features = "OLIG2") # Tumor/OPC+NPC1
 
 FeaturePlot(object = object_1, features = c("HSPA1A","HSPA1B","VEGFA")) # Apoptotic Tumor?
 
@@ -1137,11 +1160,14 @@ FeaturePlot(object = object_1, features = "MOG")
 FeaturePlot(object = object_1, features = "PLP1")
 FeaturePlot(object = object_1, features = "TMEM144")
 
+DotPlot(object = object_1, features = c("MOG","PLP1","TMEM144"),group.by = "seurat_clusters")
+
 
 #### 6A. Endothelial (+) ----
 
 FeaturePlot(object = object_1, features = "ABCB1")
 FeaturePlot(object = object_1, features = "CD34")
+FeaturePlot(object = object_1, features = "ESM1")
 FeaturePlot(object = object_1, features = "FLT4")
 FeaturePlot(object = object_1, features = "TIE1") # meh
 FeaturePlot(object = object_1, features = "ITGA1") # endo + peri?
@@ -1149,9 +1175,14 @@ FeaturePlot(object = object_1, features = "ITGA1") # endo + peri?
 
 #### 6B. Pericytes (+) ----
 
-FeaturePlot(object = object_1, features = "RGS5")
-FeaturePlot(object = object_1, features = "PDGFRB")
-FeaturePlot(object = object_1, features = "CD248")
+FeaturePlot(object = object_1, features = c("RGS5","PDGFRB","CD248","PEAR1", "HEYL" , "CFH"))
+
+FeaturePlot(object = object_1, features = c("RGS5"))
+FeaturePlot(object = object_1, features = c("PDGFRB"))
+FeaturePlot(object = object_1, features = c("CD248"))
+FeaturePlot(object = object_1, features = c("PEAR1"))
+FeaturePlot(object = object_1, features = c("HEYL"))
+FeaturePlot(object = object_1, features = c("CFH"))
 
 
 
@@ -1214,9 +1245,39 @@ ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C6.pdf"),width=7.5, height
 ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C6.png"),width=7.5, height=4,scale=1.2)
 
 
+VlnPlot(object = object_1, features =list('C6'=C6 , 'Peri'=c("RGS5", "PDGFRB", "CD248") )) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(x = paste0("Features [C6] in: ",sid))
 
-VlnPlot(object = object_1, features = C6, stack = T, sort = T)
-VlnPlot(object = object_1, features = C6, stack = T, sort = T)
+
+VlnPlot(object = object_1, features = C6, stack = T, sort = F, group.by = "seurat_clusters")
+VlnPlot(object = object_1, features = 'PC_1', group.by = "seurat_clusters") # PE
+VlnPlot(object = object_1, features = 'PC_2', group.by = "seurat_clusters")
+VlnPlot(object = object_1, features = 'PC_3', group.by = "seurat_clusters")
+VlnPlot(object = object_1, features = 'PC_4', group.by = "seurat_clusters")
+VlnPlot(object = object_1, features = 'PC_5', group.by = "seurat_clusters")
+VlnPlot(object = object_1, features = 'PC_6', group.by = "seurat_clusters")
+
+
+plot(object_1@reductions$pca@feature.loadings[,1], 
+     1:length(object_1@reductions$pca@feature.loadings[,1]),
+     col=rownames(object_1@reductions$pca@feature.loadings) %in% C6  + 1 , pch=19)
+
+wilcox.test(object_1@reductions$pca@feature.loadings[rownames(object_1@reductions$pca@feature.loadings) %in% C6 ,1],
+            object_1@reductions$pca@feature.loadings[rownames(object_1@reductions$pca@feature.loadings) %in% C6 == F ,1])
+
+wilcox.test(object_1@reductions$pca@feature.loadings[rownames(object_1@reductions$pca@feature.loadings) %in% C5 ,1],
+            object_1@reductions$pca@feature.loadings[rownames(object_1@reductions$pca@feature.loadings) %in% C5 == F ,1])
+
+wilcox.test(object_1@reductions$pca@feature.loadings[rownames(object_1@reductions$pca@feature.loadings) %in% c(C4A,C4B) ,1],
+            object_1@reductions$pca@feature.loadings[rownames(object_1@reductions$pca@feature.loadings) %in% c(C4A,C4B) == F ,1])
+
+
+plot(object_1@reductions$pca@feature.loadings[,3], 
+     1:length(object_1@reductions$pca@feature.loadings[,1]),
+     col=rownames(object_1@reductions$pca@feature.loadings) %in% C6  + 1 , pch=19)
+
+
 
 FeaturePlot(object = object_1, features = C6)
 
@@ -1662,6 +1723,11 @@ object_1$dataset <- as.character(object_1$state)
 top10 <- head(VariableFeatures(object_1), 10)
 
 
+print(paste0("Median(nCount_RNA) in ",sid, " = ",round(median(object_1$nCount_RNA))))
+print(paste0("Median(nFeature_RNA) in ",sid, " = ",round(median(object_1$nFeature_RNA))))
+
+
+
 # plot variable features with and without labels
 
 plot1 <- VariableFeaturePlot(object_1)
@@ -1743,6 +1809,16 @@ DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "se
 ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_UMAP.pdf"),width=10,height=8)
 ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_UMAP.png"),width=10,height=8)
 
+
+median(object_1[,object_1$seurat_clusters == "16. PE"]$nCount_RNA)
+median(object_1[,object_1$seurat_clusters == "16. PE"]$nFeature_RNA)
+mean(object_1[,object_1$seurat_clusters == "16. PE"]$nCount_RNA)
+mean(object_1[,object_1$seurat_clusters == "16. PE"]$nFeature_RNA)
+
+median(object_1[,object_1$seurat_clusters == "16. EN|PE?"]$nCount_RNA)
+median(object_1[,object_1$seurat_clusters == "16. EN|PE?"]$nFeature_RNA)
+mean(object_1[,object_1$seurat_clusters == "16. EN|PE?"]$nCount_RNA)
+mean(object_1[,object_1$seurat_clusters == "16. EN|PE?"]$nFeature_RNA)
 
 
 
@@ -2100,10 +2176,6 @@ FeaturePlot(object = object_1, features =  "PERP" )
 ## BT364 [1+2/2] :: T,MG,OD ----
 
 
-rm(object_1)
-gc()
-
-
 rm(sid, object_1)
 gc()
 
@@ -2158,9 +2230,12 @@ object_1[["state"]]
 object_1$dataset <- as.character(object_1$state)
 
 
-
-
 top10 <- head(VariableFeatures(object_1), 10)
+
+
+print(paste0("Median(nCount_RNA) in ",sid, " = ",round(median(object_1$nCount_RNA))))
+print(paste0("Median(nFeature_RNA) in ",sid, " = ",round(median(object_1$nFeature_RNA))))
+
 
 
 # plot variable features with and without labels
@@ -3405,8 +3480,16 @@ object_1[["state"]] <- as.factor(paste( gsub("_.+$","",sid) , gsub("_.+$","",col
 object_1$dataset <- as.character(object_1$state)
 
 
-
 top10 <- head(VariableFeatures(object_1), 10)
+
+
+
+print(paste0("Median(nCount_RNA) in ",sid, " = ",round(median(object_1$nCount_RNA))))
+print(paste0("Median(nFeature_RNA) in ",sid, " = ",round(median(object_1$nFeature_RNA))))
+
+
+
+
 
 
 # plot variable features with and without labels
@@ -3473,6 +3556,10 @@ DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "se
 
 ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_UMAP.pdf"),width=10,height=8)
 ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_UMAP.png"),width=10,height=8)
+
+
+
+# sum(object_1$seurat_clusters == "18. PE")
 
 
 

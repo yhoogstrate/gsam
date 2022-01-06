@@ -91,6 +91,12 @@ object_1$dataset <- as.character(gsub("^[^_]+_","",sid))
 top10 <- head(VariableFeatures(object_1), 10)
 
 
+print(paste0("Median(nCount_RNA) in ",sid, " = ",round(median(object_1$nCount_RNA))))
+print(paste0("Median(nFeature_RNA) in ",sid, " = ",round(median(object_1$nFeature_RNA))))
+
+
+
+
 # plot variable features with and without labels
 
 plot1 <- VariableFeaturePlot(object_1)
@@ -130,7 +136,7 @@ object_1@meta.data$pt = sapply(strsplit(rownames(object_1@meta.data), "[.]"), "[
 
 levels(object_1$seurat_clusters) <- gsub("^(5)$",paste0("\\1. OD"),levels(object_1$seurat_clusters))
 levels(object_1$seurat_clusters) <- gsub("^(9|11)$",paste0("\\1. TAM/MG"),levels(object_1$seurat_clusters))
-levels(object_1$seurat_clusters) <- gsub("^(15)$",paste0("\\.1 ?1"),levels(object_1$seurat_clusters))# TBX3
+levels(object_1$seurat_clusters) <- gsub("^(15)$",paste0("\\1. EN&PE ?"),levels(object_1$seurat_clusters))# TBX3
 levels(object_1$seurat_clusters) <- gsub("^(3|6|7|4|1|2|0)$",paste0("\\1. T"),levels(object_1$seurat_clusters))
 levels(object_1$seurat_clusters) <- gsub("^(12)$",paste0("\\1. T"),levels(object_1$seurat_clusters))
 levels(object_1$seurat_clusters) <- gsub("^(13)$",paste0("\\1. T"),levels(object_1$seurat_clusters))
@@ -146,7 +152,7 @@ levels(object_1$seurat_clusters)
 object_1$seurat_clusters <- factor(object_1$seurat_clusters, levels=c(
   "0. T","1. T","2. T","3. T","4. T","6. T","7. T","12. T","13. T",
   "16. ?2",
-  ".1 ?1",
+  "15. EN&PE ?", # wss combi en lage depth
   "8. AC?", 
   "14. N1?", "10. N2?",
   "5. OD",
@@ -164,15 +170,28 @@ ggsave(paste0("output/figures/scRNA/Diaz/",sid,"_UMAP.png"),width=10,height=8)
 
 
 #tmp.15 <- FindMarkers(object_1, ident.1 = 15)
-head(tmp.15, 20) # A4GALT,CTD-2023N9.2,SNTG2,EFCC1,AC016768.1,  TWIST2  ,IL1R1,  KRT17  ,DLK1,MMP11,LGR6,FOXS1,CARMN,ESM1,FOXC2,FOXL1,BOK-AS1,ALDH1A3,SLC6A20,FOXA2,DMKN,IL18R1,SFRP5,LINC00261,  TBX3
+head(tmp.15, 20)
+# A4GALT,
+# CTD-2023N9.2,
+# SNTG2,EFCC1,AC016768.1,
+# TWIST2  ,IL1R1,  KRT17,
+# DLK1,MMP11,LGR6,FOXS1,CARMN,ESM1,FOXC2,FOXL1,
+# BOK-AS1,ALDH1A3,SLC6A20,FOXA2,DMKN,IL18R1,SFRP5,LINC00261,
+# TBX3
 
 # tmp.12 <- FindMarkers(object_1, ident.1 = 12) # AURKB, SKA1, BUB1B
 # tmp.13 <- FindMarkers(object_1, ident.1 = 13) # DTL, MELK
-# tmp.16 <- FindMarkers(object_1, ident.1 = 16) # SSTR2, SLC17A7, NHLH1, LHX1, CDH22
+tmp.16 <- FindMarkers(object_1, ident.1 = 16)
+# SSTR2, SLC17A7, NHLH1, LHX1, CDH22
+View(tmp.16)
+
 # tmp.8 <- FindMarkers(object_1, ident.1 = 8)
 # tmp.10 <- FindMarkers(object_1, ident.1 = 10) # SUSD5, ETV1
 # tmp.14 <- FindMarkers(object_1, ident.1 = 14)
+#tmp.11 <- FindMarkers(object_1, ident.1 = 11)
 
+tmp.8.10.14 <- FindMarkers(object_1, ident.1 = c(8,10,14))
+tmp.c.8.10.14 <- FindConservedMarkers(object_1, ident.1 = c(8,10,14))
 
 ### Prepare for integration ----
 
@@ -221,10 +240,13 @@ FeaturePlot(object = object_1, features = c("CCNB1","CDC20","CCNB2")) # G2/M
 FeaturePlot(object = object_1, features = c("TMPO")) # G2/M
 FeaturePlot(object = object_1, features = c("KIF2C","NUF2","ASPM","NEK2","CENPA","CKAP2L","SGOL1","CENPE","CCNA2","PBK","MKI67","CDCA3","NUSAP1","CCNB2","KIF23"))
 
-
+FeaturePlot(object = object_1, features = c("BRINP3"))
 
 # succes met vinden van een marker
 FeaturePlot(object = object_1, features = c("EGFR","OLIG1","TMPO","VIM","STMN2",   "AURKB")) # Tumor
+
+
+FeaturePlot(object = object_1, features = "CDH10")
 
 
 
@@ -323,6 +345,11 @@ FeaturePlot(object = object_1, features = "RGS5")
 FeaturePlot(object = object_1, features = "PDGFRB")
 FeaturePlot(object = object_1, features = "CD248")
 
+FeaturePlot(object = object_1, features = c("PEAR1"))
+FeaturePlot(object = object_1, features = c("HEYL"))
+FeaturePlot(object = object_1, features = c("CFH"))
+
+FeaturePlot(object = object_1, features = "ITGA1") # endo + peri?
 
 
 #### C4 (up) ----
@@ -433,6 +460,13 @@ object_1[["state"]] <- "P1"
 
 
 top10 <- head(VariableFeatures(object_1), 10)
+
+
+print(paste0("Median(nCount_RNA) in ",sid, " = ",round(median(object_1$nCount_RNA))))
+print(paste0("Median(nFeature_RNA) in ",sid, " = ",round(median(object_1$nFeature_RNA))))
+
+
+
 
 
 # plot variable features with and without labels
@@ -696,8 +730,15 @@ object_1[["state"]] <- "P1"
 object_1$dataset <- as.character(gsub("^[^_]+_","",sid))
 
 
-
 top10 <- head(VariableFeatures(object_1), 10)
+
+
+print(paste0("Median(nCount_RNA) in ",sid, " = ",round(median(object_1$nCount_RNA))))
+print(paste0("Median(nFeature_RNA) in ",sid, " = ",round(median(object_1$nFeature_RNA))))
+
+
+
+
 
 
 # plot variable features with and without labels
@@ -752,7 +793,7 @@ object_1$class <- ifelse(  object_1@reductions$umap@cell.embeddings[,1] >= 9 &
                              object_1@reductions$umap@cell.embeddings[,1] <= 11 & 
                              object_1@reductions$umap@cell.embeddings[,2] >= 3 & 
                              object_1@reductions$umap@cell.embeddings[,2] <= 5
-                           ,"TC", object_1$class) # other type?
+                           ,"BC", object_1$class) # other type?
 object_1$class <- ifelse(  object_1@reductions$umap@cell.embeddings[,1] >= 10 & 
                              object_1@reductions$umap@cell.embeddings[,1] <= 17 & 
                              object_1@reductions$umap@cell.embeddings[,2] >= -7 & 
@@ -760,14 +801,14 @@ object_1$class <- ifelse(  object_1@reductions$umap@cell.embeddings[,1] >= 10 &
                            ,"TAM/MG", object_1$class)
 object_1$seurat_clusters <- as.factor(paste0(object_1$seurat_clusters,". ",object_1$class))
 
-levels(object_1$seurat_clusters)
 
 
 object_1$seurat_clusters <- factor(object_1$seurat_clusters, levels=c(
   "2. T","3. T","4. T","6. T","7. T","8. T","9. T","11. T","12. T",
   "0. OD","5. OD",
   "7. TAM/MG", "1. TAM/MG", "10. TAM/MG", "3. TAM/MG",
-  "1. TC","13. TC","2. TC","3. TC","4. TC","7. TC"
+  "1. TC","13. TC","2. TC","4. TC","7. TC",
+  "3. BC", "7. BC"
 ))
 
 
@@ -778,6 +819,11 @@ DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "se
 
 ggsave(paste0("output/figures/scRNA/Diaz/",sid,"_UMAP.pdf"),width=10,height=8)
 ggsave(paste0("output/figures/scRNA/Diaz/",sid,"_UMAP.png"),width=10,height=8)
+
+
+# tmp.t.cells <- FindMarkers(object_1, ident.1 = c("3. TC", "7. TC"), group.by = "seurat_clusters")
+View(tmp.t.cells)
+
 
 
 
@@ -898,21 +944,31 @@ FeaturePlot(object = object_1, features = "SDC4")
 #### 3A. TAM/mg/monocytes (+)----
 
 
-FeaturePlot(object = object_1, features = c("CD163")) # TAM/mg
-FeaturePlot(object = object_1, features = c("P2RY12")) # specifiek MG, niet Mac?
-FeaturePlot(object = object_1, features = "CD14") # TAM/mg
-FeaturePlot(object = object_1, features = c("ITGB2"))
-FeaturePlot(object = object_1, features = c("C1QC"))
+FeaturePlot(object = object_1, features = c("CD163"),order=T) # TAM/mg
+FeaturePlot(object = object_1, features = c("P2RY12"),order=T) # specifiek MG, niet Mac?
+FeaturePlot(object = object_1, features = "CD14",order=T) # TAM/mg
+FeaturePlot(object = object_1, features = c("ITGB2"),order=T)
+FeaturePlot(object = object_1, features = c("C1QC"),order=T)
+
 
 
 #### 3B. Til/T-cell (-) ----
 
 FeaturePlot(object = object_1, features = "CD2")
 FeaturePlot(object = object_1, features = "CD3D")
+FeaturePlot(object = object_1, features = "CD4",order=T)
+FeaturePlot(object = object_1, features = "CD8A",order=T)
+FeaturePlot(object = object_1, features = "CD8B",order=T)
 FeaturePlot(object = object_1, features = "TRBC2")
 FeaturePlot(object = object_1, features = "TRAC")
 FeaturePlot(object = object_1, features = "ICOS")
 FeaturePlot(object = object_1, features = "GZMA")
+
+#### 3C. B-cells ----
+
+FeaturePlot(object = object_1, features = c("IGLC3"),order=T)
+FeaturePlot(object = object_1, features = c("CD19"),order=T)
+FeaturePlot(object = object_1, features = c("CD79B"),order=T)
 
 
 #### 4. Neurons (-) ----
@@ -967,9 +1023,9 @@ DotPlot(object = object_1, features = c("SSTR2", "SST", "LHX1", "LHX6","NHLH1","
 
 #### 6B. Pericytes (?) ----
 
-FeaturePlot(object = object_1, features = "RGS5")
-FeaturePlot(object = object_1, features = "PDGFRB")
-FeaturePlot(object = object_1, features = "CD248")
+FeaturePlot(object = object_1, features = "RGS5",order=T)
+FeaturePlot(object = object_1, features = "PDGFRB",order=T)
+FeaturePlot(object = object_1, features = "CD248",order=T)
 
 
 #### C4 (up) ----
@@ -1168,8 +1224,15 @@ object_1[["state"]] <- "P1"
 object_1$dataset <- as.character(gsub("^[^_]+_","",sid))
 
 
-
 top10 <- head(VariableFeatures(object_1), 10)
+
+
+
+print(paste0("Median(nCount_RNA) in ",sid, " = ",round(median(object_1$nCount_RNA))))
+print(paste0("Median(nFeature_RNA) in ",sid, " = ",round(median(object_1$nFeature_RNA))))
+
+
+
 
 
 # plot variable features with and without labels
@@ -1202,12 +1265,19 @@ head(Idents(object_1), 20)
 object_1 <- RunUMAP(object_1, dims = 1:d)
 object_1@meta.data$pt = sapply(strsplit(rownames(object_1@meta.data), "[.]"), "[", 1)
 
-
+object_1 <- FindClusters(object_1, resolution = 1, algorithm=1)
+object_1$seurat_clusters <- as.character(object_1$seurat_clusters)
+object_1$seurat_clusters <- ifelse(  object_1@reductions$umap@cell.embeddings[,1] >= -10 & 
+                             object_1@reductions$umap@cell.embeddings[,1] <= -9 & 
+                             object_1@reductions$umap@cell.embeddings[,2] >= -6.2 & 
+                             object_1@reductions$umap@cell.embeddings[,2] <= -5.2
+                           , paste0(object_1$seurat_clusters,". PE|EN?"), object_1$seurat_clusters)
+object_1$seurat_clusters <- as.factor(object_1$seurat_clusters)
 levels(object_1$seurat_clusters) <- gsub("^(1|4|11)$",paste0("\\1. TAM/MG"),levels(object_1$seurat_clusters))
 levels(object_1$seurat_clusters) <- gsub("^(8)$",paste0("\\1. OD"),levels(object_1$seurat_clusters))
 levels(object_1$seurat_clusters) <- gsub("^(9|12)$",paste0("\\1. NE"),levels(object_1$seurat_clusters))
 levels(object_1$seurat_clusters) <- gsub("^(6|7)$",paste0("\\1. AC"),levels(object_1$seurat_clusters))
-levels(object_1$seurat_clusters) <- gsub("^(13)$",paste0("\\1. PE?"),levels(object_1$seurat_clusters))
+levels(object_1$seurat_clusters) <- gsub("^(13)$",paste0("\\1. ?"),levels(object_1$seurat_clusters))
 levels(object_1$seurat_clusters) <- gsub("^(0|2|3|5|10)$",paste0("\\1. T"),levels(object_1$seurat_clusters))
 
 
@@ -1217,7 +1287,8 @@ object_1$seurat_clusters <- factor(object_1$seurat_clusters, levels=c(
   "6. AC","7. AC",
   "9. NE","12. NE",
   "8. OD",
-  "13. PE?",
+  "6. PE|EN?",
+  "13. ?",
   "1. TAM/MG","4. TAM/MG","11. TAM/MG"
 ))
 object_1$classes <- gsub("^[0-9\\. ]+","",object_1$seurat_clusters)
@@ -1228,13 +1299,25 @@ DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "se
   guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
   labs(subtitle=sid)
 
+
+#  geom_vline(xintercept=-10, linetype="dashed", color = "blue") + 
+#  geom_vline(xintercept=-9, linetype="dashed", color = "blue") + 
+#  geom_hline(yintercept=-6.2, linetype="dashed", color = "blue") + 
+#  geom_hline(yintercept=-5.2, linetype="dashed", color = "blue")
+
 ggsave(paste0("output/figures/scRNA/Diaz/",sid,"_UMAP.pdf"),width=10,height=8)
 ggsave(paste0("output/figures/scRNA/Diaz/",sid,"_UMAP.png"),width=10,height=8)
 
 
 
 
-# tmp.13 <- FindMarkers(object_1, ident.1 = 13) # LINC00943,AC007325.2,PRRX2,RP11-407A16.3,TPD52L1,GMPR,GPC5-AS1,RP3-395M20.12,NPNT,FXYD1,GJB6,EVC2,PLIN5,OTX1,ADIRF,CGNL1,RNF43,TMPRSS3,PLSCR4,SDC4,RP11-156K13.1,ALDH1A1,SDS,SHROOM3,LINC01515
+# tmp.13 <- FindMarkers(object_1, ident.1 = 13) #
+
+# LINC00943,AC007325.2,PRRX2,RP11-407A16.3,TPD52L1,
+# GMPR,GPC5-AS1,RP3-395M20.12,NPNT,FXYD1,GJB6,EVC2,
+# PLIN5,OTX1,ADIRF,CGNL1,RNF43,TMPRSS3,PLSCR4,SDC4,
+# RP11-156K13.1,ALDH1A1,SDS,SHROOM3,LINC01515
+
 # tmp.9 <- FindMarkers(object_1, ident.1 = 9) # RBFOX3
 # tmp.12 <- FindMarkers(object_1, ident.1 = 12) # 
 
@@ -1348,15 +1431,19 @@ FeaturePlot(object = object_1, features = "IL7R")
 #### 4. Neurons (-) ----
 
 
-FeaturePlot(object = object_1, features = "RBFOX3")
+FeaturePlot(object = object_1, features = "RBFOX3",order=T)
 FeaturePlot(object = object_1, features = "RBFOX1")
 FeaturePlot(object = object_1, features = "RBFOX2") # NPC2 ~ Neftel
 FeaturePlot(object = object_1, features = "DDN")
 FeaturePlot(object = object_1, features = "TNNT2")
 FeaturePlot(object = object_1, features = "TMEM130")
 FeaturePlot(object = object_1, features = "GABRG2")
-#FeaturePlot(object = object_1, features = "GABRA1")
+FeaturePlot(object = object_1, features = "GABRA1")
 FeaturePlot(object = object_1, features = "GABRB2")
+FeaturePlot(object = object_1, features = "SATB2") # 
+FeaturePlot(object = object_1, features = "SLC17A7") # 
+FeaturePlot(object = object_1, features = "GAD1") # 
+FeaturePlot(object = object_1, features = "GAD2") # 
 
 
 DotPlot(object = object_1, features = c("RBFOX3",
@@ -1398,9 +1485,14 @@ DotPlot(object = object_1, features = c("SSTR2", "SST", "LHX1", "LHX6","NHLH1","
 
 #### 6B. Pericytes (12) ----
 
-FeaturePlot(object = object_1, features = "RGS5")
-FeaturePlot(object = object_1, features = "PDGFRB")
-FeaturePlot(object = object_1, features = "CD248")
+FeaturePlot(object = object_1, features = c("RGS5","PDGFRB","CD248","PEAR1", "HEYL" , "CFH"))
+
+FeaturePlot(object = object_1, features = c("RGS5"))
+FeaturePlot(object = object_1, features = c("PDGFRB"))
+FeaturePlot(object = object_1, features = c("CD248"))
+FeaturePlot(object = object_1, features = c("PEAR1"))
+FeaturePlot(object = object_1, features = c("HEYL"))
+FeaturePlot(object = object_1, features = c("CFH"))
 
 
 
@@ -1442,9 +1534,11 @@ FeaturePlot(object = object_1, features = C5)
 
 
 #### C6 (up) :: (-) ----
+# for sure 2 cells are pericytes
 
-
-DotPlot(object = object_1, features =list('C6'=C6 , 'Peri'=c("RGS5", "PDGFRB", "CD248") ), group.by = "seurat_clusters") +
+DotPlot(object = object_1, features =list('C6'=C6 , 'Peri'=c("RGS5", "PDGFRB", "CD248"
+#                                                             ,"PEAR1", "HEYL" , "CFH"
+                                                             ) ), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
   labs(x = paste0("Features [C6] in: ",sid))
 ggsave(paste0("output/figures/scRNA/Diaz/",sid,"_C6.pdf"),width=7.5, height=4,scale=1.2)
@@ -2330,22 +2424,22 @@ VlnPlot(object = object_1, features = c("nFeature_RNA", "nCount_RNA", "percent.m
 
 ggplot(object_1@meta.data, aes(y=`nFeature_RNA`, x=orig.ident)) +
   geom_jitter(cex=0.01) +
-  geom_hline(yintercept = 100,col="red") +
-  geom_hline(yintercept = 6500,col="red")
+  geom_hline(yintercept = 1300,col="red") +
+  geom_hline(yintercept = 7500,col="red")
 
 
 ggplot(object_1@meta.data, aes(y=`nCount_RNA`, x=orig.ident)) +
   geom_jitter(cex=0.01)  +
   geom_hline(yintercept = 100,col="red") +
-  geom_hline(yintercept = 20000,col="red") # + scale_y_log10()
+  geom_hline(yintercept = 45000,col="red") # + scale_y_log10()
 
 
 
 # object_1 <- subset(x = object_1, subset =
-#                      nFeature_RNA > 100 &
-#                      nFeature_RNA < 6500 &
+#                      nFeature_RNA > 1300 &
+#                      nFeature_RNA < 7500 &
 #                      nCount_RNA > 100 &
-#                      nCount_RNA < 20000 &
+#                      nCount_RNA < 45000 &
 #                      percent.mito < 0.2)
 
 
@@ -2355,13 +2449,19 @@ object_1 <- FindVariableFeatures(object = object_1, selection.method = "vst", nf
 object_1[["state"]] <- "P1" 
 object_1$dataset <- as.character(gsub("^[^_]+_","",sid))
 
-# top10 <- head(VariableFeatures(object_1), 10)
 # plot variable features with and without labels
 
+
+
+print(paste0("Median(nCount_RNA) in ",sid, " = ",round(median(object_1$nCount_RNA))))
+print(paste0("Median(nFeature_RNA) in ",sid, " = ",round(median(object_1$nFeature_RNA))))
+
+
+
+
+top10 <- head(VariableFeatures(object_1), 10)
 plot1 <- VariableFeaturePlot(object_1)
-plot2 <- LabelPoints(plot = plot1, points = top10, repel = TRUE)
-#CombinePlots(plots = list(plot1, plot2))     
-plot1
+plot2 <- LabelPoints(plot = plot1, points = top10, repel = TRUE) #CombinePlots(plots = list(plot1, plot2))
 plot2
 
 all.genes <- rownames(object_1)
@@ -2593,8 +2693,6 @@ FeaturePlot(object = object_1, features = C5)
 
 
 
-f <- c(C6 , c("RGS5", "PDGFRB", "CD248") )
-
 
 DotPlot(object = object_1, features =list('C6'=C6 , 'Peri'=c("RGS5", "PDGFRB", "CD248") ), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
@@ -2669,6 +2767,10 @@ object_1$dataset <- as.character(gsub("^[^_]+_","",sid))
 
 # top10 <- head(VariableFeatures(object_1), 10)
 # plot variable features with and without labels
+
+print(paste0("Median(nCount_RNA) in ",sid, " = ",round(median(object_1$nCount_RNA))))
+print(paste0("Median(nFeature_RNA) in ",sid, " = ",round(median(object_1$nFeature_RNA))))
+
 
 plot1 <- VariableFeaturePlot(object_1)
 plot2 <- LabelPoints(plot = plot1, points = top10, repel = TRUE)
