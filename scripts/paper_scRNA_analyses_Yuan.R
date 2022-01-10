@@ -23,7 +23,7 @@ C4B <- c("WNT11", "SCUBE3", "KRT17", "GPR78","CPZ","GLI1", "PRB2","MAFA","HAPLN1
 
 C5 <- c("PRF1", "ARHGAP9", "FCMR","LXN","KCNE3", "NR5A2","FPR2", "CCL13", "MMP7", "CALCR", "LRG1", "SAA2", "PI3", "LIF", "HSPA6")
 
-C6 <- c('CRABP2', 'CLIP2', 'DPT', 'FGF7', 'COL10A1', 'FBN1', 'GLT8D2',
+C6 <- c('CRABP2', 'CILP2', 'DPT', 'FGF7', 'COL10A1', 'FBN1', 'GLT8D2',
         'IRX3', 'MFAP5', 'MFAP4', "COL8A2", "FNDC1", "MMP11", "MFAP2",
         "COL1A2", "COL1A1", "COL5A1", "ADAMTS2", "TPSB2", "KRT8", "OMD",
         "OGN", "MME", "MLPH", "MRC1L1", "PTGFR", "TWIST2", "C5orf46",
@@ -483,7 +483,7 @@ FeaturePlot(object = object_1, features = C6)
 
 
 FeaturePlot(object = object_1, features =  "CRABP2" )
-FeaturePlot(object = object_1, features =  "CLIP2" )
+FeaturePlot(object = object_1, features =  "CILP2" )
 # FeaturePlot(object = object_1, features =  "DPT" )
 # FeaturePlot(object = object_1, features =  "FGF7" )
 # FeaturePlot(object = object_1, features =  "COL10A1" )
@@ -844,7 +844,7 @@ VlnPlot(object = object_1, features = f, group.by = "seurat_clusters",stack=T)
 FeaturePlot(object = object_1, features = C6)
 
 FeaturePlot(object = object_1, features =  "CRABP2" )
-FeaturePlot(object = object_1, features =  "CLIP2" )
+FeaturePlot(object = object_1, features =  "CILP2" )
 FeaturePlot(object = object_1, features =  "DPT" )
 FeaturePlot(object = object_1, features =  "FGF7" )
 # FeaturePlot(object = object_1, features =  "COL10A1" )
@@ -1213,7 +1213,7 @@ ggsave(paste0("output/figures/scRNA/Yuan/",sid,"_C6.png"),width=7.5, height=4,sc
 
 
 FeaturePlot(object = object_1, features =  "CRABP2" )
-FeaturePlot(object = object_1, features =  "CLIP2" )
+FeaturePlot(object = object_1, features =  "CILP2" )
 # FeaturePlot(object = object_1, features =  "DPT" )
 FeaturePlot(object = object_1, features =  "FGF7" )
 # FeaturePlot(object = object_1, features =  "COL10A1" )
@@ -1509,7 +1509,7 @@ DotPlot(object_1, features=f, group.by = "seurat_clusters") +  theme(axis.text.x
 
 
 FeaturePlot(object = object_1, features =  "CRABP2" )
-FeaturePlot(object = object_1, features =  "CLIP2" )
+FeaturePlot(object = object_1, features =  "CILP2" )
 FeaturePlot(object = object_1, features =  "DPT" )
 FeaturePlot(object = object_1, features =  "FGF7" )
 # FeaturePlot(object = object_1, features =  "COL10A1" )
@@ -1856,7 +1856,7 @@ ggsave(paste0("output/figures/scRNA/Yuan/",sid,"_C6.png"),width=7.5, height=4,sc
 
 
 FeaturePlot(object = object_1, features =  "CRABP2" )
-FeaturePlot(object = object_1, features =  "CLIP2" )
+FeaturePlot(object = object_1, features =  "CILP2" )
 FeaturePlot(object = object_1, features =  "DPT" )
 FeaturePlot(object = object_1, features =  "FGF7" )
 # FeaturePlot(object = object_1, features =  "COL10A1" )
@@ -2272,7 +2272,7 @@ VlnPlot(object = object_1, features = c(C6), group.by = "seurat_clusters",stack=
 FeaturePlot(object = object_1, features = C6)
 
 FeaturePlot(object = object_1, features =  "CRABP2" )
-FeaturePlot(object = object_1, features =  "CLIP2" )
+FeaturePlot(object = object_1, features =  "CILP2" )
 #FeaturePlot(object = object_1, features =  "DPT" )
 FeaturePlot(object = object_1, features =  "FGF7" )
 #FeaturePlot(object = object_1, features =  "COL10A1" )
@@ -2465,7 +2465,7 @@ RidgePlot(object = object_c, features = c(C6), group.by = "youri_clusters",stack
 FeaturePlot(object = object_c, features = C6)
 
 FeaturePlot(object = object_c, features =  "CRABP2" )
-FeaturePlot(object = object_c, features =  "CLIP2" )
+FeaturePlot(object = object_c, features =  "CILP2" )
 FeaturePlot(object = object_c, features =  "DPT" )
 FeaturePlot(object = object_c, features =  "FGF7" )
 #FeaturePlot(object = object_c, features =  "COL10A1" )

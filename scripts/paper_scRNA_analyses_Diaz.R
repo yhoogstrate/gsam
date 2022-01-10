@@ -2697,6 +2697,7 @@ FeaturePlot(object = object_1, features = C5)
 DotPlot(object = object_1, features =list('C6'=C6 , 'Peri'=c("RGS5", "PDGFRB", "CD248") ), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
   labs(x = paste0("Features [C6] in: ",sid))
+
 ggsave(paste0("output/figures/scRNA/Diaz/",sid,"_C6.pdf"),width=7.5, height=4,scale=1.2)
 ggsave(paste0("output/figures/scRNA/Diaz/",sid,"_C6.png"),width=7.5, height=4,scale=1.2)
 
