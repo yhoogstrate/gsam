@@ -23,7 +23,7 @@ C4B <- c("WNT11", "SCUBE3", "KRT17", "GPR78","CPZ","GLI1", "PRB2","MAFA","HAPLN1
 
 C5 <- c("PRF1", "ARHGAP9", "FCMR","LXN","KCNE3", "NR5A2","FPR2", "CCL13", "MMP7", "CALCR", "LRG1", "SAA2", "PI3", "LIF", "HSPA6")
 
-C6 <- c('CRABP2', 'CLIP2', 'DPT', 'FGF7', 'COL10A1', 'FBN1', 'GLT8D2',
+C6 <- c('CRABP2', 'CILP2', 'DPT', 'FGF7', 'COL10A1', 'FBN1', 'GLT8D2',
         'IRX3', 'MFAP5', 'MFAP4', "COL8A2", "FNDC1", "MMP11", "MFAP2",
         "COL1A2", "COL1A1", "COL5A1", "ADAMTS2", "TPSB2", "KRT8", "OMD",
         "OGN", "MME", "MLPH", "MRC1L1", "PTGFR", "TWIST2", "C5orf46",
@@ -1646,9 +1646,8 @@ FeaturePlot(object = object_1, features = C5[13:16])
 
 
 f <- c(C6 , c("RGS5", "PDGFRB", "CD248") )
-
-
 f <- C6
+
 
 DotPlot(object = object_1, features = f, group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 RidgePlot(object = object_1, features = c(C6), group.by = "seurat_clusters",stack=T)
@@ -1806,6 +1805,8 @@ object_1$seurat_clusters <- factor(object_1$seurat_clusters, levels=c(
 
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "seurat_clusters") +
   labs(subtitle=sid)
+
+
 ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_UMAP.pdf"),width=10,height=8)
 ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_UMAP.png"),width=10,height=8)
 
@@ -2126,6 +2127,7 @@ VlnPlot(object = object_1, features = c(C5), group.by = "seurat_clusters",stack=
 DotPlot(object = object_1, features =list('C6'=C6 , 'Peri'=c("RGS5", "PDGFRB", "CD248") ), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
   labs(x = paste0("Features [C6] in: ",sid))
+
 ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C6.pdf"),width=7.5, height=4,scale=1.2)
 ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C6.png"),width=7.5, height=4,scale=1.2)
 
@@ -2139,7 +2141,7 @@ FeaturePlot(object = object_1, features = C6)
 
 
 FeaturePlot(object = object_1, features =  "CRABP2" )
-FeaturePlot(object = object_1, features =  "CLIP2" )
+FeaturePlot(object = object_1, features =  "CILP2" )
 #FeaturePlot(object = object_1, features =  "DPT" )
 FeaturePlot(object = object_1, features =  "FGF7" )
 #FeaturePlot(object = object_1, features =  "COL10A1" )
@@ -3840,6 +3842,7 @@ FeaturePlot(object = object_1, features = C5[13:16])
 DotPlot(object = object_1, features =list('C6'=C6 , 'Peri'=c("RGS5", "PDGFRB", "CD248") ), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
   labs(x = paste0("Features [C6] in: ",sid))
+
 ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C6.pdf"),width=7.5, height=4,scale=1.2)
 ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C6.png"),width=7.5, height=4,scale=1.2)
 
@@ -5764,7 +5767,7 @@ RidgePlot(object = object_c, features = c(C6), group.by = "youri_clusters",stack
 FeaturePlot(object = object_c, features = C6)
 
 FeaturePlot(object = object_c, features =  "CRABP2" )
-FeaturePlot(object = object_c, features =  "CLIP2" )
+FeaturePlot(object = object_c, features =  "CILP2" )
 FeaturePlot(object = object_c, features =  "DPT" )
 FeaturePlot(object = object_c, features =  "FGF7" )
 #FeaturePlot(object = object_c, features =  "COL10A1" )
