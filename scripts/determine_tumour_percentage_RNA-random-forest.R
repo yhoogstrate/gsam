@@ -18,7 +18,7 @@ source("scripts/R/youri_gg_theme.R")
 source("scripts/R/gsam_metadata.R")
 source("scripts/R/gsam_rna-seq_expression.R")
 
-source("scripts/R/glass_expression_matrix.R") # glass & tcga validation set + metedata
+source("scripts/R/glass_expression_matrix.R") # glass & tcga validation set + metadata
 
 
 # load data ----
@@ -213,7 +213,9 @@ for(i in 1:10) {
                           data=train.data,
                           ntree = 5000,
                           #mtry=3,
+                          
                           importance=TRUE
+                          
                           #na.action=na.omit
                           )
 
