@@ -35,6 +35,7 @@ library(tidyverse)
 # load data ----
 
 source('scripts/R/gsam_rna-seq_expression.R') # recursively calls metadata
+source('scripts/R/gsam_metadata.R') # HM status
 
 source('scripts/R/glass_expression_matrix.R')
 
@@ -529,7 +530,7 @@ if(file.exists("output/tables/gsam_nmf_lda_data.txt")) {
   colnames(a)
 }  
 
-s150.pca.nmf.subtype.classifier.svm <- readRDS(s150.pca.nmf.subtype.classifier.svm, 'tmp/s150.pca.nmf.subtype.classifier.svm.Rds')
+s150.pca.nmf.subtype.classifier.svm <- readRDS('tmp/s150.pca.nmf.subtype.classifier.svm.Rds')
 # s150.pca.nmf.subtype.classifier.svm <- svm(x = plt.single  %>%
 #                                              #dplyr::filter(dataset == "GSAM") %>%
 #                                              dplyr::select(c('sid' ,'NMF:123456.PC1', 'NMF:123456.PC2')) %>%
@@ -635,13 +636,15 @@ write.table(
   plt.single %>%
     dplyr::select(c("sid",
                     "NMF:123456.membership",
+                    
+                    'NMF:123456.1','NMF:123456.2','NMF:123456.3',
+                    
                     "NMF:123456.PC1", "NMF:123456.PC2", "NMF:123456.PC3",
                     "NMF:123456.PCA.SVM.class",
                     "NMF:123456.PCA.SVM.Classical.p", "NMF:123456.PCA.SVM.Proneural.p", "NMF:123456.PCA.SVM.Mesenchymal.p"
                     #"NMF:123456.PCA.LDA.class", "NMF:123456.PCA.LDA.posterior.Classical", "NMF:123456.PCA.LDA.posterior.Mesenchymal", "NMF:123456.PCA.LDA.posterior.Proneural"
-                    
     )),
-  "output/tables/gsam_nmf_lda_data.txt")
+  "output/tables/gsam_nmf_lda_data.new.txt")
 
 
 
@@ -672,6 +675,88 @@ plt.paired %>%   dplyr::filter(pid %in% c('G-SM-R056-2', 'GLSS-HF-3081', 'GLSS-H
 
 plot(density(plt.paired$eucledian.dist))
 hist(plt.paired$eucledian.dist,breaks=15)
+
+plt.paired %>%
+  dplyr::filter(`NMF:123456.PCA.SVM.class.R1` == 'Classical') %>% 
+  nrow()
+
+plt.paired %>%
+  dplyr::filter(`NMF:123456.PCA.SVM.class.R1` == 'Classical')  %>%
+  dplyr::filter(`NMF:123456.PCA.SVM.class.R2` == 'Mesenchymal') %>%
+  nrow()
+
+
+plt.paired %>%
+  dplyr::filter(`NMF:123456.PCA.SVM.class.R1` == 'Classical')  %>%
+  dplyr::filter(`NMF:123456.PCA.SVM.class.R2` == 'Proneural') %>%
+  nrow()
+
+
+
+dist.stable <- plt.paired %>%
+  dplyr::filter(`NMF:123456.PCA.SVM.class.R1` == 'Classical')  %>%
+  dplyr::filter(`NMF:123456.PCA.SVM.class.R2` == 'Classical') %>%
+  dplyr::pull(eucledian.dist)
+
+
+dist.switch <- plt.paired %>%
+  dplyr::filter(`NMF:123456.PCA.SVM.class.R1` == 'Classical')  %>%
+  dplyr::filter(`NMF:123456.PCA.SVM.class.R2` != 'Classical') %>%
+  dplyr::pull(eucledian.dist)
+
+
+wilcox.test(dist.stable, dist.switch)
+
+
+
+
+dist.stable <- plt.paired %>%
+  dplyr::filter(`NMF:123456.PCA.SVM.class.R1` == 'Mesenchymal')  %>%
+  dplyr::filter(`NMF:123456.PCA.SVM.class.R2` == 'Mesenchymal') %>%
+  dplyr::pull(eucledian.dist)
+
+
+dist.switch <- plt.paired %>%
+  dplyr::filter(`NMF:123456.PCA.SVM.class.R1` == 'Mesenchymal')  %>%
+  dplyr::filter(`NMF:123456.PCA.SVM.class.R2` != 'Mesenchymal') %>%
+  dplyr::pull(eucledian.dist)
+
+
+wilcox.test(dist.stable, dist.switch)
+
+
+
+dist.stable <- plt.paired %>%
+  dplyr::filter(`NMF:123456.PCA.SVM.class.R1` == 'Proneural')  %>%
+  dplyr::filter(`NMF:123456.PCA.SVM.class.R2` == 'Proneural') %>%
+  dplyr::pull(eucledian.dist)
+
+
+dist.switch <- plt.paired %>%
+  dplyr::filter(`NMF:123456.PCA.SVM.class.R1` == 'Proneural')  %>%
+  dplyr::filter(`NMF:123456.PCA.SVM.class.R2` == 'Classical') %>%
+  dplyr::pull(eucledian.dist)
+
+
+wilcox.test(dist.stable, dist.switch)
+
+
+
+dist.stable <- plt.paired %>%
+  dplyr::filter(`NMF:123456.PCA.SVM.class.R1` == 'Proneural')  %>%
+  dplyr::filter(`NMF:123456.PCA.SVM.class.R2` == 'Proneural') %>%
+  dplyr::pull(eucledian.dist)
+
+
+dist.switch <- plt.paired %>%
+  dplyr::filter(`NMF:123456.PCA.SVM.class.R1` == 'Proneural')  %>%
+  dplyr::filter(`NMF:123456.PCA.SVM.class.R2` == 'Mesenchymal') %>%
+  dplyr::pull(eucledian.dist)
+
+
+wilcox.test(dist.stable, dist.switch)
+
+
 
 
 # Tests ----
@@ -1238,7 +1323,7 @@ ggplot(plt , aes(x = `NMF:123456.PC1`, y = `NMF:123456.PC2`, group=pid,  col = `
   scale_fill_manual(values = subtype_colors)
 
 
-ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_SVM-reclassification_SVM-countours_classical.pdf', width=12 * 0.5,height=10 * 0.5)
+ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_SVM-reclassification_SVM-countours_classical.pdf', width=12 * 0.45,height=10 * 0.45)
 
 
 
@@ -1278,7 +1363,7 @@ ggplot(plt , aes(x = `NMF:123456.PC1`, y = `NMF:123456.PC2`, group=pid,  col = `
 
 
 
-ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_SVM-reclassification_SVM-countours_mesenchymal.pdf', width=12 * 0.5,height=10 * 0.5)
+ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_SVM-reclassification_SVM-countours_mesenchymal.pdf', width=12 * 0.45,height=10 * 0.45)
 
 
 
@@ -1315,7 +1400,7 @@ ggplot(plt , aes(x = `NMF:123456.PC1`, y = `NMF:123456.PC2`, group=pid,  col = `
   scale_fill_manual(values = subtype_colors)
 
 
-ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_SVM-reclassification_SVM-countours_proneural.pdf', width=12 * 0.5,height=10 * 0.5)
+ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_SVM-reclassification_SVM-countours_proneural.pdf', width=12 * 0.45,height=10 * 0.45)
 
 
 
@@ -1608,8 +1693,12 @@ ggplot(plt  , aes(x = `NMF:123456.PC1`, y = -`NMF:123456.PC2`, group=pid, col = 
   scale_color_manual(values=c('Stable'= rgb(0,0.75,0), 'Transition' = 'black','NA'='purple')) +
   scale_fill_manual(values = subtype_colors) +
   facet_grid(cols = vars(facet)) +
+#  geom_text_repel(data = subset(plt, pid %in% c('CDA','CDD','CBP','CBR','CCZ') )) + 
   theme(strip.background = element_blank(), strip.text = element_blank())
- 
+
+
+
+
 
 
 ggsave('output/figures/paper_subtypes_nmf_S150G_PC1_PC2_SVM-reclassification_SVM-countours_facet.pdf',width=16.7,height=6.5)
@@ -2364,7 +2453,9 @@ df.paired <- df.paired %>%
                 init.class = NULL,
                 end = NULL,
                 end.class = NULL) %>%
-  dplyr::left_join(plt.paired , by = c('pid' = 'pid'))
+  dplyr::left_join(plt.paired , by = c('pid' = 'pid')) %>%
+  dplyr::left_join(gsam.patient.metadata %>% dplyr::select(studyID, HM), by = c('pid' = 'studyID') ) %>%
+  dplyr::mutate(HM = ifelse(is.na(HM),"N/A",HM))
 
 
 
@@ -2375,8 +2466,22 @@ plt <- data.frame()
 for(i in 1:nrow(df.paired)){
   slice = df.paired[i,]
   
+
   if(is.na( slice$split )) {
     dist <- slice$eucledian.dist
+    
+    # Add HM status
+    if(slice$HM[1] == "Yes") {
+      plt <- rbind(plt,
+                   data.frame(
+                     pid = c(slice$pid,slice$pid),
+                     group = paste0(c(slice$pid,slice$pid),".HM"),
+                     pos = c(-0.1,-0.1),
+                     subtype = c('Hyper-mutant','Hyper-mutant'),
+                     subtype.init = c(slice$`NMF:123456.PCA.SVM.class.R1`,slice$`NMF:123456.PCA.SVM.class.R1`),
+                     d = c(dist,dist),
+                     type=c("lpad","lpad")))
+    }
     
     plt <- rbind(plt, 
                  data.frame(
@@ -2402,6 +2507,20 @@ for(i in 1:nrow(df.paired)){
     
     
     dist <- - slice$eucledian.dist
+    
+    # Add HM status
+    if(slice$HM[1] == "Yes") {
+      plt <- rbind(plt,
+                   data.frame(
+                     pid = c(slice$pid,slice$pid),
+                     group = paste0(c(slice$pid,slice$pid),".HM"),
+                     pos = c(-2.8,-2.8),
+                     subtype = c('Hyper-mutant','Hyper-mutant'),
+                     subtype.init = c(slice$`NMF:123456.PCA.SVM.class.R1`,slice$`NMF:123456.PCA.SVM.class.R1`),
+                     d = c(dist,dist),
+                     type=c("rpad","rpad")))
+    }
+    
     plt <- rbind(plt, 
                  data.frame(
                    pid = slice$pid,
@@ -2427,6 +2546,19 @@ for(i in 1:nrow(df.paired)){
     
   } else  {
     dist <- slice$eucledian.dist
+    
+    # Add HM status
+    if(slice$HM[1] == "Yes") {
+      plt <- rbind(plt,
+                   data.frame(
+                     pid = c(slice$pid,slice$pid),
+                     group = paste0(c(slice$pid,slice$pid),".HM"),
+                     pos = c(-0.1,-0.1),
+                     subtype = c('Hyper-mutant','Hyper-mutant'),
+                     subtype.init = c(slice$`NMF:123456.PCA.SVM.class.R1`,slice$`NMF:123456.PCA.SVM.class.R1`),
+                     d = c(dist,dist),
+                     type=c("lpad","lpad")))
+    }
     
     
     plt <- rbind(plt,
@@ -2474,6 +2606,20 @@ for(i in 1:nrow(df.paired)){
     
     
     dist <- (slice$split) * slice$eucledian.dist
+    
+    # Add HM status
+    if(slice$HM[1] == "Yes") {
+      plt <- rbind(plt,
+                   data.frame(
+                     pid = c(slice$pid,slice$pid),
+                     group = paste0(c(slice$pid,slice$pid),".HM"),
+                     pos = c(-2.8,-2.8),
+                     subtype = c('Hyper-mutant','Hyper-mutant'),
+                     subtype.init = c(slice$`NMF:123456.PCA.SVM.class.R1`,slice$`NMF:123456.PCA.SVM.class.R1`),
+                     d = c(dist,dist),
+                     type=c("rpad","rpad")))
+    }
+    
     plt <- rbind(plt,
                  data.frame(
                    pid = slice$pid,
@@ -2537,7 +2683,7 @@ p1 <- ggplot(plt %>% dplyr::filter(type == "lpad"), aes(x = pos , y = reorder(pi
     axis.text.y = element_text(size = 6)
   ) +
   theme(strip.background = element_blank(), strip.text = element_blank()) +
-  scale_color_manual(values = subtype_colors, guide = guide_legend(title = NULL, title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75))
+  scale_color_manual(values = c(subtype_colors, 'Hyper-mutant' = 'gray40'), guide = guide_legend(title = NULL, title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75))
 
 
 p2 <- ggplot(plt %>% dplyr::filter(type == "rpad"), aes(x = pos , y = reorder(pid, d), col = subtype, group=group)) +
@@ -2556,7 +2702,7 @@ p2 <- ggplot(plt %>% dplyr::filter(type == "rpad"), aes(x = pos , y = reorder(pi
     axis.text.y = element_text(size = 6)
   ) +
   theme(strip.background = element_blank(), strip.text = element_blank()) +
-  scale_color_manual(values = subtype_colors, guide = guide_legend(title = NULL, title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75))
+  scale_color_manual(values = c(subtype_colors, 'Hyper-mutant' = 'gray40'), guide = guide_legend(title = NULL, title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75))
 
 p1 + p2
 
