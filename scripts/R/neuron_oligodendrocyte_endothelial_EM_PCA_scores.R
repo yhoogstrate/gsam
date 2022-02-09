@@ -282,12 +282,17 @@ pca.endothelial$x %>%
 # extra-cellular matrix correlated genes ----
 
 
-extracellular.matrix.genes <- c("PRF1","ARHGAP9","FCMR","LXN","KCNE3","NR5A2","FPR2","CCL13","MMP7","CALCR","LRG1","SAA2","PI3","LIF","HSPA6","CRABP2","CILP2","DPT","FGF7","COL10A1","FBN1","GLT8D2","IRX3","MFAP5","MFAP4","COL8A2","FNDC1","MMP11","MFAP2","COL1A2","COL1A1","COL5A1","ADAMTS2","TPSB2","KRT8","OMD","OGN","MME","MLPH","MRC1L1","PTGFR","TWIST2","C5orf46","TNNT3","ASS1","PERP","KLHDC7B","CCL8")
+# C5 + C6
+#extracellular.matrix.genes <- c("PRF1","ARHGAP9","FCMR","LXN","KCNE3","NR5A2","FPR2","CCL13","MMP7","CALCR","LRG1","SAA2","PI3","LIF","HSPA6","CRABP2","CILP2","DPT","FGF7","COL10A1","FBN1","GLT8D2","IRX3","MFAP5","MFAP4","COL8A2","FNDC1","MMP11","MFAP2","COL1A2","COL1A1","COL5A1","ADAMTS2","TPSB2","KRT8","OMD","OGN","MME","MLPH","MRC1L1","PTGFR","TWIST2","C5orf46","TNNT3","ASS1","PERP","KLHDC7B","CCL8")
+
+# C6
+extracellular.matrix.genes <- c("CRABP2","CILP2","DPT","FGF7","COL10A1","FBN1","GLT8D2","IRX3","MFAP5","MFAP4","COL8A2","FNDC1","MMP11","MFAP2","COL1A2","COL1A1","COL5A1","ADAMTS2","TPSB2","KRT8","OMD","OGN","MME","MLPH","MRC1L1","PTGFR","TWIST2","C5orf46","TNNT3","ASS1","PERP","KLHDC7B","CCL8")
+
 
 results.out %>% dplyr::filter(in.gsam == T & in.glass == T) %>% 
   dplyr::filter(hugo_symbol %in% extracellular.matrix.genes) %>% dplyr::pull('ensembl_id')
 
-extracellular.matrix.genes.ens <- c("ENSG00000117122","ENSG00000171812","ENSG00000122420","ENSG00000143320","ENSG00000173110","ENSG00000143196","ENSG00000116833","ENSG00000162894","ENSG00000115648","ENSG00000233608","ENSG00000196549","ENSG00000079257","ENSG00000178776","ENSG00000087116","ENSG00000123500","ENSG00000112378","ENSG00000164694","ENSG00000004948","ENSG00000164692","ENSG00000106809","ENSG00000127083","ENSG00000130707","ENSG00000130635","ENSG00000183748","ENSG00000180644","ENSG00000130595","ENSG00000134339","ENSG00000175538","ENSG00000137673","ENSG00000197614","ENSG00000170421","ENSG00000123329","ENSG00000120820","ENSG00000166147","ENSG00000140285","ENSG00000197253","ENSG00000177508","ENSG00000166482","ENSG00000108700","ENSG00000181374","ENSG00000108821","ENSG00000171236","ENSG00000160161","ENSG00000171049","ENSG00000124102","ENSG00000099953","ENSG00000128342","ENSG00000130487")
+extracellular.matrix.genes.ens <- c("ENSG00000117122","ENSG00000171812","ENSG00000122420","ENSG00000143320","ENSG00000143196","ENSG00000115648","ENSG00000233608","ENSG00000196549","ENSG00000178776","ENSG00000087116","ENSG00000123500","ENSG00000112378","ENSG00000164694","ENSG00000164692","ENSG00000106809","ENSG00000127083","ENSG00000130707","ENSG00000130635","ENSG00000183748","ENSG00000130595","ENSG00000197614","ENSG00000170421","ENSG00000120820","ENSG00000166147","ENSG00000140285","ENSG00000197253","ENSG00000177508","ENSG00000166482","ENSG00000108700","ENSG00000108821","ENSG00000160161","ENSG00000099953","ENSG00000130487")
 
 
 
@@ -302,8 +307,21 @@ plot(pca.extracellular.matrix)
 #library(ggbiplot)
 #ggbiplot(pca.extracellular.matrix)
 
+
+#variance explained
+varExp = (100*pca.extracellular.matrix$sdev^2)/sum(pca.extracellular.matrix$sdev^2)
+varDF = data.frame(Dimensions=1:length(varExp),
+                   varExp=varExp)
+
+ggplot(varDF,aes(x=Dimensions,y=varExp)) + geom_point() + 
+  geom_col(fill="steelblue") + geom_line() + 
+  theme_bw() + scale_x_continuous(breaks=1:nrow(varDF)) + 
+  ylim(c(0,100)) + ylab("Perc variance explained")
+
+
 # correlates nicely to the individual genes
-#plot(as.numeric(combined.gene.expression.extracellular.matrix[4,]), as.numeric(pca.extracellular.matrix$x %>% as.data.frame %>% dplyr::pull('PC1') )  )
+plot(as.numeric(combined.gene.expression.extracellular.matrix[1,]),
+     as.numeric(pca.extracellular.matrix$x %>% as.data.frame %>% dplyr::pull('PC1') )  )
 
 
 pca.extracellular.matrix$x %>%
@@ -357,5 +375,21 @@ write.table(principal_de_components , "output/tables/principal_DE_cluster_compon
   
   
 
+# add when changing to only C6
+# 
+# principal_de_components <- read.table('output/tables/principal_DE_cluster_components.txt') %>%
+#   dplyr::mutate(extracellular.matrix.component = NULL) %>% 
+#   dplyr::left_join(
+#     pca.extracellular.matrix$x %>%
+#       as.data.frame() %>%
+#       tibble::rownames_to_column('pid') %>%
+#       dplyr::select(c('pid','PC1')) %>%
+#       dplyr::rename(extracellular.matrix.component = PC1) ,
+#     by = c('pid'='pid')
+#   )
+# 
+# 
+# write.table(principal_de_components , "output/tables/principal_DE_cluster_components.txt")
+# 
 
 
