@@ -33,36 +33,37 @@ source("scripts/R/glass_expression_matrix.R") # glass & tcga validation set
 #plt.expanded %>% dplyr::filter(pid == "GAO")
 #GAO = duplicated !?
 
+
 plt.ids <- gsam.rna.metadata %>%
-    dplyr::filter(blacklist.pca == F) %>%
+    #dplyr::filter(blacklist.pca == F) %>% # er zijn patienten met 1 goede en 1 slechte resectie
     #dplyr::filter(pat.with.IDH == F) %>%
     dplyr::filter(sid %in% c('BAI2', 'CAO1-replicate', 'FAB2', 'GAS2-replicate') == F ) %>%
-    dplyr::select(c('pid', 'sid')) %>%
+    dplyr::select(c('pid', 'sid', 'blacklist.pca')) %>%
     dplyr::mutate(resection = gsub("^...(.).*$","R\\1",sid)) %>%
     dplyr::mutate(pid = as.factor(as.character(pid))) # refactor
 
 
 # maak eerst losse colommen en rbind die daarna
 
+
 plt.expanded <- data.frame(pid = unique(plt.ids$pid) ) %>%
-  dplyr::left_join(gsam.patient.metadata %>% dplyr::select(c('studyID','treatedWithTMZ')) , by = c('pid' = 'studyID')) %>%
-  dplyr::left_join(gsam.patient.metadata %>% dplyr::select(c('studyID','treatedWithRT')) , by = c('pid' = 'studyID')) %>%
-  dplyr::left_join(plt.ids %>% dplyr::filter(resection == "R1") %>% dplyr::rename(R1 = sid) %>% dplyr::select(c('pid', 'R1')) , by = c('pid' = 'pid') ) %>%
-  dplyr::left_join(plt.ids %>% dplyr::filter(resection == "R2") %>% dplyr::rename(R2 = sid) %>% dplyr::select(c('pid', 'R2')) , by = c('pid' = 'pid') ) %>%
+  dplyr::left_join(gsam.patient.metadata %>% dplyr::select(c('studyID','treatedWithTMZ','treatedWithRT','HM')) , by = c('pid' = 'studyID')) %>%
+  dplyr::mutate(HM = ifelse(HM == "Yes", "-", "+")) %>% 
+  dplyr::left_join(plt.ids %>% dplyr::filter(resection == "R1") %>% dplyr::rename(R1 = sid) %>% dplyr::filter(blacklist.pca == F) %>% dplyr::select(c('pid', 'R1')) , by = c('pid' = 'pid') ) %>%
+  dplyr::left_join(plt.ids %>% dplyr::filter(resection == "R2") %>% dplyr::rename(R2 = sid) %>% dplyr::filter(blacklist.pca == F) %>% dplyr::select(c('pid', 'R2')) , by = c('pid' = 'pid') ) %>%
   dplyr::mutate(R1.status =  ifelse(is.na(R1), "NA", "+") ) %>%
   dplyr::mutate(R2.status =  ifelse(is.na(R2), "NA", "+") ) %>%
   dplyr::mutate(R1.R2.status = case_when( is.na(R1) ~ 'R2', is.na(R2) ~ 'R1',     TRUE ~ 'both'   ) ) %>%
-  dplyr::left_join(gsam.rna.metadata %>% dplyr::filter(sid %in% plt.ids$sid & resection == "r1") %>% dplyr::select(c('pid','NMF.123456.PCA.SVM.class')) %>% dplyr::rename(R1.rna.subtype = NMF.123456.PCA.SVM.class ),  by = c('pid' = 'pid') ) %>%
-  dplyr::left_join(gsam.rna.metadata %>% dplyr::filter(sid %in% plt.ids$sid & resection == "r2") %>% dplyr::select(c('pid','NMF.123456.PCA.SVM.class')) %>% dplyr::rename(R2.rna.subtype = NMF.123456.PCA.SVM.class ),  by = c('pid' = 'pid') ) %>%
-  dplyr::left_join(
-  gsam.rna.metadata %>% dplyr::select(c('pid','pat.with.IDH')) %>% dplyr::distinct() %>% dplyr::rename(patient.idh.status = pat.with.IDH ),  by = c('pid' = 'pid') ) %>%
-  
+  dplyr::left_join(gsam.rna.metadata %>% dplyr::filter(sid %in% plt.ids$sid & resection == "r1") %>% dplyr::select(c('sid','NMF.123456.PCA.SVM.class')) %>% dplyr::rename(R1.rna.subtype = NMF.123456.PCA.SVM.class ),  by = c('R1' = 'sid') ) %>%
+  dplyr::left_join(gsam.rna.metadata %>% dplyr::filter(sid %in% plt.ids$sid & resection == "r2") %>% dplyr::select(c('sid','NMF.123456.PCA.SVM.class')) %>% dplyr::rename(R2.rna.subtype = NMF.123456.PCA.SVM.class ),  by = c('R2' = 'sid') ) %>%
+  dplyr::left_join(gsam.rna.metadata %>% dplyr::select(c('pid','pat.with.IDH')) %>% dplyr::distinct() %>% dplyr::rename(patient.idh.status = pat.with.IDH ),  by = c('pid' = 'pid') ) %>%
+
   dplyr::mutate(patient.idh.status = ifelse(patient.idh.status == "TRUE", "-", "+") ) %>%
-  dplyr::left_join(gsam.rna.metadata %>% dplyr::filter(sid %in% plt.ids$sid &resection == "r1") %>% dplyr::select(c('pid','tumour.percentage.dna')) %>% dplyr::rename(R1.tumour.percentage.dna = tumour.percentage.dna )
-    ,  by = c('pid' = 'pid')) %>%
+  dplyr::left_join(gsam.rna.metadata %>% dplyr::filter(sid %in% plt.ids$sid &resection == "r1") %>% dplyr::select(c('sid','tumour.percentage.dna')) %>% dplyr::rename(R1.tumour.percentage.dna = tumour.percentage.dna )
+    ,  by = c('R1' = 'sid')) %>%
   dplyr::left_join(
-    gsam.rna.metadata %>% dplyr::filter(sid %in% plt.ids$sid &resection == "r2") %>% dplyr::select(c('pid','tumour.percentage.dna')) %>% dplyr::rename(R2.tumour.percentage.dna = tumour.percentage.dna )
-    ,  by = c('pid' = 'pid')) %>%
+    gsam.rna.metadata %>% dplyr::filter(sid %in% plt.ids$sid &resection == "r2") %>% dplyr::select(c('sid','tumour.percentage.dna')) %>% dplyr::rename(R2.tumour.percentage.dna = tumour.percentage.dna )
+    ,  by = c('R2' = 'sid')) %>%
   dplyr::mutate(R1.tumour.percentage.status = ifelse(R1.tumour.percentage.dna >= 15,'+','-') ) %>%
   dplyr::mutate(R2.tumour.percentage.status = ifelse(R2.tumour.percentage.dna >= 15,'+','-') ) %>%
   dplyr::mutate(R1.tumour.percentage.status.order = ifelse(R1.tumour.percentage.dna >= 15,1,2) ) %>%
@@ -70,12 +71,18 @@ plt.expanded <- data.frame(pid = unique(plt.ids$pid) ) %>%
   dplyr::mutate(treatedWithTMZ = ifelse(treatedWithTMZ == "Yes",'+','-') ) %>%
   dplyr::mutate(treatedWithRT = ifelse(treatedWithRT == "Yes",'+','-') ) %>%
   dplyr::arrange(patient.idh.status, R1.R2.status, R2.tumour.percentage.status.order,  R1.tumour.percentage.status.order, R1.rna.subtype, R2.rna.subtype) %>%
-  #dplyr::arrange(patient.idh.status, R1.R2.status, R2.tumour.percentage.status.order,  R1.tumour.percentage.status.order) %>%
+
+  dplyr::left_join(gsam.rna.metadata %>% dplyr::filter(resection == "r1") %>% dplyr::select(sid, blacklist.pca) %>% dplyr::mutate(blacklist.pca.R1 = ifelse(blacklist.pca,'-','+'), blacklist.pca = NULL), by=c('R1'='sid')) %>% 
+  dplyr::left_join(gsam.rna.metadata %>% dplyr::filter(resection == "r2") %>% dplyr::select(sid, blacklist.pca) %>% dplyr::mutate(blacklist.pca.R2 = ifelse(blacklist.pca,'-','+'), blacklist.pca = NULL), by=c('R2'='sid')) %>% 
+  
   dplyr::mutate(order = 1:nrow(.) )
-stopifnot(nrow(plt.expanded) == 185) # ensure what gets in comes out
+#stopifnot(nrow(plt.expanded) == 185) # ensure what gets in comes out
+stopifnot(duplicated(plt.expanded$pid) == F) # dupes
 
 
-#plt.expanded %>% dplyr::filter(pid == "GAO")
+
+
+
 
 
 
@@ -87,7 +94,11 @@ plt <- bind_rows(
     plt.expanded %>% dplyr::select(c('pid', 'patient.idh.status')) %>% dplyr::rename(col = patient.idh.status) %>% dplyr::mutate(y = "IDH wildtype") ,
     plt.expanded %>% dplyr::select(c('pid', 'R1.tumour.percentage.status')) %>% dplyr::rename(col = R1.tumour.percentage.status) %>% dplyr::mutate(y = "Tumor cells >= 15% (WES) R1") ,
     plt.expanded %>% dplyr::select(c('pid', 'R2.tumour.percentage.status')) %>% dplyr::rename(col = R2.tumour.percentage.status) %>% dplyr::mutate(y = "Tumor cells >= 15% (WES) R2") ,
+
+    #plt.expanded %>% dplyr::select(c('pid', 'blacklist.pca.R1')) %>% dplyr::rename(col = blacklist.pca.R1) %>% dplyr::mutate(y = "RNA Quality R1") ,
+    #plt.expanded %>% dplyr::select(c('pid', 'blacklist.pca.R2')) %>% dplyr::rename(col = blacklist.pca.R2) %>% dplyr::mutate(y = "RNA Quality R2") ,
     
+    plt.expanded %>% dplyr::select(c('pid', 'HM')) %>% dplyr::rename(col = HM) %>% dplyr::mutate(y = "Low mut. burden (no HM)") ,
     plt.expanded %>% dplyr::select(c('pid', 'treatedWithTMZ')) %>% dplyr::rename(col = treatedWithTMZ) %>% dplyr::mutate(y = "Treatment: TMZ") ,
     plt.expanded %>% dplyr::select(c('pid', 'treatedWithRT')) %>% dplyr::rename(col = treatedWithRT) %>% dplyr::mutate(y = "Treatment: Radio therapy")
   ) %>%
@@ -104,7 +115,9 @@ ggplot(plt, aes(x = reorder(pid, order), y = y, fill=col)) +
   labs(y=NULL, x=NULL)
 
 
+
 ggsave("output/figures/cohort_overview_gsam.pdf",width=11,height=3)
+
 
 ## n rna-seq
 
@@ -157,7 +170,11 @@ plt.expanded %>%
 
 
 
+
+
 # GLASS ----
+
+
 
 
 c1  <- c("GLSS-SM-R068-TP-01R-RNA-0UPMYO", "GLSS-SM-R068-R1-01R-RNA-7I5H9P",
@@ -171,11 +188,28 @@ c3 <- glass.gbm.rnaseq.metadata$sid
 
 
 
+glass.gbm.rnaseq.metadata <- glass.gbm.rnaseq.metadata %>% 
+  dplyr::mutate(
+    `NMF.123456.membership` = NULL,
+    `NMF.123456.PC1` = NULL,
+    `NMF.123456.PC2` = NULL,
+    `NMF.123456.PC3` = NULL,
+    `NMF.123456.PCA.SVM.class` = NULL,
+    `NMF.123456.PCA.SVM.Classical.p` = NULL,
+    `NMF.123456.PCA.SVM.Proneural.p` = NULL,
+    `NMF.123456.PCA.SVM.Mesenchymal.p` = NULL
+  ) %>% 
+  dplyr::left_join(read.table("data/gsam/output/tables/gsam_nmf_lda_data.txt") %>%
+                     dplyr::mutate(sid = gsub("^GSAM-","",sid)), by=c('sid' = 'sid'))
+
+
+
 plt.ids <- data.frame( sid = unique(sort(c(c1,c2,c3))) ) %>%
   dplyr::mutate(pid = as.factor(gsub("^([^\\-]+.[^\\-]+.[^\\-]+).*$","\\1",sid))) %>%
   dplyr::mutate(resection = as.factor(gsub("^[^\\-]+.[^\\-]+.[^\\-]+.([^\\-]+).*$","\\1",sid)))
 stopifnot(duplicated(plt.ids$sid) == F)
-coho
+
+
 
 
 plt.expanded <- data.frame(pid = unique(plt.ids$pid) ) %>%
@@ -185,6 +219,14 @@ plt.expanded <- data.frame(pid = unique(plt.ids$pid) ) %>%
   dplyr::left_join(plt.ids %>% dplyr::filter(resection == "R2") %>% dplyr::rename(R2 = sid) %>% dplyr::select(c('pid', 'R2')) , by = c('pid' = 'pid') ) %>%
   dplyr::left_join(plt.ids %>% dplyr::filter(resection == "R3") %>% dplyr::rename(R3 = sid) %>% dplyr::select(c('pid', 'R3')) , by = c('pid' = 'pid') ) %>%
   
+  dplyr::left_join(
+    glass.gbm.rnaseq.metadata %>% dplyr::filter(resection == "TP") %>% dplyr::select(pid, `NMF.123456.PCA.SVM.class`) %>% dplyr::rename(`Subtype Primary`= `NMF.123456.PCA.SVM.class`),
+    by=c('pid'='pid')
+  ) %>% 
+  dplyr::left_join(
+    glass.gbm.rnaseq.metadata %>% dplyr::filter(resection != "TP") %>% dplyr::select(pid, `NMF.123456.PCA.SVM.class`) %>% dplyr::rename(`Subtype Recurrent`= `NMF.123456.PCA.SVM.class`),
+  by=c('pid'='pid')
+  ) %>% 
   dplyr::mutate(TP.status =  case_when(is.na(TP) ~ 'NA', TP %in% colnames(glass.gbm.rnaseq.expression) ~ "+" , TRUE ~ "-") ) %>%
   dplyr::mutate(R1.status =  case_when(is.na(R1) ~ 'NA', R1 %in% colnames(glass.gbm.rnaseq.expression) ~ "+" , TRUE ~ "-") ) %>%
   dplyr::mutate(R2.status =  case_when(is.na(R2) ~ 'NA', R2 %in% colnames(glass.gbm.rnaseq.expression) ~ "+" , TRUE ~ "-") ) %>%
@@ -220,6 +262,10 @@ plt <- bind_rows(
     plt.expanded %>% dplyr::select(c('pid', 'R1.status')) %>% dplyr::rename(col = R1.status) %>% dplyr::mutate(y = "RNA-Seq sample R2") ,
     plt.expanded %>% dplyr::select(c('pid', 'R2.status')) %>% dplyr::rename(col = R2.status) %>% dplyr::mutate(y = "RNA-Seq sample R3") ,
     plt.expanded %>% dplyr::select(c('pid', 'R3.status')) %>% dplyr::rename(col = R3.status) %>% dplyr::mutate(y = "RNA-Seq sample R4") ,
+    
+    plt.expanded %>% dplyr::select(c('pid', `Subtype Primary`)) %>% dplyr::rename(col = `Subtype Primary`) %>% dplyr::mutate(y = 'Transcriptional subtype R1') ,
+    plt.expanded %>% dplyr::select(c('pid', `Subtype Recurrent`)) %>% dplyr::rename(col = `Subtype Recurrent`) %>% dplyr::mutate(y = 'Transcriptional subtype R2-4') ,
+
     plt.expanded %>% dplyr::select(c('pid', 'dataset')) %>% dplyr::rename(col = dataset) %>% dplyr::mutate(y = "GLASS Project barcode") ,
     plt.expanded %>% dplyr::select(c('pid', 'IDHwt')) %>% dplyr::rename(col = IDHwt) %>% dplyr::mutate(y = "IDH wildtype") ,
     plt.expanded %>% dplyr::select(c('pid', 'R1.R2.Grade.IV')) %>% dplyr::rename(col = R1.R2.Grade.IV) %>% dplyr::mutate(y = "R1 (TP) & R2 Grade IV (GBM)"),

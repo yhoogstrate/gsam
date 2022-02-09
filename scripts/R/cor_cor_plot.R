@@ -53,7 +53,7 @@ col2 <- colorRampPalette(c("#67001F", "#B2182B", "#D6604D", "#F4A582",
 # TMEM88B         TRUE          FALSE
 
 
-cor_cor_plot <- function(normalised_correlated_data, labels, method="ward.D2") {
+cor_cor_plot <- function(normalised_correlated_data, labels, font_scale , legend_scale , method="ward.D2") {
   
   #normalised_correlated_data <- plt
   
@@ -114,13 +114,13 @@ cor_cor_plot <- function(normalised_correlated_data, labels, method="ward.D2") {
              col=value,
              label=x)
          ) +
-    geom_tile( col="gray", fill="white", lwd=0.3) +
+    geom_tile( col="gray", fill="white", lwd=0.15) +
     scale_fill_gradientn( colours = col2(200), na.value = "grey50", limits = c(-1,1) , guide="none") + # guide = "colourbar",
     scale_color_gradientn( colours = col2(200), na.value = "grey50", limits = c(-1,1) , guide="none" ) +
-    geomnet::geom_circle(radius.fixed = T) + # not to be confused w/ geomnet::geom_circle
+    geomnet::geom_circle(radius.fixed = T) + # not to be confused w/ geomnet::geom_circle, and install my committed updated code [https://github.com/yhoogstrate/geomnet]
     scale_x_discrete(labels = NULL, breaks = NULL) +
     theme(legend.position = 'bottom',
-          axis.text.y = element_text(size = 6, angle = 0, hjust = 1, vjust = 0.5),
+          axis.text.y = element_text(size = font_scale, angle = 0, hjust = 1, vjust = 0.5), # used to be [3,6] reduce font size here, should become argument
           axis.text.x = element_text(angle = 90, hjust = 0, vjust = 0.5, color="gray80"),
           
           text = element_text(size=13),
@@ -137,8 +137,10 @@ cor_cor_plot <- function(normalised_correlated_data, labels, method="ward.D2") {
   
   
   plt <- data.frame(gid = o, i = 1:length(o)) %>%
-    dplyr::left_join(labels %>% tibble::rownames_to_column('gid'), by=c('gid' = 'gid')) %>%
-    reshape2::melt(id.vars = c('gid','i'))  
+    dplyr::left_join(labels %>%
+                       tibble::rownames_to_column('gid'), by=c('gid' = 'gid')) %>%
+    reshape2::melt(id.vars = c('gid','i'))  %>%
+    dplyr::mutate(variable = factor(variable, levels = rev(colnames(labels))))
   
   
   p2 <- ggplot(plt , aes(x = i , y = variable , fill=value, label=gid)) +
@@ -153,9 +155,9 @@ cor_cor_plot <- function(normalised_correlated_data, labels, method="ward.D2") {
           axis.line = element_blank()
           ) +
     guides(fill="none") +
-    ggplot2::coord_fixed(ratio = 2.75) +
+    ggplot2::coord_fixed(ratio = legend_scale) + # used to be 2.75
     labs(x=NULL, y=NULL) + 
-    scale_fill_manual(values=c('TRUE'='red','FALSE'='gray95')) 
+    scale_fill_manual(values=c('TRUE'='red','FALSE'='gray98')) 
     #scale_fill_manual(values=c('TRUE'='gray40','FALSE'='gray95')) 
 
   
@@ -182,4 +184,17 @@ BC'
 }
 
 
-
+# df
+# plt.1 <- df %>%
+#   dplyr::rename(x=P) %>% 
+#   dplyr::mutate(lab='P', P=NULL, R=NULL)
+# 
+# plt.2 <- df %>%
+#   dplyr::rename(x=R) %>% 
+#   dplyr::mutate(lab='R', P=NULL, R=NULL)
+# 
+# plt <- rbind(plt.1, plt.2)
+# 
+# ggplot(plt, aes(x=lab,y=x,group=sid)) + geom_point() + geom_line()
+#   
+# 

@@ -29,12 +29,19 @@ actual.males <- c('AAT', 'AAM', 'AZH', 'HAI', 'FAG')
 gsam.patient.metadata[gsam.patient.metadata$studyID %in% actual.males,]$gender.corrected <- 'Male'
 rm(actual.males)
 
+
 gsam.patient.metadata <- gsam.patient.metadata %>%
   dplyr::mutate(survival.event = NA) %>%
   dplyr::mutate(survival.event = ifelse(status == "Deceased", 1, survival.event)) %>%
   dplyr::mutate(survival.event = ifelse(status == "Censored", 0, survival.event)) %>%
   dplyr::mutate(survival.months = survivalDays / 365.0 * 12.0) %>%
   dplyr::mutate(`X.1` = NULL)
+
+
+
+# gsam.patient.metadata <- gsam.patient.metadata %>%
+#   dplyr::mutate(hyper.mutant = studyID %in% c('FAN','HA')) # from jco manuscript
+
 
 
 ## ---- DNA exome-seq ----
@@ -77,7 +84,7 @@ gsam.cnv.metadata <- read.delim("data/gsam/DNA/sample codes sanger gsam.txt",str
   by = c('PD_ID'='PD_ID')) %>%
   dplyr::select(c('donor_ID', 'pid', 'PD_ID', 'IDH1', 'IDH.mutation', 'IDH.mutation.call.status', 'IDH.mutation.VAF', 'IDH.mutation.count','CNVKIT.output')) %>%
   dplyr::mutate(tmp = ifelse(is.na(IDH.mutation), 'NA' , IDH.mutation)) %>%
-  dplyr::mutate(tmp = case_when(
+  dplyr::mutate(tmp = case_when( # BAW EAF FAD and JAF are all IDH1 and IDH2 negative in Kaspars paper but apparently positive in this file. actual mutation not given.
                 tmp == "NA" ~ '0',
                 tmp == '-' ~ '1' , 
                 TRUE ~ '2'
@@ -92,8 +99,8 @@ gsam.cnv.metadata <- read.delim("data/gsam/DNA/sample codes sanger gsam.txt",str
   dplyr::mutate(pat.with.IDH = ifelse(pat.with.IDH == 2, T , pat.with.IDH))  %>%
   dplyr::mutate(resection = gsub("^...(.).*$","R\\1", donor_ID) ) %>%
   dplyr::mutate(resection = ifelse(resection == "RN", NA ,resection) )
-  
-  
+
+
 
 
 ## ---- RNA-seq metadata [full] ----
@@ -417,6 +424,32 @@ gsam.rna.metadata <- gsam.rna.metadata %>%
 
 stopifnot('NMF.123456.PCA.LDA.class' %in% colnames(gsam.rna.metadata) == F)
   
+
+
+gsam.rna.metadata <- gsam.rna.metadata %>% 
+  dplyr::mutate(
+    "NMF.123456.membership" = NULL,
+    "NMF.123456.PC1" = NULL,
+    "NMF.123456.PC2" = NULL,
+    "NMF.123456.PC3" = NULL,
+    #"NMF.123456.PCA.SVM.class" = NULL,
+    #"NMF.123456.PCA.SVM.Classical.p" = NULL,
+    #"NMF.123456.PCA.SVM.Proneural.p" = NULL,
+    #"NMF.123456.PCA.SVM.Mesenchymal.p" = NULL
+  ) %>% 
+  dplyr::left_join(
+    readRDS("tmp/combi.gbm_nmf_150.new.Rds") %>%
+      purrr::pluck('123456') %>%
+      purrr::pluck('H') %>%
+      t() %>%
+      as.data.frame() %>%
+      `colnames<-`(c('NMF:123456.1','NMF:123456.2','NMF:123456.3')) %>% 
+      tibble::rownames_to_column('sid') %>%
+      dplyr::mutate(sid = gsub('^GSAM-','',sid))
+    , by=c('sid'='sid')    
+  )
+
+
 
 
 # this is from a different NMF run - deprecated
