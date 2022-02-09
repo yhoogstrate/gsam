@@ -48,6 +48,8 @@ source('scripts/R/wang_glioma_intrinsic_genes.R')
 
 source("scripts/R/glass_expression_matrix.R") # glass & tcga validation set + metedata
 
+source("scripts/R/cor_cor_plot.R")
+
 
 #m <- c("ward.D", "ward.D2", "single", "complete", "average" , "mcquitty" , "median" , "centroid")
 m <- "use correlation of correlation instead?!"
@@ -510,9 +512,10 @@ results.out %>%
 
 
 results.out <- results.out %>%
-  dplyr::mutate(primary.marker.genes = ifelse(hugo_symbol %in%  c("COL1A1", "LAMB1", "RUNX1", "S100A11"), paste0(primary.marker.genes, ",CL subtype"), primary.marker.genes)) %>%
-  dplyr::mutate(primary.marker.genes = ifelse(hugo_symbol %in%  c("ELOVL2", "VAV3", "SOCS2", "MLC1"), paste0(primary.marker.genes, ",PN subtype"), primary.marker.genes)) %>%
-  dplyr::mutate(primary.marker.genes = ifelse(hugo_symbol %in%  c("PLAAT1", "DNM3", "ERBB3","SOX10"), paste0(primary.marker.genes, ",MES subtype"), primary.marker.genes)) %>%
+  dplyr::mutate(primary.marker.genes = NA) %>% 
+  dplyr::mutate(primary.marker.genes = ifelse(hugo_symbol %in%  c("COL1A1", "LAMB1", "RUNX1", "S100A11"), paste0(primary.marker.genes, ",MES subtype"), primary.marker.genes)) %>%
+  dplyr::mutate(primary.marker.genes = ifelse(hugo_symbol %in%  c("ELOVL2", "VAV3", "SOCS2", "MLC1"), paste0(primary.marker.genes, ",CL subtype"), primary.marker.genes)) %>%
+  dplyr::mutate(primary.marker.genes = ifelse(hugo_symbol %in%  c("PLAAT1", "DNM3", "ERBB3","SOX10"), paste0(primary.marker.genes, ",PN subtype"), primary.marker.genes)) %>%
   dplyr::mutate(primary.marker.genes = gsub("^[,]+","", primary.marker.genes) ) 
 
 
@@ -862,7 +865,9 @@ results.out <- results.out %>%
 # :::::::::::::::::::: ----
 # Import (quick) ----
 
+
 results.out <- readRDS(file = 'tmp/results.out.Rds')
+
 
 # stats ----
 
@@ -2342,8 +2347,14 @@ plt <- rbind(
     dplyr::mutate(resection = ifelse(resection == 'TP', "Primary Res.", "Recurrent Res.")) %>%
     dplyr::mutate(tumour.percentage.dna = tumour.percentage.dna.imputed.rf) %>%
     dplyr::select(c(sid, resection, tumour.percentage.dna)) %>%
-    dplyr::mutate(dataset = "(B) GLASS"))
+    dplyr::mutate(dataset = "(B) GLASS")) %>%
+  dplyr::mutate(pid = gsub("^(...).*$","\\1",sid)) %>%
+  dplyr::left_join(
+    gsam.patient.metadata %>% dplyr::select(studyID, HM),
+    by = c('pid' = 'studyID')
+  ) 
 
+# HM does not clearly change, seems actually more stable with small N - exclude from fig..
 
 ggplot(plt, aes(x = resection, y = tumour.percentage.dna, fill=resection)) +
   facet_grid(cols=vars(dataset), scales = "free", space="free_y") + 
@@ -2749,6 +2760,10 @@ ggsave("output/figures/DESeq2_x_tumor_cell_percentage.pdf", width = 5.7 * 2, hei
 ## Figure 4AB ----
 
 
+# show CD14, CD74, CD163,
+# CD33, CD84, FCER1G, GPR34, TMEM119
+
+
 
 plt <- results.out %>%
   dplyr::filter(!is.na(statistic.gsam.cor.tpc)) %>% # TPC correlation G-SAM
@@ -2773,7 +2788,7 @@ plt.expanded <- rbind(
     dplyr::rename(is.limited = is.limited.gsam.res) %>%
     dplyr::mutate(dataset = "G-SAM") %>%
     dplyr::mutate(DESeq2.tcp.corrected = F) %>%
-    dplyr::select(log2FoldChange, cor.stat, is.limited, dataset, DESeq2.tcp.corrected, padj, is.mg.or.tam)
+    dplyr::select(log2FoldChange, cor.stat, is.limited, dataset, DESeq2.tcp.corrected, padj, is.mg.or.tam, hugo_symbol)
   ,
   plt %>%
     dplyr::rename(log2FoldChange = log2FoldChange.glass.res) %>%
@@ -2782,19 +2797,21 @@ plt.expanded <- rbind(
     dplyr::rename(is.limited = is.limited.glass.res) %>%
     dplyr::mutate(dataset = "GLASS") %>%
     dplyr::mutate(DESeq2.tcp.corrected = F) %>%
-    dplyr::select(log2FoldChange, cor.stat, is.limited, dataset, DESeq2.tcp.corrected, padj, is.mg.or.tam)
+    dplyr::select(log2FoldChange, cor.stat, is.limited, dataset, DESeq2.tcp.corrected, padj, is.mg.or.tam, hugo_symbol)
 ) %>%
   dplyr::mutate(is.limited = is.limited == 'TRUE') %>%
   dplyr::mutate(col = case_when(
     is.mg.or.tam == F ~ "no-mg-or-tam",
     is.mg.or.tam == T ~ dataset
-  ))
+  )) %>%
+  dplyr::mutate(show.label = hugo_symbol %in% c("CD33", "CD84", "FCER1G", "GPR34", "CD14","CD74", "CD163"))
 
 
 ggplot(plt.expanded, aes(x = log2FoldChange ,
                          y =  cor.stat,
                          shape = is.limited ,
                          col =  is.limited ,
+                         label = hugo_symbol,
                          #size = is.limited  ,
                          fill = col  ) ) +
   facet_grid(cols = vars(dataset), scales = "free") +
@@ -2806,6 +2823,12 @@ ggplot(plt.expanded, aes(x = log2FoldChange ,
               aes(group=1),
               method="lm",
               se = FALSE,  formula=y ~ x, orientation="y", col="#ff2929", show.legend=F ) +
+  geom_text_repel(data=subset(plt.expanded, show.label  & log2FoldChange > 0), size=2.5 , 
+                  segment.size = 0.25, segment.linetype = 1, nudge_x = 3.1, 
+                  direction = "y", hjust = "left", col="black", nudge_y = -4.8 ) +
+  geom_text_repel(data=subset(plt.expanded, show.label  & log2FoldChange < 0), size=2.5 ,
+                  segment.size = 0.25, segment.linetype = 1, nudge_x = -3.1, 
+                  direction = "y", hjust = "right", col="black", nudge_y = -4.8 ) +
   scale_shape_manual(values = c('TRUE'= 23, 'FALSE' = 21)   )  +
   scale_color_manual(values = c('FALSE' = '#00000040', 'TRUE' = '#000000aa')) +
   scale_fill_manual(values = dataset_colors <- c('G-SAM' = '#e69356', 'GLASS' = '#69a4d5', 'no-mg-or-tam'='white') ) + 
@@ -2816,6 +2839,7 @@ ggplot(plt.expanded, aes(x = log2FoldChange ,
        size="Truncated at x-axis",
        col="Truncated at x-axis") +
   xlim(-2.5,2.5)
+
 
 ggsave('output/figures/geiser_plot_mckenzy_immune_tam.pdf', height=5.75 * 1.1,width=12 * 1.1)
 
@@ -3778,11 +3802,17 @@ plt <- results.out %>%
   dplyr::mutate(show.label.other = hugo_symbol %in% c( 
     "TP53", "PIK3CA","PIK3R1","NF1","SPTA1","GABRA6","ABCC6","CXCL12",
     "LTBP4", "TGFB1","PREX1","MSH6", "MSH2", "MLH1","VEGFA", "PTPN11",
-    "STAT3","DCC", "MGMT", "PTCH1","VEGFA","GLI1"
+    "STAT3","DCC", "MGMT", "PTCH1","VEGFA","GLI1",
+    "NODAL",
+    "PTPN11", # mut [https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5627776/]
+    "LTBP4", "MSH6", "PRDM2", "IGF1R"
   )) %>%
   dplyr::mutate(show.label.losses = hugo_symbol %in% c(
     "CDKN2A","CDKN2B","PTEN","RB1","NF1","QKI","CDKN2C","TP53","MTAP","ELAVL2","PARK2"
   ))
+
+
+#PTPN11, LTBP4, MSH6, PRDM2, IGF1R
 
 
 
@@ -3791,7 +3821,7 @@ plt.expanded <- rbind(
     dplyr::rename(cor.tpc = statistic.gsam.cor.tpc) %>%
     dplyr::rename(log2FoldChange = log2FoldChange.gsam.tpc.res) %>%
     dplyr::rename(show.label = show.label.gains) %>% 
-    dplyr::mutate(marker.genes = "Gains") %>%
+    dplyr::mutate(marker.genes = "Common gains") %>%
     dplyr::mutate(dataset = "G-SAM") %>%
     dplyr::select(hugo_symbol, cor.tpc, log2FoldChange, show.label, dataset, significant, marker.genes)
   ,
@@ -3807,7 +3837,7 @@ plt.expanded <- rbind(
     dplyr::rename(cor.tpc = statistic.gsam.cor.tpc) %>%
     dplyr::rename(log2FoldChange = log2FoldChange.gsam.tpc.res) %>%
     dplyr::rename(show.label = show.label.losses) %>% 
-    dplyr::mutate(marker.genes = "Losses") %>%
+    dplyr::mutate(marker.genes = "Common losses") %>%
     dplyr::mutate(dataset = "G-SAM") %>%
     dplyr::select(hugo_symbol, cor.tpc, log2FoldChange, show.label, dataset, significant, marker.genes)
   ,
@@ -3815,7 +3845,7 @@ plt.expanded <- rbind(
     dplyr::rename(cor.tpc = statistic.glass.cor.tpc) %>%
     dplyr::rename(log2FoldChange = log2FoldChange.glass.tpc.res) %>%
     dplyr::rename(show.label = show.label.gains) %>% 
-    dplyr::mutate(marker.genes = "Gains") %>%
+    dplyr::mutate(marker.genes = "Common gains") %>%
     dplyr::mutate(dataset = "GLASS") %>%
     dplyr::select(hugo_symbol, cor.tpc, log2FoldChange, show.label, dataset, significant, marker.genes)
   ,
@@ -3831,7 +3861,7 @@ plt.expanded <- rbind(
     dplyr::rename(cor.tpc = statistic.glass.cor.tpc) %>%
     dplyr::rename(log2FoldChange = log2FoldChange.glass.tpc.res) %>%
     dplyr::rename(show.label = show.label.losses) %>% 
-    dplyr::mutate(marker.genes = "Losses") %>%
+    dplyr::mutate(marker.genes = "Common losses") %>%
     dplyr::mutate(dataset = "GLASS") %>%
     dplyr::select(hugo_symbol, cor.tpc, log2FoldChange, show.label, dataset, significant, marker.genes)
 ) %>%
@@ -3840,7 +3870,7 @@ plt.expanded <- rbind(
                                    show.label == T & significant == F ~ "show label",
                                    show.label == T & significant == T ~ "label & show significant")) %>%
   dplyr::filter(!is.na(cor.tpc) & !is.na(log2FoldChange)) %>%
-  dplyr::mutate(marker.genes = factor(marker.genes, levels = c("Gains", "Other", "Losses"))) %>%
+  dplyr::mutate(marker.genes = factor(marker.genes, levels = c("Common gains", "Other", "Common losses"))) %>%
   dplyr::mutate(limited = abs(log2FoldChange) > 2.5) %>%
   dplyr::mutate(log2FoldChange = ifelse(limited & log2FoldChange < 0, -2.5, log2FoldChange)) %>%
   dplyr::mutate(log2FoldChange = ifelse(limited & log2FoldChange > 0, 2.5, log2FoldChange)) %>% 
@@ -3848,7 +3878,27 @@ plt.expanded <- rbind(
 
 
 
-ggplot()
+ggplot(plt.expanded, aes(x = log2FoldChange, y = cor.tpc, shape=limited,
+                         fill = status, col = status, label=hugo_symbol)) +
+  facet_grid(cols = vars(marker.genes), rows = vars(dataset), scales = "free") +
+  geom_point(data = subset(plt.expanded, status == "other"), size=1.8, col="#00000044") +
+  geom_point(data = subset(plt.expanded, status == "significant"), size=2, col="black") +
+  geom_vline(xintercept = c(-0.5,0.5), lty=1, lwd=2, col="#FFFFFF88") +
+  geom_vline(xintercept = c(-0.5,0.5), lty=2, col="red") +
+  geom_text_repel(data=subset(plt.expanded, grepl("label",status) & log2FoldChange > 0), col="blue", size=2.5 ,nudge_x = 3.1, direction = "y", hjust = "left", segment.size=0.35) + 
+  geom_text_repel(data=subset(plt.expanded, grepl("label",status) & log2FoldChange < 0), col="blue", size=2.5 , nudge_x = -3.1, direction = "y", hjust = "right", segment.size=0.35) + 
+  geom_point(data = subset(plt.expanded, status == "show label"), size=2.75, col="black") +
+  geom_point(data = subset(plt.expanded, status == "label & show significant"), size=2.75, col="black") +
+  scale_shape_manual(values = c('TRUE' = 23, 'FALSE' = 21)) +
+  scale_fill_manual(values = c("other" = "white", "significant" = "#eab509DD", "show label" = "#6ba6e5DD", "label & show significant" = "red")) + 
+  scale_color_manual(values = c("other" = "white", "significant" = "#eab509DD", "show label" = "#6ba6e5DD", "label & show significant" = "red")) + 
+  youri_gg_theme +
+  xlim(-3, 3) +
+  labs(x="log2FC R1. vs R2 (unpaired; tumour-% corrected)", y="Correlation t-statistic with tumour-%")
+
+
+ggsave("output/figures/paper_dge_gains_losses_other.png", width=10,height=7.5)
+
 
 
 
@@ -3894,13 +3944,13 @@ ggplot(plt.expanded, aes(x = log2FoldChange.gsam.res, y = statistic.gsam.cor.tpc
   geom_text_repel(data=subset(plt.expanded, status == "chr7 label"),  size=2.5 , nudge_x = -3.1, direction = "y", hjust = "right", segment.size=0.35) + 
   geom_text_repel(data=subset(plt.expanded, status == "chr10 label"),  size=2.5 ,nudge_x = 3.1, direction = "y", hjust = "left", segment.size=0.35) + 
   scale_shape_manual(values = c('TRUE' = 23, 'FALSE' = 21)) +
-  scale_fill_manual(values=c('chr7'='#6ba6e5AA','chr10'='#eab509','other'='white' , "chr10 label"='red',"chr7 label"='red')) + 
-  scale_color_manual(values=c('chr7'='#6ba6e5AA','chr10'='#eab509','other'='white' , "chr10 label"='red',"chr7 label"='red')) + 
+  scale_fill_manual(values=c('chr7'='#6ba6e5AA','chr10'='#eab509AA','other'='white' , "chr10 label"='red',"chr7 label"='red')) + 
+  scale_color_manual(values=c('chr7'='#6ba6e5AA','chr10'='#eab509AA','other'='white' , "chr10 label"='red',"chr7 label"='red')) + 
   youri_gg_theme +
   xlim(-2.75, 2.75)
 
 
-ggsave("output/figures/paper_dge_chr7_chr10_geiser_uncorrected.png",width=10,height=6)
+ggsave("output/figures/paper_dge_chr7_chr10_geiser_uncorrected.png",width=10,height=5)
 
 
 
@@ -4134,9 +4184,9 @@ labels <- results.out %>%
     # "SLC35E3", "DACT2", "TLX2", "SEPT12",
     # "TLR10", "SCIN", "HAMP", "CXCR2",
     # "GLI1", "PRB2", "MAFA", "HAPLN1"
-    "BIRC5", "CD44", "DANCR", "EZH2", "HIF1A", "ID1", "ID2", "IGFBP2", "ITGA6", "MECAM", "MET",
-    "MYC", "NOS2", "OLIG2", "PDGFRA", "PDPN", "PI3", "POSTN", "PROM1", "TGFBR2", "TNFAIP3",
-    "MFAP2","COL12A1"
+    #"BIRC5", "CD44", "DANCR", "EZH2", "HIF1A", "ID1", "ID2", "IGFBP2", "ITGA6", "MECAM", "MET",
+    #"MYC", "NOS2", "OLIG2", "PDGFRA", "PDPN", "PI3", "POSTN", "PROM1", "TGFBR2", "TNFAIP3",
+    #"MFAP2","COL12A1"
   )) %>%
   dplyr::filter(!is.na(gid)) %>%
   dplyr::filter(primary.marker.genes %in% c('CL subtype', 'MES subtype', 'PN subtype') == F ) %>%
@@ -4173,7 +4223,18 @@ labels <- labels %>%
   dplyr::mutate_all(is.na)
 
 
-cor_cor_plot(plt, labels)
+cor_cor_plot(plt, labels %>%
+               dplyr::select(
+                 `chr7 gained (tumor)`,
+                 `tumor-% DNA`,
+                 `astrocyte`,
+                 `endothelial`,
+                 `oligodendrocyte`,
+                 `neuron`,
+                 `TIL / T-cell`,
+                 `microglia/TAM`
+               )
+             )
 
 
 
@@ -4237,15 +4298,57 @@ ggsave("output/figures/paper_dge_corrplot_expression_gene_per_patient.png",width
 
 
 
-### B :: LFC per gepaard sample ----
+### Figure 7|S7 LFC per gepaard sample ----
+
+
+Pericyte <- c("RGS5","PDGFRB","CD248","HEYL","CFH")
 
 
 labels <- results.out %>% 
-  dplyr::filter(!is.na(primary.marker.genes)) %>%
-  dplyr::filter(primary.marker.genes %in% c('CL subtype', 'MES subtype', 'PN subtype') == F ) %>%
+  dplyr::mutate(pericyte = hugo_symbol %in% Pericyte) %>% 
+  dplyr::mutate(primary.marker.genes = ifelse( primary.marker.genes %in% c('PN subtype', 'CL subtype', 'MES subtype'), NA, primary.marker.genes) ) %>%
+  dplyr::filter((!is.na(primary.marker.genes) | hugo_symbol %in% c("MFAP2","COL1A1","COL5A1","ADAMTS2", Pericyte)) & !is.na(gid)) %>%
+  dplyr::filter(hugo_symbol %in% c('CREB5', 'COA1', 'AHCYL1') == F) %>%
   dplyr::select(c('gid', 'hugo_symbol' , 'primary.marker.genes')) %>%
+  rbind(data.frame('gid'="NMF:V[1] (MES)", hugo_symbol = "NMF:V[1] (MES)", primary.marker.genes = 'MES subtype')) %>%
+  rbind(data.frame('gid'="NMF:V[2] (CL)", hugo_symbol = "NMF:V[2] (CL)", primary.marker.genes = 'CL subtype')) %>%
+  rbind(data.frame('gid'="NMF:V[3] (PN)", hugo_symbol = "NMF:V[3] (PN)", primary.marker.genes = 'PN subtype')) %>%
   rbind(data.frame('gid'='tumor-% DNA', hugo_symbol = 'tumor-% DNA', primary.marker.genes = 'tumor-% DNA')) %>%
-  reshape2::dcast (gid + hugo_symbol ~ primary.marker.genes, fill = F,fun.aggregate = as.logical)
+  reshape2::dcast (gid + hugo_symbol ~ primary.marker.genes, fill = F,fun.aggregate = as.logical,value.var= 'primary.marker.genes') %>%
+  dplyr::mutate('Extracellular Matrix'=F) %>% 
+  dplyr::mutate(`Extracellular Matrix` = ifelse(hugo_symbol %in% c("MFAP2","COL1A1","COL5A1","ADAMTS2"), NA , F)) %>%
+  dplyr::mutate(`pericyte` = ifelse(hugo_symbol %in% Pericyte, NA , F)) %>%
+  dplyr::select(c("gid","hugo_symbol",
+                  "oligodendrocyte",
+                  'PN subtype',
+                  "neuron",
+                  'CL subtype',
+                  "astrocyte",
+                  "tumor-% DNA",
+                  "chr7 gained (tumor)",
+                  'pericyte',
+                  'Extracellular Matrix',
+                  'MES subtype',
+                  "microglia/TAM",
+                  "TIL / T-cell",
+                  "endothelial",
+  )) %>% 
+  dplyr::rename(`NMF:V[1] (MES)` = `MES subtype`) %>% 
+  dplyr::rename(`NMF:V[2] (CL)` = `CL subtype`) %>% 
+  dplyr::rename(`NMF:V[3] (PN)` = `PN subtype`) %>% 
+  dplyr::rename(`OD` = `oligodendrocyte`) %>% 
+  dplyr::rename(`NE` = `neuron`) %>% 
+  dplyr::rename(`AC` = `astrocyte`) %>% 
+  dplyr::rename(`EN` = `endothelial`) %>%
+  dplyr::rename(`PE` = `pericyte`) %>% 
+  dplyr::rename(`TIL/TC` = `TIL / T-cell`) %>% 
+  dplyr::rename(`TAM/MG` = `microglia/TAM`) %>% 
+  dplyr::rename(`ECM` = `Extracellular Matrix`) %>% 
+  dplyr::rename(`T% (DNA)` = `tumor-% DNA`) %>% 
+  dplyr::rename(`chr7 (T)` = `chr7 gained (tumor)`)
+
+
+
 
 
 plt <- labels %>%
@@ -4258,8 +4361,33 @@ plt <- labels %>%
   dplyr::select(c('gid','hugo_symbol',colnames(gsam.gene.expression.all.paired))) %>% # <3
   dplyr::filter(gid %in% labels$gid) %>%
   dplyr::mutate(gid = NULL) %>%
-  tibble::column_to_rownames('hugo_symbol')
+  dplyr::filter(hugo_symbol %in% c('NMF:V[1] (MES)', 'NMF:V[2] (CL)', 'NMF:V[3] (PN)') == F)  %>% # lines below add the NMF matrices
+  tibble::column_to_rownames('hugo_symbol') %>%
+  t() %>% 
+  as.data.frame() %>%
+  tibble::rownames_to_column('sid') %>%
+  dplyr::left_join(
 
+    readRDS("tmp/combi.gbm_nmf_150.new.Rds") %>%
+      purrr::pluck('123456') %>%
+      purrr::pluck('H') %>%
+      t() %>%
+      as.data.frame() %>%
+      `colnames<-`(c('NMF:V[1] (MES)','NMF:V[2] (CL)','NMF:V[3] (PN)')) %>% 
+      tibble::rownames_to_column('sid') %>%
+      dplyr::mutate(sid = gsub('^GSAM-','',sid))
+    
+    , by=c('sid' = 'sid')
+  ) %>%
+  tibble::column_to_rownames('sid') %>%
+  t() %>%
+  as.data.frame()
+
+
+
+# Add NMF 1 - 3
+# Add ECM signature
+# Add EPIC macrophage score [not necessary]
 
 odd <- 1:ncol(plt) %>% purrr::keep(~ . %% 2 == 1)
 even <- 1:ncol(plt) %>% purrr::keep(~ . %% 2 == 0)
@@ -4303,12 +4431,714 @@ labels <- labels %>%
   tibble::column_to_rownames('hugo_symbol')
 
 
+cor_cor_plot(plt, labels, 6, 1)
+
+
+
+
+#ggsave("output/figures/paper_dge_corrplot_logFc_gene_per_pair.png",width = 1200 * 2, height = 900 * 2 ,units="px" )
+ggsave("output/figures/paper_dge_corrplot_logFc_gene_per_pair.pdf",width = 1200 * 2.4, height = 1200 * 2.4 ,units="px" )
+
+
+
+
+
+
+
+### corrplot 'm + C4 + Pericytes [log2(r1/r2)] ----
+
+
+
+Pericyte <- c("RGS5","PDGFRB","CD248","HEYL","CFH")
+
+
+labels <- results.out %>% 
+  dplyr::mutate(Pericyte = hugo_symbol %in% Pericyte) %>% 
+  dplyr::mutate(C4 = hugo_symbol %in% c(C4A,C4B)) %>% 
+  dplyr::mutate(primary.marker.genes = ifelse( primary.marker.genes %in% c('PN subtype', 'CL subtype', 'MES subtype'), NA, primary.marker.genes) ) %>%
+  dplyr::filter((!is.na(primary.marker.genes) | Pericyte | C4 | hugo_symbol %in% c("MFAP2","COL1A1","COL5A1","ADAMTS2")) & !is.na(gid)) %>%
+  dplyr::filter(hugo_symbol %in% c('CREB5', 'COA1', 'AHCYL1') == F) %>% # 
+  dplyr::select(c('gid', 'hugo_symbol' , 'primary.marker.genes')) %>%
+  rbind(data.frame('gid'="NMF:V[1] (MES)", hugo_symbol = "NMF:V[1] (MES)", primary.marker.genes = 'MES subtype')) %>%
+  rbind(data.frame('gid'="NMF:V[2] (CL)", hugo_symbol = "NMF:V[2] (CL)", primary.marker.genes = 'CL subtype')) %>%
+  rbind(data.frame('gid'="NMF:V[3] (PN)", hugo_symbol = "NMF:V[3] (PN)", primary.marker.genes = 'PN subtype')) %>%
+  rbind(data.frame('gid'='tumor-% DNA', hugo_symbol = 'tumor-% DNA', primary.marker.genes = 'tumor-% DNA')) %>%
+  reshape2::dcast (gid + hugo_symbol ~ primary.marker.genes, fill = F,fun.aggregate = as.logical,value.var= 'primary.marker.genes') %>%
+  dplyr::mutate('Extracellular Matrix'=F) %>% 
+  dplyr::mutate(`Extracellular Matrix` = ifelse(hugo_symbol %in% c("MFAP2","COL1A1","COL5A1","ADAMTS2"), NA , F)) %>% 
+  dplyr::mutate(Pericyte = ifelse(hugo_symbol %in% Pericyte, NA , F)) %>% 
+  dplyr::mutate(C4 = ifelse(hugo_symbol %in% c(C4A,C4B), NA , F)) %>% 
+  dplyr::select(c("gid","hugo_symbol",
+                  "Pericyte",
+                  "endothelial",
+                  "tumor-% DNA",
+                  "chr7 gained (tumor)",
+                  "C4",
+                  "microglia/TAM",
+                  "TIL / T-cell",
+                  'MES subtype',
+                  'Extracellular Matrix',
+                  'CL subtype',
+                  "astrocyte",
+                  "oligodendrocyte",
+                  'PN subtype',
+                  "neuron",
+  ))
+
+
+
+
+
+plt <- labels %>%
+  dplyr::filter(gid != 'tumor-% DNA') %>%
+  dplyr::select('gid','hugo_symbol') %>%
+  dplyr::left_join(gsam.gene.expression.all.vst %>%
+                     as.data.frame %>%
+                     tibble::rownames_to_column('gid')
+                   , by=c('gid'='gid')) %>% 
+  dplyr::select(c('gid','hugo_symbol',colnames(gsam.gene.expression.all.paired))) %>% # <3
+  dplyr::filter(gid %in% labels$gid) %>%
+  dplyr::mutate(gid = NULL) %>%
+  dplyr::filter(hugo_symbol %in% c('NMF:V[1] (MES)', 'NMF:V[2] (CL)', 'NMF:V[3] (PN)') == F)  %>% # lines below add the NMF matrices
+  tibble::column_to_rownames('hugo_symbol') %>%
+  t() %>% 
+  as.data.frame() %>%
+  tibble::rownames_to_column('sid') %>%
+  dplyr::left_join(
+    
+    readRDS("tmp/combi.gbm_nmf_150.new.Rds") %>%
+      purrr::pluck('123456') %>%
+      purrr::pluck('H') %>%
+      t() %>%
+      as.data.frame() %>%
+      `colnames<-`(c('NMF:V[1] (MES)','NMF:V[2] (CL)','NMF:V[3] (PN)')) %>% 
+      tibble::rownames_to_column('sid') %>%
+      dplyr::mutate(sid = gsub('^GSAM-','',sid))
+    
+    , by=c('sid' = 'sid')
+  ) %>%
+  tibble::column_to_rownames('sid') %>%
+  t() %>%
+  as.data.frame()
+
+
+
+# Add NMF 1 - 3
+# Add ECM signature
+# Add EPIC macrophage score [not necessary]
+
+odd <- 1:ncol(plt) %>% purrr::keep(~ . %% 2 == 1)
+even <- 1:ncol(plt) %>% purrr::keep(~ . %% 2 == 0)
+
+
+
+plt.r1 <- plt[,odd] 
+plt.r2 <- plt[,even]
+stopifnot ( gsub("^(...).*$","\\1",colnames(plt.r1)) == gsub("^(...).*$","\\1",colnames(plt.r2)) )
+rm(plt)
+
+
+plt <- log2(plt.r1 %>% `colnames<-`(gsub("^(...).*$","\\1",colnames(.))) /
+              plt.r2 %>% `colnames<-`(gsub("^(...).*$","\\1",colnames(.))) )
+
+
+
+plt <- rbind(plt,
+             dplyr::full_join(
+               data.frame(sid = colnames(plt.r1)) %>%
+                 dplyr::left_join(gsam.metadata.all.paired %>% dplyr::select(c('sid','tumour.percentage.dna')), by=c('sid'='sid')) %>%
+                 dplyr::mutate(pid = gsub("^(...).*$","\\1",sid)) %>%
+                 dplyr::rename(tumour.percentage.dna.R1 = tumour.percentage.dna) %>%
+                 dplyr::mutate(sid = NULL) ,
+               data.frame(sid = colnames(plt.r2)) %>%
+                 dplyr::left_join(gsam.metadata.all.paired %>% dplyr::select(c('sid','tumour.percentage.dna')), by=c('sid'='sid')) %>%
+                 dplyr::mutate(pid = gsub("^(...).*$","\\1",sid))%>%
+                 dplyr::rename(tumour.percentage.dna.R2 = tumour.percentage.dna) %>%
+                 dplyr::mutate(sid = NULL) , by = c('pid'='pid'))  %>%
+               dplyr::mutate(`tumor-% DNA` = log2(tumour.percentage.dna.R1 / tumour.percentage.dna.R2)) %>%
+               dplyr::mutate(tumour.percentage.dna.R1 = NULL, tumour.percentage.dna.R2 = NULL) %>%
+               tibble::column_to_rownames('pid') %>%
+               t()
+)
+
+stopifnot(labels$hugo_symbol == rownames(plt))
+
+
+labels <- labels %>% 
+  dplyr::mutate(gid = NULL) %>%
+  tibble::column_to_rownames('hugo_symbol')
+
 
 cor_cor_plot(plt, labels)
 
 
 
-ggsave("output/figures/paper_dge_corrplot_logFc_gene_per_pair.png",width = 1200 * 2, height = 900 * 2 ,units="px" )
+
+ggsave("output/figures/paper_dge_corrplot_C4_logFc_per_pair.png",width = 1200 * 2, height = 900 * 2 ,units="px" )
+ggsave("output/figures/paper_dge_corrplot_C4_logFc_per_pair.pdf",width = 1200 * 2, height = 900 * 2 ,units="px" )
+
+
+
+### corrplot 'm + C4 + Pericytes [vst expr] ----
+Pericyte <- c("RGS5","PDGFRB","CD248","HEYL","CFH")
+
+
+labels <- results.out %>% 
+  dplyr::mutate(Pericyte = hugo_symbol %in% Pericyte) %>% 
+  dplyr::mutate(C4 = hugo_symbol %in% c(C4A,C4B)) %>% 
+  dplyr::mutate(primary.marker.genes = ifelse( primary.marker.genes %in% c('PN subtype', 'CL subtype', 'MES subtype'), NA, primary.marker.genes) ) %>%
+  dplyr::filter((!is.na(primary.marker.genes) | Pericyte | C4 | hugo_symbol %in% c("MFAP2","COL1A1","COL5A1","ADAMTS2")) & !is.na(gid)) %>%
+  dplyr::filter(hugo_symbol %in% c('CREB5', 'COA1', 'AHCYL1') == F) %>% # 
+  dplyr::select(c('gid', 'hugo_symbol' , 'primary.marker.genes')) %>%
+  rbind(data.frame('gid'="NMF:V[1] (MES)", hugo_symbol = "NMF:V[1] (MES)", primary.marker.genes = 'MES subtype')) %>%
+  rbind(data.frame('gid'="NMF:V[2] (CL)", hugo_symbol = "NMF:V[2] (CL)", primary.marker.genes = 'CL subtype')) %>%
+  rbind(data.frame('gid'="NMF:V[3] (PN)", hugo_symbol = "NMF:V[3] (PN)", primary.marker.genes = 'PN subtype')) %>%
+  rbind(data.frame('gid'='tumor-% DNA', hugo_symbol = 'tumor-% DNA', primary.marker.genes = 'tumor-% DNA')) %>%
+  reshape2::dcast (gid + hugo_symbol ~ primary.marker.genes, fill = F,fun.aggregate = as.logical,value.var= 'primary.marker.genes') %>%
+  dplyr::mutate('Extracellular Matrix'=F) %>% 
+  dplyr::mutate(`Extracellular Matrix` = ifelse(hugo_symbol %in% c("MFAP2","COL1A1","COL5A1","ADAMTS2"), NA , F)) %>% 
+  dplyr::mutate(Pericyte = ifelse(hugo_symbol %in% Pericyte, NA , F)) %>% 
+  dplyr::mutate(C4 = ifelse(hugo_symbol %in% c(C4A,C4B), NA , F)) %>% 
+  dplyr::select(c("gid","hugo_symbol",
+                  "endothelial",
+                  'CL subtype',
+                  "astrocyte",
+                  "tumor-% DNA",
+                  "chr7 gained (tumor)",
+                  "oligodendrocyte",
+                  "neuron",
+                  'PN subtype',
+                  "Pericyte",
+                  'MES subtype',
+                  'Extracellular Matrix',
+                  "TIL / T-cell",
+                  "microglia/TAM",
+                  "C4"
+  ))
+
+
+
+# labels <- labels %>% dplyr::filter(!is.na(endothelial))
+
+
+
+plt <- labels %>%
+  dplyr::filter(gid != 'tumor-% DNA') %>%
+  dplyr::select('gid','hugo_symbol') %>%
+  dplyr::left_join(gsam.gene.expression.all.vst %>%
+                     as.data.frame %>%
+                     tibble::rownames_to_column('gid')
+                   , by=c('gid'='gid')) %>% 
+  dplyr::select(c('gid','hugo_symbol',colnames(gsam.gene.expression.all.paired))) %>% # <3
+  dplyr::filter(gid %in% labels$gid) %>%
+  dplyr::mutate(gid = NULL) %>%
+  dplyr::filter(hugo_symbol %in% c('NMF:V[1] (MES)', 'NMF:V[2] (CL)', 'NMF:V[3] (PN)') == F)  %>% # lines below add the NMF matrices
+  tibble::column_to_rownames('hugo_symbol') %>%
+  t() %>% 
+  as.data.frame() %>%
+  tibble::rownames_to_column('sid') %>%
+  dplyr::left_join(
+    
+    readRDS("tmp/combi.gbm_nmf_150.new.Rds") %>%
+      purrr::pluck('123456') %>%
+      purrr::pluck('H') %>%
+      t() %>%
+      as.data.frame() %>%
+      `colnames<-`(c('NMF:V[1] (MES)','NMF:V[2] (CL)','NMF:V[3] (PN)')) %>% 
+      tibble::rownames_to_column('sid') %>%
+      dplyr::mutate(sid = gsub('^GSAM-','',sid))
+    
+    , by=c('sid' = 'sid')
+  ) %>%
+  dplyr::left_join(gsam.metadata.all.paired %>% dplyr::select(c('sid','tumour.percentage.dna')) %>% dplyr::rename(`tumor-% DNA`='tumour.percentage.dna'), by=c('sid'='sid')) %>%
+  tibble::column_to_rownames('sid') %>%
+  t() %>%
+  as.data.frame()
+
+
+
+labels <- labels %>%
+  dplyr::mutate(gid = NULL) %>%
+  tibble::column_to_rownames('hugo_symbol')
+
+
+cor_cor_plot(plt, labels)
+
+
+
+
+ggsave("output/figures/paper_dge_corrplot_C4_vst_per_resection.png",width = 1200 * 2, height = 900 * 2 ,units="px" )
+ggsave("output/figures/paper_dge_corrplot_C4_vst_per_resection.pdf",width = 1200 * 2, height = 900 * 2 ,units="px" )
+
+
+
+### corrplot 'm + C5 + Pericytes [log2(r1/r2)] ----
+
+
+Pericyte <- c("RGS5","PDGFRB","CD248","HEYL","CFH")
+
+
+labels <- results.out %>% 
+  dplyr::mutate(Pericyte = hugo_symbol %in% Pericyte) %>% 
+  dplyr::mutate(C5 = hugo_symbol %in% C5) %>% 
+  dplyr::mutate(primary.marker.genes = ifelse( primary.marker.genes %in% c('PN subtype', 'CL subtype', 'MES subtype'), NA, primary.marker.genes) ) %>%
+  dplyr::filter((!is.na(primary.marker.genes) | Pericyte | C5 | hugo_symbol %in% c("MFAP2","COL1A1","COL5A1","ADAMTS2")) & !is.na(gid)) %>%
+  dplyr::filter(hugo_symbol %in% c('CREB5', 'COA1', 'AHCYL1') == F) %>% # 
+  dplyr::select(c('gid', 'hugo_symbol' , 'primary.marker.genes')) %>%
+  rbind(data.frame('gid'="NMF:V[1] (MES)", hugo_symbol = "NMF:V[1] (MES)", primary.marker.genes = 'MES subtype')) %>%
+  rbind(data.frame('gid'="NMF:V[2] (CL)", hugo_symbol = "NMF:V[2] (CL)", primary.marker.genes = 'CL subtype')) %>%
+  rbind(data.frame('gid'="NMF:V[3] (PN)", hugo_symbol = "NMF:V[3] (PN)", primary.marker.genes = 'PN subtype')) %>%
+  rbind(data.frame('gid'='tumor-% DNA', hugo_symbol = 'tumor-% DNA', primary.marker.genes = 'tumor-% DNA')) %>%
+  reshape2::dcast (gid + hugo_symbol ~ primary.marker.genes, fill = F,fun.aggregate = as.logical,value.var= 'primary.marker.genes') %>%
+  dplyr::mutate('Extracellular Matrix'=F) %>% 
+  dplyr::mutate(`Extracellular Matrix` = ifelse(hugo_symbol %in% c("MFAP2","COL1A1","COL5A1","ADAMTS2"), NA , F)) %>% 
+  dplyr::mutate(Pericyte = ifelse(hugo_symbol %in% Pericyte, NA , F)) %>% 
+  dplyr::mutate(C5 = ifelse(hugo_symbol %in% C5, NA , F)) %>% 
+  dplyr::select(c("gid","hugo_symbol",
+                  "oligodendrocyte",
+                  'PN subtype',
+                  "neuron",
+                  'CL subtype',
+                  "astrocyte",
+                  "tumor-% DNA",
+                  "chr7 gained (tumor)",
+                  "TIL / T-cell",
+                  "microglia/TAM",
+                  'MES subtype',
+                  'Extracellular Matrix',
+                  "C5",
+                  "Pericyte",
+                  "endothelial"
+  ))
+
+
+
+
+
+plt <- labels %>%
+  dplyr::filter(gid != 'tumor-% DNA') %>%
+  dplyr::select('gid','hugo_symbol') %>%
+  dplyr::left_join(gsam.gene.expression.all.vst %>%
+                     as.data.frame %>%
+                     tibble::rownames_to_column('gid')
+                   , by=c('gid'='gid')) %>% 
+  dplyr::select(c('gid','hugo_symbol',colnames(gsam.gene.expression.all.paired))) %>% # <3
+  dplyr::filter(gid %in% labels$gid) %>%
+  dplyr::mutate(gid = NULL) %>%
+  dplyr::filter(hugo_symbol %in% c('NMF:V[1] (MES)', 'NMF:V[2] (CL)', 'NMF:V[3] (PN)') == F)  %>% # lines below add the NMF matrices
+  tibble::column_to_rownames('hugo_symbol') %>%
+  t() %>% 
+  as.data.frame() %>%
+  tibble::rownames_to_column('sid') %>%
+  dplyr::left_join(
+    
+    readRDS("tmp/combi.gbm_nmf_150.new.Rds") %>%
+      purrr::pluck('123456') %>%
+      purrr::pluck('H') %>%
+      t() %>%
+      as.data.frame() %>%
+      `colnames<-`(c('NMF:V[1] (MES)','NMF:V[2] (CL)','NMF:V[3] (PN)')) %>% 
+      tibble::rownames_to_column('sid') %>%
+      dplyr::mutate(sid = gsub('^GSAM-','',sid))
+    
+    , by=c('sid' = 'sid')
+  ) %>%
+  tibble::column_to_rownames('sid') %>%
+  t() %>%
+  as.data.frame()
+
+
+
+# Add NMF 1 - 3
+# Add ECM signature
+# Add EPIC macrophage score [not necessary]
+
+odd <- 1:ncol(plt) %>% purrr::keep(~ . %% 2 == 1)
+even <- 1:ncol(plt) %>% purrr::keep(~ . %% 2 == 0)
+
+
+
+plt.r1 <- plt[,odd] 
+plt.r2 <- plt[,even]
+stopifnot ( gsub("^(...).*$","\\1",colnames(plt.r1)) == gsub("^(...).*$","\\1",colnames(plt.r2)) )
+rm(plt)
+
+
+plt <- log2(plt.r1 %>% `colnames<-`(gsub("^(...).*$","\\1",colnames(.))) /
+              plt.r2 %>% `colnames<-`(gsub("^(...).*$","\\1",colnames(.))) )
+
+
+
+plt <- rbind(plt,
+             dplyr::full_join(
+               data.frame(sid = colnames(plt.r1)) %>%
+                 dplyr::left_join(gsam.metadata.all.paired %>% dplyr::select(c('sid','tumour.percentage.dna')), by=c('sid'='sid')) %>%
+                 dplyr::mutate(pid = gsub("^(...).*$","\\1",sid)) %>%
+                 dplyr::rename(tumour.percentage.dna.R1 = tumour.percentage.dna) %>%
+                 dplyr::mutate(sid = NULL) ,
+               data.frame(sid = colnames(plt.r2)) %>%
+                 dplyr::left_join(gsam.metadata.all.paired %>% dplyr::select(c('sid','tumour.percentage.dna')), by=c('sid'='sid')) %>%
+                 dplyr::mutate(pid = gsub("^(...).*$","\\1",sid))%>%
+                 dplyr::rename(tumour.percentage.dna.R2 = tumour.percentage.dna) %>%
+                 dplyr::mutate(sid = NULL) , by = c('pid'='pid'))  %>%
+               dplyr::mutate(`tumor-% DNA` = log2(tumour.percentage.dna.R1 / tumour.percentage.dna.R2)) %>%
+               dplyr::mutate(tumour.percentage.dna.R1 = NULL, tumour.percentage.dna.R2 = NULL) %>%
+               tibble::column_to_rownames('pid') %>%
+               t()
+)
+
+stopifnot(labels$hugo_symbol == rownames(plt))
+
+
+labels <- labels %>% 
+  dplyr::mutate(gid = NULL) %>%
+  tibble::column_to_rownames('hugo_symbol')
+
+
+cor_cor_plot(plt, labels)
+
+
+
+
+ggsave("output/figures/paper_dge_corrplot_C5_logFc_per_pair.png",width = 1200 * 2, height = 900 * 2 ,units="px" )
+ggsave("output/figures/paper_dge_corrplot_C5_logFc_per_pair.pdf",width = 1200 * 2, height = 900 * 2 ,units="px" )
+
+
+
+### corrplot 'm + C5 + Pericytes [vst expr] ----
+
+
+
+Pericyte <- c("RGS5","PDGFRB","CD248","HEYL","CFH")
+
+
+labels <- results.out %>% 
+  dplyr::mutate(Pericyte = hugo_symbol %in% Pericyte) %>% 
+  dplyr::mutate(C5 = hugo_symbol %in% C5) %>% 
+  dplyr::mutate(primary.marker.genes = ifelse( primary.marker.genes %in% c('PN subtype', 'CL subtype', 'MES subtype'), NA, primary.marker.genes) ) %>%
+  dplyr::filter((!is.na(primary.marker.genes) | Pericyte | C5 | hugo_symbol %in% c("MFAP2","COL1A1","COL5A1","ADAMTS2")) & !is.na(gid)) %>%
+  dplyr::filter(hugo_symbol %in% c('CREB5', 'COA1', 'AHCYL1') == F) %>% # 
+  dplyr::select(c('gid', 'hugo_symbol' , 'primary.marker.genes')) %>%
+  rbind(data.frame('gid'="NMF:V[1] (MES)", hugo_symbol = "NMF:V[1] (MES)", primary.marker.genes = 'MES subtype')) %>%
+  rbind(data.frame('gid'="NMF:V[2] (CL)", hugo_symbol = "NMF:V[2] (CL)", primary.marker.genes = 'CL subtype')) %>%
+  rbind(data.frame('gid'="NMF:V[3] (PN)", hugo_symbol = "NMF:V[3] (PN)", primary.marker.genes = 'PN subtype')) %>%
+  rbind(data.frame('gid'='tumor-% DNA', hugo_symbol = 'tumor-% DNA', primary.marker.genes = 'tumor-% DNA')) %>%
+  reshape2::dcast (gid + hugo_symbol ~ primary.marker.genes, fill = F,fun.aggregate = as.logical,value.var= 'primary.marker.genes') %>%
+  dplyr::mutate('Extracellular Matrix'=F) %>% 
+  dplyr::mutate(`Extracellular Matrix` = ifelse(hugo_symbol %in% c("MFAP2","COL1A1","COL5A1","ADAMTS2"), NA , F)) %>% 
+  dplyr::mutate(Pericyte = ifelse(hugo_symbol %in% Pericyte, NA , F)) %>% 
+  dplyr::mutate(C5 = ifelse(hugo_symbol %in% C5, NA , F)) %>% 
+  dplyr::select(c("gid","hugo_symbol",
+                  "chr7 gained (tumor)",
+                  "tumor-% DNA",
+                  "astrocyte",
+                  'CL subtype',
+                  "endothelial",
+                  
+                  "oligodendrocyte",
+                  "neuron",
+                  'PN subtype',
+                  "microglia/TAM",
+                  "TIL / T-cell",
+                  
+                  'Extracellular Matrix',
+                  'MES subtype',
+                  "C5",
+                  "Pericyte"
+                  
+  ))
+
+
+# labels <- labels %>% dplyr::filter(!is.na(endothelial))
+
+
+
+plt <- labels %>%
+  dplyr::filter(gid != 'tumor-% DNA') %>%
+  dplyr::select('gid','hugo_symbol') %>%
+  dplyr::left_join(gsam.gene.expression.all.vst %>%
+                     as.data.frame %>%
+                     tibble::rownames_to_column('gid')
+                   , by=c('gid'='gid')) %>% 
+  dplyr::select(c('gid','hugo_symbol',colnames(gsam.gene.expression.all.paired))) %>% # <3
+  dplyr::filter(gid %in% labels$gid) %>%
+  dplyr::mutate(gid = NULL) %>%
+  dplyr::filter(hugo_symbol %in% c('NMF:V[1] (MES)', 'NMF:V[2] (CL)', 'NMF:V[3] (PN)') == F)  %>% # lines below add the NMF matrices
+  tibble::column_to_rownames('hugo_symbol') %>%
+  t() %>% 
+  as.data.frame() %>%
+  tibble::rownames_to_column('sid') %>%
+  dplyr::left_join(
+    
+    readRDS("tmp/combi.gbm_nmf_150.new.Rds") %>%
+      purrr::pluck('123456') %>%
+      purrr::pluck('H') %>%
+      t() %>%
+      as.data.frame() %>%
+      `colnames<-`(c('NMF:V[1] (MES)','NMF:V[2] (CL)','NMF:V[3] (PN)')) %>% 
+      tibble::rownames_to_column('sid') %>%
+      dplyr::mutate(sid = gsub('^GSAM-','',sid))
+    
+    , by=c('sid' = 'sid')
+  ) %>%
+  dplyr::left_join(gsam.metadata.all.paired %>% dplyr::select(c('sid','tumour.percentage.dna')) %>% dplyr::rename(`tumor-% DNA`='tumour.percentage.dna'), by=c('sid'='sid')) %>%
+  tibble::column_to_rownames('sid') %>%
+  t() %>%
+  as.data.frame()
+
+
+
+labels <- labels %>%
+  dplyr::mutate(gid = NULL) %>%
+  tibble::column_to_rownames('hugo_symbol')
+
+
+cor_cor_plot(plt, labels)
+
+
+
+
+ggsave("output/figures/paper_dge_corrplot_C5_vst_per_resection.png",width = 1200 * 2, height = 900 * 2 ,units="px" )
+ggsave("output/figures/paper_dge_corrplot_C5_vst_per_resection.pdf",width = 1200 * 2, height = 900 * 2 ,units="px" )
+
+
+
+### corrplot 'm + C6 + Pericytes [log2(r1/r2)] ----
+
+
+C6 <- c('CRABP2', 'CILP2', 'DPT', 'FGF7', 'COL10A1', 'FBN1', 'GLT8D2',
+        'IRX3', 'MFAP5', 'MFAP4', "COL8A2", "FNDC1", "MMP11", "MFAP2",
+        "COL1A2", "COL1A1", "COL5A1", "ADAMTS2", "TPSB2", "KRT8", "OMD",
+        "OGN", "MME", "MLPH", "MRC1L1", "PTGFR", "TWIST2", "C5orf46",
+        "TNNT3", "ASS1", "PERP","KLHDC7B", "CCL8")
+Pericyte <- c("RGS5","PDGFRB","CD248","HEYL","CFH")
+
+
+labels <- results.out %>% 
+  dplyr::mutate(Pericyte = hugo_symbol %in% Pericyte) %>% 
+  dplyr::mutate(C6 = hugo_symbol %in% C6) %>% 
+  dplyr::mutate(primary.marker.genes = ifelse( primary.marker.genes %in% c('PN subtype', 'CL subtype', 'MES subtype'), NA, primary.marker.genes) ) %>%
+  dplyr::filter((!is.na(primary.marker.genes) | Pericyte | C6 | hugo_symbol %in% c("MFAP2","COL1A1","COL5A1","ADAMTS2")) & !is.na(gid)) %>%
+  dplyr::filter(hugo_symbol %in% c('CREB5', 'COA1', 'AHCYL1') == F) %>% # 
+  dplyr::select(c('gid', 'hugo_symbol' , 'primary.marker.genes')) %>%
+  rbind(data.frame('gid'="NMF:V[1] (MES)", hugo_symbol = "NMF:V[1] (MES)", primary.marker.genes = 'MES subtype')) %>%
+  rbind(data.frame('gid'="NMF:V[2] (CL)", hugo_symbol = "NMF:V[2] (CL)", primary.marker.genes = 'CL subtype')) %>%
+  rbind(data.frame('gid'="NMF:V[3] (PN)", hugo_symbol = "NMF:V[3] (PN)", primary.marker.genes = 'PN subtype')) %>%
+  rbind(data.frame('gid'='tumor-% DNA', hugo_symbol = 'tumor-% DNA', primary.marker.genes = 'tumor-% DNA')) %>%
+  reshape2::dcast (gid + hugo_symbol ~ primary.marker.genes, fill = F,fun.aggregate = as.logical,value.var= 'primary.marker.genes') %>%
+  dplyr::mutate('Extracellular Matrix'=F) %>% 
+  dplyr::mutate(`Extracellular Matrix` = ifelse(hugo_symbol %in% c("MFAP2","COL1A1","COL5A1","ADAMTS2"), NA , F)) %>% 
+  dplyr::mutate(Pericyte = ifelse(hugo_symbol %in% Pericyte, NA , F)) %>% 
+  dplyr::mutate(C6 = ifelse(hugo_symbol %in% C6, NA , F)) %>% 
+  dplyr::select(c("gid","hugo_symbol",
+                  "tumor-% DNA",
+                  "chr7 gained (tumor)",
+                  "endothelial",
+                  
+                  "oligodendrocyte",
+                  'PN subtype',
+                  "neuron",
+                  "astrocyte",
+                  'CL subtype',
+                  "C6",
+                  'Extracellular Matrix',
+                  'MES subtype',
+                  "Pericyte",
+                  "TIL / T-cell",
+                  "microglia/TAM"
+  ))
+
+
+
+
+
+plt <- labels %>%
+  dplyr::filter(gid != 'tumor-% DNA') %>%
+  dplyr::select('gid','hugo_symbol') %>%
+  dplyr::left_join(gsam.gene.expression.all.vst %>%
+                     as.data.frame %>%
+                     tibble::rownames_to_column('gid')
+                   , by=c('gid'='gid')) %>% 
+  dplyr::select(c('gid','hugo_symbol',colnames(gsam.gene.expression.all.paired))) %>% # <3
+  dplyr::filter(gid %in% labels$gid) %>%
+  dplyr::mutate(gid = NULL) %>%
+  dplyr::filter(hugo_symbol %in% c('NMF:V[1] (MES)', 'NMF:V[2] (CL)', 'NMF:V[3] (PN)') == F)  %>% # lines below add the NMF matrices
+  tibble::column_to_rownames('hugo_symbol') %>%
+  t() %>% 
+  as.data.frame() %>%
+  tibble::rownames_to_column('sid') %>%
+  dplyr::left_join(
+    
+    readRDS("tmp/combi.gbm_nmf_150.new.Rds") %>%
+      purrr::pluck('123456') %>%
+      purrr::pluck('H') %>%
+      t() %>%
+      as.data.frame() %>%
+      `colnames<-`(c('NMF:V[1] (MES)','NMF:V[2] (CL)','NMF:V[3] (PN)')) %>% 
+      tibble::rownames_to_column('sid') %>%
+      dplyr::mutate(sid = gsub('^GSAM-','',sid))
+    
+    , by=c('sid' = 'sid')
+  ) %>%
+  tibble::column_to_rownames('sid') %>%
+  t() %>%
+  as.data.frame()
+
+
+
+# Add NMF 1 - 3
+# Add ECM signature
+# Add EPIC macrophage score [not necessary]
+
+odd <- 1:ncol(plt) %>% purrr::keep(~ . %% 2 == 1)
+even <- 1:ncol(plt) %>% purrr::keep(~ . %% 2 == 0)
+
+
+
+plt.r1 <- plt[,odd] 
+plt.r2 <- plt[,even]
+stopifnot ( gsub("^(...).*$","\\1",colnames(plt.r1)) == gsub("^(...).*$","\\1",colnames(plt.r2)) )
+rm(plt)
+
+
+plt <- log2(plt.r1 %>% `colnames<-`(gsub("^(...).*$","\\1",colnames(.))) /
+              plt.r2 %>% `colnames<-`(gsub("^(...).*$","\\1",colnames(.))) )
+
+
+
+plt <- rbind(plt,
+             dplyr::full_join(
+               data.frame(sid = colnames(plt.r1)) %>%
+                 dplyr::left_join(gsam.metadata.all.paired %>% dplyr::select(c('sid','tumour.percentage.dna')), by=c('sid'='sid')) %>%
+                 dplyr::mutate(pid = gsub("^(...).*$","\\1",sid)) %>%
+                 dplyr::rename(tumour.percentage.dna.R1 = tumour.percentage.dna) %>%
+                 dplyr::mutate(sid = NULL) ,
+               data.frame(sid = colnames(plt.r2)) %>%
+                 dplyr::left_join(gsam.metadata.all.paired %>% dplyr::select(c('sid','tumour.percentage.dna')), by=c('sid'='sid')) %>%
+                 dplyr::mutate(pid = gsub("^(...).*$","\\1",sid))%>%
+                 dplyr::rename(tumour.percentage.dna.R2 = tumour.percentage.dna) %>%
+                 dplyr::mutate(sid = NULL) , by = c('pid'='pid'))  %>%
+               dplyr::mutate(`tumor-% DNA` = log2(tumour.percentage.dna.R1 / tumour.percentage.dna.R2)) %>%
+               dplyr::mutate(tumour.percentage.dna.R1 = NULL, tumour.percentage.dna.R2 = NULL) %>%
+               tibble::column_to_rownames('pid') %>%
+               t()
+)
+
+stopifnot(labels$hugo_symbol == rownames(plt))
+
+
+labels <- labels %>% 
+  dplyr::mutate(gid = NULL) %>%
+  tibble::column_to_rownames('hugo_symbol')
+
+
+cor_cor_plot(plt, labels)
+
+
+
+
+ggsave("output/figures/paper_dge_corrplot_C6_logFc_per_pair.png",width = 1200 * 2, height = 900 * 2 ,units="px" )
+ggsave("output/figures/paper_dge_corrplot_C6_logFc_per_pair.pdf",width = 1200 * 2, height = 900 * 2 ,units="px" )
+
+
+
+### corrplot 'm + C6 + Pericytes [vst expr] ----
+
+
+C6 <- c('CRABP2', 'CILP2', 'DPT', 'FGF7', 'COL10A1', 'FBN1', 'GLT8D2',
+        'IRX3', 'MFAP5', 'MFAP4', "COL8A2", "FNDC1", "MMP11", "MFAP2",
+        "COL1A2", "COL1A1", "COL5A1", "ADAMTS2", "TPSB2", "KRT8", "OMD",
+        "OGN", "MME", "MLPH", "MRC1L1", "PTGFR", "TWIST2", "C5orf46",
+        "TNNT3", "ASS1", "PERP","KLHDC7B", "CCL8")
+Pericyte <- c("RGS5","PDGFRB","CD248","HEYL","CFH")
+
+
+labels <- results.out %>% 
+  dplyr::mutate(Pericyte = hugo_symbol %in% Pericyte) %>% 
+  dplyr::mutate(C6 = hugo_symbol %in% C6) %>% 
+  dplyr::mutate(primary.marker.genes = ifelse( primary.marker.genes %in% c('PN subtype', 'CL subtype', 'MES subtype'), NA, primary.marker.genes) ) %>%
+  dplyr::filter((!is.na(primary.marker.genes) | Pericyte | C6 | hugo_symbol %in% c("MFAP2","COL1A1","COL5A1","ADAMTS2")) & !is.na(gid)) %>%
+  dplyr::filter(hugo_symbol %in% c('CREB5', 'COA1', 'AHCYL1') == F) %>% # 
+  dplyr::select(c('gid', 'hugo_symbol' , 'primary.marker.genes')) %>%
+  rbind(data.frame('gid'="NMF:V[1] (MES)", hugo_symbol = "NMF:V[1] (MES)", primary.marker.genes = 'MES subtype')) %>%
+  rbind(data.frame('gid'="NMF:V[2] (CL)", hugo_symbol = "NMF:V[2] (CL)", primary.marker.genes = 'CL subtype')) %>%
+  rbind(data.frame('gid'="NMF:V[3] (PN)", hugo_symbol = "NMF:V[3] (PN)", primary.marker.genes = 'PN subtype')) %>%
+  rbind(data.frame('gid'='tumor-% DNA', hugo_symbol = 'tumor-% DNA', primary.marker.genes = 'tumor-% DNA')) %>%
+  reshape2::dcast (gid + hugo_symbol ~ primary.marker.genes, fill = F,fun.aggregate = as.logical,value.var= 'primary.marker.genes') %>%
+  dplyr::mutate('Extracellular Matrix'=F) %>% 
+  dplyr::mutate(`Extracellular Matrix` = ifelse(hugo_symbol %in% c("MFAP2","COL1A1","COL5A1","ADAMTS2"), NA , F)) %>% 
+  dplyr::mutate(Pericyte = ifelse(hugo_symbol %in% Pericyte, NA , F)) %>% 
+  dplyr::mutate(C6 = ifelse(hugo_symbol %in% C6, NA , F)) %>% 
+  dplyr::select(c("gid","hugo_symbol",
+                  "tumor-% DNA",
+                  "chr7 gained (tumor)",
+                  "astrocyte",
+                  'CL subtype',
+                  "endothelial",
+                  
+                  "oligodendrocyte",
+                  "neuron",
+                  'PN subtype',
+                  "C6",
+                  'Extracellular Matrix',
+                  'MES subtype',
+                  "Pericyte",
+                  "TIL / T-cell",
+                  "microglia/TAM"
+  ))
+
+
+# labels <- labels %>% dplyr::filter(!is.na(endothelial))
+
+
+
+plt <- labels %>%
+  dplyr::filter(gid != 'tumor-% DNA') %>%
+  dplyr::select('gid','hugo_symbol') %>%
+  dplyr::left_join(gsam.gene.expression.all.vst %>%
+                     as.data.frame %>%
+                     tibble::rownames_to_column('gid')
+                   , by=c('gid'='gid')) %>% 
+  dplyr::select(c('gid','hugo_symbol',colnames(gsam.gene.expression.all.paired))) %>% # <3
+  dplyr::filter(gid %in% labels$gid) %>%
+  dplyr::mutate(gid = NULL) %>%
+  dplyr::filter(hugo_symbol %in% c('NMF:V[1] (MES)', 'NMF:V[2] (CL)', 'NMF:V[3] (PN)') == F)  %>% # lines below add the NMF matrices
+  tibble::column_to_rownames('hugo_symbol') %>%
+  t() %>% 
+  as.data.frame() %>%
+  tibble::rownames_to_column('sid') %>%
+  dplyr::left_join(
+    
+    readRDS("tmp/combi.gbm_nmf_150.new.Rds") %>%
+      purrr::pluck('123456') %>%
+      purrr::pluck('H') %>%
+      t() %>%
+      as.data.frame() %>%
+      `colnames<-`(c('NMF:V[1] (MES)','NMF:V[2] (CL)','NMF:V[3] (PN)')) %>% 
+      tibble::rownames_to_column('sid') %>%
+      dplyr::mutate(sid = gsub('^GSAM-','',sid))
+    
+    , by=c('sid' = 'sid')
+  ) %>%
+  dplyr::left_join(gsam.metadata.all.paired %>% dplyr::select(c('sid','tumour.percentage.dna')) %>% dplyr::rename(`tumor-% DNA`='tumour.percentage.dna'), by=c('sid'='sid')) %>%
+  tibble::column_to_rownames('sid') %>%
+  t() %>%
+  as.data.frame()
+
+
+
+labels <- labels %>%
+  dplyr::mutate(gid = NULL) %>%
+  tibble::column_to_rownames('hugo_symbol')
+
+
+cor_cor_plot(plt, labels)
+
+
+
+
+ggsave("output/figures/paper_dge_corrplot_C6_vst_per_resection.png",width = 1200 * 2, height = 900 * 2 ,units="px" )
+ggsave("output/figures/paper_dge_corrplot_C6_vst_per_resection.pdf",width = 1200 * 2, height = 900 * 2 ,units="px" )
 
 
 
@@ -4570,7 +5400,7 @@ ggsave("output/figures/figure-DGE_all_corrected.png",  width = 5.7 * 1.4 , heigh
 
 
 
-### corrplot 'm ----
+### corrplot 'm (Real Figure 5?) ----
 
 
 
@@ -4595,6 +5425,13 @@ labels <- results.out %>%
   dplyr::mutate(Patel.Complete.Immune.response = ifelse(!is.na(patel.scRNAseq.cluster) & patel.scRNAseq.cluster == "Complete/Immune response" , T, F) ) %>% 
   dplyr::mutate(Patel.Hypoxia = ifelse(!is.na(patel.scRNAseq.cluster) & patel.scRNAseq.cluster == "Hypoxia" , T, F) ) %>% 
   
+  dplyr::rename(Neftel.AC = neftel.meta.module.AC) %>% 
+  dplyr::rename(Neftel.NPC1 = neftel.meta.module.NPC1) %>% 
+  dplyr::rename(Neftel.NPC2 = neftel.meta.module.NPC2) %>% 
+  dplyr::rename(Neftel.OPC = neftel.meta.module.OPC) %>% 
+  dplyr::rename(Neftel.MES1 = neftel.meta.module.MES1) %>% 
+  dplyr::rename(Neftel.MES2 = neftel.meta.module.MES2) %>% 
+  
   dplyr::rename(`Extracellular Matrix` = EM.struct.constituent) %>%
   
   dplyr::mutate(significant = 
@@ -4605,14 +5442,17 @@ labels <- results.out %>%
   
   dplyr::filter(significant == T) %>%
   dplyr::select(c('gid', 'hugo_symbol' , 'McKenzie_celltype_top_human_specificity', 'direction_up', 'direction_down',
-                  TCGA.CL, TCGA.MES, TCGA.PN , Patel.Cell.cycle, Patel.Complete.Immune.response, Patel.Hypoxia, `Extracellular Matrix`))
+                  TCGA.CL, TCGA.MES, TCGA.PN ,
+                  Patel.Cell.cycle, Patel.Complete.Immune.response, Patel.Hypoxia, 
+                  Neftel.AC, Neftel.OPC, Neftel.MES1, Neftel.MES2, Neftel.NPC1, Neftel.NPC2,
+                  `Extracellular Matrix`))
   #%>% dplyr::slice_head(n=50)
+  # dplyr::filter(hugo_symbol %in%c("CRABP2",'CILP2','DPT','FGF7')) 
 
 
 
 
-  
-  
+
 # add checks to check dcast
 n_astrocyte <- labels %>%
   dplyr::filter(!is.na(`McKenzie_celltype_top_human_specificity`)) %>%
@@ -4640,6 +5480,7 @@ labels <- labels %>%
   reshape2::dcast(hugo_symbol +
                     direction_up + direction_down + 
                     TCGA.CL + TCGA.MES + TCGA.PN +
+                    Neftel.AC + Neftel.NPC1 + Neftel.NPC2 + Neftel.OPC + Neftel.MES1 + Neftel.MES2 + 
                     Patel.Cell.cycle + Patel.Complete.Immune.response + Patel.Hypoxia +
                     `Extracellular Matrix` +
                     gid ~ `McKenzie_celltype_top_human_specificity`, fill = NA,fun.aggregate = as.logical) %>%
@@ -4652,13 +5493,22 @@ labels <- labels %>%
   dplyr::mutate(TCGA.MES = ifelse(TCGA.MES , F, NA) ) %>%
   dplyr::mutate(TCGA.PN = ifelse(TCGA.PN , F, NA) ) %>%
   
+  dplyr::mutate(Neftel.AC = ifelse(Neftel.AC , F, NA) ) %>%
+  dplyr::mutate(Neftel.NPC1 = ifelse(Neftel.NPC1 , F, NA) ) %>%
+  dplyr::mutate(Neftel.NPC2 = ifelse(Neftel.NPC2 , F, NA) ) %>%
+  dplyr::mutate(Neftel.OPC = ifelse(Neftel.OPC , F, NA) ) %>%
+  dplyr::mutate(Neftel.MES1 = ifelse(Neftel.MES1 , F, NA) ) %>%
+  dplyr::mutate(Neftel.MES2 = ifelse(Neftel.MES2 , F, NA) ) %>%
+  
   dplyr::mutate(`Extracellular Matrix` = ifelse(`Extracellular Matrix` , F, NA) ) %>%
 
   dplyr::mutate(Patel.Cell.cycle = ifelse(Patel.Cell.cycle , F, NA) ) %>%
   dplyr::mutate(Patel.Complete.Immune.response = ifelse(Patel.Complete.Immune.response , F, NA) ) %>%
   dplyr::mutate(Patel.Hypoxia = ifelse(Patel.Hypoxia , F, NA) ) %>%
 
-  dplyr::mutate(TCGA.CL = NULL , TCGA.MES = NULL , TCGA.PN = NULL , Patel.Cell.cycle = NULL , Patel.Complete.Immune.response = NULL , Patel.Hypoxia = NULL)
+  dplyr::mutate(TCGA.CL = NULL , TCGA.MES = NULL , TCGA.PN = NULL ,
+                Patel.Cell.cycle = NULL , Patel.Complete.Immune.response = NULL , Patel.Hypoxia = NULL,
+                C1 = NULL, C2 = NULL, C3 = NULL, C4 = NULL, C5 = NULL, C6 = NULL)
 
 
 
@@ -4699,7 +5549,8 @@ stopifnot(labels %>% dplyr::filter(oligodendrocyte == T) %>% nrow == n_oligodend
 # cor_cor_plot(plt, labels, method="complete")
 # ggsave("output/figures/cor_ward.complete.png", height=30, width=30) # then average, then ward.D1?
 
-cor_cor_plot(plt, labels, method="ward.D2")
+# cor_cor_plot <- function(normalised_correlated_data, labels, font_scale , legend_scale , method="ward.D2")
+cor_cor_plot(plt, labels, 3,6, method="ward.D2")
 #ggsave("output/figures/cor_ward.D2x.pdf", height=30, width=30) # then average, then ward.D1?
 ggsave("output/figures/cor_ward.D2x.svg", height=30, width=30) # then average, then ward.D1?
 
@@ -4772,7 +5623,8 @@ plot(plt$stat.glass.res, plt$stat.gsam.res, col=plt$show.label + 1, pch = 19, ce
 
 
 
-## 2.17 Corrplot DE + marker genes ----
+## 2.17 Corrplot DE + marker genes (Figure 5?) ----
+
 
 
 plt.genes <- data.frame(
@@ -6113,5 +6965,250 @@ df %>%
   dplyr::arrange(chr, start)
 
 
+## N NPC1 NPC2 N :: Figure S6 A-B ----
+# a. eerst losse PCA bepaling, dan correlatie daar tussen?
+
+
+neuron.genes <- c("PTPRN","ICAM5","VWA7","PANX2","STRC","NPAS4","EGR4","OTOF","L1CAM","DOC2B","STXBP6","REPS2","DYNC1I1","AMPH",
+                  "PWWP3B","KCNQ5","ZNF98","KCNK12","BSPRY","YPEL4","PDZD7","ZNF365","SLC6A15","RBM11","CDKL2","KCTD4","RASGRF2",
+                  "IGFL2","TRIM54","TNNT2","ESYT3","RBP4","FSTL5","EPHB6","CAMKK1","SNCG","MATK","HS3ST2","FABP3","CBLN2","ATP8A2",
+                  "SULT4A1","ATP2B3","TMEM130","SSTR1","CNNM1","CABP1","SHISAL1","FGF13","CBLN1","NEFH","KCNS1","RYR2","NEFM",
+                  "ANKRD30B","KHDRBS2","SYCE1","SLC35F3","CDH18","CDH12","TRHDE","TCERG1L","FAM153CP","FAM153B","FAM153A","SOHLH1",
+                  "MTUS2","DLGAP2","FRMPD4","CCK","HOOK1","MAP7D2","GALNTL6","CDH9","NEGR1","LRFN5","GRM1","ACVR1C","PPP4R4","DRD1",
+                  "OCA2","CNGB1","RTN4RL1","GLP2R","MEPE","VSNL1","GABRB2","KRT222","HTR2A","SLITRK4","RXFP1","VSTM2L","SLC6A7",
+                  "ISLR2","CYP4X1","COL26A1","CABLES1","SYNGR3","ARHGDIG","PSD","NPM2","SGSM1","OLFM1","SRRM4","NEUROD2","UBE2QL1",
+                  "SVOP","CELF4","PCSK2","ATP1A3","SCN3B","CHGB","JPH3","DLGAP3","CKMT1B","KCNH3","DOC2A","KCNN1","UNC5A","SHANK1",
+                  "TMEM151B","VWA5B2","STX1B","FBXL16","ADAM11","TMEM63C","PDE2A","TMEM246","PRKCZ","SNAP91","SH3GL2","KCTD16",
+                  "NMNAT2","STXBP5L","TAC3","RIMBP2","CRHR2","CUX2","CLEC2L","SLC12A5","LRTM2","IQSEC3","WSCD2","HTR5A","GPR83",
+                  "NRGN","KCNS2","SLC30A3","DNAJC5G","SYT7","GABRD","TGFBR3L","KCNC2","GABRG2","GABRA1","HCN1","CREG2","CACNG3",
+                  "C1QL3","SLC6A17","SLC17A7","GABRG3","GABRA5","KCNV1","GPR26","GAD2","GPR22","CAMK1G","PDYN","SERTM1","HPCA",
+                  "CPLX2","SYT5","SLC8A2","CHRM1","RAB3A","GRIN1","CHGA","SNCB","FAM163B","SYN1","FSTL4","GPR61","SLC32A1","CPLX1",
+                  "SPTB","GLS2","SYT13","SNAP25","SYT1","SV2C","SYNPR","OLFM3","RBFOX1","UNC13C","RBFOX3","SYT2","PHYHIP","KCNA4",
+                  "HPCAL4","MPPED1","EMX1","PACSIN1","CALY","CACNA1B","TMEM132D","SV2B","CCKBR","RASAL1","DDN","C4orf50","HRH3",
+                  "CACNA1I","PHF24","MFSD4A","CAMK2A","SST","PRKCG","TBR1","SLC4A10","ARHGAP44","AJAP1","KCNT1","CHD5","GALNT9",
+                  "GRM4","NGEF","RTN4R","SCN2B","NAP1L2","DMTN","BRINP1","GRIN2A","GDA","SNCA","PRKCB","SERPINI1","NECAB1","KCNK1",
+                  "AK5","GABRA2","PPP2R2C","CPNE6","SOWAHA","ADARB2","NPY","KIRREL3","PNMA8B","FAIM2","DLG2","KIAA0319","SLC39A12",
+                  "ETNPPL","HPSE2")
+
+
+labels <- results.out %>% 
+  dplyr::mutate(C1 = hugo_symbol %in% neuron.genes) %>%
+  dplyr::filter(!is.na(gid) ) %>% 
+  dplyr::filter(C1 | neftel.meta.module.NPC1 | neftel.meta.module.NPC2  ) %>% 
+  dplyr::select(gid, ensembl_id, hugo_symbol, C1, neftel.meta.module.NPC1 , neftel.meta.module.NPC2, McKenzie_celltype_top_human_specificity) %>% 
+  dplyr::mutate(col = "") %>% 
+  dplyr::mutate(col = ifelse(C1, "C1", col)) %>% 
+  dplyr::mutate(col = ifelse(neftel.meta.module.NPC1, paste0(col,",NPC1"), col)) %>% 
+  dplyr::mutate(col = ifelse(neftel.meta.module.NPC2, paste0(col,",NPC2"), col)) %>% 
+  dplyr::mutate(col = as.factor(gsub("^[,]+","",col))) %>% 
+  dplyr::mutate(label = ifelse(neftel.meta.module.NPC1 | neftel.meta.module.NPC2 | McKenzie_celltype_top_human_specificity == "neuron",hugo_symbol, ""))
+
+#factoextra::fviz_eig(res.pca)
+# 
+# factoextra::fviz_pca_biplot(res.pca, repel = TRUE,
+#                 col.var = labels$col, # Variables color
+#                 col.ind = "#696969"  # Individuals color 
+# )
+
+
+
+
+plt <- labels %>% 
+  dplyr::select('gid', 'hugo_symbol') %>% 
+  dplyr::left_join(gsam.gene.expression.all.vst %>%
+                     as.data.frame %>%
+                     tibble::rownames_to_column('gid')
+                   , by=c('gid'='gid')) %>% 
+  dplyr::mutate(gid = NULL) %>% 
+  tibble::column_to_rownames('hugo_symbol')
+res.pca <- prcomp(t(plt), scale = TRUE)
+factoextra::fviz_pca_var(res.pca,
+                         col.var = labels$col,
+                         repel = TRUE   ) +
+  youri_gg_theme +
+  scale_color_manual(values=c('C1'='#ff5f68',
+                              'C1,NPC2'='purple',
+                              'NPC1'='#6ba6e5',
+                              'NPC2'='#6be5d9',
+                              'NPC1,NPC2'='#6bcee5'
+                              ))
+
+
+ggsave("output/figures/figure_S6_C1_NPC1_NPC2_biplot.pdf", width=7, height=6)
+
+
+
+
+
+plt <- labels %>% 
+  dplyr::select('gid') %>% 
+  dplyr::left_join(gsam.gene.expression.all.vst %>%
+                     as.data.frame %>%
+                     tibble::rownames_to_column('gid')
+                   , by=c('gid'='gid')) %>% 
+  tibble::column_to_rownames('gid')
+res.pca <- prcomp(t(plt), scale = TRUE)
+stopifnot(rownames(res.pca$rotation) == labels$gid)
+
+tmp <- res.pca$rotation %>% 
+  as.data.frame %>% 
+  tibble::rownames_to_column('gid') %>% 
+  dplyr::left_join(labels, by=c('gid'='gid'))
+
+aa <- 0.7
+ggplot(tmp, aes(x=PC1, y = PC2, fill=col, label=label)) +
+  geom_point(size=2.75, pch=21, col="black") +
+  geom_text_repel(size=2.25) + 
+  labs(x = "PC1 loadings", y = "PC2 loadings", title="PCA on G-SAM VST expression of C1 and NPC1 & NPC2 (Neftel) genes") + 
+  youri_gg_theme +
+  scale_fill_manual(values=c('C1'=alpha('#ff5f68',aa),
+                              'C1,NPC2'=alpha('purple',aa),
+                              'NPC1'=alpha('#6ba6e5',aa),
+                              'NPC2'=alpha('#6be5d9',aa),
+                              'NPC1,NPC2'=alpha('#6bcee5',aa)))
+
+
+ggsave("output/figures/figure_S6_C1_NPC1_NPC2_PC-loadings_scatterplot.pdf", width=7, height=7.5)
+
+
+
+plt <- plt %>% 
+  tibble::rownames_to_column('gid') %>% 
+  dplyr::left_join(labels %>% dplyr::select('gid','hugo_symbol'), by=c('gid'='gid')) %>% 
+  dplyr::mutate(gid=NULL) %>% 
+  tibble::column_to_rownames('hugo_symbol')
+
+
+labels2 <- labels %>% 
+  dplyr::select(c('hugo_symbol','C1','McKenzie_celltype_top_human_specificity','neftel.meta.module.NPC1','neftel.meta.module.NPC2')) %>% 
+  
+  dplyr::mutate(`Neuron Marker` = ifelse(is.na(McKenzie_celltype_top_human_specificity), "NA", McKenzie_celltype_top_human_specificity)) %>% 
+  dplyr::mutate(`Neuron Marker` = `Neuron Marker` == "neuron") %>% 
+  dplyr::mutate(`Neuron Marker` = ifelse(`Neuron Marker` == T, NA , F)) %>% 
+  dplyr::mutate(McKenzie_celltype_top_human_specificity = NULL) %>% 
+  
+  dplyr::rename(`Neftel.NPC1` = neftel.meta.module.NPC1) %>% 
+  dplyr::mutate(Neftel.NPC1 = ifelse(Neftel.NPC1 == T, NA , F)) %>% 
+
+  dplyr::rename(`Neftel.NPC2` = neftel.meta.module.NPC2) %>% 
+  dplyr::mutate(Neftel.NPC2 = ifelse(Neftel.NPC2 == T, NA , F)) %>% 
+  
+  dplyr::mutate(C1 = ifelse(C1 == T, NA , F)) %>% 
+  tibble::column_to_rownames('hugo_symbol') %>%
+  dplyr::mutate(`Neuron Marker` = NULL)
+
+
+cor_cor_plot(plt, labels2)
+ggsave("output/figures/figure_S6_C1_NPC1_NPC2_corr-corr-plot.pdf", width=7*3, height=7.5*3)
+ggsave("output/figures/figure_S6_C1_NPC1_NPC2_corr-corr-plot.svg", width=7*3, height=7.5*3)
+
+
+
+
+## OD OPC :: Figure S6 C-D ----
+# a. eerst losse PCA bepaling, dan correlatie daar tussen?
+
+
+oligodendrocyte.genes <- c("RASGRF1","FBXO2","PPP1R16B","TPPP","SEC14L5","TMEM151A","LGI3","TMCC2","HHATL","RAB11FIP4","PDIA2",
+                           "HCN2","KCNJ9","DNAJC6","TUBB4A","ADCY5","CSDC2","AC118754.1","PLIN4","HSPA2","PI16","PTGDS","CDK18",
+                           "FA2H","AATK","NKX6-2","MAG","PLCH2","FAM131C","PPP1R14A","CHADL","TMEM88B","ABCA2","PLPP2","CERCAM",
+                           "BOK","ACP7","CYS1","ANXA3","TNFSF9","AVPI1","MYH11","ADH1B","TUBA4A","CORO6","IL12RB2","TESPA1",
+                           "MPP7","RSPO3","KCNJ12","OPN4","MKX","FRAS1","CPNE7")
+
+labels <- results.out %>% 
+  dplyr::mutate(C2 = hugo_symbol %in% oligodendrocyte.genes) %>%
+  dplyr::filter(!is.na(gid) ) %>% 
+  dplyr::filter(C2 | neftel.meta.module.OPC  ) %>% 
+  dplyr::select(gid, ensembl_id, hugo_symbol, C2, neftel.meta.module.OPC, McKenzie_celltype_top_human_specificity) %>% 
+  dplyr::mutate(col = "") %>% 
+  dplyr::mutate(col = ifelse(C2, "C2", col)) %>% 
+  dplyr::mutate(col = ifelse(neftel.meta.module.OPC, paste0(col,",OPC"), col)) %>% 
+  dplyr::mutate(col = as.factor(gsub("^[,]+","",col))) %>% 
+  dplyr::mutate(label = ifelse(neftel.meta.module.OPC | McKenzie_celltype_top_human_specificity == "oligodendrocyte",
+                               hugo_symbol, ""))
+
+
+
+
+
+plt <- labels %>% 
+  dplyr::select('gid', 'hugo_symbol') %>% 
+  dplyr::left_join(gsam.gene.expression.all.vst %>%
+                     as.data.frame %>%
+                     tibble::rownames_to_column('gid')
+                   , by=c('gid'='gid')) %>% 
+  dplyr::mutate(gid = NULL) %>% 
+  tibble::column_to_rownames('hugo_symbol')
+res.pca <- prcomp(t(plt), scale = TRUE)
+factoextra::fviz_pca_var(res.pca,
+                         col.var = labels$col,
+                         repel = TRUE   ) +
+  youri_gg_theme + 
+  scale_color_manual(values=c('C2'='#ff5f68',
+                              'OPC'='#6ba6e5'
+  ))
+
+
+
+ggsave("output/figures/figure_S6_C2_OPC_biplot.pdf", width=7, height=6)
+
+
+
+
+
+plt <- labels %>% 
+  dplyr::select('gid') %>% 
+  dplyr::left_join(gsam.gene.expression.all.vst %>%
+                     as.data.frame %>%
+                     tibble::rownames_to_column('gid')
+                   , by=c('gid'='gid')) %>% 
+  tibble::column_to_rownames('gid')
+res.pca <- prcomp(t(plt), scale = TRUE)
+stopifnot(rownames(res.pca$rotation) == labels$gid)
+
+tmp <- res.pca$rotation %>% 
+  as.data.frame %>% 
+  tibble::rownames_to_column('gid') %>% 
+  dplyr::left_join(labels, by=c('gid'='gid'))
+
+ggplot(tmp, aes(x=PC1, y = PC2, fill=col, label=hugo_symbol)) +
+  geom_point(size=2.75, pch=21, col="black") +
+  geom_text_repel(size=2.25) + 
+  labs(x = "PC1 loadings", y = "PC2 loadings", title="PCA on G-SAM VST expression of C2 and OPC (Neftel) genes") + 
+  youri_gg_theme +
+  scale_fill_manual(values=c('C2'=alpha('#ff5f68',aa),
+                             'OPC'=alpha('#6ba6e5',aa)
+                    ))
+
+ggsave("output/figures/figure_S6_C2_OPC_PC-loadings_scatterplot.pdf", width=7, height=7.5)
+
+
+
+
+plt <- plt %>% 
+  tibble::rownames_to_column('gid') %>% 
+  dplyr::left_join(labels %>% dplyr::select('gid','hugo_symbol'), by=c('gid'='gid')) %>% 
+  dplyr::mutate(gid=NULL) %>% 
+  tibble::column_to_rownames('hugo_symbol')
+
+
+labels2 <- labels %>% 
+  dplyr::select(c('hugo_symbol','C2','McKenzie_celltype_top_human_specificity','neftel.meta.module.OPC')) %>% 
+
+  dplyr::mutate(`Oligodendrocyte Marker` = ifelse(is.na(McKenzie_celltype_top_human_specificity), "NA", McKenzie_celltype_top_human_specificity)) %>% 
+  dplyr::mutate(`Oligodendrocyte Marker` = `Oligodendrocyte Marker` == "oligodendrocyte") %>% 
+  dplyr::mutate(`Oligodendrocyte Marker` = ifelse(`Oligodendrocyte Marker` == T, NA , F)) %>% 
+  dplyr::mutate(McKenzie_celltype_top_human_specificity = NULL) %>% 
+
+  dplyr::rename(`Neftel.OPC` = neftel.meta.module.OPC) %>% 
+  dplyr::mutate(Neftel.OPC = ifelse(Neftel.OPC == T, NA , F)) %>% 
+  
+  dplyr::mutate(C2 = ifelse(C2 == T, NA , F)) %>% 
+  tibble::column_to_rownames('hugo_symbol') %>%
+  dplyr::mutate(`Oligodendrocyte Marker` = NULL)
+
+
+cor_cor_plot(plt, labels2)
+ggsave("output/figures/figure_S6_C2_OPC_corr-corr-plot.pdf", width=7*1.5, height=7.5*1.5)
 
 
