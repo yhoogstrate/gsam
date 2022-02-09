@@ -21,7 +21,9 @@ C4A <- c('SOD3', "FSTL3", "FAM180A", "OSGIN1", "NDRG1", "AC010327.1","TRIM29", "
         "CYP26B1", "NPR3", "FGF5", "CCBE1", "GPR68", "SH3RF2")
 C4B <- c("WNT11", "SCUBE3", "KRT17", "GPR78","CPZ","GLI1", "PRB2","MAFA","HAPLN1")
 
-C5 <- c("PRF1", "ARHGAP9", "FCMR","LXN","KCNE3", "NR5A2","FPR2", "CCL13", "MMP7", "CALCR", "LRG1", "SAA2", "PI3", "LIF", "HSPA6")
+C5 <- c("PRF1", "ARHGAP9", "FCMR","LXN","KCNE3", "NR5A2","FPR2", "CCL13",
+        "MMP7",
+        "CALCR", "LRG1", "SAA2", "PI3", "LIF", "HSPA6")
 
 C6 <- c('CRABP2', 'CILP2', 'DPT', 'FGF7', 'COL10A1', 'FBN1', 'GLT8D2',
         'IRX3', 'MFAP5', 'MFAP4', "COL8A2", "FNDC1", "MMP11", "MFAP2",
@@ -833,6 +835,7 @@ FeaturePlot(object = object_1, features = C5)
 DotPlot(object = object_1, features =list('C6'=C6 , 'Peri'=c("RGS5", "PDGFRB", "CD248") ), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
   labs(x = paste0("Features [C6] in: ",sid))
+
 ggsave(paste0("output/figures/scRNA/Yuan/",sid,"_C6.pdf"),width=7.5, height=4,scale=1.2)
 ggsave(paste0("output/figures/scRNA/Yuan/",sid,"_C6.png"),width=7.5, height=4,scale=1.2)
 
@@ -1206,6 +1209,7 @@ FeaturePlot(object = object_1, features = C5)
 DotPlot(object = object_1, features =list('C6'=C6 , 'Peri'=c("RGS5", "PDGFRB", "CD248") ), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
   labs(x = paste0("Features [C6] in: ",sid))
+
 ggsave(paste0("output/figures/scRNA/Yuan/",sid,"_C6.pdf"),width=7.5, height=4,scale=1.2)
 ggsave(paste0("output/figures/scRNA/Yuan/",sid,"_C6.png"),width=7.5, height=4,scale=1.2)
 
@@ -1647,6 +1651,7 @@ ggsave(paste0("output/figures/scRNA/Yuan/",sid,"_UMAP.pdf"),width=10,height=8)
 ggsave(paste0("output/figures/scRNA/Yuan/",sid,"_UMAP.png"),width=10,height=8)
 
 
+
 ### Prepare for integration ----
 
 object_1 <- FindClusters(object_1, resolution = 0.5)
@@ -1836,6 +1841,7 @@ FeaturePlot(object = object_1, features = C4B)
 DotPlot(object = object_1, features = c(C5),  group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
   labs(x = paste0("Features [C5] in: ",sid))
+
 ggsave(paste0("output/figures/scRNA/Yuan/",sid,"_C5.pdf"),width=6.5, height=4,scale=1.2)
 ggsave(paste0("output/figures/scRNA/Yuan/",sid,"_C5.png"),width=6.5, height=4,scale=1.2)
 
@@ -1850,6 +1856,7 @@ FeaturePlot(object = object_1, features = C5)
 DotPlot(object = object_1, features =list('C6'=C6 , 'Peri'=c("RGS5", "PDGFRB", "CD248") ), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
   labs(x = paste0("Features [C6] in: ",sid))
+
 ggsave(paste0("output/figures/scRNA/Yuan/",sid,"_C6.pdf"),width=7.5, height=4,scale=1.2)
 ggsave(paste0("output/figures/scRNA/Yuan/",sid,"_C6.png"),width=7.5, height=4,scale=1.2)
 
@@ -2260,6 +2267,7 @@ FeaturePlot(object = object_1, features = C5)
 DotPlot(object = object_1, features =list('C6'=C6 , 'Peri'=c("RGS5", "PDGFRB", "CD248") ), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
   labs(x = paste0("Features [C6] in: ",sid))
+
 ggsave(paste0("output/figures/scRNA/Yuan/",sid,"_C6.pdf"),width=7.5, height=4,scale=1.2)
 ggsave(paste0("output/figures/scRNA/Yuan/",sid,"_C6.png"),width=7.5, height=4,scale=1.2)
 
