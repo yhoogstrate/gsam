@@ -116,7 +116,7 @@ points(s1, s2, pch=19,cex=0.2,col=rgb(0,0,0,0.05))
 # per sample example ----
 
 ## IMPORTANT - FROM CNVKit:
-## The log2 ratio values of CNAs in a tumor sample correspond to
+## Then
 ## integer copy numbers in tumor cells, and in aggregate these
 ## log2 values will cluster around values that indicate subclone
 ## populations, each with a given ploidy and clonality. For
