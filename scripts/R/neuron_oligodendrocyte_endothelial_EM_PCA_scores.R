@@ -393,3 +393,99 @@ write.table(principal_de_components , "output/tables/principal_DE_cluster_compon
 # 
 
 
+# also add C4 and C5 ----
+
+## C4 ----
+
+#C4A <- c('SOD3', "FSTL3", "FAM180A", "OSGIN1", "NDRG1", "AC010327.1","TRIM29", "HSPB7", "TNNT1", "CCN5", "MICAL2", "GLIS1", "SLIT3",
+#         "CYP26B1", "NPR3", "FGF5", "CCBE1", "GPR68", "SH3RF2")
+#C4B <- c("WNT11", "SCUBE3", "KRT17", "GPR78","CPZ","GLI1", "PRB2","MAFA","HAPLN1")
+
+#results.out %>% dplyr::filter(in.gsam == T & in.glass == T) %>% 
+#  dplyr::filter(hugo_symbol %in% c(C4A, C4B)) %>% dplyr::pull('ensembl_id')
+
+C4 <- c("ENSG00000173641", "ENSG00000174332", "ENSG00000003137", "ENSG00000155269", "ENSG00000109625", "ENSG00000109610", "ENSG00000138675", "ENSG00000113389", "ENSG00000145681", "ENSG00000156463",
+        "ENSG00000184347", "ENSG00000146197", "ENSG00000189320", "ENSG00000104419", "ENSG00000182759", "ENSG00000133816", "ENSG00000085741", "ENSG00000137699", "ENSG00000121335", "ENSG00000111087",
+        "ENSG00000119714", "ENSG00000140961", "ENSG00000128422", "ENSG00000183287", "ENSG00000070404", "ENSG00000105048", "ENSG00000080031", "ENSG00000064205")
+
+
+combined.gene.expression.C4 <- combined.gene.expression %>%
+  tibble::rownames_to_column('ens') %>%
+  dplyr::filter(ens %in% C4) %>%
+  tibble::column_to_rownames('ens')
+
+
+pca.C4 <- prcomp(t(combined.gene.expression.C4))
+#plot(pca.C4)
+#library(ggbiplot)
+#ggbiplot(pca.C4)
+
+
+
+pca.C4$x %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column('pid') %>%
+  dplyr::select(c('pid','PC1')) %>%
+  dplyr::rename(C4.signature = PC1)
+
+
+
+## C5 ----
+
+#C5 <- c("PRF1", "ARHGAP9", "FCMR","LXN","KCNE3", "NR5A2","FPR2", "CCL13",
+#        "MMP7", "CALCR", "LRG1", "SAA2", "PI3", "LIF", "HSPA6")
+#
+#results.out %>% dplyr::filter(in.gsam == T & in.glass == T) %>% 
+#  dplyr::filter(hugo_symbol %in% c(C5)) %>% dplyr::pull('ensembl_id')
+
+
+C5 <- c("ENSG00000173110", "ENSG00000116833", "ENSG00000162894", "ENSG00000079257", "ENSG00000004948", "ENSG00000180644", "ENSG00000134339", "ENSG00000175538", "ENSG00000137673", "ENSG00000123329",
+        "ENSG00000181374", "ENSG00000171236", "ENSG00000171049", "ENSG00000124102", "ENSG00000128342")
+
+
+combined.gene.expression.C5 <- combined.gene.expression %>%
+  tibble::rownames_to_column('ens') %>%
+  dplyr::filter(ens %in% C5) %>%
+  tibble::column_to_rownames('ens')
+
+
+pca.C5 <- prcomp(t(combined.gene.expression.C5))
+plot(pca.C5)
+#library(ggbiplot)
+#ggbiplot(pca.C5)
+
+
+
+pca.C5$x %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column('pid') %>%
+  dplyr::select(c('pid','PC1')) %>%
+  dplyr::rename(C5.signature = PC1)
+
+
+
+# re-export ----
+
+
+tmp <- read.table("data/gsam/output/tables/principal_DE_cluster_components.txt") %>% 
+  dplyr::left_join(
+    pca.C4$x %>%
+      as.data.frame() %>%
+      tibble::rownames_to_column('pid') %>%
+      dplyr::select(c('pid','PC1')) %>%
+      dplyr::rename(C4.signature = PC1)
+    , by=c('pid'='pid')) %>% 
+  dplyr::left_join(
+    pca.C5$x %>%
+      as.data.frame() %>%
+      tibble::rownames_to_column('pid') %>%
+      dplyr::select(c('pid','PC1')) %>%
+      dplyr::rename(C5.signature = PC1)
+    , by=c('pid'='pid'))
+
+
+write.table(tmp, "output/tables/principal_DE_cluster_components.txt")
+
+
+
+
