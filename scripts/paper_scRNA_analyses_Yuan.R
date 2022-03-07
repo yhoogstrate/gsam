@@ -618,6 +618,7 @@ DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "se
   guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
   labs(subtitle=sid)
 
+
 ggsave(paste0("output/figures/scRNA/Yuan/",sid,"_UMAP.pdf"),width=10,height=8)
 ggsave(paste0("output/figures/scRNA/Yuan/",sid,"_UMAP.png"),width=10,height=8)
 
@@ -803,6 +804,39 @@ FeaturePlot(object = object_1, features = "CD248")
 # FeaturePlot(object = object_1, features = "CD2")
 FeaturePlot(object = object_1, features = "TRBC2")
 
+
+#### C3 :: endothelial (down) ----
+
+
+C3 <- c('VWF', 'TIE1', 'HIGD1B', 'MMRN1', 'CYSLTR2', 'MMP25','FLT4', 'BCL6B', 'GRAP', 'LAMC3', 'DPEP1', 'PXDNL', 'ANGPT2',
+        'PALD1', 'ADGRD1', 'GBP6', 'SLC52A3', 'CLDN5', 'VWA2', 'ABCB1', 'THSD7B', 'SPINK8', 'FOXQ1', 'ZIC3', 'NODAL')
+
+endo <- read_xlsx("data/McKenzie et al. Gene expression different cell types.xlsx", sheet='top_human_specificity') %>%
+  dplyr::select(c('grand_mean', 'gene', 'Celltype')) %>%
+  dplyr::filter(Celltype == 'end') %>% 
+  dplyr::arrange(desc(grand_mean)) %>%
+  dplyr::filter(gene %in% all.genes ) %>%
+  dplyr::slice_head(n=25) %>%
+  dplyr::mutate(grand_mean = NULL) %>% 
+  dplyr::pull(gene)
+
+
+C3.only <- setdiff(C3, endo)
+C3.and.endo <- intersect(endo, C3)
+endo.only <- setdiff(endo, C3)
+
+
+DotPlot(object = object_1, features = list('C3'=C3.only, 'C3+endo'= C3.and.endo, 'endo'=endo.only,'pericyte'=c('PDGFRB','CD248','RGS5')), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(x = paste0("Features [C3 & top25 McKenzy endothelial cell markers] in: ",sid))
+
+
+
+ggsave(paste0("output/figures/scRNA/Yuan/",sid,"_C3.pdf"),width=7.5, height=3,scale=2)
+ggsave(paste0("output/figures/scRNA/Yuan/",sid,"_C3.png"),width=7.5, height=3,scale=2)
+
+
+
 #### C4 (up) ----
 
 
@@ -884,6 +918,7 @@ FeaturePlot(object = object_1, features =  "CCL8" )
 
 ## D :: GSM2758474_PJ025 :: T,MG,TC ----
 # Glioblastoma, WHO grade IV, idh1 status: wt, EGFR-ampli
+
 
 rm(object_1, sid)
 
@@ -971,6 +1006,7 @@ object_1$seurat_clusters <- factor(object_1$seurat_clusters, levels=c(
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters") +
   guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
   labs(subtitle=sid)
+
 
 ggsave(paste0("output/figures/scRNA/Yuan/",sid,"_UMAP.pdf"),width=10,height=8)
 ggsave(paste0("output/figures/scRNA/Yuan/",sid,"_UMAP.png"),width=10,height=8)
@@ -1173,6 +1209,34 @@ FeaturePlot(object = object_1, features = c("EGFR", "TGFA"))
 # FeaturePlot(object = object_1, features = c("EGFR", "NGF"))
 FeaturePlot(object = object_1, features = c("EGFR", "FGFR3"))
 
+#### C3 :: endothelial (down) ----
+
+
+C3 <- c('VWF', 'TIE1', 'HIGD1B', 'MMRN1', 'CYSLTR2', 'MMP25','FLT4', 'BCL6B', 'GRAP', 'LAMC3', 'DPEP1', 'PXDNL', 'ANGPT2',
+        'PALD1', 'ADGRD1', 'GBP6', 'SLC52A3', 'CLDN5', 'VWA2', 'ABCB1', 'THSD7B', 'SPINK8', 'FOXQ1', 'ZIC3', 'NODAL')
+
+endo <- read_xlsx("data/McKenzie et al. Gene expression different cell types.xlsx", sheet='top_human_specificity') %>%
+  dplyr::select(c('grand_mean', 'gene', 'Celltype')) %>%
+  dplyr::filter(Celltype == 'end') %>% 
+  dplyr::arrange(desc(grand_mean)) %>%
+  dplyr::filter(gene %in% all.genes ) %>%
+  dplyr::slice_head(n=25) %>%
+  dplyr::mutate(grand_mean = NULL) %>% 
+  dplyr::pull(gene)
+
+
+C3.only <- setdiff(C3, endo)
+C3.and.endo <- intersect(endo, C3)
+endo.only <- setdiff(endo, C3)
+
+
+DotPlot(object = object_1, features = list('C3'=C3.only, 'C3+endo'= C3.and.endo, 'endo'=endo.only,'pericyte'=c('PDGFRB','CD248','RGS5')), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(x = paste0("Features [C3 & top25 McKenzy endothelial cell markers] in: ",sid))
+
+
+ggsave(paste0("output/figures/scRNA/Yuan/",sid,"_C3.pdf"),width=7.5, height=3,scale=2)
+ggsave(paste0("output/figures/scRNA/Yuan/",sid,"_C3.png"),width=7.5, height=3,scale=2)
 
 
 #### C4 (up) ----
@@ -1647,6 +1711,7 @@ DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "se
   guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
   labs(subtitle=sid)
 
+
 ggsave(paste0("output/figures/scRNA/Yuan/",sid,"_UMAP.pdf"),width=10,height=8)
 ggsave(paste0("output/figures/scRNA/Yuan/",sid,"_UMAP.png"),width=10,height=8)
 
@@ -1811,13 +1876,36 @@ FeaturePlot(object = object_1, features = "VEGFA")
 FeaturePlot(object = object_1, features = "NDRG1")
 
 
-#### C3 (down) :: endothelial ----
 
-DotPlot(object = object_1, features = c(C3), group.by = "seurat_clusters")
-RidgePlot(object = object_1, features = c(C3), group.by = "seurat_clusters",stack=T)
-VlnPlot(object = object_1, features = c(C3), group.by = "seurat_clusters",stack=T)
+#### C3 :: endothelial (down) ----
 
-FeaturePlot(object = object_1, features = C3)
+
+C3 <- c('VWF', 'TIE1', 'HIGD1B', 'MMRN1', 'CYSLTR2', 'MMP25','FLT4', 'BCL6B', 'GRAP', 'LAMC3', 'DPEP1', 'PXDNL', 'ANGPT2',
+        'PALD1', 'ADGRD1', 'GBP6', 'SLC52A3', 'CLDN5', 'VWA2', 'ABCB1', 'THSD7B', 'SPINK8', 'FOXQ1', 'ZIC3', 'NODAL')
+
+endo <- read_xlsx("data/McKenzie et al. Gene expression different cell types.xlsx", sheet='top_human_specificity') %>%
+  dplyr::select(c('grand_mean', 'gene', 'Celltype')) %>%
+  dplyr::filter(Celltype == 'end') %>% 
+  dplyr::arrange(desc(grand_mean)) %>%
+  dplyr::filter(gene %in% all.genes ) %>%
+  dplyr::slice_head(n=25) %>%
+  dplyr::mutate(grand_mean = NULL) %>% 
+  dplyr::pull(gene)
+
+
+C3.only <- setdiff(C3, endo)
+C3.and.endo <- intersect(endo, C3)
+endo.only <- setdiff(endo, C3)
+
+
+DotPlot(object = object_1, features = list('C3'=C3.only, 'C3+endo'= C3.and.endo, 'endo'=endo.only,'pericyte'=c('PDGFRB','CD248','RGS5')), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(x = paste0("Features [C3 & top25 McKenzy endothelial cell markers] in: ",sid))
+
+
+ggsave(paste0("output/figures/scRNA/Yuan/",sid,"_C3.pdf"),width=7.5, height=3,scale=2)
+ggsave(paste0("output/figures/scRNA/Yuan/",sid,"_C3.png"),width=7.5, height=3,scale=2)
+
 
 
 #### C4 (up) ----
@@ -2035,6 +2123,8 @@ DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "se
   guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
   labs(subtitle=sid)
 
+
+
 ggsave(paste0("output/figures/scRNA/Yuan/",sid,"_UMAP.pdf"),width=10,height=8)
 ggsave(paste0("output/figures/scRNA/Yuan/",sid,"_UMAP.png"),width=10,height=8)
 
@@ -2224,13 +2314,37 @@ DotPlot(object = object_1, features = c(C3,C4A,C4B,C5,C6), group.by = "seurat_cl
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
 
-#### C3 (down) :: endothelial ----
 
-DotPlot(object = object_1, features = c(C3), group.by = "seurat_clusters")
-RidgePlot(object = object_1, features = c(C3), group.by = "seurat_clusters",stack=T)
-VlnPlot(object = object_1, features = c(C3), group.by = "seurat_clusters",stack=T)
+#### C3 :: endothelial (down) ----
 
-FeaturePlot(object = object_1, features = C3)
+
+C3 <- c('VWF', 'TIE1', 'HIGD1B', 'MMRN1', 'CYSLTR2', 'MMP25','FLT4', 'BCL6B', 'GRAP', 'LAMC3', 'DPEP1', 'PXDNL', 'ANGPT2',
+        'PALD1', 'ADGRD1', 'GBP6', 'SLC52A3', 'CLDN5', 'VWA2', 'ABCB1', 'THSD7B', 'SPINK8', 'FOXQ1', 'ZIC3', 'NODAL')
+
+endo <- read_xlsx("data/McKenzie et al. Gene expression different cell types.xlsx", sheet='top_human_specificity') %>%
+  dplyr::select(c('grand_mean', 'gene', 'Celltype')) %>%
+  dplyr::filter(Celltype == 'end') %>% 
+  dplyr::arrange(desc(grand_mean)) %>%
+  dplyr::filter(gene %in% all.genes ) %>%
+  dplyr::slice_head(n=25) %>%
+  dplyr::mutate(grand_mean = NULL) %>% 
+  dplyr::pull(gene)
+
+
+C3.only <- setdiff(C3, endo)
+C3.and.endo <- intersect(endo, C3)
+endo.only <- setdiff(endo, C3)
+
+
+DotPlot(object = object_1, features = list('C3'=C3.only, 'C3+endo'= C3.and.endo, 'endo'=endo.only,'pericyte'=c('PDGFRB','CD248','RGS5')), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(x = paste0("Features [C3 & top25 McKenzy endothelial cell markers] in: ",sid))
+
+
+ggsave(paste0("output/figures/scRNA/Yuan/",sid,"_C3.pdf"),width=7.5, height=3,scale=2)
+ggsave(paste0("output/figures/scRNA/Yuan/",sid,"_C3.png"),width=7.5, height=3,scale=2)
+
+
 
 #### C4 (up) ----
 

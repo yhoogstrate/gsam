@@ -935,6 +935,7 @@ DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "se
   guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
   labs(subtitle=sid)
 
+
 ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_UMAP.pdf"),width=10,height=8)
 ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_UMAP.png"),width=10,height=8)
 
@@ -1189,8 +1190,33 @@ FeaturePlot(object = object_1, features = c("CFH"))
 
 #### C3 (down) :: endothelial ----
 
-DotPlot(object = object_1, features = c(C3), group.by = "seurat_clusters") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+endo <- read_xlsx("data/McKenzie et al. Gene expression different cell types.xlsx", sheet='top_human_specificity') %>%
+  dplyr::select(c('grand_mean', 'gene', 'Celltype')) %>%
+  dplyr::filter(Celltype == 'end') %>% 
+  dplyr::arrange(desc(grand_mean)) %>%
+  dplyr::filter(gene %in% all.genes ) %>%
+  dplyr::slice_head(n=25) %>%
+  dplyr::mutate(grand_mean = NULL) %>% 
+  dplyr::pull(gene)
+
+
+C3.only <- setdiff(C3, endo)
+C3.and.endo <- intersect(endo, C3)
+endo.only <- setdiff(endo, C3)
+
+
+
+DotPlot(object = object_1, features = list('C3'=C3.only, 'C3+endo'= C3.and.endo, 'endo'=endo.only,'pericyte'=c('PDGFRB','CD248','RGS5')), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(x = paste0("Features [C3 & top25 McKenzy endothelial cell markers] in: ",sid))
+
+
+ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C3.pdf"),width=7.5, height=3,scale=2)
+ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C3.png"),width=7.5, height=3,scale=2)
+
+
+
 RidgePlot(object = object_1, features = c(C3), group.by = "seurat_clusters",stack=T)
 VlnPlot(object = object_1, features = c(C3), group.by = "seurat_clusters",stack=T)
 
@@ -1802,9 +1828,9 @@ object_1$seurat_clusters <- factor(object_1$seurat_clusters, levels=c(
 
 
 
-
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "seurat_clusters") +
   labs(subtitle=sid)
+
 
 
 ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_UMAP.pdf"),width=10,height=8)
@@ -2079,6 +2105,35 @@ FeaturePlot(object = object_1, features = "PDGFRB")
 FeaturePlot(object = object_1, features = "CD248",pt.size=0.04)
 
 
+#### C3 endo (down) ----
+
+
+
+endo <- read_xlsx("data/McKenzie et al. Gene expression different cell types.xlsx", sheet='top_human_specificity') %>%
+  dplyr::select(c('grand_mean', 'gene', 'Celltype')) %>%
+  dplyr::filter(Celltype == 'end') %>% 
+  dplyr::arrange(desc(grand_mean)) %>%
+  dplyr::filter(gene %in% all.genes ) %>%
+  dplyr::slice_head(n=25) %>%
+  dplyr::mutate(grand_mean = NULL) %>% 
+  dplyr::pull(gene)
+
+
+C3.only <- setdiff(C3, endo)
+C3.and.endo <- intersect(endo, C3)
+endo.only <- setdiff(endo, C3)
+
+
+DotPlot(object = object_1, features = list('C3'=C3.only, 'C3+endo'= C3.and.endo, 'endo'=endo.only,'pericyte'=c('PDGFRB','CD248','RGS5')), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(x = paste0("Features [C3 & top25 McKenzy endothelial cell markers] in: ",sid))
+
+
+ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C3.pdf"),width=7.5, height=3,scale=2)
+ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C3.png"),width=7.5, height=3,scale=2)
+
+
+
 
 #### C4 (up) ----
 
@@ -2316,6 +2371,9 @@ object_1$seurat_clusters <- factor(object_1$seurat_clusters, levels=c(
 
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .4, group.by = "seurat_clusters") +
   labs(subtitle=sid)
+
+
+
 ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_UMAP.pdf"),width=10,height=8)
 ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_UMAP.png"),width=10,height=8)
 
@@ -2549,6 +2607,36 @@ FeaturePlot(object = object_1, features = "CD248")
 
 
 
+
+#### C3 endo (down) ----
+
+
+endo <- read_xlsx("data/McKenzie et al. Gene expression different cell types.xlsx", sheet='top_human_specificity') %>%
+  dplyr::select(c('grand_mean', 'gene', 'Celltype')) %>%
+  dplyr::filter(Celltype == 'end') %>% 
+  dplyr::arrange(desc(grand_mean)) %>%
+  dplyr::filter(gene %in% all.genes ) %>%
+  dplyr::slice_head(n=25) %>%
+  dplyr::mutate(grand_mean = NULL) %>% 
+  dplyr::pull(gene)
+
+
+C3.only <- setdiff(C3, endo)
+C3.and.endo <- intersect(endo, C3)
+endo.only <- setdiff(endo, C3)
+
+
+DotPlot(object = object_1, features = list('C3'=C3.only, 'C3+endo'= C3.and.endo, 'endo'=endo.only,'pericyte'=c('PDGFRB','CD248','RGS5')), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(x = paste0("Features [C3 & top25 McKenzy endothelial cell markers] in: ",sid))
+
+
+ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C3.pdf"),width=7.5, height=3,scale=2)
+ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C3.png"),width=7.5, height=3,scale=2)
+
+
+
+
 #### C4 (up) ----
 
 DotPlot(object = object_1, features = c(C4A, C4B), group.by = "seurat_clusters") +
@@ -2587,9 +2675,11 @@ FeaturePlot(object = object_1, features = C5[13:16])
 
 #### C6 (up) ----
 
+# DotPlot(object = object_1, features =list('C6'=C6 , 'Peri'=c("RGS5", "PDGFRB", "CD248","HEYL","CFH") ), group.by = "seurat_clusters") +
 DotPlot(object = object_1, features =list('C6'=C6 , 'Peri'=c("RGS5", "PDGFRB", "CD248") ), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
   labs(x = paste0("Features [C6] in: ",sid))
+
 ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C6.pdf"),width=7.5, height=4,scale=1.2)
 ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C6.png"),width=7.5, height=4,scale=1.2)
 
@@ -3556,6 +3646,8 @@ DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "se
   guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
   labs(subtitle=sid)
 
+
+
 ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_UMAP.pdf"),width=10,height=8)
 ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_UMAP.png"),width=10,height=8)
 
@@ -3792,8 +3884,33 @@ FeaturePlot(object = object_1, features = "CD248")
 
 #### C3 (up) ----
 
-f <- C3
-DotPlot(object = object_1, features = f, group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+endo <- read_xlsx("data/McKenzie et al. Gene expression different cell types.xlsx", sheet='top_human_specificity') %>%
+  dplyr::select(c('grand_mean', 'gene', 'Celltype')) %>%
+  dplyr::filter(Celltype == 'end') %>% 
+  dplyr::arrange(desc(grand_mean)) %>%
+  dplyr::filter(gene %in% all.genes ) %>%
+  dplyr::slice_head(n=25) %>%
+  dplyr::mutate(grand_mean = NULL) %>% 
+  dplyr::pull(gene)
+
+
+C3.only <- setdiff(C3, endo)
+C3.and.endo <- intersect(endo, C3)
+endo.only <- setdiff(endo, C3)
+
+
+
+DotPlot(object = object_1, features = list('C3'=C3.only, 'C3+endo'= C3.and.endo, 'endo'=endo.only,'pericyte'=c('PDGFRB','CD248','RGS5')), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(x = paste0("Features [C3 & top25 McKenzy endothelial cell markers] in: ",sid))
+
+
+ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C3.pdf"),width=7.5, height=3,scale=2)
+ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C3.png"),width=7.5, height=3,scale=2)
+
+
+
 
 #### C4 (up) ----
 
@@ -3840,6 +3957,7 @@ FeaturePlot(object = object_1, features = C5[13:16])
 
 
 DotPlot(object = object_1, features =list('C6'=C6 , 'Peri'=c("RGS5", "PDGFRB", "CD248") ), group.by = "seurat_clusters") +
+#DotPlot(object = object_1, features =list('C6'=C6 , 'Peri'=c("RGS5", "PDGFRB", "CD248","HEYL","CFH") ), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
   labs(x = paste0("Features [C6] in: ",sid))
 

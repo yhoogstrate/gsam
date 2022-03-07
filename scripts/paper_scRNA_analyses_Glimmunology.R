@@ -255,6 +255,8 @@ DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "se
   labs(subtitle=sid) +
   guides(col=guide_legend(ncol=1, override.aes = list(size = 3)))
 
+
+
 ggsave(paste0("output/figures/scRNA/Glimmunology/",sid,"_UMAP.pdf"),width=10,height=8)
 ggsave(paste0("output/figures/scRNA/Glimmunology/",sid,"_UMAP.png"),width=12,height=10)
 
@@ -290,6 +292,15 @@ FeaturePlot(object = object_1, features = "OLIG1") # Tumor/OPC+NPC1
 FeaturePlot(object = object_1, features = "VIM") # Tumor/MES
 
 FeaturePlot(object = object_1, features = "PDGFRB") # Tumor/MES
+
+
+FeaturePlot(object = object_1, features = "EREG") # EREG
+FeaturePlot(object = object_1, features = "EGF") # BTC
+FeaturePlot(object = object_1, features = "BTC") # BTC
+
+DotPlot(object = object_1, features =list( 'ligands'=c('EGF','EREG','AREG','BTC','EPGN','HBEGF') ), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(x = paste0("EGFR and ligands in: ",sid))
 
 
 FeaturePlot(object = object_1, features = c("HSPA1A","HSPA1B","VEGFA")) # Apoptotic Tumor?
@@ -513,6 +524,7 @@ FeaturePlot(object = object_1, features = c("CFH"))
 #### C3 - C6 ----
 
 
+
 DotPlot(object = object_1, features = c(C3, C4A, C4B, C5, C6), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
@@ -520,12 +532,39 @@ DotPlot(object = object_1, features = c(C3, C4A, C4B, C5, C6), group.by = "seura
 
 #### C3 (down) :: endothelial ----
 
-DotPlot(object = object_1, features = c(C3), group.by = "seurat_clusters") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+
+endo <- read_xlsx("data/McKenzie et al. Gene expression different cell types.xlsx", sheet='top_human_specificity') %>%
+  dplyr::select(c('grand_mean', 'gene', 'Celltype')) %>%
+  dplyr::filter(Celltype == 'end') %>% 
+  dplyr::arrange(desc(grand_mean)) %>%
+  dplyr::filter(gene %in% all.genes ) %>%
+  dplyr::slice_head(n=25) %>%
+  dplyr::mutate(grand_mean = NULL) %>% 
+  dplyr::pull(gene)
+
+
+C3.only <- setdiff(C3, endo)
+C3.and.endo <- intersect(endo, C3)
+endo.only <- setdiff(endo, C3)
+
+
+DotPlot(object = object_1, features = list('C3'=C3.only, 'C3+endo'= C3.and.endo, 'endo'=endo.only,'pericyte'=c('PDGFRB','CD248','RGS5')), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(x = paste0("Features [C3 & top25 McKenzy endothelial cell markers] in: ",sid))
+
+
+ggsave(paste0("output/figures/scRNA/Glimmunology/",sid,"_C3.pdf"),width=7.5, height=3,scale=2)
+ggsave(paste0("output/figures/scRNA/Glimmunology/",sid,"_C3.png"),width=7.5, height=3,scale=2)
+
+
+
 RidgePlot(object = object_1, features = c(C3), group.by = "seurat_clusters",stack=T)
 VlnPlot(object = object_1, features = c(C3), group.by = "seurat_clusters",stack=T)
 
+
 FeaturePlot(object = object_1, features = C3)
+
 
 
 #### C4 (up) ----
