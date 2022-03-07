@@ -42,3 +42,4 @@ scripts/santoesha
 output/tables/gliovis-subtype-input-table.csv
 /*.png
 infercnv
+/host
