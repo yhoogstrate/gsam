@@ -24,7 +24,7 @@ library(EnhancedVolcano)
 library(patchwork)
 
 library(ggsignif)
-
+library(xlsx)
 
 
 # load data ----
@@ -2921,6 +2921,91 @@ ggsave('output/figures/geiser_plot_mckenzy_immune_tam.pdf', height=5.75 * 1.1,wi
 
 
 
+### C6 & pericytes ----
+
+C6 <- c('CRABP2', 'CILP2', 'DPT', 'FGF7', 'COL10A1', 'FBN1', 'GLT8D2',
+        'IRX3', 'MFAP5', 'MFAP4', "COL8A2", "FNDC1", "MMP11", "MFAP2",
+        "COL1A2", "COL1A1", "COL5A1", "ADAMTS2", "TPSB2", "KRT8", "OMD",
+        "OGN", "MME", "MLPH", "MRC1L1", "PTGFR", "TWIST2", "C5orf46",
+        "TNNT3", "ASS1", "PERP","KLHDC7B", "CCL8")
+
+
+
+plt <- results.out %>%
+  dplyr::filter(!is.na(statistic.gsam.cor.tpc)) %>% # TPC correlation G-SAM
+  dplyr::filter(!is.na(statistic.glass.cor.tpc)) %>% # TPC correlation GLASS
+  dplyr::filter(!is.na(log2FoldChange.gsam.tpc.res)) %>%
+  dplyr::filter(!is.na(log2FoldChange.glass.tpc.res)) %>%
+  dplyr::mutate(is.limited.gsam.tpc.res = as.character(abs(log2FoldChange.gsam.tpc.res) > 2.5)) %>% # change pch to something that is limited
+  dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res > 2.5, 2.5 , log2FoldChange.gsam.tpc.res)) %>%
+  dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res < -2.5, -2.5 , log2FoldChange.gsam.tpc.res)) %>%
+  dplyr::mutate(is.limited.glass.tpc.res = as.character(abs(log2FoldChange.glass.tpc.res) > 2.5)) %>% # change pch to something that is limited
+  dplyr::mutate(log2FoldChange.glass.tpc.res = ifelse(log2FoldChange.glass.tpc.res > 2.5, 2.5 , log2FoldChange.glass.tpc.res)) %>%
+  dplyr::mutate(log2FoldChange.glass.tpc.res = ifelse(log2FoldChange.glass.tpc.res < -2.5, -2.5 , log2FoldChange.glass.tpc.res)) %>%
+  dplyr::mutate(is.C6 = hugo_symbol %in% C6) %>% 
+  dplyr::mutate(pericyte.marker = hugo_symbol %in% c('PDGFRB','CD248','RGS5','HEYL','CFH'))
+
+
+
+plt.expanded <- rbind(
+  plt %>%
+    dplyr::rename(log2FoldChange = log2FoldChange.gsam.tpc.res) %>%
+    dplyr::rename(padj = padj.gsam.tpc.res) %>%
+    dplyr::rename(cor.stat = statistic.gsam.cor.tpc) %>%
+    dplyr::rename(is.limited = is.limited.gsam.tpc.res) %>%
+    dplyr::mutate(dataset = "G-SAM") %>%
+    dplyr::mutate(DESeq2.tcp.corrected = F) %>%
+    dplyr::select(hugo_symbol, log2FoldChange, cor.stat, is.limited, dataset, DESeq2.tcp.corrected, padj, is.C6, pericyte.marker)
+  ,
+  plt %>%
+    dplyr::rename(log2FoldChange = log2FoldChange.glass.tpc.res) %>%
+    dplyr::rename(padj = padj.glass.tpc.res) %>%
+    dplyr::rename(cor.stat = statistic.glass.cor.tpc) %>%
+    dplyr::rename(is.limited = is.limited.glass.tpc.res) %>%
+    dplyr::mutate(dataset = "GLASS") %>%
+    dplyr::mutate(DESeq2.tcp.corrected = F) %>%
+    dplyr::select(hugo_symbol, log2FoldChange, cor.stat, is.limited, dataset, DESeq2.tcp.corrected, padj, is.C6, pericyte.marker)
+) %>%
+  dplyr::mutate(is.limited = is.limited == 'TRUE') %>%
+  dplyr::mutate(col = case_when(
+    pericyte.marker == T ~ "pericyte marker",
+    is.C6 == T ~ "C6",
+    T ~ "other"
+  ))
+
+
+ggplot(plt.expanded, aes(x = log2FoldChange ,
+                         y =  cor.stat,
+                         shape = is.limited ,
+                         col =  is.limited ,
+                         #size = is.limited  ,
+                         label=hugo_symbol,
+                         fill = col  ) ) +
+  facet_grid(cols = vars(dataset), scales = "free") +
+  geom_hline(yintercept = 0, col="gray60",lwd=0.5) +
+  geom_vline(xintercept = 0, col="gray60",lwd=0.5) +
+  geom_point(size=2.2, data = subset(plt.expanded, `col` == "other")) +
+  geom_point(size=2.2, data = subset(plt.expanded, `col` == "C6")) +
+  geom_point(size=2.2, data = subset(plt.expanded, `col` == "pericyte marker")) +
+  #geom_smooth(data = subset(plt.expanded, padj > 0.05 &  is.limited == FALSE),
+  #            aes(group=1),
+  #            method="lm",
+  #            se = FALSE,  formula=y ~ x, orientation="y", col="#ff2929", show.legend=F ) +
+  scale_shape_manual(values = c('TRUE'= 23, 'FALSE' = 21)   )  +
+  scale_color_manual(values = c('FALSE' = '#00000040', 'TRUE' = '#000000aa')) +
+  scale_fill_manual(values = c('C6' = '#e69356', 'pericyte marker' = '#69a4d5', 'other'='white') ) + 
+  geom_text_repel(data=subset(plt.expanded, col == "C6"), size=2.5 , segment.size = 0.25, segment.linetype = 1, nudge_x = 3.1, direction = "y", hjust = "left", col="gray30" ) +
+  geom_text_repel(data=subset(plt.expanded, col == "pericyte marker"), size=2.5 , segment.size = 0.25, segment.linetype = 1, nudge_x = -3.1, direction = "y", hjust = "right",col="black" ) +
+  youri_gg_theme + 
+  labs(x = "log2FC R1 vs. R2 (unpaired)",
+       y="Correlation t-statistic with tumour percentage",
+       shape = "Truncated at x-axis",
+       size="Truncated at x-axis",
+       col="Truncated at x-axis") +
+  xlim(-2.75,2.75)
+
+ggsave('output/figures/geiser_plot_C6_pericyte.pdf', height=5.75 * 1.1,width=12 * 1.1)
+ggsave('output/figures/geiser_plot_C6_pericyte.png', height=5.75 * 1.1,width=12 * 1.1)
 
 
 
@@ -5445,7 +5530,10 @@ labels <- results.out %>%
                   TCGA.CL, TCGA.MES, TCGA.PN ,
                   Patel.Cell.cycle, Patel.Complete.Immune.response, Patel.Hypoxia, 
                   Neftel.AC, Neftel.OPC, Neftel.MES1, Neftel.MES2, Neftel.NPC1, Neftel.NPC2,
-                  `Extracellular Matrix`))
+                  `Extracellular Matrix`
+                  
+                  ,significant,direction.gsam.tpc.res ,log2FoldChange.gsam.tpc.res,  direction.glass.tpc.res ,log2FoldChange.glass.tpc.res
+                  ))
   #%>% dplyr::slice_head(n=50)
   # dplyr::filter(hugo_symbol %in%c("CRABP2",'CILP2','DPT','FGF7')) 
 
@@ -5550,15 +5638,104 @@ stopifnot(labels %>% dplyr::filter(oligodendrocyte == T) %>% nrow == n_oligodend
 # ggsave("output/figures/cor_ward.complete.png", height=30, width=30) # then average, then ward.D1?
 
 # cor_cor_plot <- function(normalised_correlated_data, labels, font_scale , legend_scale , method="ward.D2")
-cor_cor_plot(plt, labels, 3,6, method="ward.D2")
+h <- cor_cor_plot(plt, labels, 3,6, method="ward.D2")
 #ggsave("output/figures/cor_ward.D2x.pdf", height=30, width=30) # then average, then ward.D1?
 ggsave("output/figures/cor_ward.D2x.svg", height=30, width=30) # then average, then ward.D1?
 
 
-# 
+export <- data.frame(hugo_symbol = rev(h$labels[h$order]),cluster=NA) 
+
+c <- NA
+for(i in 1:nrow(export)) {
+  slice <- export[i,]
+  if(slice$hugo_symbol == "PTPRN") {
+    c <- "C1"
+  } else if(slice$hugo_symbol == "TLX2") {
+    c <- NA
+  } else if(slice$hugo_symbol == "RASGRF1") {
+    c <- "C2"
+  } else if(slice$hugo_symbol == "VWF") {
+    c <- "C3"
+  } else if(slice$hugo_symbol == "NPY2R") {
+    c <- NA
+  } else if(slice$hugo_symbol == "SOD3") {
+    c <- "C4"
+  } else if(slice$hugo_symbol == "PRF1") {
+    c <- "C5"
+  } else if(slice$hugo_symbol == "CRABP2") {
+    c <- "C6"
+  }
+  
+  export[i,]$cluster <- c
+}
+
+stopifnot(nrow(export) == 422)
+
+
+export <- export %>%  dplyr::left_join(
+  results.out %>%
+    dplyr::filter( !is.na(log2FoldChange.gsam.tpc.res)   ) %>%
+    dplyr::filter( !is.na(log2FoldChange.glass.tpc.res)  ) %>%
+    dplyr::filter( !is.na(padj.gsam.tpc.res)   ) %>%
+    dplyr::filter( !is.na(padj.glass.tpc.res)  ) %>%
+    
+    dplyr::mutate(direction.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res > 0 , "up", "down") ) %>%
+    dplyr::mutate(direction.glass.tpc.res = ifelse(log2FoldChange.glass.tpc.res > 0 , "up", "down") ) %>%
+    
+    dplyr::mutate(direction_up = ifelse(log2FoldChange.gsam.tpc.res > 0 , T, F) ) %>% 
+    dplyr::mutate(direction_down = ifelse(log2FoldChange.gsam.tpc.res < 0 , T, F) ) %>% 
+    
+    dplyr::mutate(TCGA.CL = ifelse(!is.na(TCGA.subtype.marker) & TCGA.subtype.marker == "TCGA-CL" , T, F) ) %>% 
+    dplyr::mutate(TCGA.MES = ifelse(!is.na(TCGA.subtype.marker) & TCGA.subtype.marker == "TCGA-MES" , T, F) ) %>% 
+    dplyr::mutate(TCGA.PN = ifelse(!is.na(TCGA.subtype.marker) & TCGA.subtype.marker == "TCGA-PN" , T, F) ) %>% 
+    
+    dplyr::mutate(Patel.Cell.cycle = ifelse(!is.na(patel.scRNAseq.cluster) & patel.scRNAseq.cluster == "Cell cycle" , T, F) ) %>% 
+    dplyr::mutate(Patel.Complete.Immune.response = ifelse(!is.na(patel.scRNAseq.cluster) & patel.scRNAseq.cluster == "Complete/Immune response" , T, F) ) %>% 
+    dplyr::mutate(Patel.Hypoxia = ifelse(!is.na(patel.scRNAseq.cluster) & patel.scRNAseq.cluster == "Hypoxia" , T, F) ) %>% 
+    
+    dplyr::rename(Neftel.AC = neftel.meta.module.AC) %>% 
+    dplyr::rename(Neftel.NPC1 = neftel.meta.module.NPC1) %>% 
+    dplyr::rename(Neftel.NPC2 = neftel.meta.module.NPC2) %>% 
+    dplyr::rename(Neftel.OPC = neftel.meta.module.OPC) %>% 
+    dplyr::rename(Neftel.MES1 = neftel.meta.module.MES1) %>% 
+    dplyr::rename(Neftel.MES2 = neftel.meta.module.MES2) %>% 
+    
+    dplyr::rename(`Extracellular Matrix` = EM.struct.constituent) %>%
+    
+    dplyr::mutate(significant = 
+                    padj.gsam.tpc.res < 0.01 &
+                    abs(log2FoldChange.gsam.tpc.res) > 0.5 &
+                    abs(log2FoldChange.glass.tpc.res) > 0.5 & 
+                    direction.gsam.tpc.res == direction.glass.tpc.res) %>%
+    
+    dplyr::filter(significant == T) %>%
+    dplyr::select(c('gid', 'hugo_symbol' , 'McKenzie_celltype_top_human_specificity', 'direction_up', 'direction_down',
+                    TCGA.CL, TCGA.MES, TCGA.PN ,
+                    Patel.Cell.cycle, Patel.Complete.Immune.response, Patel.Hypoxia, 
+                    Neftel.AC, Neftel.OPC, Neftel.MES1, Neftel.MES2, Neftel.NPC1, Neftel.NPC2,
+                    `Extracellular Matrix`
+                    
+                    ,significant,
+                    
+                    
+                    padj.gsam.tpc.res,
+                    direction.gsam.tpc.res ,log2FoldChange.gsam.tpc.res, 
+                    
+                    padj.glass.tpc.res,
+                    direction.glass.tpc.res ,log2FoldChange.glass.tpc.res
+    ))
+  , by=c('hugo_symbol'='hugo_symbol')) %>% 
+  dplyr::mutate(significant=NULL)
+stopifnot(nrow(export) == 422)
+
+
+xlsx::write.xlsx(export, "output/tables/corcorplot.xlsx", sheetName = "Sheet1")
+
+
+
 # cor_cor_plot(plt, labels, method="ward")
 # ggsave("output/figures/cor_ward.D1x.png", height=30, width=30) # then average, then ward.D1?
-# 
+
 
 
 

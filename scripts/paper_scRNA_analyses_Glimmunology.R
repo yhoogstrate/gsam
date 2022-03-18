@@ -1,4 +1,4 @@
-#!/usr/bin/env R
+f#!/usr/bin/env R
 
 # load libs ----
 
@@ -626,6 +626,7 @@ ggsave(paste0("output/figures/scRNA/Glimmunology/",sid,"_C6.png"),width=7.5, hei
 VlnPlot(object = object_1, features = C6, stack = T, sort = T)
 VlnPlot(object = object_1, features = C6, stack = T, sort = T)
 
+
 FeaturePlot(object = object_1, features = C6)
 
 
@@ -653,7 +654,16 @@ FeaturePlot(object = object_1, features =  "MFAP4" )
 # FeaturePlot(object = object_1, features =  "FNDC1" )
 FeaturePlot(object = object_1, features =  "MMP11" )
 FeaturePlot(object = object_1, features =  "MFAP2" )
-FeaturePlot(object = object_1, features =  "COL1A2" ) # high in pericytes
+
+
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "seurat_clusters") + NoLegend()
+ggsave("output/figures/scRNA/Glimmunology/COL1A2_labels.svg", width=10, height=7)
+FeaturePlot(object = object_1, features =  "COL1A2" )
+ggsave("output/figures/scRNA/Glimmunology/COL1A2_expr.svg", width=10, height=7)
+
+
+
+
 FeaturePlot(object = object_1, features =  "COL1A1" ) # high in pericytes
 FeaturePlot(object = object_1, features =  "COL5A1" )
 # FeaturePlot(object = object_1, features =  "ADAMTS2" )
@@ -672,5 +682,84 @@ FeaturePlot(object = object_1, features =  "ASS1" )
 FeaturePlot(object = object_1, features =  "PERP" )
 # FeaturePlot(object = object_1, features =  "KLHDC7B" )
 #FeaturePlot(object = object_1, features =  "CCL8" )
+
+
+DotPlot(object = object_1, features = list('test'=c('GREM1')), group.by = "seurat_clusters") + # oligodendrocyte
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+DotPlot(object = object_1, features = list('test'=c('SOX10')), group.by = "seurat_clusters") + # oligodendrocyte
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+DotPlot(object = object_1, features = list('test'=c('WEE1','HOXA5','HOXA6','HOXD10','HOXD11','SHOX')), group.by = "seurat_clusters") + # T
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+
+
+p1 <- DotPlot(object = object_1, features = list(
+  'ACE.top.10'=c("NCBP3","AP002495.1","FAM106A","DEPDC5","RAD50","TRA2A","AL583810.2","BCS1L","LINC02804","CCDC32"),
+  'ACE.bottom.10'=c("AL137139.3","RASL12","HTT-AS","CTXND1","AC104088.3","HKDC1","AL031056.1","SPOCK2","AC013553.3","AC104088.1")
+), group.by = "seurat_clusters", col.min = -2.8, col.max=2.8) + # T
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+
+p2 <- DotPlot(object = object_1, features = list(
+  'ACE.below-1.top.10'=c("HSBP1L1","NAV3","PIWIL4","RGN","LGALS8","DNAJA4","SOWAHA","IGSF10","CES4A","SPATA6L"),
+  'ACE.below-1.bottom.10'=c("MED20","HNRNPA1","PRR3","ZNF426","HOXD-AS2","GPR173","BAZ1A","ZNF121","ZNF333","ZNF747")),
+  group.by = "seurat_clusters", col.min = -2.8, col.max=2.8) + # T
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+
+p3 <- DotPlot(object = object_1, features = list(
+  'Erik.Manual.top.10'=c("KHNYN","TTC12","PLD1","SLC22A15","CYB5R2","SEMA4D","YPEL2","KCNJ2","GCA","NT5DC1"),
+  'Erik.Manual.bottom.10'=c("BEST3","AL079301.1","VAX2","PRR3","RPAIN","PCGF2","AL645608.2","USP49","AC078846.1","AC006504.1")),
+  group.by = "seurat_clusters", col.min = -2.8, col.max=2.8) + # T
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+
+p4 <- DotPlot(object = object_1, features = list(
+  'VAF.top.10'=c("STPG1","HCG11","DLC1","NIPAL3","SYNJ2","UNC5C","CD55","EDIL3","SLC22A15","CBR1"),
+  'VAF.bottom.10'=c("AC078846.1","USP49","BBS1","AL079301.1","ABCB6","BEST3","SOX2","RPAIN","PHF21B","PPOX")
+), group.by = "seurat_clusters", col.min = -2.8, col.max=2.8) + # T
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+
+p5 <- DotPlot(object = object_1, features = list(
+  'meth.top.10'=c("RAB11FIP1","HCG11","SWAP70","TACC1","OSTF1","CD55","KHNYN","MCTP2","CCDC69","MYL12A"),
+  'meth.bottom.10'=c("GPR173","C1orf61","SOX2","ATAT1","PCDHB9","ZNF462","PHF21B","SNCAIP","LINC00461","AC078846.1")
+), group.by = "seurat_clusters", col.min = -2.8, col.max=2.8) + # T
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+
+p1 + p2 + p3 + p4 + p5
+
+
+
+
+DotPlot(object = object_1, features = list(
+  'ACE.bottom.10'=c("NCBP3","AP002495.1","FAM106A","DEPDC5","RAD50","TRA2A","AL583810.2","BCS1L","LINC02804","CCDC32"),
+  'ACE.top.10'=c("AL137139.3","RASL12","HTT-AS","CTXND1","AC104088.3","HKDC1","AL031056.1","SPOCK2","AC013553.3","AC104088.1"),
+  
+  'VAF.bottom.10'=c("STPG1","HCG11","DLC1","NIPAL3","SYNJ2","UNC5C","CD55","EDIL3","SLC22A15","CBR1"),
+  'VAF.top.10'=c("AC078846.1","USP49","BBS1","AL079301.1","ABCB6","BEST3","SOX2","RPAIN","PHF21B","PPOX")
+), group.by = "seurat_clusters") + # T
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+
+
+
+DotPlot(object = object_1, features = list(
+  'ACE.top.10'=c("NCBP3","AP002495.1","FAM106A","DEPDC5","RAD50","TRA2A","AL583810.2","BCS1L","LINC02804","CCDC32"),
+  'ACE.bottom.10'=c("AL137139.3","RASL12","HTT-AS","CTXND1","AC104088.3","HKDC1","AL031056.1","SPOCK2","AC013553.3","AC104088.1"),
+  
+  'meth.top.10'=c("RAB11FIP1","HCG11","SWAP70","TACC1","OSTF1","CD55","KHNYN","MCTP2","CCDC69","MYL12A"),
+  'meth.bottom.10'=c("GPR173","C1orf61","SOX2","ATAT1","PCDHB9","ZNF462","PHF21B","SNCAIP","LINC00461","AC078846.1")
+), group.by = "seurat_clusters") + # T
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+
+
+
+FeaturePlot(object = object_1, features = "")
+
 
 

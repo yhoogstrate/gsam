@@ -1,8 +1,6 @@
 #!/usr/bin/env R
 
 
-setwd("~/projects/gsam")
-
 
 library(ggplot2)
 library(tidyverse)
@@ -180,7 +178,7 @@ BC'
   # (p1 + theme(plot.margin = unit(c(0,30,0,0), "pt"))) +
   #  (p2 + theme(plot.margin = unit(c(0,0,0,30), "pt")))
   
-  
+  # return (h)
 }
 
 
