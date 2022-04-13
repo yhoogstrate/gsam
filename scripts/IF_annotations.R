@@ -8,7 +8,7 @@ source("scripts/R/youri_gg_theme.R")
 source("scripts/R/gsam_metadata.R")
 
 
-# plt ----
+# load data table ----
 
 
 ids.ecm <- c('AAJ','AAY','AOA','GAH')
@@ -30,6 +30,13 @@ plt <- data.frame(pid = c(ids.neuron, ids.ecm)) %>%
 rm(ids.neuron, ids.ecm)
 
 
+plt <- plt %>% 
+  dplyr::mutate(cuza = sid %in% c('CDD1'))
+
+
+# visualise ----
+
+
 plt <- plt %>%
   tidyr::pivot_longer(cols=c('neuron.component','extracellular.matrix.component')) %>% 
   dplyr::rename(signature.score = value) %>% 
@@ -41,5 +48,9 @@ ggplot(plt, aes(x=reorder(pid, sid),y = signature.score)) +
   geom_path( arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.12, "inches"))  ) +
   facet_grid(rows = vars(signature), cols=vars(staining), space = "free_x", scales="free") +
   theme_bw()
+
+
+# @todo fill in CUZA
+
 
 
