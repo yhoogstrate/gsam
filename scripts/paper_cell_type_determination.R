@@ -4,6 +4,7 @@
 
 
 library(EPIC)
+library(patchwork)
 
 
 
@@ -15,6 +16,9 @@ source("scripts/R/gsam_metadata.R")
 
 source("scripts/R/youri_gg_theme.R")
 source("scripts/R/job_gg_theme.R")
+
+source("scripts/R/palette.R")
+
 
 
 # counts to tpm ----
@@ -124,7 +128,19 @@ counts.tpm <- counts_to_tpm(gsam.rnaseq.expression , feature.lengths$Length , fr
   tibble::column_to_rownames('gid')
   
 
-# make outs ----
+
+# make out.sample and out.patients ----
+
+
+plt.ids <- gsam.rna.metadata %>%
+  dplyr::filter(blacklist.pca == F) %>%
+  dplyr::filter(pat.with.IDH == F) %>%
+  #dplyr::filter(is.na(tumour.percentage.dna) | tumour.percentage.dna >= 15) %>%  # refactor
+  dplyr::filter(sid %in% c('BAI2', 'CAO1-replicate', 'FAB2', 'GAS2-replicate') == F ) %>%
+  dplyr::select(c('pid', 'sid')) %>%
+  dplyr::mutate(resection = gsub("^...(.).*$","R\\1",sid)) %>%
+  dplyr::mutate(pid = as.factor(as.character(pid))) 
+
 
 
 
@@ -136,17 +152,45 @@ out.sample <- gsam.rna.metadata %>%
       'resection',
       'tumour.percentage.dna' ,
       'NMF.123456.PCA.SVM.class',
+      
       'NMF.123456.PCA.SVM.Classical.p',
       'NMF.123456.PCA.SVM.Proneural.p',
-      'NMF.123456.PCA.SVM.Mesenchymal.p'
+      'NMF.123456.PCA.SVM.Mesenchymal.p',
+      
+      'NMF:123456.1',
+      'NMF:123456.2',
+      'NMF:123456.3',
+      
+      'pat.with.IDH',
+      'old.batch',
+      'blacklist.pca'
     )
   ) %>%
-  dplyr::filter(!is.na(tumour.percentage.dna))
+  dplyr::filter(sid %in% plt.ids$sid)
+
+
+
+dim(out.sample)
+
+# only full pairs ~ 125
+tmp <- out.sample %>%
+  dplyr::select(resection, pid) %>% 
+  dplyr::mutate(pid = as.factor(as.character(pid))) %>%
+  dplyr::group_by(pid) %>%
+  tally() %>%
+  dplyr::filter(n >= 2) %>%
+  dplyr::pull(pid)
+
+# zelfde 125 als hoofd tabel
+out.sample <- out.sample %>%
+  dplyr::filter(pid %in% tmp)
+
 
 
 out.patient <- gsam.patient.metadata %>%
   dplyr::select(c('studyID')) %>%
   dplyr::rename(pid = studyID) %>%
+  dplyr::filter(pid %in% tmp) %>% 
   dplyr::left_join(
     data.frame(sid.R1 = colnames(counts.tpm)) %>%
       dplyr::mutate(resection = gsub('^...(.).*$','r\\1',sid.R1) ) %>%
@@ -159,6 +203,8 @@ out.patient <- gsam.patient.metadata %>%
       dplyr::filter(resection == 'r2') %>%
       dplyr::mutate(pid = gsub('^(...).+$','\\1',sid.R2), resection = NULL)
     ,  by = c('pid'='pid') )
+
+length(unique(as.character(out.patient$pid)))
 
 
 
@@ -332,6 +378,9 @@ out.patient <- out.patient %>%
   dplyr::mutate(`NOSTRIN.lfc [endo]` =  log(NOSTRIN.R2 / NOSTRIN.R1 ))  %>%
   dplyr::mutate(`CACHD1.lfc [astr]` =  log(CACHD1.R2 / CACHD1.R1 )) 
 
+length(unique(as.character(out.patient$pid)))
+
+
 
 
 
@@ -355,7 +404,7 @@ out.sample <- out.sample %>%
 
 
   
-# epic ----
+# add epic from file to out(s) ----
 
 
 
@@ -371,7 +420,7 @@ if(file.exists('tmp/out.epic.Rds')) {
     `colnames<-`(paste0('EPIC.',colnames(.))) %>%
     tibble::rownames_to_column('sid')
   
-  saveRDS(out.epic, file = "tmp/out.epic.Rds")
+  #saveRDS(out.epic, file = "tmp/out.epic.Rds")
   
 }
 
@@ -404,7 +453,7 @@ rm(out.epic)
 
 
 
-# quantiseq ----
+# quantiseq - - - -
 
 ## results are not as good as EPICs [https://doi.org/10.1093/bioinformatics/btz363]
 ## discrepancies w/ EPIC, requiring to chooose one
@@ -502,26 +551,32 @@ out.patient <- out.patient %>%
   dplyr::left_join(
     gsam.rna.metadata %>%
       dplyr::filter(resection == 'r1') %>%
-      dplyr::select(c('pid','NMF.123456.PCA.SVM.class', 'NMF.123456.PCA.SVM.Classical.p','NMF.123456.PCA.SVM.Proneural.p','NMF.123456.PCA.SVM.Mesenchymal.p')) %>%
+      dplyr::select(c('pid','NMF.123456.PCA.SVM.class', 'NMF.123456.PCA.SVM.Classical.p','NMF.123456.PCA.SVM.Proneural.p','NMF.123456.PCA.SVM.Mesenchymal.p','NMF:123456.1')) %>%
       dplyr::filter(!is.na(NMF.123456.PCA.SVM.class) ) %>%
       dplyr::rename(NMF.123456.PCA.SVM.class.R1 = NMF.123456.PCA.SVM.class) %>%
       dplyr::rename(NMF.123456.PCA.SVM.Classical.p.R1 = NMF.123456.PCA.SVM.Classical.p) %>%
       dplyr::rename(NMF.123456.PCA.SVM.Proneural.p.R1 = NMF.123456.PCA.SVM.Proneural.p) %>%
-      dplyr::rename(NMF.123456.PCA.SVM.Mesenchymal.p.R1 = NMF.123456.PCA.SVM.Mesenchymal.p)
+      dplyr::rename(NMF.123456.PCA.SVM.Mesenchymal.p.R1 = NMF.123456.PCA.SVM.Mesenchymal.p) %>% 
+      dplyr::rename('NMF:123456.1.R1' = 'NMF:123456.1')
+      
     , by=c('pid'='pid')) %>%
   dplyr::left_join(
     gsam.rna.metadata %>%
       dplyr::filter(resection == 'r2') %>%
-      dplyr::select(c('pid','NMF.123456.PCA.SVM.class', 'NMF.123456.PCA.SVM.Classical.p','NMF.123456.PCA.SVM.Proneural.p','NMF.123456.PCA.SVM.Mesenchymal.p')) %>%
+      dplyr::select(c('pid','NMF.123456.PCA.SVM.class', 'NMF.123456.PCA.SVM.Classical.p','NMF.123456.PCA.SVM.Proneural.p','NMF.123456.PCA.SVM.Mesenchymal.p','NMF:123456.1')) %>%
       dplyr::filter(!is.na(NMF.123456.PCA.SVM.class) ) %>%
       dplyr::rename(NMF.123456.PCA.SVM.class.R2 = NMF.123456.PCA.SVM.class) %>%
       dplyr::rename(NMF.123456.PCA.SVM.Classical.p.R2 = NMF.123456.PCA.SVM.Classical.p) %>%
       dplyr::rename(NMF.123456.PCA.SVM.Proneural.p.R2 = NMF.123456.PCA.SVM.Proneural.p) %>%
-      dplyr::rename(NMF.123456.PCA.SVM.Mesenchymal.p.R2 = NMF.123456.PCA.SVM.Mesenchymal.p)
+      dplyr::rename(NMF.123456.PCA.SVM.Mesenchymal.p.R2 = NMF.123456.PCA.SVM.Mesenchymal.p) %>% 
+      dplyr::rename('NMF:123456.1.R2' = 'NMF:123456.1')
     , by=c('pid'='pid')) %>%
   dplyr::mutate(NMF.123456.PCA.SVM.Classical.p.log.odds = log( (NMF.123456.PCA.SVM.Classical.p.R2+1) / (NMF.123456.PCA.SVM.Classical.p.R1+1) )) %>%
   dplyr::mutate(NMF.123456.PCA.SVM.Mesenchymal.p.log.odds = log( (NMF.123456.PCA.SVM.Mesenchymal.p.R2+1) / (NMF.123456.PCA.SVM.Mesenchymal.p.R1+1) )) %>%
-  dplyr::mutate(NMF.123456.PCA.SVM.Proneural.p.log.odds = log( (NMF.123456.PCA.SVM.Proneural.p.R2+1) / (NMF.123456.PCA.SVM.Proneural.p.R1+1 )))
+  dplyr::mutate(NMF.123456.PCA.SVM.Proneural.p.log.odds = log( (NMF.123456.PCA.SVM.Proneural.p.R2+1) / (NMF.123456.PCA.SVM.Proneural.p.R1+1 ))) %>% 
+  dplyr::mutate(`NMF:123456.1.log.odds` = log( (`NMF:123456.1.R1` + 1) / (`NMF:123456.1.R2` +1)))
+  
+  
   #dplyr::mutate(NMF.123456.PCA.SVM.Classical.p.log.odds2 = NMF.123456.PCA.SVM.Classical.p.R2 - NMF.123456.PCA.SVM.Classical.p.R1 ) %>%
   #dplyr::mutate(NMF.123456.PCA.SVM.Mesenchymal.p.log.odds2 = NMF.123456.PCA.SVM.Mesenchymal.p.R2 - NMF.123456.PCA.SVM.Mesenchymal.p.R1 ) %>%
   #dplyr::mutate(NMF.123456.PCA.SVM.Proneural.p.log.odds2 = NMF.123456.PCA.SVM.Proneural.p.R2 - NMF.123456.PCA.SVM.Proneural.p.R1 )
@@ -699,7 +754,7 @@ abline(v=0)
 
 
 
-
+out <- out.patient
 
 plt <- out %>%
   dplyr::mutate(order = match(1:nrow(.), order(`tumour.percentage.dna.log.odds`))) 
@@ -855,64 +910,192 @@ ggplot(out.patient, aes(x = tumour.percentage.dna.log.odds,
 
 
 
-plt <- out.sample %>%
-  dplyr::filter(pid %in%  out.patient$pid) %>%
-  dplyr::arrange(pid, resection, sid) %>%
-  dplyr::left_join(out.patient %>% dplyr::select(c(pid, tumour.percentage.dna.log.odds, EPIC.Macrophages.log.odds,EPIC.CD4_Tcells.log.odds)), by=c('pid'='pid')) %>%
-  dplyr::mutate(tumour.percentage.status = ifelse(tumour.percentage.dna.log.odds > 0, "increase", "decrease"))
-
-p1 <- ggplot(plt, aes(x=tumour.percentage.dna, y=EPIC.Macrophages, group=pid, col= tumour.percentage.status)) + 
-  geom_point(data = subset(plt, resection == "r1"), pch=19, cex=1.2, alpha=0.5) +
-  geom_path(  arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.125, "inches")) , alpha = 0.5 ) + 
-  labs(x = "Tumor cell percentage (DNA-seq estimate)",y="EPIC Macrophages score") +
-  xlim(0, 100) +
-  ylim(0, 0.5) +
-  youri_gg_theme
-
-p2 <- ggplot(plt, aes(x=tumour.percentage.dna, y=EPIC.CD4_Tcells, group=pid, col= tumour.percentage.status)) + 
-  geom_point(data = subset(plt, resection == "r1"), pch=19, cex=1.2, alpha=0.5) +
-  geom_path(  arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.125, "inches")) , alpha = 0.5 ) + 
-  labs(x = "Tumor cell percentage (DNA-seq estimate)",y="EPIC CD4 T-cells score") +
-  xlim(0, 100) +
-  ylim(0, 0.5) +
-  youri_gg_theme
-
-
-p1 + p2
-
-
-
-ggsave("output/figures/epic_tumor_percentage_traversal.png", width = 12, height=6)
-
 
 
 plt <- out.sample %>%
   dplyr::filter(pid %in%  out.patient$pid) %>%
   dplyr::arrange(pid, resection, sid) %>%
   dplyr::left_join(out.patient %>% dplyr::select(c(pid, tumour.percentage.dna.log.odds,
+                                                   EPIC.Macrophages.log.odds,
+                                                   EPIC.CD4_Tcells.log.odds
+                                                   )), by=c('pid'='pid')) %>%
+  dplyr::mutate(tumour.percentage.status = ifelse(tumour.percentage.dna.log.odds > 0, "increase", "decrease"))
+
+
+plt <- plt %>%
+  dplyr::select(pid, resection, tumour.percentage.dna, tumour.percentage.status, EPIC.Macrophages, EPIC.CD4_Tcells) %>% 
+  reshape2::melt(id = c('pid','resection', 'tumour.percentage.dna', 'tumour.percentage.status'))
+
+
+ggplot(plt, aes(x=tumour.percentage.dna, y=value, group=pid, col= tumour.percentage.status)) + 
+  facet_grid(cols = vars(variable), scales = "free",space="free") +
+  geom_point(data = subset(plt, resection == "r1"), pch=19, cex=1.2 * 1.5, alpha=0.5) +
+  geom_path(  arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.125, "inches")) , alpha = 0.75 ) + 
+  labs(x = "Tumor cell percentage (DNA-seq estimate)",y='EPIC deconvolution score') +
+  scale_color_manual(values = c("increase"="#bb5f6c", "decrease"="#79b1b1" )) +
+  xlim(0, 100) +
+  ylim(0, 0.5) +
+  youri_gg_theme
+
+
+# p1 <- ggplot(plt, aes(x=tumour.percentage.dna, y=EPIC.Macrophages, group=pid, col= tumour.percentage.status)) + 
+#   geom_point(data = subset(plt, resection == "r1"), pch=19, cex=1.2 * 1.5, alpha=0.5) +
+#   geom_path(  arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.125, "inches")) , alpha = 0.75 ) + 
+#   labs(x = "Tumor cell percentage (DNA-seq estimate)",y="EPIC Macrophages score") +
+#   scale_color_manual(values = c("increase"="#bb5f6c", "decrease"="#79b1b1" )) +
+#   xlim(0, 100) +
+#   ylim(0, 0.5) +
+#   youri_gg_theme
+# 
+# p2 <- ggplot(plt, aes(x=tumour.percentage.dna, y=EPIC.CD4_Tcells, group=pid, col= tumour.percentage.status)) + 
+#   geom_point(data = subset(plt, resection == "r1"), pch=19, cex=1.2 * 1.5, alpha=0.5) +
+#   geom_path(  arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.125, "inches")) , alpha = 0.75 ) + 
+#   labs(x = "Tumor cell percentage (DNA-seq estimate)",y="EPIC CD4 T-cells score") +
+#   scale_color_manual(values = c("increase"="#bb5f6c", "decrease"="#79b1b1" )) +
+#   xlim(0, 100) +
+#   ylim(0, 0.5) +
+#   youri_gg_theme
+# 
+# 
+# p1 + p2
+# 
+
+
+ggsave("output/figures/epic_tumor_percentage_traversal.pdf", width = 12, height=4.8)
+ggsave("output/figures/epic_tumor_percentage_traversal_4.2.pdf", width = 12, height=4.2)
+
+
+
+
+
+plt <- out.sample %>%
+  dplyr::filter(pid %in% out.patient$pid) %>%
+  dplyr::arrange(pid, resection, sid) %>%
+  dplyr::left_join(out.patient %>% dplyr::select(c(pid, tumour.percentage.dna.log.odds,
                                                    tumour.percentage.dna.R1,
                                                    tumour.percentage.dna.R2,
-                                                   EPIC.Macrophages.log.odds,EPIC.CD4_Tcells.log.odds)), by=c('pid'='pid')) %>%
-  dplyr::mutate(tumour.percentage.dna.delta = tumour.percentage.dna.R2 - tumour.percentage.dna.R1 )
+                                                   EPIC.Macrophages.log.odds,EPIC.CD4_Tcells.log.odds
+                                                   ,`NMF:123456.1.log.odds`
+                                                   #,`NMF:123456.2.log.odds`
+                                                   #,`NMF:123456.3.log.odds`
+                                                   )), by=c('pid'='pid')) %>%
+  dplyr::mutate(tumour.percentage.dna.delta = tumour.percentage.dna.R2 - tumour.percentage.dna.R1 ) %>%
+  dplyr::mutate(panel = ifelse(
+    pid %in% (out.sample %>% dplyr::filter(!is.na(tumour.percentage.dna) & tumour.percentage.dna < 15) %>% dplyr::pull(pid)),
+    "< 15%", ">= 15%"
+  )) %>% 
+  dplyr::mutate(panel = factor(panel, levels=c("< 15%", ">= 15%"))) # fix order
 
-plt <- rbind(plt %>% dplyr::mutate(y = tumour.percentage.dna, type="Tumour percentage (DNA estimate)",
+
+
+plt <- rbind(plt %>% dplyr::mutate(y = tumour.percentage.dna, type="Tumour purity",
                                    sign = ifelse(tumour.percentage.dna.log.odds > 0, "increase", "decrease")),
              plt %>% dplyr::mutate(y = EPIC.Macrophages, type="EPIC Macrophages score",
                                    sign = ifelse(EPIC.Macrophages.log.odds > 0, "increase", "decrease")),
              plt %>% dplyr::mutate(y = EPIC.CD4_Tcells, type="EPIC CD4 T-cells score",
                                    sign = ifelse(EPIC.CD4_Tcells.log.odds > 0, "increase", "decrease"))
+             ,plt %>% dplyr::mutate(y = `NMF:123456.1`, type="NMF W1 (MES)",
+                                    sign = ifelse(`NMF:123456.1.log.odds` > 0, "increase", "decrease")) 
+             # ,plt %>% dplyr::mutate(y = `NMF:123456.2`, type="NMF W2 (MES)",
+             #                        sign = ifelse(`NMF:123456.2.log.odds` > 0, "increase", "decrease"))
+             # ,plt %>% dplyr::mutate(y = `NMF:123456.3`, type="NMF W3 (MES)",
+             #                        sign = ifelse(`NMF:123456.3.log.odds` > 0, "increase", "decrease"))
              )
 
-ggplot(plt, aes(x = reorder(pid, tumour.percentage.dna.log.odds), y=y, col=sign)) +
+
+p1 <- ggplot(plt, aes(x = reorder(pid, tumour.percentage.dna.log.odds), y=y, col=sign)) +
+#p1 <- ggplot(plt, aes(x = reorder(pid, `NMF:123456.1.log.odds`), y=y, col=sign)) +
   geom_point(data = subset(plt, resection == "r1"), pch=19, cex=1.2, alpha=0.8) +
   geom_path(arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.125, "inches")) , alpha = 0.8, lwd=1.05 )  +
-  facet_grid(rows=vars(type), scales="free") +
+  scale_color_manual(values = c('increase'='#bb5f6c', 'decrease'='#79b1b1')) +
+  facet_grid(rows=vars(type),cols=vars(panel), scales="free", space="free_x") +
   theme_bw() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 0.5),
-    legend.position = 'bottom') +
-  labs(y=NULL,x="G-Sam patient identifier",col="Longitudinal direction")
+  theme(axis.text.x = element_text(angle = 90, hjust = 0.5), legend.position = 'bottom') +
+  labs(y=NULL,x="G-SAM patient",col="Longitudinal direction")
 
-ggsave("output/figures/epic_tumor_percentage_traversal_vertical.png", width = 16, height=2/3*16)
+p1
+
+
+
+
+plt <- out.sample %>%
+  dplyr::filter(pid %in% out.patient$pid) %>%
+  dplyr::arrange(pid, resection, sid) %>%
+  dplyr::left_join(out.patient %>% dplyr::select(c(pid, tumour.percentage.dna.log.odds)), by=c('pid'='pid')) %>%
+  dplyr::mutate(panel = ifelse(
+    pid %in% (out.sample %>% dplyr::filter(!is.na(tumour.percentage.dna) & tumour.percentage.dna < 15) %>% dplyr::pull(pid)),
+    "< 15%", ">= 15%"
+  )) %>% 
+  dplyr::select(pid, panel, tumour.percentage.dna.log.odds) %>%
+  dplyr::distinct() %>%
+  dplyr::left_join(out.patient %>% dplyr::select(pid, NMF.123456.PCA.SVM.class.R1, NMF.123456.PCA.SVM.class.R2), by = c('pid' = 'pid')) %>%
+  dplyr::rename(`Sub-type R1` = NMF.123456.PCA.SVM.class.R1) %>%
+  dplyr::rename(`Sub-type R2` = NMF.123456.PCA.SVM.class.R2) %>%
+  dplyr::mutate(panel = factor(panel, levels=c("< 15%", ">= 15%"))) %>%
+  dplyr::left_join(gsam.patient.metadata %>%
+      dplyr::select(studyID, 
+                    initialMGMT,HM,
+                    AXIN2,APC,JAK2,
+                    RB1,MSH2,BRCA1,
+                    BRCA2,ATM,SETD2,ARID2,KMT2C,KMT2D,
+                    NF1,ERBB3,
+                    EGFR,TP53BP1,TP53,PIK3R1,PIK3CA,TSC2,
+                    # PI3K, TP53Signaling, Wnt, Telomere, RTK, RAS, DNADamage, primary7, primary10, recurrent7, recurrent10, cnStatusEGFRs,
+                    
+                    cnStatusRB1s,
+                    cnStatusNF1s,
+                    cnStatusCDK4s,
+                    cnStatusMDM2s,
+                    
+                    SETD2,PDGFRA
+                    ),by = c('pid' = 'studyID')
+  ) %>%
+  reshape2::melt(id = c('pid','panel', 'tumour.percentage.dna.log.odds')) %>% 
+  dplyr::mutate(value = gsub('Methylated','Yes',value)) %>% 
+  dplyr::mutate(value = gsub('Unmethylated','No',value)) %>%
+  dplyr::mutate(value = gsub('Normal','No',value)) %>%
+  dplyr::mutate(value = gsub('Loss','Yes',value)) %>%
+  dplyr::mutate(value = gsub('^Gain$','Yes',value)) %>%
+  dplyr::mutate(value = gsub('^Gained$','Gained/increased',value)) %>%
+  dplyr::mutate(value = gsub('^Lost$','Lost/decreased',value)) %>%
+  dplyr::mutate(ypanel = case_when(
+    grepl("NMF|Sub-type",variable) ~ "A",
+    variable %in% c("EGFR",  "cnStatusEGFRs", "NF1") ~ "B",
+    T ~ "C"
+    )) %>% 
+  dplyr::mutate(ypanel = factor(ypanel, levels=c('A','B','C')))
+
+
+
+p2 <- ggplot(plt, aes(x = reorder(pid, tumour.percentage.dna.log.odds), y=variable, fill = value)) +
+  facet_grid(cols=vars(panel), rows=vars(ypanel), scales="free", space="free") + 
+  geom_tile(colour = "black", size = 0.3) +
+  theme_bw() +
+  #coord_equal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 0.5), legend.position = 'bottom') +
+  scale_fill_manual(values = c( subtype_colors ,
+"Wildtype"="white",
+"No"="white",
+
+"Gained/increased"="#bb5f6c", # rood #bb5f6c
+"Lost/decreased"="#79b1b1", # lichtlauw #79b1b1
+"Stable"="#2e415e", # donker blauw #2e415e
+"Yes" = "#2e415e", # zelfde als stable #2e415e
+  
+"NA"="grey"  )) + 
+  labs(y=NULL,x=NULL)
+
+
+
+
+p1 / p2 +  plot_layout(heights = c(2, 1))
+
+
+
+
+
+ggsave("output/figures/epic_tumor_percentage_traversal_vertical.pdf", width = 16 * 1.05, height=11.5 * 1.05)
+
 
 
 

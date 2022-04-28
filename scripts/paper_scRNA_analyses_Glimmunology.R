@@ -507,6 +507,7 @@ FeaturePlot(object = object_1, features = "TIE1") # meh
 FeaturePlot(object = object_1, features = "ITGA1") # endo + peri?
 
 
+
 #### 6B. Pericytes (+) ----
 
 FeaturePlot(object = object_1, features = c("RGS5","PDGFRB","CD248","PEAR1", "HEYL" , "CFH"))
@@ -695,6 +696,14 @@ DotPlot(object = object_1, features = list('test'=c('WEE1','HOXA5','HOXA6','HOXD
 
 
 
+FeaturePlot(object = object_1, features =  c("TROAP","FOXM1","AURKB","TPX2","H3C3","H3C2","TOP2A","DTL"))
+
+
+## GLASS-NL purity ----
+
+### ACE ----
+
+
 p1 <- DotPlot(object = object_1, features = list(
   'ACE.top.10'=c("NCBP3","AP002495.1","FAM106A","DEPDC5","RAD50","TRA2A","AL583810.2","BCS1L","LINC02804","CCDC32"),
   'ACE.bottom.10'=c("AL137139.3","RASL12","HTT-AS","CTXND1","AC104088.3","HKDC1","AL031056.1","SPOCK2","AC013553.3","AC104088.1")
@@ -702,12 +711,17 @@ p1 <- DotPlot(object = object_1, features = list(
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
 
+
+### ACE != 1.0 ----
+
 p2 <- DotPlot(object = object_1, features = list(
   'ACE.below-1.top.10'=c("HSBP1L1","NAV3","PIWIL4","RGN","LGALS8","DNAJA4","SOWAHA","IGSF10","CES4A","SPATA6L"),
   'ACE.below-1.bottom.10'=c("MED20","HNRNPA1","PRR3","ZNF426","HOXD-AS2","GPR173","BAZ1A","ZNF121","ZNF333","ZNF747")),
   group.by = "seurat_clusters", col.min = -2.8, col.max=2.8) + # T
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
+
+### Erik curated fit ----
 
 p3 <- DotPlot(object = object_1, features = list(
   'Erik.Manual.top.10'=c("KHNYN","TTC12","PLD1","SLC22A15","CYB5R2","SEMA4D","YPEL2","KCNJ2","GCA","NT5DC1"),

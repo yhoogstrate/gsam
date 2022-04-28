@@ -221,7 +221,7 @@ cnv_plot <- ggplot(dat_cnv, aes(x = reorder(reorder(reorder(pid,transition),to_M
 
 
 components <- gsam.rna.metadata %>%
-  dplyr::select(contains(".component") | 'sid' | 'pid') %>%
+  dplyr::select(contains(".component") | contains(".component") | 'sid' | 'pid') %>%
   dplyr::filter(!is.na(neuron.component))
 
 
@@ -603,6 +603,8 @@ ggsave("output/figures/em_pat_scores.pdf",heigh=15/1.5,width=15)
 
 
 
+
+
 test <- plt.tight %>%
   dplyr::mutate(to.mes = NMF.123456.PCA.SVM.class.R1 != "Mesenchymal" & NMF.123456.PCA.SVM.class.R2 == "Mesenchymal") %>%
   dplyr::select(pid, to.mes, delta.extracellular.matrix.component)
@@ -799,6 +801,100 @@ ggplot(plt.tight, aes(x = mgmtRecurrent, y=extracellular.matrix.component.R2 )) 
 ggplot(plt.tight, aes(x = NF1, y=extracellular.matrix.component.R2 )) + 
   geom_violin(draw_quantiles = c(0.5), col="black") +
   geom_jitter( position=position_jitter(0.2), size=0.9)
+
+
+
+# re-newed SVVL analysis [low/high] ----
+
+
+components <- gsam.rna.metadata %>%
+  dplyr::select(contains(".component") | contains(".signature") | 'sid' | 'pid') %>%
+  dplyr::filter(!is.na(neuron.component)) %>% 
+  dplyr::rename(C1.neuron.signature = neuron.component) %>% 
+  dplyr::rename(C2.oligodendrocyte.signature = oligodendrocyte.component) %>% 
+  dplyr::rename(C3.endothelial.signature = endothelial.component) %>% 
+  dplyr::rename(C6.ECM.signature = extracellular.matrix.component)
+
+
+
+
+components.paired <- dplyr::inner_join(
+  components %>% 
+    dplyr::filter(grepl("1", sid)) %>%
+    `colnames<-`(paste0(colnames(.), ".R1")) %>%
+    dplyr::rename(pid = pid.R1)
+  ,
+  components %>% 
+    dplyr::filter(grepl("2", sid)) %>%
+    `colnames<-`(paste0(colnames(.), ".R2")) %>%
+    dplyr::rename(pid = pid.R2)
+  , by=c('pid'='pid')) %>%
+  dplyr::left_join(
+    gsam.patient.metadata %>%dplyr::select(studyID, survivalDays, survivalFromSecondSurgeryDays),
+    by=c('pid'='studyID')
+  ) %>% 
+  dplyr::mutate(event=1) %>% 
+  dplyr::mutate(C6.ECM.signature.R2.status = factor(ifelse( C6.ECM.signature.R2 > 1.4, "high", "low"), levels=c("low","high")))%>% 
+  dplyr::mutate(C5.signature.R2.status = factor(ifelse( C5.signature.R2 > 0, "high", "low"), levels=c("low","high"))) %>%  # plot(sort(components.paired$C6.ECM.signature.R2)) ; abline(h=1.4)
+  dplyr::mutate(C4.signature.R2.status = factor(ifelse( C4.signature.R2 > -0.78, "high", "low"), levels=c("low","high"))) %>% # plot(sort(components.paired$C4.signature.R2)) ; abline(h=-0.78)
+  dplyr::mutate(C3.endothelial.signature.R2.status = factor(ifelse( C3.endothelial.signature.R2 > 1.7, "high", "low"), levels=c("low","high"))) %>%  # plot(sort(components.paired$C3.endothelial.signature.R2)) ; abline(h=1.7)
+  dplyr::mutate(C2.oligodendrocyte.signature.R2.status = factor(ifelse( C2.oligodendrocyte.signature.R2 > 4.8, "high", "low"), levels=c("low","high"))) %>%  # plot(sort(components.paired$C2.oligodendrocyte.signature.R2)) ; abline(h=4.8)
+  dplyr::mutate(C1.neuron.signature.R2.status = factor(ifelse( C1.neuron.signature.R2 > 1, "high", "low"), levels=c("low","high"))) # plot(sort(components.paired$C1.neuron.signature.R2)) ; abline(h=1)
+
+
+
+
+surv_object <- Surv(time = components.paired$survivalDays, event=components.paired$event)
+fit1 <- survfit(surv_object ~  `C6.ECM.signature.R2.status` , data = components.paired)
+ggsurvplot(fit1, data = components.paired, pval = TRUE)
+
+
+surv_object <- Surv(time = components.paired$survivalDays, event=components.paired$event)
+fit1 <- survfit(surv_object ~  `C5.signature.R2.status` , data = components.paired)
+ggsurvplot(fit1, data = components.paired, pval = TRUE)
+
+
+
+fit.cox <- coxph(surv_object ~ `C6.ECM.signature.R2.status`  , data = components.paired)
+ggforest(fit.cox)
+
+fit.cox <- coxph(surv_object ~ `C5.signature.R2.status`  , data = components.paired)
+ggforest(fit.cox)
+
+fit.cox <- coxph(surv_object ~ `C4.signature.R2.status`  , data = components.paired)
+ggforest(fit.cox)
+
+fit.cox <- coxph(surv_object ~ `C3.endothelial.signature.R2.status`  , data = components.paired)
+ggforest(fit.cox)
+
+fit.cox <- coxph(surv_object ~ `C2.oligodendrocyte.signature.R2.status` , data = components.paired)
+ggforest(fit.cox)
+
+fit.cox <- coxph(surv_object ~ `C2.oligodendrocyte.signature.R2.status` , data = components.paired)
+ggforest(fit.cox)
+
+
+fit.cox <- coxph(surv_object ~
+                   `C6.ECM.signature.R2.status` + 
+                   `C5.signature.R2.status` +
+                   `C4.signature.R2.status` +
+                   `C3.endothelial.signature.R2.status` +  `C2.oligodendrocyte.signature.R2.status` + `C1.neuron.signature.R2.status` , data = components.paired)
+ggforest(fit.cox)
+
+
+ggsave("output/figures/R2_survival_signatures.pdf",height=5.5,width=12)
+
+
+
+
+plot( -components.paired$survivalFromSecondSurgeryDays , components.paired$C5.signature.R2)
+
+
+plot( components.paired$C6.ECM.signature.R2 , components.paired$C5.signature.R2)
+plot( components.paired$C6.ECM.signature.R2 , components.paired$C4.signature.R2)
+
+
+plot( -components.paired$survivalFromSecondSurgeryDays , components.paired$C5.signature.R2)
 
 
 
