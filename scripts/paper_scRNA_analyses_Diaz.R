@@ -217,14 +217,14 @@ object_1 <- RunUMAP(object_1, dims = 1:d)
 object_1@meta.data$pt = sapply(strsplit(rownames(object_1@meta.data), "[.]"), "[", 1)
 
 levels(object_1$seurat_clusters) <- gsub("^(5)$",paste0("\\1. OD"),levels(object_1$seurat_clusters))
-levels(object_1$seurat_clusters) <- gsub("^(9|11)$",paste0("\\1. TAM/MG"),levels(object_1$seurat_clusters))
+levels(object_1$seurat_clusters) <- gsub("^(9|11)$",paste0("\\1. TAM"),levels(object_1$seurat_clusters))
 levels(object_1$seurat_clusters) <- gsub("^(15)$",paste0("\\1. EN&PE ?"),levels(object_1$seurat_clusters))# TBX3
 levels(object_1$seurat_clusters) <- gsub("^(3|6|7|4|1|2|0)$",paste0("\\1. T"),levels(object_1$seurat_clusters))
 levels(object_1$seurat_clusters) <- gsub("^(12)$",paste0("\\1. T"),levels(object_1$seurat_clusters))
 levels(object_1$seurat_clusters) <- gsub("^(13)$",paste0("\\1. T"),levels(object_1$seurat_clusters))
-levels(object_1$seurat_clusters) <- gsub("^(16)$",paste0("\\1. ?2"),levels(object_1$seurat_clusters))
-levels(object_1$seurat_clusters) <- gsub("^(14)$",paste0("\\1. N1?"),levels(object_1$seurat_clusters))
-levels(object_1$seurat_clusters) <- gsub("^(10)$",paste0("\\1. N2?"),levels(object_1$seurat_clusters))
+levels(object_1$seurat_clusters) <- gsub("^(16)$",paste0("\\1. ?3"),levels(object_1$seurat_clusters))
+levels(object_1$seurat_clusters) <- gsub("^(14)$",paste0("\\1. ?1"),levels(object_1$seurat_clusters))
+levels(object_1$seurat_clusters) <- gsub("^(10)$",paste0("\\1. ?2"),levels(object_1$seurat_clusters))
 levels(object_1$seurat_clusters) <- gsub("^(8)$",paste0("\\1. AC?"),levels(object_1$seurat_clusters))
 
 
@@ -233,12 +233,12 @@ levels(object_1$seurat_clusters)
 
 object_1$seurat_clusters <- factor(object_1$seurat_clusters, levels=c(
   "0. T","1. T","2. T","3. T","4. T","6. T","7. T","12. T","13. T",
-  "16. ?2",
+  "16. ?3",
   "15. EN&PE ?", # wss combi en lage depth
   "8. AC?", 
-  "14. N1?", "10. N2?",
+  "14. ?1", "10. ?2", # Neurons?
   "5. OD",
-  "9. TAM/MG", "11. TAM/MG"
+  "9. TAM", "11. TAM"
 ))
 
 
@@ -299,7 +299,7 @@ object_1$youri_clusters <- ifelse(object_1$seurat_clusters %in% c(0:4,6:7),"Tumo
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "youri_clusters")
 
 
-object_1.SF10022 <- object_1
+#object_1.SF10022 <- object_1
 
 
 
@@ -390,13 +390,24 @@ DotPlot(object = object_1, features = c("RBFOX3",
                                         ),group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
 
-#### 5. Oligodendrocytes (?) ----
+#### 5. Oligodendrocytes & OPC (?) ----
 
 
 FeaturePlot(object = object_1, features = "TMEM144")
 FeaturePlot(object = object_1, features = "TMEM125")
 FeaturePlot(object = object_1, features = "MOG")
 FeaturePlot(object = object_1, features = "PLP1")
+
+
+
+
+DotPlot(object = object_1, features =list('C2'=oligodendrocyte.genes , 'OPC'=OPC ), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
+  labs(x = paste0("Features [C2/OPC] in: ",sid))
+
+ggsave(paste0("output/figures/scRNA/Diaz/",sid,"_C2_OPC.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+ggsave(paste0("output/figures/scRNA/Diaz/",sid,"_C2_OPC.png"),width=7.5*1.8, height=3.75,scale=1.2)
+
 
 
 #### 6A. Endothelial (?) ----
@@ -432,6 +443,9 @@ FeaturePlot(object = object_1, features = c("HEYL"))
 FeaturePlot(object = object_1, features = c("CFH"))
 
 FeaturePlot(object = object_1, features = "ITGA1") # endo + peri?
+
+
+#### C2 (up) ----
 
 
 #### C4 (up) ----
@@ -880,7 +894,7 @@ object_1$class <- ifelse(  object_1@reductions$umap@cell.embeddings[,1] >= 10 &
                              object_1@reductions$umap@cell.embeddings[,1] <= 17 & 
                              object_1@reductions$umap@cell.embeddings[,2] >= -7 & 
                              object_1@reductions$umap@cell.embeddings[,2] <= 2
-                           ,"TAM/MG", object_1$class)
+                           ,"TAM", object_1$class)
 object_1$seurat_clusters <- as.factor(paste0(object_1$seurat_clusters,". ",object_1$class))
 
 
@@ -888,12 +902,17 @@ object_1$seurat_clusters <- as.factor(paste0(object_1$seurat_clusters,". ",objec
 object_1$seurat_clusters <- factor(object_1$seurat_clusters, levels=c(
   "2. T","3. T","4. T","6. T","7. T","8. T","9. T","11. T","12. T",
   "0. OD","5. OD",
-  "7. TAM/MG", "1. TAM/MG", "10. TAM/MG", "3. TAM/MG",
+  "7. TAM", "1. TAM", "10. TAM", "3. TAM",
   "1. TC","13. TC","2. TC","4. TC","7. TC",
   "3. BC", "7. BC"
 ))
 
 
+
+
+DimPlot(object_1, reduction = "pca", label = TRUE, pt.size = .6, group.by = "seurat_clusters") +
+  guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
+  labs(subtitle=sid)
 
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters") +
   guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
@@ -1072,13 +1091,24 @@ DotPlot(object = object_1, features = c("RBFOX3",
                                         "CCT2","RUFY2","UBN2","ATP6V1H","HSPA4L","NASP","GNAO1","RAB6B","HLF","SLC25A36"
 ),group.by = "seurat_clusters")
 
-#### 5. Oligodendrocytes (?) ----
+#### 5. Oligodendrocytes + OPC (+) ----
 
 
 FeaturePlot(object = object_1, features = "TMEM144")
 FeaturePlot(object = object_1, features = "TMEM125")
 FeaturePlot(object = object_1, features = "MOG")
 FeaturePlot(object = object_1, features = "PLP1")
+
+
+
+DotPlot(object = object_1, features =list('C2'=oligodendrocyte.genes , 'OPC'=OPC ), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
+  labs(x = paste0("Features [C2/OPC] in: ",sid))
+
+ggsave(paste0("output/figures/scRNA/Diaz/",sid,"_C2_OPC.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+ggsave(paste0("output/figures/scRNA/Diaz/",sid,"_C2_OPC.png"),width=7.5*1.8, height=3.75,scale=1.2)
+
+
 
 
 #### 6A. Endothelial (?) ----
@@ -1355,7 +1385,7 @@ object_1$seurat_clusters <- ifelse(  object_1@reductions$umap@cell.embeddings[,1
                              object_1@reductions$umap@cell.embeddings[,2] <= -5.2
                            , paste0(object_1$seurat_clusters,". PE|EN?"), object_1$seurat_clusters)
 object_1$seurat_clusters <- as.factor(object_1$seurat_clusters)
-levels(object_1$seurat_clusters) <- gsub("^(1|4|11)$",paste0("\\1. TAM/MG"),levels(object_1$seurat_clusters))
+levels(object_1$seurat_clusters) <- gsub("^(1|4|11)$",paste0("\\1. TAM"),levels(object_1$seurat_clusters))
 levels(object_1$seurat_clusters) <- gsub("^(8)$",paste0("\\1. OD"),levels(object_1$seurat_clusters))
 levels(object_1$seurat_clusters) <- gsub("^(9|12)$",paste0("\\1. NE"),levels(object_1$seurat_clusters))
 levels(object_1$seurat_clusters) <- gsub("^(6|7)$",paste0("\\1. AC"),levels(object_1$seurat_clusters))
@@ -1371,7 +1401,7 @@ object_1$seurat_clusters <- factor(object_1$seurat_clusters, levels=c(
   "8. OD",
   "6. PE|EN?",
   "13. ?",
-  "1. TAM/MG","4. TAM/MG","11. TAM/MG"
+  "1. TAM","4. TAM","11. TAM"
 ))
 object_1$classes <- gsub("^[0-9\\. ]+","",object_1$seurat_clusters)
 
@@ -1555,7 +1585,7 @@ DotPlot(object = object_1, features =list('C2'=oligodendrocyte.genes , 'OPC'=OPC
   labs(x = paste0("Features [C2/OPC] in: ",sid))
 
 
-#### 5. Oligodendrocytes (+) ----
+#### 5. Oligodendrocytes + OPC (+) ----
 
 
 FeaturePlot(object = object_1, features = "TMEM144")
@@ -1563,6 +1593,18 @@ FeaturePlot(object = object_1, features = "TMEM125")
 FeaturePlot(object = object_1, features = "MOG")
 FeaturePlot(object = object_1, features = "PLP1")
 FeaturePlot(object = object_1, features = "OPALIN")
+
+
+
+DotPlot(object = object_1, features =list('C2'=oligodendrocyte.genes , 'OPC'=OPC ), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
+  labs(x = paste0("Features [C2/OPC] in: ",sid))
+
+ggsave(paste0("output/figures/scRNA/Diaz/",sid,"_C2_OPC.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+ggsave(paste0("output/figures/scRNA/Diaz/",sid,"_C2_OPC.png"),width=7.5*1.8, height=3.75,scale=1.2)
+
+
+
 
 
 #### 6A. Endothelial (-) ----
@@ -1744,13 +1786,34 @@ head(Idents(object_1), 20)
 object_1 <- RunUMAP(object_1, dims = 1:d)
 object_1@meta.data$pt = sapply(strsplit(rownames(object_1@meta.data), "[.]"), "[", 1)
 
-levels(object_1$seurat_clusters) <- gsub("^(0)$",paste0("TAM/MG?"),levels(object_1$seurat_clusters))
+levels(object_1$seurat_clusters) <- gsub("^(0)$",paste0("TAM"),levels(object_1$seurat_clusters))
 
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters")
 
 
 
 # tmp.12 <- FindMarkers(object_1, ident.1 = 12) # PLP1, OPALIN, mitochondrial, dubbele kernen?
+
+
+
+#### 5. Oligodendrocytes + OPC (+) ----
+
+
+FeaturePlot(object = object_1, features = "TMEM144")
+FeaturePlot(object = object_1, features = "TMEM125")
+FeaturePlot(object = object_1, features = "MOG")
+FeaturePlot(object = object_1, features = "PLP1")
+
+
+
+DotPlot(object = object_1, features =list('C2'=oligodendrocyte.genes , 'OPC'=OPC ), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
+  labs(x = paste0("Features [C2/OPC] in: ",sid))
+
+ggsave(paste0("output/figures/scRNA/Diaz/",sid,"_C2_OPC.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+ggsave(paste0("output/figures/scRNA/Diaz/",sid,"_C2_OPC.png"),width=7.5*1.8, height=3.75,scale=1.2)
+
+
 
 #### C5 (down) :: TAM? ----
 
@@ -1864,10 +1927,10 @@ object_1 <- RunUMAP(object_1, dims = 1:d)
 object_1@meta.data$pt = sapply(strsplit(rownames(object_1@meta.data), "[.]"), "[", 1)
 
 
-levels(object_1$seurat_clusters) <- gsub("^(0|1|7|3|4|5)$",paste0("Oligodendrocytes.\\1"),levels(object_1$seurat_clusters))
-levels(object_1$seurat_clusters) <- gsub("^(6|11)$",paste0("Tumor.\\1"),levels(object_1$seurat_clusters))
-levels(object_1$seurat_clusters) <- gsub("^(10)$",paste0("Tumor OPC/BCAN.\\1"),levels(object_1$seurat_clusters))
-levels(object_1$seurat_clusters) <- gsub("^(2|8|9)$",paste0("TAM/MG.\\1"),levels(object_1$seurat_clusters))
+levels(object_1$seurat_clusters) <- gsub("^(0|1|7|3|4|5)$",paste0("\\1. OD"),levels(object_1$seurat_clusters))
+levels(object_1$seurat_clusters) <- gsub("^(6|11)$",paste0("\\1. T"),levels(object_1$seurat_clusters))
+levels(object_1$seurat_clusters) <- gsub("^(10)$",paste0("\\1. T"),levels(object_1$seurat_clusters))
+levels(object_1$seurat_clusters) <- gsub("^(2|8|9)$",paste0("\\1. TAM"),levels(object_1$seurat_clusters))
 
 
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters")
@@ -1965,7 +2028,7 @@ DotPlot(object = object_1, features = c("RBFOX3",
                                         "CCT2","RUFY2","UBN2","ATP6V1H","HSPA4L","NASP","GNAO1","RAB6B","HLF","SLC25A36"
 ),group.by = "seurat_clusters")
 
-#### 5. Oligodendrocytes (?) ----
+#### 5. Oligodendrocytes + OPC (?) ----
 
 
 FeaturePlot(object = object_1, features = "TMEM144")
@@ -1973,6 +2036,19 @@ FeaturePlot(object = object_1, features = "TMEM125")
 FeaturePlot(object = object_1, features = "MOG")
 FeaturePlot(object = object_1, features = "PLP1")
 FeaturePlot(object = object_1, features = "OPALIN")
+
+
+
+
+
+DotPlot(object = object_1, features =list('C2'=oligodendrocyte.genes , 'OPC'=OPC ), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
+  labs(x = paste0("Features [C2/OPC] in: ",sid))
+
+ggsave(paste0("output/figures/scRNA/Diaz/",sid,"_C2_OPC.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+ggsave(paste0("output/figures/scRNA/Diaz/",sid,"_C2_OPC.png"),width=7.5*1.8, height=3.75,scale=1.2)
+
+
 
 
 #### 6A. Endothelial (-) ----
@@ -2135,11 +2211,24 @@ object_1 <- RunUMAP(object_1, dims = 1:d)
 object_1@meta.data$pt = sapply(strsplit(rownames(object_1@meta.data), "[.]"), "[", 1)
 
 
-levels(object_1$seurat_clusters) <- gsub("^(1)$",paste0("TAM/MG.\\1"),levels(object_1$seurat_clusters))
-levels(object_1$seurat_clusters) <- gsub("^(2|5|4|10|3|8|0|6)$",paste0("Tumor.\\1"),levels(object_1$seurat_clusters))
+levels(object_1$seurat_clusters) <- gsub("^(1)$",paste0("\\1. TAM"),levels(object_1$seurat_clusters))
+levels(object_1$seurat_clusters) <- gsub("^(2|5|4|10|3|8|0|6)$",paste0("\\1. T"),levels(object_1$seurat_clusters))
+levels(object_1$seurat_clusters) <- gsub("^(12)$",paste0("\\1. PE"),levels(object_1$seurat_clusters))
+levels(object_1$seurat_clusters) <- gsub("^(9)$",paste0("\\1. IL32 & CD69 +"),levels(object_1$seurat_clusters))
+levels(object_1$seurat_clusters) <- gsub("^(7)$",paste0("\\1. EN?"),levels(object_1$seurat_clusters))
 
 
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters")
+
+
+
+#tmp.7 <- FindMarkers(object_1, ident.1 = 7)# PKD1, GOLGA8A, GOLGA8B, SPRY4-IT1, COL16A1, MIRLET7BHG, XIST
+#tmp.9 <- FindMarkers(object_1, ident.1 = 9) # IL32, CD69
+
+
+#### 0. Cycling (+) ----
+
+FeaturePlot(object = object_1, features = "TOP2A") # Tumor
 
 
 
@@ -2168,7 +2257,7 @@ FeaturePlot(object = object_1, features = c("KIF2C","NUF2","ASPM","NEK2","CENPA"
 FeaturePlot(object = object_1, features = c("EGFR","OLIG1","TMPO","VIM","STMN2",   "AURKB")) # Tumor
 
 
-#### 2. Astrocyte (+) ----
+#### 2. Astrocyte (?) ----
 
 
 #FeaturePlot(object = object_1, features = "STMN2") # Tumor
@@ -2196,18 +2285,28 @@ FeaturePlot(object = object_1, features = c("ITGB2"))
 FeaturePlot(object = object_1, features = c("C1QC"))
 
 
+
 #### 3B. Til/T-cell (-) ----
 
 FeaturePlot(object = object_1, features = "CD2")
 FeaturePlot(object = object_1, features = "CD3D")
+FeaturePlot(object = object_1, features = "CD4",order=T)
+FeaturePlot(object = object_1, features = "CD8A",order=T)
+FeaturePlot(object = object_1, features = "CD8B",order=T)
 FeaturePlot(object = object_1, features = "TRBC2")
 FeaturePlot(object = object_1, features = "TRAC")
 FeaturePlot(object = object_1, features = "ICOS")
 FeaturePlot(object = object_1, features = "GZMA")
 
+#### 3C. B-cells (?) ----
+
+FeaturePlot(object = object_1, features = c("IGLC3"),order=T)
+FeaturePlot(object = object_1, features = c("CD19"),order=T)
+FeaturePlot(object = object_1, features = c("CD79B"),order=T)
 
 
-#### 4. Neurons (+) ----
+
+#### 4. Neurons (?) ----
 
 
 FeaturePlot(object = object_1, features = "RBFOX3")
@@ -2229,7 +2328,7 @@ DotPlot(object = object_1, features = c("RBFOX3",
                                         "CCT2","RUFY2","UBN2","ATP6V1H","HSPA4L","NASP","GNAO1","RAB6B","HLF","SLC25A36"
 ),group.by = "seurat_clusters")
 
-#### 5. Oligodendrocytes (+) ----
+#### 5. Oligodendrocytes + OPC (+) ----
 
 
 FeaturePlot(object = object_1, features = "TMEM144")
@@ -2237,6 +2336,19 @@ FeaturePlot(object = object_1, features = "TMEM125")
 FeaturePlot(object = object_1, features = "MOG")
 FeaturePlot(object = object_1, features = "PLP1")
 FeaturePlot(object = object_1, features = "OPALIN")
+
+
+
+
+
+DotPlot(object = object_1, features =list('C2'=oligodendrocyte.genes , 'OPC'=OPC ), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
+  labs(x = paste0("Features [C2/OPC] in: ",sid))
+
+ggsave(paste0("output/figures/scRNA/Diaz/",sid,"_C2_OPC.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+ggsave(paste0("output/figures/scRNA/Diaz/",sid,"_C2_OPC.png"),width=7.5*1.8, height=3.75,scale=1.2)
+
+
 
 
 #### 6A. Endothelial (-) ----
@@ -2594,7 +2706,7 @@ object_1@meta.data$pt = sapply(strsplit(rownames(object_1@meta.data), "[.]"), "[
 
 levels(object_1$seurat_clusters) <- gsub("^(18)$",paste0("\\1. TC"),levels(object_1$seurat_clusters))
 levels(object_1$seurat_clusters) <- gsub("^(16)$",paste0("\\1. OD"),levels(object_1$seurat_clusters))
-levels(object_1$seurat_clusters) <- gsub("^(1|8|12|15|12|17)$",paste0("\\1. TAM/MG"),levels(object_1$seurat_clusters))
+levels(object_1$seurat_clusters) <- gsub("^(1|8|12|15|12|17)$",paste0("\\1. TAM"),levels(object_1$seurat_clusters))
 levels(object_1$seurat_clusters) <- gsub("^(0|2|3|4|5|6|7|9|10|11|13)$",paste0("\\1. T"),levels(object_1$seurat_clusters))
 
 object_1$seurat_clusters <- ifelse(grepl("^(14)$",as.character(object_1$seurat_clusters)) &  object_1@reductions$umap@cell.embeddings[,2] >= -11.4 ,"14. PE",as.character(object_1$seurat_clusters))
@@ -2604,7 +2716,7 @@ object_1$seurat_clusters <- factor(object_1$seurat_clusters, levels=c(
   "0. T","2. T","3. T","4. T","5. T","6. T","7. T","9. T","10. T","11. T","13. T",
   "16. OD",
   
-  "1. TAM/MG","8. TAM/MG","12. TAM/MG","15. TAM/MG","17. TAM/MG",
+  "1. TAM","8. TAM","12. TAM","15. TAM","17. TAM",
   "18. TC",
   
   "14. EN","14. PE"
@@ -2718,7 +2830,7 @@ DotPlot(object = object_1, features = c("RBFOX3",
                                         "CCT2","RUFY2","UBN2","ATP6V1H","HSPA4L","NASP","GNAO1","RAB6B","HLF","SLC25A36"
 ),group.by = "seurat_clusters")
 
-#### 5. Oligodendrocytes (?) ----
+#### 5. Oligodendrocytes + OPC (?) ----
 
 
 FeaturePlot(object = object_1, features = "TMEM144")
@@ -2726,6 +2838,19 @@ FeaturePlot(object = object_1, features = "TMEM125")
 FeaturePlot(object = object_1, features = "MOG")
 FeaturePlot(object = object_1, features = "PLP1")
 FeaturePlot(object = object_1, features = "OPALIN")
+
+
+
+
+DotPlot(object = object_1, features =list('C2'=oligodendrocyte.genes , 'OPC'=OPC ), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
+  labs(x = paste0("Features [C2/OPC] in: ",sid))
+
+ggsave(paste0("output/figures/scRNA/Diaz/",sid,"_C2_OPC.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+ggsave(paste0("output/figures/scRNA/Diaz/",sid,"_C2_OPC.png"),width=7.5*1.8, height=3.75,scale=1.2)
+
+
+
 
 
 #### 6A. Endothelial (?) ----
@@ -2938,7 +3063,7 @@ object_1 <- RunUMAP(object_1, dims = 1:d)
 object_1@meta.data$pt = sapply(strsplit(rownames(object_1@meta.data), "[.]"), "[", 1)
 
 levels(object_1$seurat_clusters) <- gsub("^(7)$",paste0("\\1. OD"),levels(object_1$seurat_clusters))
-levels(object_1$seurat_clusters) <- gsub("^(1|4|5|11)$",paste0("\\1. TAM/MG"),levels(object_1$seurat_clusters))
+levels(object_1$seurat_clusters) <- gsub("^(1|4|5|11)$",paste0("\\1. TAM"),levels(object_1$seurat_clusters))
 levels(object_1$seurat_clusters) <- gsub("^(0|2|3|6|7|8|10|12)$",paste0("\\1. T"),levels(object_1$seurat_clusters))
 levels(object_1$seurat_clusters) <- gsub("^(9)$",paste0("\\1. TC (+2PE?)"),levels(object_1$seurat_clusters))
 levels(object_1$seurat_clusters) <- gsub("^(13)$",paste0("\\1. PE?"),levels(object_1$seurat_clusters))
@@ -2947,7 +3072,7 @@ levels(object_1$seurat_clusters) <- gsub("^(13)$",paste0("\\1. PE?"),levels(obje
 object_1$seurat_clusters <- factor(object_1$seurat_clusters, levels=c(
   "0. T","2. T","3. T","6. T","8. T","10. T","12. T",
   "7. OD",
-  "1. TAM/MG", "4. TAM/MG", "5. TAM/MG", "11. TAM/MG",
+  "1. TAM", "4. TAM", "5. TAM", "11. TAM",
   "9. TC (+2PE?)"))
 
 
@@ -3062,7 +3187,7 @@ DotPlot(object = object_1, features = c("RBFOX3",
                                         "CCT2","RUFY2","UBN2","ATP6V1H","HSPA4L","NASP","GNAO1","RAB6B","HLF","SLC25A36"
 ),group.by = "seurat_clusters")
 
-#### 5. Oligodendrocytes (?) ----
+#### 5. Oligodendrocytes + OPC (?) ----
 
 
 FeaturePlot(object = object_1, features = "TMEM144")
@@ -3070,6 +3195,17 @@ FeaturePlot(object = object_1, features = "TMEM125")
 FeaturePlot(object = object_1, features = "MOG")
 FeaturePlot(object = object_1, features = "PLP1")
 FeaturePlot(object = object_1, features = "OPALIN")
+
+
+DotPlot(object = object_1, features =list('C2'=oligodendrocyte.genes , 'OPC'=OPC ), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
+  labs(x = paste0("Features [C2/OPC] in: ",sid))
+
+ggsave(paste0("output/figures/scRNA/Diaz/",sid,"_C2_OPC.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+ggsave(paste0("output/figures/scRNA/Diaz/",sid,"_C2_OPC.png"),width=7.5*1.8, height=3.75,scale=1.2)
+
+
+
 
 
 #### 6A. Endothelial (?) ----
