@@ -4108,6 +4108,9 @@ ggplot(plt.expanded, aes(x = log2FoldChange, y = cor.tpc, shape=limited,
   labs(x="log2FC R1. vs R2 (unpaired; tumour-% corrected)", y="Correlation t-statistic with tumour-%")
 
 
+ggsave("output/figures/paper_dge_gains_losses_other.pdf", width=10,height=7.5)
+
+
 ggsave("output/figures/paper_dge_gains_losses_other.png", width=10,height=7.5)
 
 

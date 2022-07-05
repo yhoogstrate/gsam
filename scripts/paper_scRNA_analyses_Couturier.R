@@ -914,7 +914,7 @@ object_1@meta.data$pt = sapply(strsplit(rownames(object_1@meta.data), "[.]"), "[
 object_1$class <- as.character(object_1$seurat_clusters)
 object_1$class <- ifelse(object_1$seurat_clusters %in% c(1,4,11),"PE", object_1$class)
 object_1$class <- ifelse(object_1$seurat_clusters %in% c(8),"OD", object_1$class)
-object_1$class <- ifelse(object_1$seurat_clusters %in% c(13),"TAM/MG", object_1$class)
+object_1$class <- ifelse(object_1$seurat_clusters %in% c(13),"TAM", object_1$class)
 object_1$class <- ifelse(object_1$seurat_clusters %in% c(6)  & object_1@reductions$umap@cell.embeddings[,2] < -14,"TC", object_1$class)
 object_1$class <- ifelse(object_1$seurat_clusters %in% c(0,2,3,5,6,7,9,10,12)  & object_1@reductions$umap@cell.embeddings[,2] >= -14,"T", object_1$class)
 object_1$seurat_clusters <- as.factor(paste0(as.character(object_1$seurat_clusters),". ",object_1$class))
@@ -926,7 +926,7 @@ object_1$seurat_clusters <- factor(object_1$seurat_clusters, levels=c(
   "0. T","2. T","3. T","5. T","6. T","7. T","9. T","10. T","12. T",
   "8. OD",
   "1. PE", "11. PE","4. PE",
-  "13. TAM/MG",
+  "13. TAM",
   "6. TC"
 ))
 
@@ -1155,13 +1155,24 @@ FeaturePlot(object = object_1, features = "GABRB2")
 
 
 
-#### 5. Oligodendrocytes (+) ----
+#### 5. Oligodendrocytes + OPC (+) ----
 
 FeaturePlot(object = object_1, features = "MOG")
 FeaturePlot(object = object_1, features = "PLP1")
 FeaturePlot(object = object_1, features = "TMEM144")
 
 DotPlot(object = object_1, features = c("MOG","PLP1","TMEM144"),group.by = "seurat_clusters")
+
+
+
+
+DotPlot(object = object_1, features =list('C2'=oligodendrocyte.genes , 'OPC'=OPC ), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
+  labs(x = paste0("Features [C2/OPC] in: ",sid))
+
+ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C2_OPC.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C2_OPC.png"),width=7.5*1.8, height=3.75,scale=1.2)
+
 
 
 #### 6A. Endothelial (+) ----
@@ -1799,7 +1810,7 @@ object_1@meta.data$pt = sapply(strsplit(rownames(object_1@meta.data), "[.]"), "[
 # levels(object_1$seurat_clusters) <- gsub("^15$","Endothelial",levels(object_1$seurat_clusters))
 # levels(object_1$seurat_clusters) <- gsub("^16$","Pericytes",levels(object_1$seurat_clusters))
 object_1$class <- as.character(object_1$seurat_clusters)
-object_1$class <- ifelse(object_1$seurat_clusters %in% c(6,9),"TAM/MG", object_1$class)
+object_1$class <- ifelse(object_1$seurat_clusters %in% c(6,9),"TAM", object_1$class)
 object_1$class <- ifelse(object_1$seurat_clusters %in% c(7,13),"OD", object_1$class)
 object_1$class <- ifelse(object_1$seurat_clusters %in% c(0:5,8,10:12,14) ,"T", object_1$class)
 object_1$class <- ifelse(object_1$seurat_clusters %in% c(15,16) & 
@@ -1823,7 +1834,7 @@ object_1$seurat_clusters <- factor(object_1$seurat_clusters, levels=c(
   "15. EN",
   "16. EN|PE?",
   "16. PE",
-  "6. TAM/MG","9. TAM/MG"
+  "6. TAM","9. TAM"
 ))
 
 
@@ -2081,12 +2092,23 @@ FeaturePlot(object = object_1, features = "ELAVL4")# ? https://www.biorxiv.org/c
 
 
 
-#### 5. Oligodendrocytes (+) ----
+#### 5. Oligodendrocytes + OPC (+) ----
 
 FeaturePlot(object = object_1, features = "MOG")
 #FeaturePlot(object = object_1, features = "OPALIN") # - clear small cluster
 FeaturePlot(object = object_1, features = "PLP1")
 FeaturePlot(object = object_1, features = "TMEM144")
+
+
+
+DotPlot(object = object_1, features =list('C2'=oligodendrocyte.genes , 'OPC'=OPC ), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
+  labs(x = paste0("Features [C2/OPC] in: ",sid))
+
+ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C2_OPC.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C2_OPC.png"),width=7.5*1.8, height=3.75,scale=1.2)
+
+
 
 
 #### 6A. Endothelial (+) ----
@@ -2353,7 +2375,7 @@ object_1$class <- ifelse( object_1@reductions$umap@cell.embeddings[,1] >= -3 &
 object_1$class <- ifelse(object_1$seurat_clusters %in% c(13) &
                            object_1@reductions$umap@cell.embeddings[,1] < -10.25,
                          "T ?", object_1$class) # NPC2 cluster
-object_1$class <- ifelse(object_1$seurat_clusters %in% c(6,8,11),"TAM/MG", object_1$class)
+object_1$class <- ifelse(object_1$seurat_clusters %in% c(6,8,11),"TAM", object_1$class)
 object_1$class <- ifelse(object_1$seurat_clusters %in% c(0:5,7,9,12,13,15) &
                            object_1@reductions$umap@cell.embeddings[,1] >= -10.25 ,"T", object_1$class)
 object_1$seurat_clusters <- as.factor(paste0(as.character(object_1$seurat_clusters),". ",object_1$class))
@@ -2365,7 +2387,7 @@ object_1$seurat_clusters <- factor(object_1$seurat_clusters, levels=c(
   "0. T","1. T","2. T","3. T","4. T","5. T","7. T","9. T","12. T","13. T","15. T",  "13. T ?",
   "10. OD","14. OD",
   "14. PE",
-  "6. TAM/MG","8. TAM/MG","11. TAM/MG"
+  "6. TAM","8. TAM","11. TAM"
 ))
 
 
@@ -2581,13 +2603,22 @@ FeaturePlot(object = object_1, features = "GABRB2")
 
 
 
-#### 5. Oligodendrocytes (?) ----
+#### 5. Oligodendrocytes + OPC (?) ----
 
 
 FeaturePlot(object = object_1, features = "TMEM144")
 FeaturePlot(object = object_1, features = "TMEM125")
 FeaturePlot(object = object_1, features = "MOG")
 FeaturePlot(object = object_1, features = "PLP1")
+
+
+
+DotPlot(object = object_1, features =list('C2'=oligodendrocyte.genes , 'OPC'=OPC ), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
+  labs(x = paste0("Features [C2/OPC] in: ",sid))
+
+ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C2_OPC.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C2_OPC.png"),width=7.5*1.8, height=3.75,scale=1.2)
 
 
 #### 6A. Endothelial (?) ----
@@ -3327,17 +3358,32 @@ head(Idents(object_1), 20)
 object_1 <- RunUMAP(object_1, dims = 1:30)
 object_1@meta.data$pt = sapply(strsplit(rownames(object_1@meta.data), "[.]"), "[", 1)
 
-levels(object_1$seurat_clusters) <- gsub("^(1|4|9|8|6)$",paste0("TAM/microglia.\\1"),levels(object_1$seurat_clusters))
-levels(object_1$seurat_clusters) <- gsub("^(0|11|2|10|12)$",paste0("Tumor.\\1"),levels(object_1$seurat_clusters))
-levels(object_1$seurat_clusters) <- gsub("^(13)$",paste0("T-Cells"),levels(object_1$seurat_clusters))
+levels(object_1$seurat_clusters) <- gsub("^(1|4|9|8|6)$",paste0("\\1. TAM"),levels(object_1$seurat_clusters))
+levels(object_1$seurat_clusters) <- gsub("^(0|11|2|10|12)$",paste0("\\1. T"),levels(object_1$seurat_clusters))
+levels(object_1$seurat_clusters) <- gsub("^(13)$",paste0("\\1. TC"),levels(object_1$seurat_clusters))
 
-levels(object_1$seurat_clusters) <- gsub("^(3|5|7)$",paste0("Oligodendrocyte/Tumor?.\\1"),levels(object_1$seurat_clusters))
+levels(object_1$seurat_clusters) <- gsub("^(3|5|7)$",paste0("\\1. OD"),levels(object_1$seurat_clusters))
 
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters")
 
 
-# tmp.3.5.7 <- FindMarkers(object_1, ident.1 = c(3,5,7))
-head(tmp.3.5.7, 20) # STMN1
+object_1$seurat_clusters <- factor(object_1$seurat_clusters, levels=c(
+  "0. T",
+  "2. T",
+  "10. T",
+  "11. T",
+  "12. T",
+  "3. OD",
+  "5. OD",
+  "7. OD",
+  "1. TAM",
+  "4. TAM",
+  "6. TAM",
+  "8. TAM",
+  "9. TAM",
+  "13. TC"  
+))
+
 
 
 #### 1. Tumor (?) ----
@@ -3446,13 +3492,22 @@ FeaturePlot(object = object_1, features = "GABRB2")
 
 
 
-#### 5. Oligodendrocytes (?) ----
+#### 5. Oligodendrocytes + OPC (?) ----
 
 
 FeaturePlot(object = object_1, features = "TMEM144")
 FeaturePlot(object = object_1, features = "MOG")
 FeaturePlot(object = object_1, features = "OPALIN")
 FeaturePlot(object = object_1, features = "PLP1")
+
+
+
+DotPlot(object = object_1, features =list('C2'=oligodendrocyte.genes , 'OPC'=OPC ), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
+  labs(x = paste0("Features [C2/OPC] in: ",sid))
+
+ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C2_OPC.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C2_OPC.png"),width=7.5*1.8, height=3.75,scale=1.2)
 
 
 
@@ -3621,7 +3676,7 @@ object_1 <- RunUMAP(object_1, dims = 1:30)
 object_1@meta.data$pt = sapply(strsplit(rownames(object_1@meta.data), "[.]"), "[", 1)
 
 object_1$class <- as.character(object_1$seurat_clusters)
-object_1$class <- ifelse(object_1$seurat_clusters %in% c(0,1,11,7,14,2,5,8,6,10,15,3,9),"TAM/MG", object_1$class)
+object_1$class <- ifelse(object_1$seurat_clusters %in% c(0,1,11,7,14,2,5,8,6,10,15,3,9),"TAM", object_1$class)
 object_1$class <- ifelse(object_1$seurat_clusters %in% c(16),"OD", object_1$class)
 object_1$class <- ifelse(object_1$seurat_clusters %in% c(12),"TC", object_1$class)
 object_1$class <- ifelse(object_1$seurat_clusters %in% c(13,4,17) ,"T", object_1$class)
@@ -3637,7 +3692,7 @@ object_1$seurat_clusters <- factor(object_1$seurat_clusters, levels=c(
   "16. OD",
   "18. EN",
   "18. PE",
-  "0. TAM/MG","1. TAM/MG","2. TAM/MG","3. TAM/MG","5. TAM/MG","6. TAM/MG","7. TAM/MG","8. TAM/MG","9. TAM/MG" ,"10. TAM/MG","11. TAM/MG" ,"14. TAM/MG","15. TAM/MG",
+  "0. TAM","1. TAM","2. TAM","3. TAM","5. TAM","6. TAM","7. TAM","8. TAM","9. TAM" ,"10. TAM","11. TAM" ,"14. TAM","15. TAM",
   "12. TC"
 ))
 
@@ -3856,13 +3911,24 @@ FeaturePlot(object = object_1, features = "GABRB2")
 
 
 
-#### 5. Oligodendrocytes (?) ----
+#### 5. Oligodendrocytes + OPC (?) ----
 
 
 FeaturePlot(object = object_1, features = "TMEM144")
 FeaturePlot(object = object_1, features = "MOG")
 FeaturePlot(object = object_1, features = "OPALIN")
 FeaturePlot(object = object_1, features = "PLP1")
+
+
+
+DotPlot(object = object_1, features =list('C2'=oligodendrocyte.genes , 'OPC'=OPC ), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
+  labs(x = paste0("Features [C2/OPC] in: ",sid))
+
+ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C2_OPC.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C2_OPC.png"),width=7.5*1.8, height=3.75,scale=1.2)
+
+
 
 
 
