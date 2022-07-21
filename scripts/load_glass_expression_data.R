@@ -7,7 +7,7 @@
 library(DESeq2)
 
 
-## read counts from GLASS samples ----
+# read counts from GLASS samples ----
 
 # possibly some match w/ Wang dataset?
 
@@ -29,7 +29,7 @@ glass.gencode.v19 <- 'data/gsam/data/GLASS_GBM_R1-R2/gencode.v19.chr_patch_hapl_
   dplyr::rename(transcript_id=V3)
 
 
-stopifnot(!exists('glass.gbm.rnaseq.expression'))
+stopifnot(!exists('glass.gbm.rnaseq.expression')) # old
 
 
 # glass.gbm.rnaseq.expression <- 'data/gsam/data/GLASS_GBM_R1-R2/glass_transcript_counts.txt' %>%
@@ -69,13 +69,17 @@ glass.gbm.rnaseq.expression.all.samples <- 'data/gsam/data/GLASS_GBM_R1-R2/trans
   dplyr::summarise(across(everything(), list(sum))) |>
   tibble::rownames_to_column('tmp') |>
   dplyr::mutate(tmp=NULL) |>
-  #dplyr::filter(gene_id %in% c("ENSG00000198804", "ENSG00000198886", "ENSG00000198938","ENSG00000198712", # exclude from normalisation?
-  #                             "ENSG00000198727") == F ) |> # extreme high counts from odd genes
   tibble::column_to_rownames('gene_id') |>
-  round() |>
-  `colnames<-`( gsub(".","-",colnames(.), fixed=T) ) |>
-  `colnames<-`( gsub("_1$","",colnames(.), fixed=F) )
-  
+  base::round() |>
+  rename_with( ~ tolower(gsub(".", "-", .x, fixed = TRUE))) |> 
+  rename_with( ~ tolower(gsub("_1$", "", .x, fixed = TRUE)))
+
+#'@todo check with old table
+#' - identical / missing sample names
+#' - identical expression values
+
+
+
 
 #dplyr::select( # extremely strong outlier samples !!
 #    -c("GLSS-SM-R068-TP-01R-RNA-0UPMYO", "GLSS-SM-R068-R1-01R-RNA-7I5H9P",
