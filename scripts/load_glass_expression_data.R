@@ -3,7 +3,7 @@
 # load libs ----
 
 
-library(tidyverse)
+#library(tidyverse)
 library(DESeq2)
 
 
@@ -22,58 +22,89 @@ library(DESeq2)
 # gencode.v19.chr_patch_hapl_scaff.annotation.gtf << almost no mismatches [1193]
 
 
-glass.gencode.v19 <- 'data/gsam/data/GLASS_GBM_R1-R2/gencode.v19.chr_patch_hapl_scaff.annotation.translate-table.txt' %>%
-  read.table(header=F, stringsAsFactors = F) %>%
-  dplyr::rename(gene_symbol=V1) %>%
-  dplyr::rename(gene_id=V2) %>%
+glass.gencode.v19 <- 'data/gsam/data/GLASS_GBM_R1-R2/gencode.v19.chr_patch_hapl_scaff.annotation.translate-table.txt' |> 
+  read.table(header=F, stringsAsFactors = F) |> 
+  dplyr::rename(gene_symbol=V1) |> 
+  dplyr::rename(gene_id=V2) |> 
   dplyr::rename(transcript_id=V3)
 
 
-glass.gbm.rnaseq.expression <- 'data/gsam/data/GLASS_GBM_R1-R2/glass_transcript_counts.txt' %>%
-  read.delim(stringsAsFactors = F) %>%
-  dplyr::mutate(length = NULL) %>% # not needed
-  dplyr::left_join(glass.gencode.v19, by=c('target_id' = 'transcript_id')) %>%
-  dplyr::filter(!is.na(gene_symbol) ) %>% # 1193 transcript id's not matching gtf Ensembl 64
-  dplyr::mutate(target_id = NULL) %>% # aggregate @ gene_id level
-  dplyr::mutate(gene_symbol = NULL) %>%
-  dplyr::group_by(gene_id) %>%
-  summarise(across(everything(), list(sum))) %>%
-  tibble::rownames_to_column('tmp') %>% 
-  dplyr::mutate(tmp=NULL) %>%
+stopifnot(!exists('glass.gbm.rnaseq.expression'))
+
+
+# glass.gbm.rnaseq.expression <- 'data/gsam/data/GLASS_GBM_R1-R2/glass_transcript_counts.txt' %>%
+#   read.delim(stringsAsFactors = F) %>%
+#   dplyr::mutate(length = NULL) %>% # not needed
+#   dplyr::left_join(glass.gencode.v19, by=c('target_id' = 'transcript_id')) %>%
+#   dplyr::filter(!is.na(gene_symbol) ) %>% # 1193 transcript id's not matching gtf Ensembl 64
+#   dplyr::mutate(target_id = NULL) %>% # aggregate @ gene_id level
+#   dplyr::mutate(gene_symbol = NULL) %>%
+#   dplyr::group_by(gene_id) %>%
+#   summarise(across(everything(), list(sum))) %>%
+#   tibble::rownames_to_column('tmp') %>% 
+#   dplyr::mutate(tmp=NULL) %>%
+#   #dplyr::filter(gene_id %in% c("ENSG00000198804", "ENSG00000198886", "ENSG00000198938","ENSG00000198712", # exclude from normalization?
+#   #                             "ENSG00000198727") == F ) %>% # extreme high counts from odd genes
+#   tibble::column_to_rownames('gene_id') %>%
+#   round() %>%
+#   `colnames<-`( gsub(".","-",colnames(.), fixed=T) ) %>%
+#   `colnames<-`( gsub("_1$","",colnames(.), fixed=F) ) %>%
+#   dplyr::select( # extremely strong outlier samples !!
+#     -c("GLSS-SM-R068-TP-01R-RNA-0UPMYO", "GLSS-SM-R068-R1-01R-RNA-7I5H9P",
+#        "GLSS-SM-R071-TP-01R-RNA-OAXGI8", "GLSS-SM-R071-R1-01R-RNA-7AZ6G2",
+#        "GLSS-SM-R099-R1-01R-RNA-MNTPMI", #"GLSS-SM-R099-TP-01R-RNA-YGXA72",
+#        "GLSS-SM-R100-TP-01R-RNA-EUI7AZ", "GLSS-SM-R100-R1-01R-RNA-46UW5U"
+#     ))
+
+
+
+glass.gbm.rnaseq.expression.all.samples <- 'data/gsam/data/GLASS_GBM_R1-R2/transcript_count_matrix_all_samples.tsv' |> 
+  read.delim(stringsAsFactors = F) |> 
+  dplyr::mutate(length = NULL) |> # not needed
+  dplyr::left_join(glass.gencode.v19, by=c('target_id' = 'transcript_id')) |>
+  dplyr::filter(!is.na(gene_symbol) ) |> # 1193 transcript id's not matching gtf Ensembl 64
+  dplyr::mutate(target_id = NULL) |> # aggregate @ gene_id level
+  dplyr::mutate(gene_symbol = NULL) |>
+  dplyr::group_by(gene_id) |>
+  dplyr::summarise(across(everything(), list(sum))) |>
+  tibble::rownames_to_column('tmp') |>
+  dplyr::mutate(tmp=NULL) |>
   #dplyr::filter(gene_id %in% c("ENSG00000198804", "ENSG00000198886", "ENSG00000198938","ENSG00000198712", # exclude from normalisation?
-  #                             "ENSG00000198727") == F ) %>% # extreme high counts from odd genes
-  tibble::column_to_rownames('gene_id') %>%
-  round() %>%
-  `colnames<-`( gsub(".","-",colnames(.), fixed=T) ) %>%
-  `colnames<-`( gsub("_1$","",colnames(.), fixed=F) ) %>%
-  dplyr::select( # extremely strong outlier samples !!
-    -c("GLSS-SM-R068-TP-01R-RNA-0UPMYO", "GLSS-SM-R068-R1-01R-RNA-7I5H9P",
-       "GLSS-SM-R071-TP-01R-RNA-OAXGI8", "GLSS-SM-R071-R1-01R-RNA-7AZ6G2",
-       "GLSS-SM-R099-R1-01R-RNA-MNTPMI", #"GLSS-SM-R099-TP-01R-RNA-YGXA72",
-       "GLSS-SM-R100-TP-01R-RNA-EUI7AZ", "GLSS-SM-R100-R1-01R-RNA-46UW5U"
-    ))
+  #                             "ENSG00000198727") == F ) |> # extreme high counts from odd genes
+  tibble::column_to_rownames('gene_id') |>
+  round() |>
+  `colnames<-`( gsub(".","-",colnames(.), fixed=T) ) |>
+  `colnames<-`( gsub("_1$","",colnames(.), fixed=F) )
+  
+
+#dplyr::select( # extremely strong outlier samples !!
+#    -c("GLSS-SM-R068-TP-01R-RNA-0UPMYO", "GLSS-SM-R068-R1-01R-RNA-7I5H9P",
+#       "GLSS-SM-R071-TP-01R-RNA-OAXGI8", "GLSS-SM-R071-R1-01R-RNA-7AZ6G2",
+#       "GLSS-SM-R099-R1-01R-RNA-MNTPMI", #"GLSS-SM-R099-TP-01R-RNA-YGXA72",
+#       "GLSS-SM-R100-TP-01R-RNA-EUI7AZ", "GLSS-SM-R100-R1-01R-RNA-46UW5U"
+#    ))
 
 
 
-  # Using the following will pick the max() transcript per gene
-  # I tried this as well in the hope that it would remove the batch
-  # effect but it didn't:'
-  # 
-  # dplyr::arrange(gene_id) %>%
-  # as.data.frame() %>%
-  # mutate(rs = rowSums(dplyr::select( ., !dplyr::contains("gene_id") ))) %>%
-  # tibble::as_tibble() %>%
-  # dplyr::group_by(gene_id) %>%
-  # top_n(n=1, wt = rs) %>%
-  # dplyr::mutate(rs=NULL) %>%
-  # dplyr::arrange(gene_id) %>%
-  # dplyr::filter(duplicated(gene_id) == F) %>% # exclude ties
-  # tibble::rownames_to_column('tmp') %>% 
-  # dplyr::mutate(tmp=NULL) %>%
-  # tibble::column_to_rownames('gene_id') %>%
-  # round() %>%
-  # `colnames<-`( gsub(".","-",colnames(.), fixed=T) ) %>%
-  # `colnames<-`( gsub("_1$","",colnames(.), fixed=F) )
+#   # Using the following will pick the max() transcript per gene
+#   # I tried this as well in the hope that it would remove the batch
+#   # effect but it didn't:'
+#   # 
+#   # dplyr::arrange(gene_id) %>%
+#   # as.data.frame() %>%
+#   # mutate(rs = rowSums(dplyr::select( ., !dplyr::contains("gene_id") ))) %>%
+#   # tibble::as_tibble() %>%
+#   # dplyr::group_by(gene_id) %>%
+#   # top_n(n=1, wt = rs) %>%
+#   # dplyr::mutate(rs=NULL) %>%
+#   # dplyr::arrange(gene_id) %>%
+#   # dplyr::filter(duplicated(gene_id) == F) %>% # exclude ties
+#   # tibble::rownames_to_column('tmp') %>% 
+#   # dplyr::mutate(tmp=NULL) %>%
+#   # tibble::column_to_rownames('gene_id') %>%
+#   # round() %>%
+#   # `colnames<-`( gsub(".","-",colnames(.), fixed=T) ) %>%
+#   # `colnames<-`( gsub("_1$","",colnames(.), fixed=F) )
 
 
   
