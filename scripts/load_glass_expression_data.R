@@ -118,7 +118,6 @@ tmp.batch.2021 <- 'data/gsam/data/GLASS_GBM_R1-R2/glass_transcript_counts.txt' |
   dplyr::mutate(V1 = NULL) |> 
   dplyr::mutate(sid = gsub(".","-",sid,fixed=T))  |>  # by convention [https://github.com/fpbarthel/GLASS]
   dplyr::mutate(sid = gsub("_1$","",sid,fixed=F)) |>  # by convention [https://github.com/fpbarthel/GLASS]
-  dplyr::mutate(sample_barcode.short = gsub('^([^\\-]+-[^\\-]+-[^\\-]+-[^\\-]+).+$','\\1',sid)) |> 
   dplyr::mutate(batch = paste0(gsub("^([^\\-]+).+$","\\1",sid,fixed=F),".2021"))
 
 
@@ -131,8 +130,54 @@ tmp.batch.2022 <- 'data/gsam/data/GLASS_GBM_R1-R2/transcript_count_matrix_all_sa
   dplyr::mutate(V1 = NULL) |> 
   dplyr::mutate(sid = gsub(".","-",sid,fixed=T))  |>  # by convention [https://github.com/fpbarthel/GLASS]
   dplyr::mutate(sid = gsub("_1$","",sid,fixed=F)) |>  # by convention [https://github.com/fpbarthel/GLASS]
-  dplyr::mutate(sample_barcode.short = gsub('^([^\\-]+-[^\\-]+-[^\\-]+-[^\\-]+).+$','\\1',sid)) |> 
   dplyr::mutate(batch = paste0(gsub("^([^\\-]+).+$","\\1",sid,fixed=F),".2022"))
+
+
+
+glass.gbm.rnaseq.metadata.all.samples <- tmp.batch.2022 |> 
+  dplyr::full_join(tmp.batch.2021, by=c('sid'='sid'), suffix=c('.2022','.2021')) |> 
+  dplyr::mutate(sample_barcode = gsub('^([^\\-]+-[^\\-]+-[^\\-]+-[^\\-]+).+$','\\1',sid))
+
+
+# ensure that all the 2021 samples are in the 2022 samples
+stopifnot(nrow(glass.gbm.rnaseq.metadata.all.samples |>  dplyr::filter(!is.na(batch.2021) & is.na(batch.2022))) == 0)
+
+
+glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::mutate(batch = ifelse(is.na(batch.2021),batch.2022, batch.2021)) |> 
+  dplyr::mutate(in.batch.2021 = !is.na(batch.2021)) |> 
+  dplyr::mutate(batch.2021 = NULL) |> 
+  dplyr::mutate(batch.2022 = NULL) |> 
+  dplyr::mutate(excluded = FALSE) |> 
+  dplyr::mutate(excluded.reason = NA)
+
+
+# find and exclude replicates
+# glass.gbm.rnaseq.metadata.all.samples |> 
+#   dplyr::arrange(sample_barcode, sid) |> 
+#   dplyr::group_by(sample_barcode) |> 
+#   dplyr::filter(dplyr::n() > 1)
+
+
+glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::mutate(excluded.reason = ifelse(sid %in% c(
+    "GLSS-CU-P053-R2-01R-RNA-2HP24A",
+    "GLSS-CU-P101-R1-01R-RNA-FLI06Y",
+    "GLSS-SM-R101-R1-01R-RNA-7ATA59",
+    "GLSS-SM-R101-TP-01R-RNA-G7G4Q5",
+    "GLSS-SM-R107-R1-01R-RNA-ID07M4",
+    "GLSS-SM-R110-TP-01R-RNA-RSRC7U"
+  ),"replicate sample", excluded.reason  )) |> 
+  dplyr::mutate(excluded = !is.na(excluded.reason))
+
+
+# ensure no replicate samples exist
+stopifnot(
+glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::filter(excluded == F) |> 
+  dplyr::filter(duplicated(sample_barcode)) |> 
+  nrow() == 0
+)
 
 
 ## subtypes ----
@@ -159,6 +204,7 @@ tmp.subtype.2022 <- read.table('data/gsam/data/GLASS_GBM_R1-R2/GLASS.GBM.subtype
 stopifnot(levels(tmp.subtype.2021$GBM.transcriptional.subtype.Synapse.2021) == levels(tmp.subtype.2022$GBM.transcriptional.subtype.Synapse.2022))
 
 
+### check subtype mismatches ----
 
 
 dplyr::left_join(tmp.subtype.2021,tmp.subtype.2022,by=c('aliquot_barcode'='aliquot_barcode')) |> 
@@ -166,7 +212,7 @@ dplyr::left_join(tmp.subtype.2021,tmp.subtype.2022,by=c('aliquot_barcode'='aliqu
   dplyr::filter(as.character(GBM.transcriptional.subtype.Synapse.2021) != as.character(GBM.transcriptional.subtype.Synapse.2022)) |> 
   dplyr::mutate(pri = paste0(GBM.transcriptional.subtype.Synapse.2021 , " -to-> ", GBM.transcriptional.subtype.Synapse.2022)) |> 
   dplyr::select(aliquot_barcode, pri)
-
+warning("significant discrepancies 2021/2022 subtype calling")
 
 
 
@@ -178,7 +224,7 @@ tmp.clinical.2021 <- read.table('data/gsam/data/GLASS_GBM_R1-R2/glass_clinical_s
   dplyr::mutate(ROW_ID=NULL, ROW_VERSION=NULL) |> 
   dplyr::mutate(sample_barcode = ifelse(sample_barcode == "", NA, sample_barcode)) |> 
   dplyr::filter(!is.na(sample_barcode)) |> 
-  dplyr::left_join(tmp.batch.2021, by=c('sample_barcode'='sample_barcode.short')) |> 
+  dplyr::left_join(tmp.batch.2021, by=c('sample_barcode'='sample_barcode')) |> 
   dplyr::mutate(treatment_alkylating_agent = dplyr::case_when(
     treatment_alkylating_agent == "t" ~ TRUE,
     treatment_alkylating_agent == "f" ~ TRUE,
@@ -208,7 +254,7 @@ tmp.clinical.2022 <- read.table('data/gsam/data/GLASS_GBM_R1-R2/glass_clinical_s
   dplyr::mutate(ROW_ID=NULL, ROW_VERSION=NULL) |> 
   dplyr::mutate(sample_barcode = ifelse(sample_barcode == "", NA, sample_barcode)) |> 
   dplyr::filter(!is.na(sample_barcode)) |> 
-  dplyr::left_join(tmp.batch.2022, by=c('sample_barcode'='sample_barcode.short')) |> 
+  dplyr::left_join(tmp.batch.2022, by=c('sample_barcode'='sample_barcode')) |> 
   dplyr::mutate(treatment_alkylating_agent = dplyr::case_when(
     treatment_alkylating_agent == "1" ~ TRUE,
     treatment_alkylating_agent == "0" ~ TRUE,
@@ -258,31 +304,33 @@ rm(tmp.clinical.2021, tmp.clinical.2022) # cleanup
 
 ### check discrepancies 2021 / 2022 ----
 
-tmp.clinical.merge |> 
-  dplyr::filter(!is.na(histology.2021)) |> 
-  dplyr::filter(histology.2021 != histology.2022) |> 
-  dplyr::select(sample_barcode,
-                case_barcode.2021,
-                sid.2021, sid.2022, 
-                histology.2021, histology.2022, 
-                idh_status.2021, idh_status.2022,
-                codel_status.2021, codel_status.2022,
-                grade.2021, grade.2022
-  )
+
+# 3 discrepancies regarding histology
+# tmp.clinical.merge |> 
+#   dplyr::filter(!is.na(histology.2021)) |> 
+#   dplyr::filter(histology.2021 != histology.2022) |> 
+#   dplyr::select(sid,
+#                 case_barcode.2021,
+#                 histology.2021, histology.2022, 
+#                 idh_status.2021, idh_status.2022,
+#                 codel_status.2021, codel_status.2022,
+#                 grade.2021, grade.2022
+#   )
 
 
-tmp.clinical.merge |> 
-  dplyr::filter(!is.na(histology.2021)) |> 
-  dplyr::filter(sample_barcode.2021 != sample_barcode.2022) |> 
-  dplyr::select(sid,
-                sample_barcode.2022,
-                case_barcode.2021,
-                sample_barcode.2021, sample_barcode.2022,
-                histology.2021, histology.2022, 
-                idh_status.2021, idh_status.2022,
-                codel_status.2021, codel_status.2022,
-                grade.2021, grade.2022
-  )
+# no strange identifier mix-ups
+# tmp.clinical.merge |> 
+#   dplyr::filter(!is.na(histology.2021)) |> 
+#   dplyr::filter(sample_barcode.2021 != sample_barcode.2022) |> 
+#   dplyr::select(sid,
+#                 sample_barcode.2022,
+#                 case_barcode.2021,
+#                 sample_barcode.2021, sample_barcode.2022,
+#                 histology.2021, histology.2022, 
+#                 idh_status.2021, idh_status.2022,
+#                 codel_status.2021, codel_status.2022,
+#                 grade.2021, grade.2022
+#   )
 
 
 # 3 discrepancies in grading
@@ -373,13 +421,11 @@ tmp.clinical.merge |>
 
 
 
-
-
-
-
 ## integrate ----
 
-glass.gbm.rnaseq.metadata.all.samples <- data.frame(sid = colnames(glass.gbm.rnaseq.expression.all.samples),  stringsAsFactors = F) |> 
+
+glass.gbm.rnaseq.metadata.all.samples
+<- data.frame(sid = colnames(glass.gbm.rnaseq.expression.all.samples),  stringsAsFactors = F) |> 
   dplyr::mutate(sid = gsub(".","-",sid,fixed=T))  |>  # by convention [https://github.com/fpbarthel/GLASS]
   dplyr::mutate(sid = gsub("_1$","",sid,fixed=F)) |>  # by convention [https://github.com/fpbarthel/GLASS]
   dplyr::mutate(sample_barcode = gsub("^([^\\-]+-[^\\-]+-[^\\-]+-[^\\-]+)-.+$","\\1",sid)) |> 
@@ -387,8 +433,8 @@ glass.gbm.rnaseq.metadata.all.samples <- data.frame(sid = colnames(glass.gbm.rna
   dplyr::arrange(pid) |> 
   dplyr::mutate(resection = as.factor(gsub("^.............(..).+$","\\1",sid)))  |>  # TP is primary tumour? https://github.com/fpbarthel/GLASS
   dplyr::mutate(dataset =  as.factor(gsub("^(....).+$","\\1",sid))) |> 
-  dplyr::left_join(tmp.subtype.2021, by = c('sid' = 'aliquot_barcode' ), suffix=c('','')  ) |> 
-  dplyr::left_join(tmp.subtype.2022, by = c('sid' = 'aliquot_barcode' ), suffix=c('','')  ) |> 
+  dplyr::left_join(tmp.subtype.2021, by = c('sid' = 'aliquot_barcode' ), suffix=c('','')) |> 
+  dplyr::left_join(tmp.subtype.2022, by = c('sid' = 'aliquot_barcode' ), suffix=c('','')) |> 
   dplyr::mutate(sid.label = gsub("^(.)...(-..-....-).(.).*$","\\1\\2\\3",sid) ) |> 
   dplyr::mutate(dataset = gsub("^(....).*$","\\1",sid))
 
