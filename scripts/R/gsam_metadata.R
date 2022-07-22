@@ -39,8 +39,9 @@ gsam.patient.metadata <- gsam.patient.metadata %>%
 
 
 
-# gsam.patient.metadata <- gsam.patient.metadata %>%
-#   dplyr::mutate(hyper.mutant = studyID %in% c('FAN','HA')) # from jco manuscript
+gsam.patient.metadata <- gsam.patient.metadata |> 
+  dplyr::mutate(bevacizumab.before.recurrence = studyID %in% c('GAA','GAG','CCB','CBI','CBV','AAX','HAD','HAF'))
+
 
 
 

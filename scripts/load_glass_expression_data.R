@@ -3,10 +3,6 @@
 # load libs ----
 
 
-#library(tidyverse)
-library(DESeq2)
-
-
 # read counts from GLASS samples ----
 
 # possibly some match w/ Wang dataset?
@@ -31,7 +27,7 @@ glass.gencode.v19 <- 'data/gsam/data/GLASS_GBM_R1-R2/gencode.v19.chr_patch_hapl_
 
 stopifnot(!exists('glass.gbm.rnaseq.expression')) # old
 
-
+# 
 # glass.gbm.rnaseq.expression <- 'data/gsam/data/GLASS_GBM_R1-R2/glass_transcript_counts.txt' %>%
 #   read.delim(stringsAsFactors = F) %>%
 #   dplyr::mutate(length = NULL) %>% # not needed
@@ -41,7 +37,7 @@ stopifnot(!exists('glass.gbm.rnaseq.expression')) # old
 #   dplyr::mutate(gene_symbol = NULL) %>%
 #   dplyr::group_by(gene_id) %>%
 #   summarise(across(everything(), list(sum))) %>%
-#   tibble::rownames_to_column('tmp') %>% 
+#   tibble::rownames_to_column('tmp') %>%
 #   dplyr::mutate(tmp=NULL) %>%
 #   #dplyr::filter(gene_id %in% c("ENSG00000198804", "ENSG00000198886", "ENSG00000198938","ENSG00000198712", # exclude from normalization?
 #   #                             "ENSG00000198727") == F ) %>% # extreme high counts from odd genes
@@ -49,11 +45,11 @@ stopifnot(!exists('glass.gbm.rnaseq.expression')) # old
 #   round() %>%
 #   `colnames<-`( gsub(".","-",colnames(.), fixed=T) ) %>%
 #   `colnames<-`( gsub("_1$","",colnames(.), fixed=F) ) %>%
-#   dplyr::select( # extremely strong outlier samples !!
-#     -c("GLSS-SM-R068-TP-01R-RNA-0UPMYO", "GLSS-SM-R068-R1-01R-RNA-7I5H9P",
-#        "GLSS-SM-R071-TP-01R-RNA-OAXGI8", "GLSS-SM-R071-R1-01R-RNA-7AZ6G2",
+#   dplyr::select( # extremely strong outlier samples !! Turn out to be at least 3 IDH mutants
+#     -c("GLSS-SM-R068-TP-01R-RNA-0UPMYO", "GLSS-SM-R068-R1-01R-RNA-7I5H9P", # IDH Mut
+#        "GLSS-SM-R071-TP-01R-RNA-OAXGI8", "GLSS-SM-R071-R1-01R-RNA-7AZ6G2", # IDH Mut
 #        "GLSS-SM-R099-R1-01R-RNA-MNTPMI", #"GLSS-SM-R099-TP-01R-RNA-YGXA72",
-#        "GLSS-SM-R100-TP-01R-RNA-EUI7AZ", "GLSS-SM-R100-R1-01R-RNA-46UW5U"
+#        "GLSS-SM-R100-TP-01R-RNA-EUI7AZ", "GLSS-SM-R100-R1-01R-RNA-46UW5U"  # IDH Mut
 #     ))
 
 
@@ -71,83 +67,135 @@ glass.gbm.rnaseq.expression.all.samples <- 'data/gsam/data/GLASS_GBM_R1-R2/trans
   dplyr::mutate(tmp=NULL) |>
   tibble::column_to_rownames('gene_id') |>
   base::round() |>
-  rename_with( ~ tolower(gsub(".", "-", .x, fixed = TRUE))) |> 
-  rename_with( ~ tolower(gsub("_1$", "", .x, fixed = TRUE)))
+  dplyr::rename_with( ~ gsub(".", "-", .x, fixed = TRUE)) |> 
+  dplyr::rename_with( ~ gsub("_1$", "", .x, fixed = FALSE))
+# dplyr::select( # extremely strong outlier samples !!
+#   -c("GLSS-SM-R068-TP-01R-RNA-0UPMYO", "GLSS-SM-R068-R1-01R-RNA-7I5H9P", # IDH Mut
+#      "GLSS-SM-R071-TP-01R-RNA-OAXGI8", "GLSS-SM-R071-R1-01R-RNA-7AZ6G2", # IDH Mut
+#      "GLSS-SM-R099-R1-01R-RNA-MNTPMI", #"GLSS-SM-R099-TP-01R-RNA-YGXA72",
+#      "GLSS-SM-R100-TP-01R-RNA-EUI7AZ", "GLSS-SM-R100-R1-01R-RNA-46UW5U"  # IDH Mut
+#   ))
+
+
 
 #'@todo check with old table
-#' - identical / missing sample names
-#' - identical expression values
+#' [v] identical / missing sample names
+# stopifnot(colnames(glass.gbm.rnaseq.expression) %in% colnames(glass.gbm.rnaseq.expression.all.samples))
+# stopifnot(rownames(glass.gbm.rnaseq.expression) == rownames(glass.gbm.rnaseq.expression.all.samples))
+#' [x] identical expression values - 21 samples have changed read counts, in approximately 150-450 genes each
+# a = glass.gbm.rnaseq.expression
+# b = glass.gbm.rnaseq.expression.all.samples |> dplyr::select(colnames(glass.gbm.rnaseq.expression))
+# 
+# for(i in 1:ncol(a)) {
+#   print( paste0(colnames(a)[i]," -> ",sum(a[,i] != b[,i])))
+# }
+
+#'@todo check what is with the excluded samples in the data overview plot
+#' [?] batch effect?
+#' [?] suspected IDH outliers?
+#' [x] 30 changed subtype ? this is worrysome
 
 
 
 
-#dplyr::select( # extremely strong outlier samples !!
-#    -c("GLSS-SM-R068-TP-01R-RNA-0UPMYO", "GLSS-SM-R068-R1-01R-RNA-7I5H9P",
-#       "GLSS-SM-R071-TP-01R-RNA-OAXGI8", "GLSS-SM-R071-R1-01R-RNA-7AZ6G2",
-#       "GLSS-SM-R099-R1-01R-RNA-MNTPMI", #"GLSS-SM-R099-TP-01R-RNA-YGXA72",
-#       "GLSS-SM-R100-TP-01R-RNA-EUI7AZ", "GLSS-SM-R100-R1-01R-RNA-46UW5U"
-#    ))
-
-
-
-#   # Using the following will pick the max() transcript per gene
-#   # I tried this as well in the hope that it would remove the batch
-#   # effect but it didn't:'
-#   # 
-#   # dplyr::arrange(gene_id) %>%
-#   # as.data.frame() %>%
-#   # mutate(rs = rowSums(dplyr::select( ., !dplyr::contains("gene_id") ))) %>%
-#   # tibble::as_tibble() %>%
-#   # dplyr::group_by(gene_id) %>%
-#   # top_n(n=1, wt = rs) %>%
-#   # dplyr::mutate(rs=NULL) %>%
-#   # dplyr::arrange(gene_id) %>%
-#   # dplyr::filter(duplicated(gene_id) == F) %>% # exclude ties
-#   # tibble::rownames_to_column('tmp') %>% 
-#   # dplyr::mutate(tmp=NULL) %>%
-#   # tibble::column_to_rownames('gene_id') %>%
-#   # round() %>%
-#   # `colnames<-`( gsub(".","-",colnames(.), fixed=T) ) %>%
-#   # `colnames<-`( gsub("_1$","",colnames(.), fixed=F) )
-
-
-  
-
-
-#tmp = glass.gbm.rnaseq.expression.vst[rownames(glass.gbm.rnaseq.expression.vst) == "ENSG00000198727",]
-#type = as.factor(gsub("^(.).*$","\\1",names(tmp)) )
-#o = order(tmp)
-#plot(tmp[o], pch=19,cex=0.95,col=as.numeric(type[o]) + 1)
-#rm(tmp, type, o)
 
 
 # Load metadata ----
 
 
-glass.gbm.rnaseq.metadata <- data.frame(sid = colnames(glass.gbm.rnaseq.expression),  stringsAsFactors = F) %>%
-  dplyr::mutate(sid = gsub(".","-",sid,fixed=T)) %>% # by convention [https://github.com/fpbarthel/GLASS]
-  dplyr::mutate(sid = gsub("_1$","",sid,fixed=F)) %>% # by convention [https://github.com/fpbarthel/GLASS]
-  dplyr::mutate(sample_barcode = gsub("^([^\\-]+-[^\\-]+-[^\\-]+-[^\\-]+)-.+$","\\1",sid)) %>%
-  dplyr::mutate(pid = gsub("^(............).+$","\\1",sid)) %>%
-  dplyr::arrange(pid) %>%
-  dplyr::mutate(resection = as.factor(gsub("^.............(..).+$","\\1",sid))) %>% # TP is primary tumour? https://github.com/fpbarthel/GLASS
-  dplyr::mutate(dataset =  as.factor(gsub("^(....).+$","\\1",sid)) ) %>%
-  dplyr::left_join(
-    read.table('data/gsam/data/GLASS_GBM_R1-R2/GLASS.GBM.subtypes.from.Synapse.portal.tsv', header=T,stringsAsFactors = F) %>% # https://www.synapse.org/#!Synapse:syn21441635/tables/
-      dplyr::select(c('aliquot_barcode','subtype')) %>%
-      dplyr::mutate(subtype = as.factor(subtype)) %>%
-      dplyr::rename(GBM.transcriptional.subtype.Synapse = subtype)
-    , by     = c('sid' = 'aliquot_barcode' )  )  %>%
-  dplyr::mutate(sid.label = gsub("^(.)...(-..-....-).(.).*$","\\1\\2\\3",sid) ) %>%
-  dplyr::mutate(dataset = gsub("^(....).*$","\\1",sid) ) %>%
-  dplyr::left_join(
-    read.table('data/glass_clinical_surgeries.txt',sep="\t",header=T,stringsAsFactors = F) %>%
-      dplyr::mutate(ROW_ID=NULL, ROW_VERSION=NULL)
-      ,
-    by=c('sample_barcode'='sample_barcode')) %>%
-  dplyr::mutate(condition = ifelse(resection == "TP","Primary","NotPrimary")) %>%
-  dplyr::mutate(condition = factor(condition, levels = c("Primary","NotPrimary") )) %>%
-  dplyr::filter(idh_status == "IDHwt") # exclude the three IDH mutants according to Synapse WGS/WES VCF files
+stopifnot(!exists('glass.gbm.rnaseq.metadata'))
+
+## batch 2021 id's ----
+# those that were in the 2021 Synapse release / first revision
+# labels needed to find possibly batch effects
+tmp.batch.2021 <- 'data/gsam/data/GLASS_GBM_R1-R2/glass_transcript_counts.txt' |> 
+  read.delim(stringsAsFactors = F,nrows=1) |> 
+  dplyr::mutate(target_id=NULL, length=NULL) |> 
+  t() |> 
+  as.data.frame() |> 
+  tibble::rownames_to_column('sid') |> 
+  dplyr::mutate(V1 = NULL) |> 
+  dplyr::mutate(sid = gsub(".","-",sid,fixed=T))  |>  # by convention [https://github.com/fpbarthel/GLASS]
+  dplyr::mutate(sid = gsub("_1$","",sid,fixed=F)) |>  # by convention [https://github.com/fpbarthel/GLASS]
+  dplyr::mutate(batch = paste0(gsub("^([^\\-]+).+$","\\1",sid,fixed=F),".2021"))
+
+
+## subtypes ----
+# subtype data from Synapse portal 7 jan 2021
+tmp.subtype.2021 <- read.table('data/gsam/data/GLASS_GBM_R1-R2/GLASS.GBM.subtypes.from.Synapse.portal.tsv', header=T,stringsAsFactors = F) |>  # https://www.synapse.org/#!Synapse:syn21441635/tables/
+  dplyr::select(c('aliquot_barcode','subtype')) |> 
+  dplyr::mutate(subtype = as.factor(subtype)) |> 
+  dplyr::rename(GBM.transcriptional.subtype.Synapse.2021 = subtype)
+
+
+# new subtype data from Synapse portal 21 jul 2022
+tmp.subtype.2022 <- read.table('data/gsam/data/GLASS_GBM_R1-R2/GLASS.GBM.subtypes.from.Synapse.portal.all_samples.tsv', header=T,stringsAsFactors = F) |>
+  dplyr::group_by(aliquot_barcode) |> 
+  dplyr::filter(p_value == min(p_value)) |> 
+  #dplyr::filter(enrichment_score == min(enrichment_score)) |> 
+  dplyr::ungroup() |> 
+  dplyr::select(c('aliquot_barcode','signature_name')) |> 
+  dplyr::mutate(signature_name = as.factor(signature_name)) |> 
+  dplyr::rename(GBM.transcriptional.subtype.Synapse.2022 = signature_name)
+
+
+
+# x-check same names are used consistently throughout
+stopifnot(levels(tmp.subtype.2021$GBM.transcriptional.subtype.Synapse.2021) == levels(tmp.subtype.2022$GBM.transcriptional.subtype.Synapse.2022))
+
+
+
+
+dplyr::left_join(tmp.subtype.2021,tmp.subtype.2022,by=c('aliquot_barcode'='aliquot_barcode')) |> 
+  dplyr::filter(!is.na(GBM.transcriptional.subtype.Synapse.2021)) |> 
+  dplyr::filter(as.character(GBM.transcriptional.subtype.Synapse.2021) != as.character(GBM.transcriptional.subtype.Synapse.2022)) |> 
+  dplyr::mutate(pri = paste0(GBM.transcriptional.subtype.Synapse.2021 , " -to-> ", GBM.transcriptional.subtype.Synapse.2022)) |> 
+  dplyr::select(aliquot_barcode, pri)
+
+
+
+
+## clinical ----
+
+
+
+tmp.clinical.2021 <- read.table('data/glass_clinical_surgeries.txt',sep="\t",header=T,stringsAsFactors = F) |> 
+  dplyr::mutate(ROW_ID=NULL, ROW_VERSION=NULL)
+
+
+# clinial 2022: syn31121219
+
+
+
+
+## integrate ----
+
+glass.gbm.rnaseq.metadata.all.samples <- data.frame(sid = colnames(glass.gbm.rnaseq.expression.all.samples),  stringsAsFactors = F) |> 
+  dplyr::mutate(sid = gsub(".","-",sid,fixed=T))  |>  # by convention [https://github.com/fpbarthel/GLASS]
+  dplyr::mutate(sid = gsub("_1$","",sid,fixed=F)) |>  # by convention [https://github.com/fpbarthel/GLASS]
+  dplyr::mutate(sample_barcode = gsub("^([^\\-]+-[^\\-]+-[^\\-]+-[^\\-]+)-.+$","\\1",sid)) |> 
+  dplyr::mutate(pid = gsub("^(............).+$","\\1",sid)) |> 
+  dplyr::arrange(pid) |> 
+  dplyr::mutate(resection = as.factor(gsub("^.............(..).+$","\\1",sid)))  |>  # TP is primary tumour? https://github.com/fpbarthel/GLASS
+  dplyr::mutate(dataset =  as.factor(gsub("^(....).+$","\\1",sid))) |> 
+  dplyr::left_join(tmp.subtype.2021, by = c('sid' = 'aliquot_barcode' ), suffix=c('','')  ) |> 
+  dplyr::left_join(tmp.subtype.2022, by = c('sid' = 'aliquot_barcode' ), suffix=c('','')  ) |> 
+  dplyr::mutate(sid.label = gsub("^(.)...(-..-....-).(.).*$","\\1\\2\\3",sid) ) |> 
+  dplyr::mutate(dataset = gsub("^(....).*$","\\1",sid))
+
+
+
+
+
+  # dplyr::left_join(
+
+  #     ,
+  #   by=c('sample_barcode'='sample_barcode')) %>%
+  # dplyr::mutate(condition = ifelse(resection == "TP","Primary","NotPrimary")) %>%
+  # dplyr::mutate(condition = factor(condition, levels = c("Primary","NotPrimary") )) %>%
+  # dplyr::filter(idh_status == "IDHwt") # exclude the three IDH mutants according to Synapse WGS/WES VCF files
+  # 
+
 
 
 # exclude samples from patients that had a no grade IV tumor
