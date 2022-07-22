@@ -27,7 +27,7 @@ glass.gencode.v19 <- 'data/gsam/data/GLASS_GBM_R1-R2/gencode.v19.chr_patch_hapl_
 
 stopifnot(!exists('glass.gbm.rnaseq.expression')) # old
 
-# 
+
 # glass.gbm.rnaseq.expression <- 'data/gsam/data/GLASS_GBM_R1-R2/glass_transcript_counts.txt' %>%
 #   read.delim(stringsAsFactors = F) %>%
 #   dplyr::mutate(length = NULL) %>% # not needed
@@ -105,6 +105,7 @@ glass.gbm.rnaseq.expression.all.samples <- 'data/gsam/data/GLASS_GBM_R1-R2/trans
 
 stopifnot(!exists('glass.gbm.rnaseq.metadata'))
 
+
 ## batch 2021 id's ----
 # those that were in the 2021 Synapse release / first revision
 # labels needed to find possibly batch effects
@@ -117,7 +118,21 @@ tmp.batch.2021 <- 'data/gsam/data/GLASS_GBM_R1-R2/glass_transcript_counts.txt' |
   dplyr::mutate(V1 = NULL) |> 
   dplyr::mutate(sid = gsub(".","-",sid,fixed=T))  |>  # by convention [https://github.com/fpbarthel/GLASS]
   dplyr::mutate(sid = gsub("_1$","",sid,fixed=F)) |>  # by convention [https://github.com/fpbarthel/GLASS]
+  dplyr::mutate(sample_barcode.short = gsub('^([^\\-]+-[^\\-]+-[^\\-]+-[^\\-]+).+$','\\1',sid)) |> 
   dplyr::mutate(batch = paste0(gsub("^([^\\-]+).+$","\\1",sid,fixed=F),".2021"))
+
+
+tmp.batch.2022 <- 'data/gsam/data/GLASS_GBM_R1-R2/transcript_count_matrix_all_samples.tsv' |> 
+  read.delim(stringsAsFactors = F,nrows=1) |> 
+  dplyr::mutate(target_id=NULL, length=NULL) |> 
+  t() |> 
+  as.data.frame() |> 
+  tibble::rownames_to_column('sid') |> 
+  dplyr::mutate(V1 = NULL) |> 
+  dplyr::mutate(sid = gsub(".","-",sid,fixed=T))  |>  # by convention [https://github.com/fpbarthel/GLASS]
+  dplyr::mutate(sid = gsub("_1$","",sid,fixed=F)) |>  # by convention [https://github.com/fpbarthel/GLASS]
+  dplyr::mutate(sample_barcode.short = gsub('^([^\\-]+-[^\\-]+-[^\\-]+-[^\\-]+).+$','\\1',sid)) |> 
+  dplyr::mutate(batch = paste0(gsub("^([^\\-]+).+$","\\1",sid,fixed=F),".2022"))
 
 
 ## subtypes ----
@@ -155,15 +170,209 @@ dplyr::left_join(tmp.subtype.2021,tmp.subtype.2022,by=c('aliquot_barcode'='aliqu
 
 
 
-## clinical ----
+## clinical / histological ----
 
 
 
-tmp.clinical.2021 <- read.table('data/glass_clinical_surgeries.txt',sep="\t",header=T,stringsAsFactors = F) |> 
-  dplyr::mutate(ROW_ID=NULL, ROW_VERSION=NULL)
+tmp.clinical.2021 <- read.table('data/gsam/data/GLASS_GBM_R1-R2/glass_clinical_surgeries.txt',sep="\t",header=T,stringsAsFactors = F) |> 
+  dplyr::mutate(ROW_ID=NULL, ROW_VERSION=NULL) |> 
+  dplyr::mutate(sample_barcode = ifelse(sample_barcode == "", NA, sample_barcode)) |> 
+  dplyr::filter(!is.na(sample_barcode)) |> 
+  dplyr::left_join(tmp.batch.2021, by=c('sample_barcode'='sample_barcode.short')) |> 
+  dplyr::mutate(treatment_alkylating_agent = dplyr::case_when(
+    treatment_alkylating_agent == "t" ~ TRUE,
+    treatment_alkylating_agent == "f" ~ TRUE,
+    TRUE ~ NA,
+  )) |> 
+  dplyr::mutate(treatment_tmz = dplyr::case_when(
+    treatment_tmz == "t" ~ TRUE,
+    treatment_tmz == "f" ~ TRUE,
+    TRUE ~ NA,
+  ))
 
+  
+# check if all that have expression dat also have a clinical metadata entry:
+stopifnot(tmp.batch.2021$sample_barcode.short %in% tmp.clinical.2021$sample_barcode)
+
+
+# remove those that do have metadata but no expression data
+tmp.clinical.2021 <- tmp.clinical.2021 |> 
+    dplyr::filter(!is.na(sid))
+
+
+
+  
 
 # clinial 2022: syn31121219
+tmp.clinical.2022 <- read.table('data/gsam/data/GLASS_GBM_R1-R2/glass_clinical_surgeries.all_samples.txt',sep="\t",header=T,stringsAsFactors = F) |> 
+  dplyr::mutate(ROW_ID=NULL, ROW_VERSION=NULL) |> 
+  dplyr::mutate(sample_barcode = ifelse(sample_barcode == "", NA, sample_barcode)) |> 
+  dplyr::filter(!is.na(sample_barcode)) |> 
+  dplyr::left_join(tmp.batch.2022, by=c('sample_barcode'='sample_barcode.short')) |> 
+  dplyr::mutate(treatment_alkylating_agent = dplyr::case_when(
+    treatment_alkylating_agent == "1" ~ TRUE,
+    treatment_alkylating_agent == "0" ~ TRUE,
+    TRUE ~ NA,
+  )) |> 
+  dplyr::mutate(treatment_tmz = dplyr::case_when(
+    treatment_tmz == "1" ~ TRUE,
+    treatment_tmz == "0" ~ TRUE,
+    TRUE ~ NA,
+  ))
+
+
+# check if all that have expression dat also have a clinical metadata entry:
+stopifnot(tmp.batch.2022$sample_barcode.short %in% tmp.clinical.2022$sample_barcode)
+
+
+# remove those that do have metadata but no expression data
+tmp.clinical.2022 <- tmp.clinical.2022 |> 
+  dplyr::filter(!is.na(sid))
+
+
+
+# check if both tables have the same columns
+stopifnot(colnames(tmp.clinical.2022) == colnames(tmp.clinical.2022))
+
+
+
+tmp.clinical.2021 <- tmp.clinical.2021 |>
+  dplyr::rename_with( ~ paste0( .x, ".2021"))
+
+tmp.clinical.2022 <- tmp.clinical.2022 |>
+  dplyr::rename_with( ~ paste0( .x, ".2022"))
+
+
+tmp.clinical.merge <- 
+  dplyr::full_join(
+    tmp.clinical.2021,
+    tmp.clinical.2022,
+    by=c('sid.2021'='sid.2022')
+  ) |> 
+  dplyr::rename(sid = sid.2021)
+
+
+rm(tmp.clinical.2021, tmp.clinical.2022) # cleanup
+
+
+
+### check discrepancies 2021 / 2022 ----
+
+tmp.clinical.merge |> 
+  dplyr::filter(!is.na(histology.2021)) |> 
+  dplyr::filter(histology.2021 != histology.2022) |> 
+  dplyr::select(sample_barcode,
+                case_barcode.2021,
+                sid.2021, sid.2022, 
+                histology.2021, histology.2022, 
+                idh_status.2021, idh_status.2022,
+                codel_status.2021, codel_status.2022,
+                grade.2021, grade.2022
+  )
+
+
+tmp.clinical.merge |> 
+  dplyr::filter(!is.na(histology.2021)) |> 
+  dplyr::filter(sample_barcode.2021 != sample_barcode.2022) |> 
+  dplyr::select(sid,
+                sample_barcode.2022,
+                case_barcode.2021,
+                sample_barcode.2021, sample_barcode.2022,
+                histology.2021, histology.2022, 
+                idh_status.2021, idh_status.2022,
+                codel_status.2021, codel_status.2022,
+                grade.2021, grade.2022
+  )
+
+
+# 3 discrepancies in grading
+# tmp.clinical.merge |> 
+#   dplyr::filter(!is.na(histology.2021)) |> 
+#   dplyr::filter(grade.2021 != grade.2022) |> 
+#   dplyr::select(sid,
+#                 sample_barcode.2022,
+#                 case_barcode.2021,
+#                 sample_barcode.2021, sample_barcode.2022,
+#                 histology.2021, histology.2022, 
+#                 idh_status.2021, idh_status.2022,
+#                 codel_status.2021, codel_status.2022,
+#                 grade.2021, grade.2022
+#   )
+
+
+# exactly identical
+# tmp.clinical.merge |> 
+#   dplyr::filter(!is.na(histology.2021)) |> 
+#   dplyr::filter(idh_status.2021 != idh_status.2022 ) |> 
+#   dplyr::select(sid,
+#                 sample_barcode.2022,
+#                 case_barcode.2021,
+#                 sample_barcode.2021, sample_barcode.2022,
+#                 histology.2021, histology.2022, 
+#                 idh_status.2021, idh_status.2022,
+#                 codel_status.2021, codel_status.2022,
+#                 grade.2021, grade.2022
+#   )
+
+
+# exactly identical
+# tmp.clinical.merge |> 
+#   dplyr::filter(!is.na(histology.2021)) |> 
+#   dplyr::filter(codel_status.2021 != codel_status.2022 ) |> 
+#   dplyr::select(sid,
+#                 sample_barcode.2022,
+#                 case_barcode.2021,
+#                 sample_barcode.2021, sample_barcode.2022,
+#                 histology.2021, histology.2022, 
+#                 idh_status.2021, idh_status.2022,
+#                 codel_status.2021, codel_status.2022,
+#                 grade.2021, grade.2022
+#   )
+
+
+# plenty but small discrepancies:
+# tmp.clinical.merge |> 
+#   dplyr::filter(!is.na(histology.2021)) |> 
+#   dplyr::filter(surgical_interval_mo.2021 != surgical_interval_mo.2022 ) |> 
+#   dplyr::select(sid,
+#                 sample_barcode.2022,
+#                 case_barcode.2021,
+#                 surgical_interval_mo.2021 , surgical_interval_mo.2022 
+#   )
+
+
+# exactly identical
+# tmp.clinical.merge |> 
+#   dplyr::filter(!is.na(histology.2021)) |> 
+#   dplyr::filter(treatment_alkylating_agent.2021 != treatment_alkylating_agent.2022 ) |>
+#   dplyr::select(sid,
+#                 sample_barcode.2022,
+#                 case_barcode.2021,
+#                 treatment_alkylating_agent.2021 , treatment_alkylating_agent.2022 
+#   )
+
+
+# exactly identical
+# tmp.clinical.merge |> 
+#   dplyr::filter(!is.na(histology.2021)) |> 
+#   dplyr::filter(treatment_tmz.2021 != treatment_tmz.2022 ) |>
+#   dplyr::select(sid,
+#                 sample_barcode.2022,
+#                 case_barcode.2021,
+#                 treatment_tmz.2021 , treatment_tmz.2022
+#   )
+
+
+# quite striking differences in alternative chemo descriptions:
+# tmp.clinical.merge |> 
+#   dplyr::filter(!is.na(histology.2021)) |> 
+#   dplyr::filter(treatment_chemotherapy_other.2021 != treatment_chemotherapy_other.2022 ) |>
+#   dplyr::select(sid,
+#                 treatment_chemotherapy_other.2021 , treatment_chemotherapy_other.2022
+#   )
+
+
+
 
 
 
