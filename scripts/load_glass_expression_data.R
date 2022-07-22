@@ -225,52 +225,52 @@ warning("significant discrepancies 2021/2022 subtype calling")
 ## clinical / histological ----
 
 
-
-tmp.clinical.2021 <- read.table('data/gsam/data/GLASS_GBM_R1-R2/glass_clinical_surgeries.txt',sep="\t",header=T,stringsAsFactors = F) |> 
-  dplyr::mutate(ROW_ID=NULL, ROW_VERSION=NULL) |> 
+tmp.clinical.2021 <- 'data/gsam/data/GLASS_GBM_R1-R2/glass_clinical_surgeries.txt' |> 
+  read.table(sep="\t",header=T,stringsAsFactors = F) |> 
+  dplyr::mutate(ROW_ID=NULL) |> 
+  dplyr::mutate(ROW_VERSION=NULL) |> 
   dplyr::mutate(sample_barcode = ifelse(sample_barcode == "", NA, sample_barcode)) |> 
   dplyr::filter(!is.na(sample_barcode)) |> 
-  dplyr::left_join(tmp.batch.2021, by=c('sample_barcode'='sample_barcode')) |> 
   dplyr::mutate(treatment_alkylating_agent = dplyr::case_when(
     treatment_alkylating_agent == "t" ~ TRUE,
     treatment_alkylating_agent == "f" ~ TRUE,
-    TRUE ~ NA,
-  )) |> 
+    TRUE ~ NA )) |> 
   dplyr::mutate(treatment_tmz = dplyr::case_when(
     treatment_tmz == "t" ~ TRUE,
     treatment_tmz == "f" ~ TRUE,
-    TRUE ~ NA,
-  ))
+    TRUE ~ NA )) |> 
+  dplyr::mutate(histology = as.factor(ifelse(histology == "", NA, histology))) |> 
+  dplyr::mutate(grade = as.factor(ifelse(grade == "", NA, grade))) |> 
+  dplyr::mutate(idh_status = as.factor(ifelse(idh_status == "", NA, idh_status))) |> 
+  dplyr::mutate(codel_status = as.factor(ifelse(codel_status == "", NA, codel_status)))
 
-  
+
 # check if all that have expression dat also have a clinical metadata entry:
-stopifnot(tmp.batch.2021$sample_barcode.short %in% tmp.clinical.2021$sample_barcode)
+stopifnot(glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::filter(in.batch.2021) |> 
+  #dplyr::filter(!excluded) |> # not really necessary
+  dplyr::pull(sample_barcode) %in% tmp.clinical.2021$sample_barcode)
 
 
-# remove those that do have metadata but no expression data
-tmp.clinical.2021 <- tmp.clinical.2021 |> 
-    dplyr::filter(!is.na(sid))
-
-
-
-  
 
 # clinial 2022: syn31121219
 tmp.clinical.2022 <- read.table('data/gsam/data/GLASS_GBM_R1-R2/glass_clinical_surgeries.all_samples.txt',sep="\t",header=T,stringsAsFactors = F) |> 
-  dplyr::mutate(ROW_ID=NULL, ROW_VERSION=NULL) |> 
+  dplyr::mutate(ROW_ID=NULL) |> 
+  dplyr::mutate(ROW_VERSION=NULL) |> 
   dplyr::mutate(sample_barcode = ifelse(sample_barcode == "", NA, sample_barcode)) |> 
   dplyr::filter(!is.na(sample_barcode)) |> 
-  dplyr::left_join(tmp.batch.2022, by=c('sample_barcode'='sample_barcode')) |> 
   dplyr::mutate(treatment_alkylating_agent = dplyr::case_when(
     treatment_alkylating_agent == "1" ~ TRUE,
     treatment_alkylating_agent == "0" ~ TRUE,
-    TRUE ~ NA,
-  )) |> 
+    TRUE ~ NA )) |> 
   dplyr::mutate(treatment_tmz = dplyr::case_when(
     treatment_tmz == "1" ~ TRUE,
     treatment_tmz == "0" ~ TRUE,
-    TRUE ~ NA,
-  ))
+    TRUE ~ NA )) |> 
+  dplyr::mutate(histology = as.factor(ifelse(histology == "", NA, histology))) |> 
+  dplyr::mutate(grade = as.factor(ifelse(grade == "", NA, grade))) |> 
+  dplyr::mutate(idh_status = as.factor(ifelse(idh_status == "", NA, idh_status))) |> 
+  dplyr::mutate(codel_status = as.factor(ifelse(codel_status == "", NA, codel_status)))
 
 
 # check if all that have expression dat also have a clinical metadata entry:
