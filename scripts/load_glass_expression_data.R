@@ -114,11 +114,11 @@ tmp.batch.2021 <- 'data/gsam/data/GLASS_GBM_R1-R2/glass_transcript_counts.txt' |
   dplyr::mutate(target_id=NULL, length=NULL) |> 
   t() |> 
   as.data.frame() |> 
-  tibble::rownames_to_column('sid') |> 
+  tibble::rownames_to_column('aliquot_barcode') |> 
   dplyr::mutate(V1 = NULL) |> 
-  dplyr::mutate(sid = gsub(".","-",sid,fixed=T))  |>  # by convention [https://github.com/fpbarthel/GLASS]
-  dplyr::mutate(sid = gsub("_1$","",sid,fixed=F)) |>  # by convention [https://github.com/fpbarthel/GLASS]
-  dplyr::mutate(batch = paste0(gsub("^([^\\-]+).+$","\\1",sid,fixed=F),".2021"))
+  dplyr::mutate(aliquot_barcode = gsub(".","-",  aliquot_barcode,fixed=T)) |> # by convention [https://github.com/fpbarthel/GLASS]
+  dplyr::mutate(aliquot_barcode = gsub("_1$","", aliquot_barcode,fixed=F)) |> # by convention [https://github.com/fpbarthel/GLASS]
+  dplyr::mutate(batch = paste0(gsub("^([^\\-]+).+$","\\1", aliquot_barcode,fixed=F),".2021"))
 
 
 tmp.batch.2022 <- 'data/gsam/data/GLASS_GBM_R1-R2/transcript_count_matrix_all_samples.tsv' |> 
@@ -126,17 +126,20 @@ tmp.batch.2022 <- 'data/gsam/data/GLASS_GBM_R1-R2/transcript_count_matrix_all_sa
   dplyr::mutate(target_id=NULL, length=NULL) |> 
   t() |> 
   as.data.frame() |> 
-  tibble::rownames_to_column('sid') |> 
+  tibble::rownames_to_column('aliquot_barcode') |> 
   dplyr::mutate(V1 = NULL) |> 
-  dplyr::mutate(sid = gsub(".","-",sid,fixed=T))  |>  # by convention [https://github.com/fpbarthel/GLASS]
-  dplyr::mutate(sid = gsub("_1$","",sid,fixed=F)) |>  # by convention [https://github.com/fpbarthel/GLASS]
-  dplyr::mutate(batch = paste0(gsub("^([^\\-]+).+$","\\1",sid,fixed=F),".2022"))
+  dplyr::mutate(aliquot_barcode = gsub(".",  "-", aliquot_barcode,fixed=T)) |> # by convention [https://github.com/fpbarthel/GLASS]
+  dplyr::mutate(aliquot_barcode = gsub("_1$","",  aliquot_barcode,fixed=F)) |> # by convention [https://github.com/fpbarthel/GLASS]
+  dplyr::mutate(batch = paste0(gsub("^([^\\-]+).+$","\\1",aliquot_barcode,fixed=F),".2022"))
 
 
 
 glass.gbm.rnaseq.metadata.all.samples <- tmp.batch.2022 |> 
-  dplyr::full_join(tmp.batch.2021, by=c('sid'='sid'), suffix=c('.2022','.2021')) |> 
-  dplyr::mutate(sample_barcode = gsub('^([^\\-]+-[^\\-]+-[^\\-]+-[^\\-]+).+$','\\1',sid))
+  dplyr::full_join(tmp.batch.2021, by=c('aliquot_barcode'='aliquot_barcode'), suffix=c('.2022','.2021')) |> 
+  dplyr::mutate(sample_barcode = gsub('^([^\\-]+-[^\\-]+-[^\\-]+-[^\\-]+).+$','\\1',aliquot_barcode))
+
+
+rm(tmp.batch.2021, tmp.batch.2022)
 
 
 # ensure that all the 2021 samples are in the 2022 samples
@@ -147,20 +150,20 @@ glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |
   dplyr::mutate(batch = ifelse(is.na(batch.2021),batch.2022, batch.2021)) |> 
   dplyr::mutate(in.batch.2021 = !is.na(batch.2021)) |> 
   dplyr::mutate(batch.2021 = NULL) |> 
-  dplyr::mutate(batch.2022 = NULL) |> 
-  dplyr::mutate(excluded = FALSE) |> 
-  dplyr::mutate(excluded.reason = NA)
+  dplyr::mutate(batch.2022 = NULL)
 
 
 # find and exclude replicates
-# glass.gbm.rnaseq.metadata.all.samples |> 
-#   dplyr::arrange(sample_barcode, sid) |> 
-#   dplyr::group_by(sample_barcode) |> 
+# glass.gbm.rnaseq.metadata.all.samples |>
+#   dplyr::arrange(sample_barcode, aliquot_barcode) |>
+#   dplyr::group_by(sample_barcode) |>
 #   dplyr::filter(dplyr::n() > 1)
 
 
 glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
-  dplyr::mutate(excluded.reason = ifelse(sid %in% c(
+  dplyr::mutate(excluded = FALSE) |> 
+  dplyr::mutate(excluded.reason = NA) |> 
+  dplyr::mutate(excluded.reason = ifelse(aliquot_barcode %in% c(
     "GLSS-CU-P053-R2-01R-RNA-2HP24A",
     "GLSS-CU-P101-R1-01R-RNA-FLI06Y",
     "GLSS-SM-R101-R1-01R-RNA-7ATA59",
@@ -180,7 +183,10 @@ glass.gbm.rnaseq.metadata.all.samples |>
 )
 
 
+
 ## subtypes ----
+
+
 # subtype data from Synapse portal 7 jan 2021
 tmp.subtype.2021 <- read.table('data/gsam/data/GLASS_GBM_R1-R2/GLASS.GBM.subtypes.from.Synapse.portal.tsv', header=T,stringsAsFactors = F) |>  # https://www.synapse.org/#!Synapse:syn21441635/tables/
   dplyr::select(c('aliquot_barcode','subtype')) |> 
