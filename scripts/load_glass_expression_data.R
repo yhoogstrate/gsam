@@ -116,7 +116,7 @@ tmp.batch.2021 <- 'data/gsam/data/GLASS_GBM_R1-R2/glass_transcript_counts.txt' |
   dplyr::mutate(V1 = NULL) |> 
   dplyr::mutate(aliquot_barcode = gsub(".","-",  aliquot_barcode,fixed=T)) |> # by convention [https://github.com/fpbarthel/GLASS]
   dplyr::mutate(aliquot_barcode = gsub("_1$","", aliquot_barcode,fixed=F)) |> # by convention [https://github.com/fpbarthel/GLASS]
-  dplyr::mutate(batch = paste0(gsub("^([^\\-]+).+$","\\1", aliquot_barcode,fixed=F),".2021"))
+  dplyr::mutate(batch = paste0(gsub("^([^\\-]+).+$","\\1", aliquot_barcode,fixed=F),":2021"))
 
 
 tmp.batch.2022 <- 'data/gsam/data/GLASS_GBM_R1-R2/transcript_count_matrix_all_samples.tsv' |> 
@@ -128,7 +128,7 @@ tmp.batch.2022 <- 'data/gsam/data/GLASS_GBM_R1-R2/transcript_count_matrix_all_sa
   dplyr::mutate(V1 = NULL) |> 
   dplyr::mutate(aliquot_barcode = gsub(".",  "-", aliquot_barcode,fixed=T)) |> # by convention [https://github.com/fpbarthel/GLASS]
   dplyr::mutate(aliquot_barcode = gsub("_1$","",  aliquot_barcode,fixed=F)) |> # by convention [https://github.com/fpbarthel/GLASS]
-  dplyr::mutate(batch = paste0(gsub("^([^\\-]+).+$","\\1",aliquot_barcode,fixed=F),".2022"))
+  dplyr::mutate(batch = paste0(gsub("^([^\\-]+).+$","\\1",aliquot_barcode,fixed=F),":2022"))
 
 
 
@@ -301,6 +301,11 @@ tmp.clinical.2022 <- read.table('data/gsam/data/GLASS_GBM_R1-R2/glass_clinical_s
   dplyr::mutate(codel_status = as.factor(ifelse(codel_status == "", NA, codel_status)))
 
 
+
+#'@details [v] ensure no strange duplicate identifiers exist
+stopifnot(duplicated(tmp.clinical.2022$sample_barcode) == FALSE)
+
+
 #'@details [v] check if all that have expression dat also have a clinical metadata entry:
 stopifnot(glass.gbm.rnaseq.metadata.all.samples$sample_barcode %in% tmp.clinical.2022$sample_barcode)
 
@@ -316,6 +321,15 @@ tmp.clinical.merge <- dplyr::full_join(
     suffix=c('.2021','.2022')
   )
 rm(tmp.clinical.2021, tmp.clinical.2022) # cleanup
+
+
+#'@details [v] ensure that case_barcode's (patient identifiers) match
+stopifnot(
+tmp.clinical.merge |>
+  dplyr::filter(!is.na(case_barcode.2021) & !is.na(case_barcode.2022)) |>
+  dplyr::filter(case_barcode.2021 != case_barcode.2022) |> 
+  nrow() == 0)
+
 
 
 
@@ -446,16 +460,27 @@ tmp.clinical.merge <- tmp.clinical.merge |>
 ## integrate ----
 
 
-#'@details 111/111 subtypes
-tmp.subtype.merge$aliquot_barcode %in% glass.gbm.rnaseq.metadata.all.samples$aliquot_barcode
-sum(glass.gbm.rnaseq.metadata.all.samples$aliquot_barcode %in% tmp.subtype.merge$aliquot_barcode)
+glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::mutate(case_barcode = gsub("^(............).+$","\\1",aliquot_barcode)) |> 
+  dplyr::mutate(resection = factor(gsub("^.............(..).+$","\\1",aliquot_barcode), levels=c('TP','R1','R2','R3','R4'))) |>  # TP is primary tumour? https://github.com/fpbarthel/GLASS
+  dplyr::arrange(case_barcode, resection)
 
 
-glass.gbm.rnaseq.metadata.all.samples |> 
-  dplyr::mutate(pid = gsub("^(............).+$","\\1",aliquot_barcode)) |> 
-  dplyr::arrange(pid) |> 
-  dplyr::mutate(resection = as.factor(gsub("^.............(..).+$","\\1",sid)))  |>  # TP is primary tumour? https://github.com/fpbarthel/GLASS
-  dplyr::mutate(dataset =  as.factor(gsub("^(....).+$","\\1", aliquot_barcode))) |> 
+
+#'@details [v] 447/447 subtypes in expression data
+stopifnot(tmp.subtype.merge$aliquot_barcode %in% glass.gbm.rnaseq.metadata.all.samples$aliquot_barcode)
+
+#'@details [v] 447/447 expression data samples in subtype data
+stopifnot(glass.gbm.rnaseq.metadata.all.samples$aliquot_barcode %in% tmp.subtype.merge$aliquot_barcode)
+
+
+#'@details [v] check if there is clinical data for all
+stopifnot(glass.gbm.rnaseq.metadata.all.samples$sample_barcode %in% tmp.clinical.merge$sample_barcode)
+# stopifnot(tmp.clinical.merge$sample_barcode %in% glass.gbm.rnaseq.metadata.all.samples$sample_barcode) there is clinical data beyond those of which expression data is available
+
+
+
+glass.gbm.rnaseq.metadata.all.samples
   dplyr::left_join(tmp.subtype.merge, by = c('sid' = 'aliquot_barcode' ), suffix=c('','')) |> 
   dplyr::left_join(tmp.subtype.2022, by = c('sid' = 'aliquot_barcode' ), suffix=c('','')) |> 
   dplyr::mutate(sid.label = gsub("^(.)...(-..-....-).(.).*$","\\1\\2\\3",sid) ) |> 
