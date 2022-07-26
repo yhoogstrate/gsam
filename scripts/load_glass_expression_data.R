@@ -498,7 +498,7 @@ glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |
       "GLSS-SM-R101-TP-01R-RNA-G7G4Q5",
       "GLSS-SM-R107-R1-01R-RNA-ID07M4",
       "GLSS-SM-R110-TP-01R-RNA-RSRC7U" ), 
-    lapply(excluded, function(x) { return(c(x,"replicate sample")) }), excluded))
+    lapply(excluded, function(x) { return(unique(c(x,"replicate sample"))) }), excluded))
 
 
 glass.gbm.rnaseq.metadata.all.samples |> 
@@ -522,11 +522,85 @@ stopifnot(
 
 #### codel status ----
 
+
+# use any(), to mark all samples that belong to the same patient in one go
 glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
-  dplyr::mutate(excluded.reason = ifelse(is.na(excluded.reason) & codel_status.2022 == "codel","1p/19q-codel", excluded.reason)) |> 
-  dplyr::mutate(excluded.reason = ifelse(is.na(excluded.reason) & idh_status.2022 == "IDHmut","IDH-mut", excluded.reason)) |> 
+  dplyr::group_by(case_barcode.2022) |> 
+  dplyr::mutate(drop = dplyr::case_when(
+    any(codel_status.2022 == "codel") ~ "Y",
+    any(codel_status.2021 == "codel") ~ "Y",
+    any(!is.na(codel_status.2021) & !is.na(codel_status.2022) & codel_status.2021 != codel_status.2022) ~ "Y", # possible 2021/2022 discrepancies
+    T ~ "N"
+  )) |> 
+  dplyr::ungroup() |> 
+  dplyr::mutate(excluded = ifelse(drop != "N", lapply(excluded, function(x) { return(unique(c(x,"1p/19q-codel"))) }), excluded)) |> 
+  dplyr::mutate(drop=NULL)
+
+
+glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::filter(lapply(excluded , length) > 0) |> 
+  dplyr::select(excluded) |> 
+  dplyr::mutate(excluded = as.character(lapply(excluded, paste, collapse=", "))) |> 
+  as.data.frame()
+
+
+  
+#### IDH status ----
+
+
+# use any(), to mark all samples that belong to the same patient in one go
+glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::group_by(case_barcode.2022) |> 
+  dplyr::mutate(drop1 = dplyr::case_when(
+    any(idh_status.2022 == "IDHmut") ~ "Y",
+    any(idh_status.2021 == "IDHmut") ~ "Y",
+    T ~ "N"
+  )) |>
+  dplyr::mutate(drop2 = dplyr::case_when(
+    all(is.na(idh_status.2021) & is.na(idh_status.2022)) ~ "Y",
+    any(!is.na(idh_status.2021) & !is.na(idh_status.2022) & idh_status.2021 != idh_status.2022) ~ "Y", # possible 2021/2022 discrepancies
+    T ~ "N"
+  )) |>
+  dplyr::ungroup()
+
+
+summary(as.factor(glass.gbm.rnaseq.metadata.all.samples$drop1))
+summary(as.factor(glass.gbm.rnaseq.metadata.all.samples$drop2))
+
+
+glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::mutate(excluded = ifelse(drop1 != "N", lapply(excluded, function(x) { return(unique(c(x,"IDH-mut"))) }), excluded)) |> 
+  dplyr::mutate(excluded = ifelse(drop2 != "N", lapply(excluded, function(x) { return(unique(c(x,"IDH-status N/A"))) }), excluded)) |> 
+  dplyr::mutate(drop=NULL)
+
+
+glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::filter(idh_status.2022 == "IDHmut") |> 
+  dplyr::select(idh_status.2022, excluded) |> 
+  dplyr::mutate(excluded = as.character(lapply(excluded, paste, collapse=", "))) |> 
+  as.data.frame()
+
+
+
+glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::filter(as.logical(lapply(excluded,function(x){return("IDH-status N/A" %in% x)}))) |> 
+  dplyr::select(histology.2021, histology.2022, who_classification.2021, who_classification.2022, idh_status.2021, idh_status.2022, excluded) |> 
+  dplyr::mutate(excluded = as.character(lapply(excluded, paste, collapse=", "))) |> 
+  as.data.frame() |> 
+  View()
+
+
+
+
+
+#### grade -----
+
+
+
   dplyr::mutate(excluded.reason = ifelse(is.na(excluded.reason) & (grade.2021 %in% c("II","III") | grade.2022 %in% c("II","III")),"low-grade", excluded.reason)) |> 
-  dplyr::mutate(excluded.reason = ifelse(is.na(excluded.reason) & (is.na(idh_status.2021) & is.na(idh_status.2022)),"IDH-status N/A",excluded.reason)) |> 
+  
+  
+  
   dplyr::mutate(excluded.reason = ifelse(is.na(excluded.reason) & (is.na(grade.2021) & is.na(grade.2022)),"Grading-status N/A",excluded.reason)) |> 
   dplyr::mutate(excluded.reason = ifelse(is.na(excluded.reason) & (is.na(histology.2021) | histology.2021 != "Glioblastoma"), "Histology not GBM",excluded.reason)) |> 
   dplyr::mutate(excluded.reason = ifelse(is.na(excluded.reason) & (is.na(histology.2022) | histology.2022 != "Glioblastoma"), "Histology not GBM",excluded.reason)) |> 
