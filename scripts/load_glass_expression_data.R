@@ -224,7 +224,7 @@ stopifnot(levels(tmp.subtype.2021$GBM.transcriptional.subtype.Synapse.2021) == l
 warning('Format of 2021 and 2022 subtype data differs')
 
 
-tmp.subtype.merge2 <- dplyr::full_join(tmp.subtype.2021,tmp.subtype.2022,
+tmp.subtype.merge <- dplyr::full_join(tmp.subtype.2021,tmp.subtype.2022,
                                       by=c('aliquot_barcode'='aliquot_barcode'),
                                       suffix = c('.2021','.2022')) 
 rm(tmp.subtype.2021, tmp.subtype.2022)
@@ -446,15 +446,17 @@ tmp.clinical.merge <- tmp.clinical.merge |>
 ## integrate ----
 
 
-glass.gbm.rnaseq.metadata.all.samples
-  dplyr::mutate(sid = gsub(".","-",sid,fixed=T))  |>  # by convention [https://github.com/fpbarthel/GLASS]
-  dplyr::mutate(sid = gsub("_1$","",sid,fixed=F)) |>  # by convention [https://github.com/fpbarthel/GLASS]
-  dplyr::mutate(sample_barcode = gsub("^([^\\-]+-[^\\-]+-[^\\-]+-[^\\-]+)-.+$","\\1",sid)) |> 
-  dplyr::mutate(pid = gsub("^(............).+$","\\1",sid)) |> 
+#'@details 111/111 subtypes
+tmp.subtype.merge$aliquot_barcode %in% glass.gbm.rnaseq.metadata.all.samples$aliquot_barcode
+sum(glass.gbm.rnaseq.metadata.all.samples$aliquot_barcode %in% tmp.subtype.merge$aliquot_barcode)
+
+
+glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::mutate(pid = gsub("^(............).+$","\\1",aliquot_barcode)) |> 
   dplyr::arrange(pid) |> 
   dplyr::mutate(resection = as.factor(gsub("^.............(..).+$","\\1",sid)))  |>  # TP is primary tumour? https://github.com/fpbarthel/GLASS
-  dplyr::mutate(dataset =  as.factor(gsub("^(....).+$","\\1",sid))) |> 
-  dplyr::left_join(tmp.subtype.2021, by = c('sid' = 'aliquot_barcode' ), suffix=c('','')) |> 
+  dplyr::mutate(dataset =  as.factor(gsub("^(....).+$","\\1", aliquot_barcode))) |> 
+  dplyr::left_join(tmp.subtype.merge, by = c('sid' = 'aliquot_barcode' ), suffix=c('','')) |> 
   dplyr::left_join(tmp.subtype.2022, by = c('sid' = 'aliquot_barcode' ), suffix=c('','')) |> 
   dplyr::mutate(sid.label = gsub("^(.)...(-..-....-).(.).*$","\\1\\2\\3",sid) ) |> 
   dplyr::mutate(dataset = gsub("^(....).*$","\\1",sid))
