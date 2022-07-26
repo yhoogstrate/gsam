@@ -169,7 +169,7 @@ glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |
     "GLSS-SM-R101-TP-01R-RNA-G7G4Q5",
     "GLSS-SM-R107-R1-01R-RNA-ID07M4",
     "GLSS-SM-R110-TP-01R-RNA-RSRC7U"
-  ),"replicate sample", excluded.reason  )) |> 
+  ),"replicate sample", excluded.reason)) |> 
   dplyr::mutate(excluded = !is.na(excluded.reason))
 
 
@@ -234,10 +234,6 @@ tmp.subtype.merge <- dplyr::full_join(tmp.subtype.2021,tmp.subtype.2022,
                                       suffix = c('.2021','.2022'))
 
 
-
-stopifnot(duplicated(tmp.subtype.merge$aliquot_barcode) == FALSE)
-
-
 rm(tmp.subtype.2021, tmp.subtype.2022)
 
 
@@ -251,15 +247,15 @@ stopifnot(
     dplyr::filter(is.na(GBM.transcriptional.subtype.Synapse.2022)) |> 
     nrow()) == 0)
 
-#'@details [v] check actual discordant labels
-tmp.subtype.merge |> 
-  dplyr::filter(!is.na(GBM.transcriptional.subtype.Synapse.2021)) |> 
-  dplyr::mutate(equal.prob = grepl("|",GBM.transcriptional.subtype.Synapse.2022,fixed=T)) |> 
-  dplyr::mutate(mismatch = stringr::str_detect(as.character(GBM.transcriptional.subtype.Synapse.2022), as.character(GBM.transcriptional.subtype.Synapse.2021)) == F) |> 
-  dplyr::mutate(discrepancy.type = dplyr::case_when(mismatch ~ "discordant call", equal.prob ~ "uncertain call", T ~ "" )) |> 
-  dplyr::filter(discrepancy.type != "") |>
-  dplyr::mutate(label.switch = paste0(GBM.transcriptional.subtype.Synapse.2021 , " (2021) -to-> ", GBM.transcriptional.subtype.Synapse.2022, " (2022)")) |> 
-  dplyr::select(aliquot_barcode, discrepancy.type, label.switch)
+#'@details [-] check actual discordant labels
+# tmp.subtype.merge |> 
+#   dplyr::filter(!is.na(GBM.transcriptional.subtype.Synapse.2021)) |> 
+#   dplyr::mutate(equal.prob = grepl("|",GBM.transcriptional.subtype.Synapse.2022,fixed=T)) |> 
+#   dplyr::mutate(mismatch = stringr::str_detect(as.character(GBM.transcriptional.subtype.Synapse.2022), as.character(GBM.transcriptional.subtype.Synapse.2021)) == F) |> 
+#   dplyr::mutate(discrepancy.type = dplyr::case_when(mismatch ~ "discordant call", equal.prob ~ "uncertain call", T ~ "" )) |> 
+#   dplyr::filter(discrepancy.type != "") |>
+#   dplyr::mutate(label.switch = paste0(GBM.transcriptional.subtype.Synapse.2021 , " (2021) -to-> ", GBM.transcriptional.subtype.Synapse.2022, " (2022)")) |> 
+#   dplyr::select(aliquot_barcode, discrepancy.type, label.switch)
 warning("considerable discrepancies between 2021 & 2022 subtype calling")
 
 
@@ -482,14 +478,14 @@ glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |
 
 
 
-#'@details [v] 447/447 subtypes in expression data
+#'@details [v] 425/425 subtypes in expression data
 stopifnot(tmp.subtype.merge$aliquot_barcode %in% glass.gbm.rnaseq.metadata.all.samples$aliquot_barcode)
 
-#'@details [v] 447/447 expression data samples in subtype data
+#'@details [v] 425/425 expression data samples in subtype data
 stopifnot(glass.gbm.rnaseq.metadata.all.samples$aliquot_barcode %in% tmp.subtype.merge$aliquot_barcode)
 
 
-#'@details [v] check if there is clinical data for all
+#'@details [v] check if there is clinical data for all 425/425
 stopifnot(glass.gbm.rnaseq.metadata.all.samples$sample_barcode %in% tmp.clinical.merge$sample_barcode)
 # stopifnot(tmp.clinical.merge$sample_barcode %in% glass.gbm.rnaseq.metadata.all.samples$sample_barcode) there is clinical data beyond those of which expression data is available
 
@@ -499,6 +495,17 @@ glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |
   dplyr::left_join(tmp.clinical.merge, by = c('sample_barcode' = 'sample_barcode' ), suffix=c('','')) |> 
   dplyr::mutate(condition = factor(ifelse(resection == "TP","Primary","NotPrimary"), levels = c("Primary","NotPrimary") ))
 rm(tmp.subtype.merge, tmp.clinical.2022)
+
+
+glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::mutate(excluded.reason = ifelse(is.na(excluded.reason) & codel_status.2022 == "codel","1p/19q-codel", excluded.reason)) |> 
+  dplyr::mutate(excluded.reason = ifelse(is.na(excluded.reason) & idh_status.2022 == "IDHmut","IDH-mut", excluded.reason)) |> 
+  dplyr::mutate(excluded.reason = ifelse(is.na(excluded.reason) & (grade.2021 %in% c("II","III") | grade.2022 %in% c("II","III")),"low-grade", excluded.reason)) |> 
+  dplyr::mutate(excluded.reason = ifelse(is.na(excluded.reason) & (is.na(idh_status.2021) & is.na(idh_status.2022)),"IDH-status N/A",excluded.reason)) |> 
+  dplyr::mutate(excluded.reason = ifelse(is.na(excluded.reason) & (is.na(grade.2021) & is.na(grade.2022)),"Grading-status N/A",excluded.reason))
+
+
+
 
 
 # mark idh mutatns as excluded
