@@ -37,8 +37,7 @@ stopifnot(!exists('glass.gbm.rnaseq.expression')) # old
 #   dplyr::mutate(gene_symbol = NULL) %>%
 #   dplyr::group_by(gene_id) %>%
 #   summarise(across(everything(), list(sum))) %>%
-#   tibble::rownames_to_column('tmp') %>%
-#   dplyr::mutate(tmp=NULL) %>%
+#   tibble::remove_rownames() |> 
 #   #dplyr::filter(gene_id %in% c("ENSG00000198804", "ENSG00000198886", "ENSG00000198938","ENSG00000198712", # exclude from normalization?
 #   #                             "ENSG00000198727") == F ) %>% # extreme high counts from odd genes
 #   tibble::column_to_rownames('gene_id') %>%
@@ -63,8 +62,7 @@ glass.gbm.rnaseq.expression.all.samples <- 'data/gsam/data/GLASS_GBM_R1-R2/trans
   dplyr::mutate(gene_symbol = NULL) |>
   dplyr::group_by(gene_id) |>
   dplyr::summarise(across(everything(), list(sum))) |>
-  tibble::rownames_to_column('tmp') |>
-  dplyr::mutate(tmp=NULL) |>
+  tibble::remove_rownames() |> 
   tibble::column_to_rownames('gene_id') |>
   base::round() |>
   dplyr::rename_with( ~ gsub(".", "-", .x, fixed = TRUE)) |> 
@@ -210,15 +208,31 @@ tmp.subtype.2022 <- read.table('data/gsam/data/GLASS_GBM_R1-R2/GLASS.GBM.subtype
 stopifnot(levels(tmp.subtype.2021$GBM.transcriptional.subtype.Synapse.2021) == levels(tmp.subtype.2022$GBM.transcriptional.subtype.Synapse.2022))
 
 
+tmp.subtype.merge2 <- dplyr::full_join(tmp.subtype.2021,tmp.subtype.2022,
+                                      by=c('aliquot_barcode'='aliquot_barcode'),
+                                      suffix = c('.2021','.2022')) 
+
+rm(tmp.subtype.2021, tmp.subtype.2022)
+
+
+
 ### check subtype mismatches ----
 
 
-dplyr::left_join(tmp.subtype.2021,tmp.subtype.2022,by=c('aliquot_barcode'='aliquot_barcode')) |> 
+#'@details [x] check if all 2021 labels are in the 2022 data
+stopifnot(
+  (tmp.subtype.merge |> 
+    dplyr::filter(is.na(GBM.transcriptional.subtype.Synapse.2022)) |> 
+    nrow()) == 0)
+
+
+#'@details [x] check actual discordant labels
+tmp.subtype.merge |> 
   dplyr::filter(!is.na(GBM.transcriptional.subtype.Synapse.2021)) |> 
   dplyr::filter(as.character(GBM.transcriptional.subtype.Synapse.2021) != as.character(GBM.transcriptional.subtype.Synapse.2022)) |> 
-  dplyr::mutate(pri = paste0(GBM.transcriptional.subtype.Synapse.2021 , " -to-> ", GBM.transcriptional.subtype.Synapse.2022)) |> 
-  dplyr::select(aliquot_barcode, pri)
-warning("significant discrepancies 2021/2022 subtype calling")
+  dplyr::mutate(label.switch = paste0(GBM.transcriptional.subtype.Synapse.2021 , " -to-> ", GBM.transcriptional.subtype.Synapse.2022)) |> 
+  dplyr::select(aliquot_barcode, label.switch)
+warning("considerable discrepancies between 2021 & 2022 subtype calling")
 
 
 
@@ -274,34 +288,18 @@ tmp.clinical.2022 <- read.table('data/gsam/data/GLASS_GBM_R1-R2/glass_clinical_s
 
 
 # check if all that have expression dat also have a clinical metadata entry:
-stopifnot(tmp.batch.2022$sample_barcode.short %in% tmp.clinical.2022$sample_barcode)
-
-
-# remove those that do have metadata but no expression data
-tmp.clinical.2022 <- tmp.clinical.2022 |> 
-  dplyr::filter(!is.na(sid))
-
+stopifnot(glass.gbm.rnaseq.metadata.all.samples$sample_barcode %in% tmp.clinical.2022$sample_barcode)
 
 
 # check if both tables have the same columns
 stopifnot(colnames(tmp.clinical.2022) == colnames(tmp.clinical.2022))
 
 
-
-tmp.clinical.2021 <- tmp.clinical.2021 |>
-  dplyr::rename_with( ~ paste0( .x, ".2021"))
-
-tmp.clinical.2022 <- tmp.clinical.2022 |>
-  dplyr::rename_with( ~ paste0( .x, ".2022"))
-
-
-tmp.clinical.merge <- 
-  dplyr::full_join(
-    tmp.clinical.2021,
-    tmp.clinical.2022,
-    by=c('sid.2021'='sid.2022')
-  ) |> 
-  dplyr::rename(sid = sid.2021)
+tmp.clinical.merge <- dplyr::full_join(
+    tmp.clinical.2021, tmp.clinical.2022,
+    by=c('sample_barcode'='sample_barcode'),
+    suffix=c('.2021','.2022')
+  )
 
 
 rm(tmp.clinical.2021, tmp.clinical.2022) # cleanup
