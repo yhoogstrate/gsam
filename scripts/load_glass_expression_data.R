@@ -582,19 +582,17 @@ glass.gbm.rnaseq.metadata.all.samples |>
 
 
 
-glass.gbm.rnaseq.metadata.all.samples |> 
-  dplyr::filter(as.logical(lapply(excluded,function(x){return("IDH-status N/A" %in% x)}))) |> 
-  dplyr::select(histology.2021, histology.2022, who_classification.2021, who_classification.2022, idh_status.2021, idh_status.2022, excluded) |> 
-  dplyr::mutate(excluded = as.character(lapply(excluded, paste, collapse=", "))) |> 
-  as.data.frame() |> 
-  View()
-
+# glass.gbm.rnaseq.metadata.all.samples |> 
+#   dplyr::filter(as.logical(lapply(excluded,function(x){return("IDH-status N/A" %in% x)}))) |> 
+#   dplyr::select(histology.2021, histology.2022, who_classification.2021, who_classification.2022, idh_status.2021, idh_status.2022, excluded) |> 
+#   dplyr::mutate(excluded = as.character(lapply(excluded, paste, collapse=", "))) |> 
+#   as.data.frame() |> 
+#   View()
 
 
 
 
 #### grade -----
-
 
 
 # use any(), to mark all samples that belong to the same patient in one go
@@ -613,37 +611,75 @@ glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |
   dplyr::ungroup()
 
 
-summary(as.factor(glass.gbm.rnaseq.metadata.all.samples$drop1))
-summary(as.factor(glass.gbm.rnaseq.metadata.all.samples$drop2))
+# summary(as.factor(glass.gbm.rnaseq.metadata.all.samples$drop1))
+# summary(as.factor(glass.gbm.rnaseq.metadata.all.samples$drop2))
 
 
 glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
   dplyr::mutate(excluded = ifelse(drop1 != "N", lapply(excluded, function(x) { return(unique(c(x,"Grade II/III"))) }), excluded)) |> 
   dplyr::mutate(excluded = ifelse(drop2 != "N", lapply(excluded, function(x) { return(unique(c(x,"Grade N/A"))) }), excluded)) |> 
-  dplyr::mutate(drop=NULL)
+  dplyr::mutate(drop1=NULL, drop2 = NULL)
 
 
-glass.gbm.rnaseq.metadata.all.samples |> 
-  dplyr::filter(as.logical(lapply(excluded,function(x){return("Grade N/A" %in% x)}))) |> 
-  dplyr::select(histology.2021, histology.2022,
-                who_classification.2021, who_classification.2022, 
-                idh_status.2021, idh_status.2022,
-                case_barcode.2022,
-                grade.2021, grade.2022,
-                excluded) |> 
-  dplyr::mutate(excluded = as.character(lapply(excluded, paste, collapse=", "))) |> 
-  as.data.frame() |> 
-  View()
-
+# x-check
+# glass.gbm.rnaseq.metadata.all.samples |> 
+#   dplyr::filter(as.logical(lapply(excluded,function(x){return("Grade N/A" %in% x)}))) |> 
+#   dplyr::select(histology.2021, histology.2022,
+#                 who_classification.2021, who_classification.2022, 
+#                 idh_status.2021, idh_status.2022,
+#                 case_barcode.2022,
+#                 grade.2021, grade.2022,
+#                 excluded) |> 
+#   dplyr::mutate(excluded = as.character(lapply(excluded, paste, collapse=", "))) |> 
+#   as.data.frame() |> 
+#   View()
 
 
 
 #### histology ----
-  dplyr::mutate(excluded.reason = ifelse(is.na(excluded.reason) & (is.na(histology.2021) | histology.2021 != "Glioblastoma"), "Histology not GBM",excluded.reason)) |> 
-  dplyr::mutate(excluded.reason = ifelse(is.na(excluded.reason) & (is.na(histology.2022) | histology.2022 != "Glioblastoma"), "Histology not GBM",excluded.reason)) |> 
-  dplyr::mutate(excluded.reason = ifelse(is.na(excluded.reason) & !is.na(histology.2021) & !is.na(histology.2022) & as.character(histology.2021) != as.character(histology.2022), "Histology 2021/2022 mismatch",excluded.reason)) |> 
-  dplyr::mutate(excluded.reason = ifelse(is.na(excluded.reason) & !is.na(grade.2021) & !is.na(grade.2022) & as.character(grade.2021) != as.character(grade.2022), "Grade 2021/2022 mismatch",excluded.reason)) |> 
-  dplyr::mutate(excluded = !is.na(excluded.reason))
+
+
+# use any(), to mark all samples that belong to the same patient in one go
+glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::group_by(case_barcode.2022) |> 
+  dplyr::mutate(drop1 = dplyr::case_when( # drop if there is any non-GBM sample that belongs to a given patient
+    any(histology.2022 != "Glioblastoma") ~ "Y1",
+    any(histology.2021 != "Glioblastoma") ~ "Y2",
+    T ~ "N"
+  )) |>
+  dplyr::mutate(drop2 = dplyr::case_when( # drop if all samples that belong to a given patient have no histology or are discordant
+    all( is.na(histology.2021) &  is.na(histology.2022)) ~ "Y1",
+    any(!is.na(histology.2021) & !is.na(histology.2022) & as.character(histology.2021) != as.character(histology.2022)) ~ "Y2", # possible 2021/2022 discrepancies
+    T ~ "N"
+  )) |>
+  dplyr::ungroup()
+
+
+summary(as.factor(glass.gbm.rnaseq.metadata.all.samples$drop1))
+summary(as.factor(glass.gbm.rnaseq.metadata.all.samples$drop2))
+
+
+glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::mutate(excluded = ifelse(drop1 != "N", lapply(excluded, function(x) { return(unique(c(x,"Histology not Glioblastoma"))) }), excluded)) |> 
+  dplyr::mutate(excluded = ifelse(drop2 != "N", lapply(excluded, function(x) { return(unique(c(x,"Histology N/A"))) }), excluded)) |> 
+  dplyr::mutate(drop1=NULL, drop2 = NULL)
+
+
+# x-check
+glass.gbm.rnaseq.metadata.all.samples |>
+  dplyr::filter(as.logical(lapply(excluded,function(x){return("Histology N/A" %in% x)}))) |>
+  dplyr::select(histology.2021, histology.2022,
+                who_classification.2021, who_classification.2022,
+                idh_status.2021, idh_status.2022,
+                case_barcode.2022,
+                grade.2021, grade.2022,
+                excluded) |>
+  dplyr::mutate(excluded = as.character(lapply(excluded, paste, collapse=", "))) |>
+  as.data.frame() |>
+  View()
+  
+  
+#### additional / todo ----
 
 
 #'@todo x-check VCFs for ADDITIONAL IDH muts !!
@@ -671,8 +707,7 @@ x = data.frame(a = c('1:2:3',"4:5","6","","7:8:9:10")) |>
   #dplyr::mutate(g.len = lapply(g , length)) |> 
   #dplyr::mutate(h = lapply(g, function(x) { return(c(x,"suff")) }))
 
-d = function(x) { return(c(x,"?")) }
-lapply(x$b, d)
+
 
 
 # exclude middle resection for samples with more than 2 resections
@@ -704,8 +739,6 @@ glass.gbm.rnaseq.metadata.all.samples |>
 # glass.gbm.rnaseq.metadata.all.samples |> 
 #   dplyr::filter(is.na(excluded.reason)) |> 
 #   View()
-
-
 
 
 
