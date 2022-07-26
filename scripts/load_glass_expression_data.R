@@ -502,27 +502,32 @@ glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |
   dplyr::mutate(excluded.reason = ifelse(is.na(excluded.reason) & idh_status.2022 == "IDHmut","IDH-mut", excluded.reason)) |> 
   dplyr::mutate(excluded.reason = ifelse(is.na(excluded.reason) & (grade.2021 %in% c("II","III") | grade.2022 %in% c("II","III")),"low-grade", excluded.reason)) |> 
   dplyr::mutate(excluded.reason = ifelse(is.na(excluded.reason) & (is.na(idh_status.2021) & is.na(idh_status.2022)),"IDH-status N/A",excluded.reason)) |> 
-  dplyr::mutate(excluded.reason = ifelse(is.na(excluded.reason) & (is.na(grade.2021) & is.na(grade.2022)),"Grading-status N/A",excluded.reason))
+  dplyr::mutate(excluded.reason = ifelse(is.na(excluded.reason) & (is.na(grade.2021) & is.na(grade.2022)),"Grading-status N/A",excluded.reason)) |> 
+  dplyr::mutate(excluded.reason = ifelse(is.na(excluded.reason) & (is.na(histology.2021) | histology.2021 != "Glioblastoma"), "Histology not GBM",excluded.reason)) |> 
+  dplyr::mutate(excluded.reason = ifelse(is.na(excluded.reason) & (is.na(histology.2022) | histology.2022 != "Glioblastoma"), "Histology not GBM",excluded.reason)) |> 
+  dplyr::mutate(excluded.reason = ifelse(is.na(excluded.reason) & 
+                                         !is.na(histology.2022) &
+                                         !is.na(histology.2022) &
+                                         as.character(histology.2021) != as.character(histology.2022), "Histology 2021/2022 mismatch",excluded.reason))
 
 
 
+glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::mutate(excluded.reason = as.factor(excluded.reason)) |> 
+  dplyr::pull(excluded.reason) |> 
+  summary()
 
 
-# mark idh mutatns as excluded
-  # dplyr::filter(idh_status == "IDHwt") # exclude the three IDH mutants according to Synapse WGS/WES VCF files
-  # 
-# exclude samples from patients that had a no grade IV tumor
-no.grade.iv <- glass.gbm.rnaseq.metadata %>%
-  dplyr::filter(grade %in% c('II','III')) %>%
-  dplyr::pull(pid)
-
-glass.gbm.rnaseq.metadata <- glass.gbm.rnaseq.metadata %>%
-  dplyr::filter(pid %in% no.grade.iv == F )
-
-rm(no.grade.iv)
+glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::filter(is.na(excluded.reason)) |> 
+  View()
 
 
-stopifnot(!is.na(glass.gbm.rnaseq.metadata$GBM.transcriptional.subtype.Synapse))
+#'@todo x-check VCFs for ADDITIONAL IDH muts !!
+
+
+
+stopifnot(!is.na(glass.gbm.rnaseq.metadata.all.samples$GBM.transcriptional.subtype.Synapse.2022))
 
 
 
