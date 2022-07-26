@@ -254,9 +254,12 @@ stopifnot(
 #'@details [v] check actual discordant labels
 tmp.subtype.merge |> 
   dplyr::filter(!is.na(GBM.transcriptional.subtype.Synapse.2021)) |> 
-  dplyr::filter(as.character(GBM.transcriptional.subtype.Synapse.2021) != as.character(GBM.transcriptional.subtype.Synapse.2022)) |> 
-  dplyr::mutate(label.switch = paste0(GBM.transcriptional.subtype.Synapse.2021 , " -to-> ", GBM.transcriptional.subtype.Synapse.2022)) |> 
-  dplyr::select(aliquot_barcode, label.switch)
+  dplyr::mutate(equal.prob = grepl("|",GBM.transcriptional.subtype.Synapse.2022,fixed=T)) |> 
+  dplyr::mutate(mismatch = stringr::str_detect(as.character(GBM.transcriptional.subtype.Synapse.2022), as.character(GBM.transcriptional.subtype.Synapse.2021)) == F) |> 
+  dplyr::mutate(discrepancy.type = dplyr::case_when(mismatch ~ "discordant call", equal.prob ~ "uncertain call", T ~ "" )) |> 
+  dplyr::filter(discrepancy.type != "") |>
+  dplyr::mutate(label.switch = paste0(GBM.transcriptional.subtype.Synapse.2021 , " (2021) -to-> ", GBM.transcriptional.subtype.Synapse.2022, " (2022)")) |> 
+  dplyr::select(aliquot_barcode, discrepancy.type, label.switch)
 warning("considerable discrepancies between 2021 & 2022 subtype calling")
 
 
