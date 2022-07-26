@@ -508,22 +508,34 @@ glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |
   dplyr::mutate(excluded.reason = ifelse(is.na(excluded.reason) & 
                                          !is.na(histology.2022) &
                                          !is.na(histology.2022) &
-                                         as.character(histology.2021) != as.character(histology.2022), "Histology 2021/2022 mismatch",excluded.reason))
+                                         as.character(histology.2021) != as.character(histology.2022), "Histology 2021/2022 mismatch",excluded.reason)) |> 
+  dplyr::mutate(excluded = !is.na(excluded.reason))
 
 
-
-glass.gbm.rnaseq.metadata.all.samples |> 
-  dplyr::mutate(excluded.reason = as.factor(excluded.reason)) |> 
-  dplyr::pull(excluded.reason) |> 
-  summary()
-
-
-glass.gbm.rnaseq.metadata.all.samples |> 
-  dplyr::filter(is.na(excluded.reason)) |> 
-  View()
+# glass.gbm.rnaseq.metadata.all.samples |> 
+#   dplyr::mutate(excluded.reason = as.factor(excluded.reason)) |> 
+#   dplyr::pull(excluded.reason) |> 
+#   summary()
+# 
+# 
+# glass.gbm.rnaseq.metadata.all.samples |> 
+#   dplyr::filter(is.na(excluded.reason)) |> 
+#   View()
 
 
 #'@todo x-check VCFs for ADDITIONAL IDH muts !!
+#'@todo make a definitive call about samples with "NOS" in the WHO classification (IDH mut not specified)
+
+
+# exclude middle resection for samples with more than 2 resections
+glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::filter(!excluded) |> 
+  dplyr::group_by(case_barcode.2022) |> 
+  dplyr::filter(dplyr::n() > 2)
+glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::mutate(excluded.reason = ifelse(aliquot_barcode %in% c('GLSS-SM-R056-R2-01R-RNA-DHLJ2T', 'GLSS-SM-R060-R1-01R-RNA-6SGM43', 'GLSS-SM-R064-R1-01R-RNA-GLLBN3'), "interim resection", excluded.reason)) |> 
+  dplyr::mutate(excluded = !is.na(excluded.reason))
+
 
 
 
