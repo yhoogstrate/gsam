@@ -140,7 +140,7 @@ glass.gbm.rnaseq.metadata.all.samples <- tmp.batch.2022 |>
 rm(tmp.batch.2021, tmp.batch.2022)
 
 
-# ensure that all the 2021 samples are in the 2022 samples
+#'@details [v] ensure that all the 2021 samples are in the 2022 samples
 stopifnot(nrow(glass.gbm.rnaseq.metadata.all.samples |>  dplyr::filter(!is.na(batch.2021) & is.na(batch.2022))) == 0)
 
 
@@ -158,6 +158,7 @@ glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |
 #   dplyr::filter(dplyr::n() > 1)
 
 
+# label replicates
 glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
   dplyr::mutate(excluded = FALSE) |> 
   dplyr::mutate(excluded.reason = NA) |> 
@@ -172,13 +173,23 @@ glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |
   dplyr::mutate(excluded = !is.na(excluded.reason))
 
 
-# ensure no replicate samples exist
+#'@details [v] ensure replicates are marked as such
 stopifnot(
 glass.gbm.rnaseq.metadata.all.samples |> 
   dplyr::filter(excluded == F) |> 
   dplyr::filter(duplicated(sample_barcode)) |> 
   nrow() == 0
 )
+
+
+#'@details [v] check if no strange suffixes are present
+stopifnot(grepl("_1$",glass.gbm.rnaseq.metadata.all.samples$aliquot_barcode) == F)
+
+#'@details [v] check if no dots are present
+stopifnot(grepl(".",glass.gbm.rnaseq.metadata.all.samples$aliquot_barcode,fixed=T) == F)
+
+#'@details [v] check if no dots are present
+stopifnot(grepl(".",glass.gbm.rnaseq.metadata.all.samples$sample_barcode,fixed=T) == F)
 
 
 
@@ -204,14 +215,18 @@ tmp.subtype.2022 <- read.table('data/gsam/data/GLASS_GBM_R1-R2/GLASS.GBM.subtype
 
 
 
-# x-check same names are used consistently throughout
+#'@details [v] x-check same subtype names are used consistently throughout
 stopifnot(levels(tmp.subtype.2021$GBM.transcriptional.subtype.Synapse.2021) == levels(tmp.subtype.2022$GBM.transcriptional.subtype.Synapse.2022))
+
+
+#'@details [-] check if both tables have the same columns - No - different pipelines?
+# stopifnot(colnames(tmp.subtype.2021) == colnames(tmp.subtype.2022))
+warning('Format of 2021 and 2022 subtype data differs')
 
 
 tmp.subtype.merge2 <- dplyr::full_join(tmp.subtype.2021,tmp.subtype.2022,
                                       by=c('aliquot_barcode'='aliquot_barcode'),
                                       suffix = c('.2021','.2022')) 
-
 rm(tmp.subtype.2021, tmp.subtype.2022)
 
 
@@ -219,14 +234,13 @@ rm(tmp.subtype.2021, tmp.subtype.2022)
 ### check subtype mismatches ----
 
 
-#'@details [x] check if all 2021 labels are in the 2022 data
+#'@details [v] check if all 2021 labels are in the 2022 data
 stopifnot(
   (tmp.subtype.merge |> 
     dplyr::filter(is.na(GBM.transcriptional.subtype.Synapse.2022)) |> 
     nrow()) == 0)
 
-
-#'@details [x] check actual discordant labels
+#'@details [v] check actual discordant labels
 tmp.subtype.merge |> 
   dplyr::filter(!is.na(GBM.transcriptional.subtype.Synapse.2021)) |> 
   dplyr::filter(as.character(GBM.transcriptional.subtype.Synapse.2021) != as.character(GBM.transcriptional.subtype.Synapse.2022)) |> 
@@ -259,7 +273,7 @@ tmp.clinical.2021 <- 'data/gsam/data/GLASS_GBM_R1-R2/glass_clinical_surgeries.tx
   dplyr::mutate(codel_status = as.factor(ifelse(codel_status == "", NA, codel_status)))
 
 
-# check if all that have expression dat also have a clinical metadata entry:
+#'@details [v] check if all that have expression dat also have a clinical metadata entry:
 stopifnot(glass.gbm.rnaseq.metadata.all.samples |> 
   dplyr::filter(in.batch.2021) |> 
   #dplyr::filter(!excluded) |> # not really necessary
@@ -287,21 +301,20 @@ tmp.clinical.2022 <- read.table('data/gsam/data/GLASS_GBM_R1-R2/glass_clinical_s
   dplyr::mutate(codel_status = as.factor(ifelse(codel_status == "", NA, codel_status)))
 
 
-# check if all that have expression dat also have a clinical metadata entry:
+#'@details [v] check if all that have expression dat also have a clinical metadata entry:
 stopifnot(glass.gbm.rnaseq.metadata.all.samples$sample_barcode %in% tmp.clinical.2022$sample_barcode)
 
 
-# check if both tables have the same columns
-stopifnot(colnames(tmp.clinical.2022) == colnames(tmp.clinical.2022))
+#'@details [v] check if both tables have the same columns
+stopifnot(colnames(tmp.clinical.2021) == colnames(tmp.clinical.2022))
 
 
+# merge
 tmp.clinical.merge <- dplyr::full_join(
     tmp.clinical.2021, tmp.clinical.2022,
     by=c('sample_barcode'='sample_barcode'),
     suffix=c('.2021','.2022')
   )
-
-
 rm(tmp.clinical.2021, tmp.clinical.2022) # cleanup
 
 
@@ -309,7 +322,7 @@ rm(tmp.clinical.2021, tmp.clinical.2022) # cleanup
 ### check discrepancies 2021 / 2022 ----
 
 
-# 3 discrepancies regarding histology
+#'@details [-] 3 discrepancies regarding histology
 # tmp.clinical.merge |> 
 #   dplyr::filter(!is.na(histology.2021)) |> 
 #   dplyr::filter(histology.2021 != histology.2022) |> 
@@ -322,7 +335,7 @@ rm(tmp.clinical.2021, tmp.clinical.2022) # cleanup
 #   )
 
 
-# no strange identifier mix-ups
+#'@details [v] no strange identifier mix-ups
 # tmp.clinical.merge |> 
 #   dplyr::filter(!is.na(histology.2021)) |> 
 #   dplyr::filter(sample_barcode.2021 != sample_barcode.2022) |> 
@@ -337,7 +350,7 @@ rm(tmp.clinical.2021, tmp.clinical.2022) # cleanup
 #   )
 
 
-# 3 discrepancies in grading
+#'@details [-] 3 discrepancies in grading
 # tmp.clinical.merge |> 
 #   dplyr::filter(!is.na(histology.2021)) |> 
 #   dplyr::filter(grade.2021 != grade.2022) |> 
@@ -352,7 +365,7 @@ rm(tmp.clinical.2021, tmp.clinical.2022) # cleanup
 #   )
 
 
-# exactly identical
+#'@details [v] IDH status exactly identical
 # tmp.clinical.merge |> 
 #   dplyr::filter(!is.na(histology.2021)) |> 
 #   dplyr::filter(idh_status.2021 != idh_status.2022 ) |> 
@@ -367,7 +380,7 @@ rm(tmp.clinical.2021, tmp.clinical.2022) # cleanup
 #   )
 
 
-# exactly identical
+#'@details [v] codel status exactly identical
 # tmp.clinical.merge |> 
 #   dplyr::filter(!is.na(histology.2021)) |> 
 #   dplyr::filter(codel_status.2021 != codel_status.2022 ) |> 
@@ -382,7 +395,7 @@ rm(tmp.clinical.2021, tmp.clinical.2022) # cleanup
 #   )
 
 
-# plenty but small discrepancies:
+#'@details [v] plenty but small surgical interval discrepancies - rounding errors?:
 # tmp.clinical.merge |> 
 #   dplyr::filter(!is.na(histology.2021)) |> 
 #   dplyr::filter(surgical_interval_mo.2021 != surgical_interval_mo.2022 ) |> 
@@ -393,7 +406,7 @@ rm(tmp.clinical.2021, tmp.clinical.2022) # cleanup
 #   )
 
 
-# exactly identical
+#'@details [v] alk treatment: exactly identical
 # tmp.clinical.merge |> 
 #   dplyr::filter(!is.na(histology.2021)) |> 
 #   dplyr::filter(treatment_alkylating_agent.2021 != treatment_alkylating_agent.2022 ) |>
@@ -404,7 +417,7 @@ rm(tmp.clinical.2021, tmp.clinical.2022) # cleanup
 #   )
 
 
-# exactly identical
+#'@details [v] TMZ: exactly identical
 # tmp.clinical.merge |> 
 #   dplyr::filter(!is.na(histology.2021)) |> 
 #   dplyr::filter(treatment_tmz.2021 != treatment_tmz.2022 ) |>
@@ -415,13 +428,18 @@ rm(tmp.clinical.2021, tmp.clinical.2022) # cleanup
 #   )
 
 
-# quite striking differences in alternative chemo descriptions:
+#'@details [-] alt chemo: quite striking differences in alternative chemo descriptions:
 # tmp.clinical.merge |> 
 #   dplyr::filter(!is.na(histology.2021)) |> 
 #   dplyr::filter(treatment_chemotherapy_other.2021 != treatment_chemotherapy_other.2022 ) |>
 #   dplyr::select(sid,
 #                 treatment_chemotherapy_other.2021 , treatment_chemotherapy_other.2022
 #   )
+warning("descriptions of alternative chemotherapy show considerable differences - columns are excluded")
+
+tmp.clinical.merge <- tmp.clinical.merge |> 
+  dplyr::mutate(treatment_chemotherapy_other.2021 = NULL,
+                treatment_chemotherapy_other.2022 = NULL)
 
 
 
@@ -429,7 +447,6 @@ rm(tmp.clinical.2021, tmp.clinical.2022) # cleanup
 
 
 glass.gbm.rnaseq.metadata.all.samples
-<- data.frame(sid = colnames(glass.gbm.rnaseq.expression.all.samples),  stringsAsFactors = F) |> 
   dplyr::mutate(sid = gsub(".","-",sid,fixed=T))  |>  # by convention [https://github.com/fpbarthel/GLASS]
   dplyr::mutate(sid = gsub("_1$","",sid,fixed=F)) |>  # by convention [https://github.com/fpbarthel/GLASS]
   dplyr::mutate(sample_barcode = gsub("^([^\\-]+-[^\\-]+-[^\\-]+-[^\\-]+)-.+$","\\1",sid)) |> 
