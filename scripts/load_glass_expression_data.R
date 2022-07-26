@@ -200,7 +200,8 @@ stopifnot(grepl(".",glass.gbm.rnaseq.metadata.all.samples$sample_barcode,fixed=T
 tmp.subtype.2021 <- read.table('data/gsam/data/GLASS_GBM_R1-R2/GLASS.GBM.subtypes.from.Synapse.portal.tsv', header=T,stringsAsFactors = F) |>  # https://www.synapse.org/#!Synapse:syn21441635/tables/
   dplyr::select(c('aliquot_barcode','subtype')) |> 
   dplyr::mutate(subtype = as.factor(subtype)) |> 
-  dplyr::rename(GBM.transcriptional.subtype.Synapse.2021 = subtype)
+  dplyr::rename(GBM.transcriptional.subtype.Synapse = subtype)
+stopifnot(duplicated(tmp.subtype.2021$aliquot_barcode) == FALSE)
 
 
 # new subtype data from Synapse portal 21 jul 2022
@@ -211,12 +212,16 @@ tmp.subtype.2022 <- read.table('data/gsam/data/GLASS_GBM_R1-R2/GLASS.GBM.subtype
   dplyr::ungroup() |> 
   dplyr::select(c('aliquot_barcode','signature_name')) |> 
   dplyr::mutate(signature_name = as.factor(signature_name)) |> 
-  dplyr::rename(GBM.transcriptional.subtype.Synapse.2022 = signature_name)
+  dplyr::rename(GBM.transcriptional.subtype.Synapse = signature_name) |> 
+  dplyr::group_by(aliquot_barcode) |> 
+  dplyr::summarise(GBM.transcriptional.subtype.Synapse = as.factor(paste(GBM.transcriptional.subtype.Synapse, collapse="|"))) |> 
+  dplyr::ungroup()
+stopifnot(nrow(tmp.subtype.2022$aliquot_barcode) == 425)
+stopifnot(duplicated(tmp.subtype.2022$aliquot_barcode) == FALSE) # - some have equal prob's so should have been merged/collapsed
 
 
-
-#'@details [v] x-check same subtype names are used consistently throughout
-stopifnot(levels(tmp.subtype.2021$GBM.transcriptional.subtype.Synapse.2021) == levels(tmp.subtype.2022$GBM.transcriptional.subtype.Synapse.2022))
+#'@details [-] x-check same subtype names are used consistently throughout
+#stopifnot(levels(tmp.subtype.2021$GBM.transcriptional.subtype.Synapse) == levels(tmp.subtype.2022$GBM.transcriptional.subtype.Synapse))
 
 
 #'@details [-] check if both tables have the same columns - No - different pipelines?
@@ -226,7 +231,13 @@ warning('Format of 2021 and 2022 subtype data differs')
 
 tmp.subtype.merge <- dplyr::full_join(tmp.subtype.2021,tmp.subtype.2022,
                                       by=c('aliquot_barcode'='aliquot_barcode'),
-                                      suffix = c('.2021','.2022')) 
+                                      suffix = c('.2021','.2022'))
+
+
+
+stopifnot(duplicated(tmp.subtype.merge$aliquot_barcode) == FALSE)
+
+
 rm(tmp.subtype.2021, tmp.subtype.2022)
 
 
@@ -461,8 +472,9 @@ tmp.clinical.merge <- tmp.clinical.merge |>
 
 
 glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
-  dplyr::mutate(case_barcode = gsub("^(............).+$","\\1",aliquot_barcode)) |> 
-  dplyr::mutate(resection = factor(gsub("^.............(..).+$","\\1",aliquot_barcode), levels=c('TP','R1','R2','R3','R4'))) |>  # TP is primary tumour? https://github.com/fpbarthel/GLASS
+  dplyr::mutate(sid.label = gsub("^(.)...(-..-....-).(.).*$","\\1\\2\\3", aliquot_barcode)) |> 
+  dplyr::mutate(case_barcode = gsub("^(............).+$","\\1", aliquot_barcode)) |> 
+  dplyr::mutate(resection = factor(gsub("^.............(..).+$","\\1", aliquot_barcode), levels=c('TP','R1','R2','R3','R4'))) |>  # TP is primary tumour? https://github.com/fpbarthel/GLASS
   dplyr::arrange(case_barcode, resection)
 
 
@@ -479,28 +491,16 @@ stopifnot(glass.gbm.rnaseq.metadata.all.samples$sample_barcode %in% tmp.clinical
 # stopifnot(tmp.clinical.merge$sample_barcode %in% glass.gbm.rnaseq.metadata.all.samples$sample_barcode) there is clinical data beyond those of which expression data is available
 
 
-
-glass.gbm.rnaseq.metadata.all.samples
-  dplyr::left_join(tmp.subtype.merge, by = c('sid' = 'aliquot_barcode' ), suffix=c('','')) |> 
-  dplyr::left_join(tmp.subtype.2022, by = c('sid' = 'aliquot_barcode' ), suffix=c('','')) |> 
-  dplyr::mutate(sid.label = gsub("^(.)...(-..-....-).(.).*$","\\1\\2\\3",sid) ) |> 
-  dplyr::mutate(dataset = gsub("^(....).*$","\\1",sid))
-
+glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::left_join(tmp.subtype.merge, by = c('aliquot_barcode' = 'aliquot_barcode' ), suffix=c('','')) |> 
+  dplyr::left_join(tmp.clinical.merge, by = c('sample_barcode' = 'sample_barcode' ), suffix=c('','')) |> 
+  dplyr::mutate(condition = factor(ifelse(resection == "TP","Primary","NotPrimary"), levels = c("Primary","NotPrimary") ))
+rm(tmp.subtype.merge, tmp.clinical.2022)
 
 
-
-
-  # dplyr::left_join(
-
-  #     ,
-  #   by=c('sample_barcode'='sample_barcode')) %>%
-  # dplyr::mutate(condition = ifelse(resection == "TP","Primary","NotPrimary")) %>%
-  # dplyr::mutate(condition = factor(condition, levels = c("Primary","NotPrimary") )) %>%
+# mark idh mutatns as excluded
   # dplyr::filter(idh_status == "IDHwt") # exclude the three IDH mutants according to Synapse WGS/WES VCF files
   # 
-
-
-
 # exclude samples from patients that had a no grade IV tumor
 no.grade.iv <- glass.gbm.rnaseq.metadata %>%
   dplyr::filter(grade %in% c('II','III')) %>%
