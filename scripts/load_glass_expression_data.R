@@ -151,36 +151,6 @@ glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |
   dplyr::mutate(batch.2022 = NULL)
 
 
-# find and exclude replicates
-# glass.gbm.rnaseq.metadata.all.samples |>
-#   dplyr::arrange(sample_barcode, aliquot_barcode) |>
-#   dplyr::group_by(sample_barcode) |>
-#   dplyr::filter(dplyr::n() > 1)
-
-
-# label replicates
-glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
-  dplyr::mutate(excluded = FALSE) |> 
-  dplyr::mutate(excluded.reason = NA) |> 
-  dplyr::mutate(excluded.reason = ifelse(aliquot_barcode %in% c(
-    "GLSS-CU-P053-R2-01R-RNA-2HP24A",
-    "GLSS-CU-P101-R1-01R-RNA-FLI06Y",
-    "GLSS-SM-R101-R1-01R-RNA-7ATA59",
-    "GLSS-SM-R101-TP-01R-RNA-G7G4Q5",
-    "GLSS-SM-R107-R1-01R-RNA-ID07M4",
-    "GLSS-SM-R110-TP-01R-RNA-RSRC7U"
-  ),"replicate sample", excluded.reason)) |> 
-  dplyr::mutate(excluded = !is.na(excluded.reason))
-
-
-#'@details [v] ensure replicates are marked as such
-stopifnot(
-glass.gbm.rnaseq.metadata.all.samples |> 
-  dplyr::filter(excluded == F) |> 
-  dplyr::filter(duplicated(sample_barcode)) |> 
-  nrow() == 0
-)
-
 
 #'@details [v] check if no strange suffixes are present
 stopifnot(grepl("_1$",glass.gbm.rnaseq.metadata.all.samples$aliquot_barcode) == F)
@@ -494,8 +464,63 @@ glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |
   dplyr::left_join(tmp.subtype.merge, by = c('aliquot_barcode' = 'aliquot_barcode' ), suffix=c('','')) |> 
   dplyr::left_join(tmp.clinical.merge, by = c('sample_barcode' = 'sample_barcode' ), suffix=c('','')) |> 
   dplyr::mutate(condition = factor(ifelse(resection == "TP","Primary","NotPrimary"), levels = c("Primary","NotPrimary") ))
-rm(tmp.subtype.merge, tmp.clinical.2022)
+rm(tmp.subtype.merge, tmp.clinical.merge)
 
+stopifnot(!is.na(glass.gbm.rnaseq.metadata.all.samples$GBM.transcriptional.subtype.Synapse.2022))
+
+
+
+### add exclusion labels ----
+
+
+# the 'excluded' labels should yet be absent
+stopifnot("excluded" %in% colnames(glass.gbm.rnaseq.metadata.all.samples) == FALSE)
+
+glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::mutate(excluded = strsplit("",":")) # quickest way to get a list of empty characters?
+
+
+#### replicates ----
+
+# manually find replicates
+# find and exclude replicates
+# glass.gbm.rnaseq.metadata.all.samples |>
+#   dplyr::arrange(sample_barcode, aliquot_barcode) |>
+#   dplyr::group_by(sample_barcode) |>
+#   dplyr::filter(dplyr::n() > 1)
+
+
+glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::mutate(excluded = ifelse(aliquot_barcode %in% c(
+      "GLSS-CU-P053-R2-01R-RNA-2HP24A",
+      "GLSS-CU-P101-R1-01R-RNA-FLI06Y",
+      "GLSS-SM-R101-R1-01R-RNA-7ATA59",
+      "GLSS-SM-R101-TP-01R-RNA-G7G4Q5",
+      "GLSS-SM-R107-R1-01R-RNA-ID07M4",
+      "GLSS-SM-R110-TP-01R-RNA-RSRC7U" ), 
+    lapply(excluded, function(x) { return(c(x,"replicate sample")) }), excluded))
+
+
+glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::filter(excluded == F)
+
+
+
+#'@details [v] ensure replicates are marked as such
+stopifnot(
+  glass.gbm.rnaseq.metadata.all.samples |> 
+    dplyr::filter(lapply(excluded , length) == 0) |> 
+    dplyr::filter(duplicated(sample_barcode)) |> 
+    nrow() == 0
+)
+stopifnot(
+  glass.gbm.rnaseq.metadata.all.samples |> 
+    dplyr::filter(lapply(excluded , length) > 0) |> 
+    nrow() == 6
+)
+
+
+#### codel status ----
 
 glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
   dplyr::mutate(excluded.reason = ifelse(is.na(excluded.reason) & codel_status.2022 == "codel","1p/19q-codel", excluded.reason)) |> 
@@ -505,41 +530,71 @@ glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |
   dplyr::mutate(excluded.reason = ifelse(is.na(excluded.reason) & (is.na(grade.2021) & is.na(grade.2022)),"Grading-status N/A",excluded.reason)) |> 
   dplyr::mutate(excluded.reason = ifelse(is.na(excluded.reason) & (is.na(histology.2021) | histology.2021 != "Glioblastoma"), "Histology not GBM",excluded.reason)) |> 
   dplyr::mutate(excluded.reason = ifelse(is.na(excluded.reason) & (is.na(histology.2022) | histology.2022 != "Glioblastoma"), "Histology not GBM",excluded.reason)) |> 
-  dplyr::mutate(excluded.reason = ifelse(is.na(excluded.reason) & 
-                                         !is.na(histology.2022) &
-                                         !is.na(histology.2022) &
-                                         as.character(histology.2021) != as.character(histology.2022), "Histology 2021/2022 mismatch",excluded.reason)) |> 
+  dplyr::mutate(excluded.reason = ifelse(is.na(excluded.reason) & !is.na(histology.2021) & !is.na(histology.2022) & as.character(histology.2021) != as.character(histology.2022), "Histology 2021/2022 mismatch",excluded.reason)) |> 
+  dplyr::mutate(excluded.reason = ifelse(is.na(excluded.reason) & !is.na(grade.2021) & !is.na(grade.2022) & as.character(grade.2021) != as.character(grade.2022), "Grade 2021/2022 mismatch",excluded.reason)) |> 
   dplyr::mutate(excluded = !is.na(excluded.reason))
 
 
-# glass.gbm.rnaseq.metadata.all.samples |> 
-#   dplyr::mutate(excluded.reason = as.factor(excluded.reason)) |> 
-#   dplyr::pull(excluded.reason) |> 
-#   summary()
-# 
+#'@todo x-check VCFs for ADDITIONAL IDH muts !!
+#'@todo make a definitive call about samples with "NOS" in the WHO classification (IDH mut not specified)
+#'@todo filter those recurrences that start at III or not as GBM
+
+
+data.frame(pid = c(1,1,2,2,3,3),g = c('IV','IV','III','IV','IV','IV')) |> 
+  dplyr::group_by(pid) |> 
+  dplyr::mutate(drop = dplyr::case_when(
+    any(g != "IV") ~ "Y",
+    T ~ "N"
+  )) |> 
+  dplyr::ungroup()
+
+
+data.frame(a = c('a','b','c'), d=list(c(),c(),c())) |> 
+  dplyr::mutate(e = character())
+
+x = data.frame(a = c('1:2:3',"4:5","6","","7:8:9:10")) |> 
+  dplyr::mutate(b = strsplit(a, ":")) |> 
+  dplyr::mutate(b.len = lapply(b , length)) |> 
+  dplyr::mutate(f = lapply(b, function(x) { return(as.character(0)) }) ) |> 
+  dplyr::mutate(g = as.list(as.character(f)))
+  #dplyr::mutate(g.len = lapply(g , length)) |> 
+  #dplyr::mutate(h = lapply(g, function(x) { return(c(x,"suff")) }))
+
+d = function(x) { return(c(x,"?")) }
+lapply(x$b, d)
+
+
+# exclude middle resection for samples with more than 2 resections
+glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::mutate(excluded.reason = ifelse(aliquot_barcode %in% c('GLSS-SM-R056-R2-01R-RNA-DHLJ2T', 'GLSS-SM-R060-R1-01R-RNA-6SGM43', 'GLSS-SM-R064-R1-01R-RNA-GLLBN3'), "interim resection", excluded.reason)) |> 
+  dplyr::mutate(excluded = !is.na(excluded.reason))
+
+glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::filter(!excluded) |> 
+  dplyr::group_by(case_barcode.2022) |> 
+  dplyr::filter(dplyr::n() != 2)
+
+
+glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::filter(
+    case_barcode.2021 %in% (glass.gbm.rnaseq.metadata.all.samples |> 
+      dplyr::filter(is.na(excluded.reason)) |> 
+      dplyr::pull(case_barcode.2021))
+  ) |> View()
+
+
+
+glass.gbm.rnaseq.metadata.all.samples |>
+  dplyr::mutate(excluded.reason = as.factor(excluded.reason)) |>
+  dplyr::pull(excluded.reason) |>
+  summary()
+
 # 
 # glass.gbm.rnaseq.metadata.all.samples |> 
 #   dplyr::filter(is.na(excluded.reason)) |> 
 #   View()
 
 
-#'@todo x-check VCFs for ADDITIONAL IDH muts !!
-#'@todo make a definitive call about samples with "NOS" in the WHO classification (IDH mut not specified)
-
-
-# exclude middle resection for samples with more than 2 resections
-glass.gbm.rnaseq.metadata.all.samples |> 
-  dplyr::filter(!excluded) |> 
-  dplyr::group_by(case_barcode.2022) |> 
-  dplyr::filter(dplyr::n() > 2)
-glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
-  dplyr::mutate(excluded.reason = ifelse(aliquot_barcode %in% c('GLSS-SM-R056-R2-01R-RNA-DHLJ2T', 'GLSS-SM-R060-R1-01R-RNA-6SGM43', 'GLSS-SM-R064-R1-01R-RNA-GLLBN3'), "interim resection", excluded.reason)) |> 
-  dplyr::mutate(excluded = !is.na(excluded.reason))
-
-
-
-
-stopifnot(!is.na(glass.gbm.rnaseq.metadata.all.samples$GBM.transcriptional.subtype.Synapse.2022))
 
 
 
