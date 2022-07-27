@@ -642,18 +642,12 @@ glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |
   dplyr::mutate(drop1=NULL, drop2 = NULL)
 
 
-# x-check
-# glass.gbm.rnaseq.metadata.all.samples |> 
-#   dplyr::filter(as.logical(lapply(excluded,function(x){return("Grade N/A" %in% x)}))) |> 
-#   dplyr::select(histology.2021, histology.2022,
-#                 who_classification.2021, who_classification.2022, 
-#                 idh_status.2021, idh_status.2022,
-#                 case_barcode.2022,
-#                 grade.2021, grade.2022,
-#                 excluded) |> 
-#   dplyr::mutate(excluded = as.character(lapply(excluded, paste, collapse=", "))) |> 
-#   as.data.frame() |> 
-#   View()
+# x-check / view [grade]
+glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::filter(idh_status.2021 %in% c("II","III") | idh_status.2022 %in% c("II","III") | (as.logical(lapply(excluded,function(x){return("Grade II/III" %in% x)})))) |> 
+  dplyr::select(aliquot_barcode, grade.2021, grade.2022, excluded) |> 
+  dplyr::mutate(excluded = as.character(lapply(excluded, paste, collapse=", "))) |> 
+  as.data.frame()
 
 
 
