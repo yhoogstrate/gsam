@@ -690,6 +690,13 @@ glass.gbm.rnaseq.metadata.all.samples |>
 
 
 
+#### additional / todo ----
+
+
+#'@todo make a definitive call about samples with "NOS" in the WHO classification (IDH mut not specified)
+
+
+
 #### last: take out middle resections ----
 
 
@@ -718,31 +725,65 @@ glass.gbm.rnaseq.metadata.all.samples |>
   as.data.frame()
 
 
-
-#### additional / todo ----
-
-
-#'@todo x-check VCFs for ADDITIONAL IDH muts !!
-#'@todo make a definitive call about samples with "NOS" in the WHO classification (IDH mut not specified)
+## check w/ VCF mutations ----
 
 
-#### final check for each variable ----
+#'@details all that have an IDH mutation in the VCF are also marked as such
+
+# # file from Synapse portal
+# #tmp <- read.csv('data/gsam/data/GLASS_GBM_R1-R2/variants_passgeno_20190327.csv',stringsAsFactors = F) |> 
+# tmp <- read.csv('data/gsam/data/GLASS_GBM_R1-R2/variants_passgeno_20220531.csv',stringsAsFactors = F) |> 
+#   dplyr::mutate(aliquot_barcode = as.factor(aliquot_barcode)) |> 
+#   dplyr::mutate(case_barcode = as.factor(gsub("^([^\\-]+.[^\\-]+.[^\\-]+).+$","\\1",aliquot_barcode)))
+# 
+# # idh1 => chr2:209,098,951-209,121,867 [R132]
+# tmp.idh1 <- tmp |> 
+#   dplyr::filter(chrom == "2" & start >=  209113111-1 & end <= 209113111+2+1 ) |> # hg19 R132
+#   #dplyr::filter(chrom == "2" & start >=  208248387-1 & end <= 208248389+2 ) |> # hg38
+#   dplyr::filter(ad_alt != 0) |> 
+#   dplyr::filter(ssm2_pass_call == 't') |> 
+#   dplyr::arrange(start, aliquot_barcode)
+# 
+# 
+# # idh2 => chr15:90,623,937-90,648,932 [R140/R172]
+# tmp.idh2 <- tmp %>%
+#   dplyr::filter((chrom == "15" & start >=  90088701-1 & end <= 90088703+1 ) | (chrom == "15" & start >=  90088605-1 & end <= 90088607+1 ) ) %>%
+#   dplyr::filter(ad_alt != 0) %>%
+#   dplyr::filter(ssm2_pass_call == 't') %>%
+#   dplyr::arrange(start, aliquot_barcode)
+# 
+# 
+# glass.gbm.rnaseq.metadata.all.samples |> 
+#   dplyr::filter(case_barcode %in% (tmp.idh1$case_barcode)) |> 
+#   dplyr::select(aliquot_barcode,resection, excluded)  |> 
+#   dplyr::mutate(excluded = as.character(lapply(excluded, paste, collapse=", "))) |> 
+#   as.data.frame()
+# 
+# 
 
 
-glass.gbm.rnaseq.metadata.all.samples |> 
-  dplyr::filter(lapply(excluded,length) == 0) |> 
-  dplyr::mutate(case_barcode.2021 = NULL,
-                treatment_chemotherapy_other_cycles.2022, 
-                comments.2022, idh_codel_subtype.2022,
-                surgery_indication.2022, surgery_extent_of_resection.2022,
-                surgery_laterality.2022, surgery_location.2022
-  ) |> 
-  View()
+rm(tmp,tmp.idh1,tmp.idh2)
+
+
+## final check for each variable ----
+
+
+colnames(glass.gbm.rnaseq.metadata.all.samples)
+
+stopifnot(duplicated(glass.gbm.rnaseq.metadata.all.samples$aliquot_barcode) == F)
+stopifnot(glass.gbm.rnaseq.metadata.all.samples$aliquot_barcode %in% colnames(glass.gbm.rnaseq.expression.all.samples))
 
 
 
+glass.gbm.rnaseq.metadata.all.samples |>
+  dplyr::filter(as.numeric(lapply(excluded, length)) == 0) |> 
+  dplyr::pull(case_barcode) |> 
+  unique() |> 
+  length()
 
 
+
+#### old stuff (?) ----
 
 ## according to TCGA [data/tcga/tables/rna-seq/gdc_sample_sheet.2019-01-28.tsv] these should be recurrent GBMs:
 # TCGA-06-0125	TCGA-06-0125-02A  v
@@ -772,44 +813,17 @@ glass.gbm.rnaseq.metadata.all.samples |>
 
 # select only those that are eligible for the study ----
 
-glass.gbm.rnaseq.expression <- glass.gbm.rnaseq.expression %>%
-  dplyr::select(glass.gbm.rnaseq.metadata$sid)
+
+glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::filter(lapply(excluded, length) == 0) # erase all that have reasons to be excluded
 
 
-stopifnot(colnames(glass.gbm.rnaseq.expression) %in% glass.gbm.rnaseq.metadata$sid)
+glass.gbm.rnaseq.expression.all.samples <- glass.gbm.rnaseq.expression.all.samples %>%
+  dplyr::select(glass.gbm.rnaseq.metadata.all.samples$aliquot_barcode) # match table with metadata
 
 
 
-## add mutations ----
-
-# file from Synapse portal
-# tmp <- read.csv('data/variants_passgeno_20190327.csv',stringsAsFactors = F) %>%
-#   dplyr::mutate(pid = gsub("^([^\\-]+.[^\\-]+.[^\\-]+).+$","\\1",aliquot_barcode)) 
-# 
-# #idh1:chr2:209,098,951-209,121,867
-# 
-# tmp.idh1 <- tmp %>%
-#   dplyr::filter(chrom == "2" & start >=  209098951 & end <= 209121867 ) %>%
-#   dplyr::filter(ad_alt != 0) %>%
-#   dplyr::filter(pid %in% glass.gbm.rnaseq.metadata$pid) %>%
-#   dplyr::filter(ssm2_pass_call == 't') %>%
-#   dplyr::arrange(start, aliquot_barcode)
-#   
-#   # %>% dplyr::filter(start == 209113112) %>% pull(pid) %>% unique()
-# 
-# 
-# 
-# 
-# 
-# #idh2:chr15:90,623,937-90,648,932
-# 
-# tmp.idh2 <- tmp %>%
-#   dplyr::filter(chrom == "15" & start >=  90623937 & end <= 90648932 ) %>%
-#   dplyr::filter(ad_alt != 0) %>%
-#   dplyr::filter(pid %in% glass.gbm.rnaseq.metadata$pid) %>%
-#   dplyr::filter(ssm2_pass_call == 't') %>%
-#   dplyr::arrange(start, aliquot_barcode)
-
+stopifnot(colnames(glass.gbm.rnaseq.expression.all.samples) == glass.gbm.rnaseq.metadata.all.samples$aliquot_barcode)
 
 
 
@@ -817,7 +831,14 @@ stopifnot(colnames(glass.gbm.rnaseq.expression) %in% glass.gbm.rnaseq.metadata$s
 # VST transform ----
 
 
+stopifnot(!exists('glass.gbm.rnaseq.expression.vst'))
+
+
+
 cond <- as.factor(gsub("^(.).*$","\\1",colnames(glass.gbm.rnaseq.expression)))
+glass.gbm.rnaseq.expression.all.samples
+
+
 glass.gbm.rnaseq.expression.vst <- DESeq2::DESeqDataSetFromMatrix(glass.gbm.rnaseq.expression, data.frame(cond), ~cond)
 glass.gbm.rnaseq.expression.vst <- SummarizedExperiment::assay(DESeq2::vst(glass.gbm.rnaseq.expression.vst, blind=F))
 rm(cond)
