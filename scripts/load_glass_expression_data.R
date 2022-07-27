@@ -767,6 +767,7 @@ rm(tmp,tmp.idh1,tmp.idh2)
 
 ## final check for each variable ----
 
+### metadata ----
 
 colnames(glass.gbm.rnaseq.metadata.all.samples)
 
@@ -780,6 +781,11 @@ glass.gbm.rnaseq.metadata.all.samples |>
   dplyr::pull(case_barcode) |> 
   unique() |> 
   length()
+
+### expression data ----
+
+
+# plot(sort(colSums(glass.gbm.rnaseq.expression.all.samples) / 1000000)) + abline(h=0.75)
 
 
 
@@ -834,14 +840,39 @@ stopifnot(colnames(glass.gbm.rnaseq.expression.all.samples) == glass.gbm.rnaseq.
 stopifnot(!exists('glass.gbm.rnaseq.expression.vst'))
 
 
+tmp <- as.factor(paste0('c',round(runif(ncol(glass.gbm.rnaseq.expression.all.samples)))+1) )
 
-cond <- as.factor(gsub("^(.).*$","\\1",colnames(glass.gbm.rnaseq.expression)))
-glass.gbm.rnaseq.expression.all.samples
+glass.gbm.rnaseq.expression.all.samples.vst <- DESeq2::DESeqDataSetFromMatrix(glass.gbm.rnaseq.expression.all.samples, data.frame(cond = tmp), ~cond) |> 
+  DESeq2::vst(blind=T) |> 
+  SummarizedExperiment::assay() |> 
+  as.data.frame(stringsAsFactors=F)
 
 
-glass.gbm.rnaseq.expression.vst <- DESeq2::DESeqDataSetFromMatrix(glass.gbm.rnaseq.expression, data.frame(cond), ~cond)
-glass.gbm.rnaseq.expression.vst <- SummarizedExperiment::assay(DESeq2::vst(glass.gbm.rnaseq.expression.vst, blind=F))
-rm(cond)
+## QC ----
+
+### PCA ----
+
+
+plt <- glass.gbm.rnaseq.expression.all.samples.vst |> 
+  t() |> 
+  prcomp() |> 
+  purrr::pluck('x') |> 
+  as.data.frame(stringsAsFactors=F) |> 
+  dplyr::select(PC1, PC2, PC3, PC4, PC5, PC6, PC7, PC8) |> 
+  tibble::rownames_to_column('aliquot_barcode') |> 
+  dplyr::left_join(glass.gbm.rnaseq.metadata.all.samples, by=c('aliquot_barcode'='aliquot_barcode'), suffix=c('','')) |> 
+  dplyr::mutate(project = gsub("^([^\\-]+)-[^\\-]+-.+$","\\1",aliquot_barcode)) |>  # project
+  dplyr::mutate(tissue.source = gsub("^[^\\-]+-([^\\-]+)-.+$","\\1",aliquot_barcode)) # tissue.source
+
+
+# extreme batch effects
+ggplot(plt, aes(x=PC1, y=PC2, label=sid.label, col=project)) +
+  geom_point() +
+  ggrepel::geom_text_repel(cex=3) +
+  theme_bw() + 
+  facet_grid(cols = vars(tissue.source))
+
+
 
 
 
@@ -877,6 +908,8 @@ glass.gbm.rnaseq.metadata <- glass.gbm.rnaseq.metadata %>%
 
 # pretty poor correlation, something seems odd w/ the predictions in GLASS?
 #plot(glass.gbm.rnaseq.metadata$tumour.percentage.dna , glass.gbm.rnaseq.metadata$tumour.percentage.dna.imputed.caret)
+
+#'@todo check w/ CD163 and TMEM144 expression
 
 # Combine table into paired data table ----
 
