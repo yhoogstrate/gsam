@@ -96,8 +96,6 @@ glass.gbm.rnaseq.expression.all.samples <- 'data/gsam/data/GLASS_GBM_R1-R2/trans
 
 
 
-
-
 # Load metadata ----
 
 
@@ -153,7 +151,7 @@ glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |
 
 
 #'@details [v] check if no strange suffixes are present
-stopifnot(grepl("_1$",glass.gbm.rnaseq.metadata.all.samples$aliquot_barcode) == F)
+stopifnot(stringr::str_detect(glass.gbm.rnaseq.metadata.all.samples$aliquot_barcode,"_1$", negate=T) )
 
 #'@details [v] check if no dots are present
 stopifnot(grepl(".",glass.gbm.rnaseq.metadata.all.samples$aliquot_barcode,fixed=T) == F)
@@ -192,6 +190,7 @@ stopifnot(duplicated(tmp.subtype.2022$aliquot_barcode) == FALSE) # - some have e
 
 #'@details [-] x-check same subtype names are used consistently throughout
 #stopifnot(levels(tmp.subtype.2021$GBM.transcriptional.subtype.Synapse) == levels(tmp.subtype.2022$GBM.transcriptional.subtype.Synapse))
+warning('2022 subtypes contain inconfident calls with equal probabilities')
 
 
 #'@details [-] check if both tables have the same columns - No - different pipelines?
@@ -444,6 +443,7 @@ glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |
   dplyr::mutate(sid.label = gsub("^(.)...(-..-....-).(.).*$","\\1\\2\\3", aliquot_barcode)) |> 
   dplyr::mutate(case_barcode = gsub("^(............).+$","\\1", aliquot_barcode)) |> 
   dplyr::mutate(resection = factor(gsub("^.............(..).+$","\\1", aliquot_barcode), levels=c('TP','R1','R2','R3','R4'))) |>  # TP is primary tumour? https://github.com/fpbarthel/GLASS
+  dplyr::mutate(is.primary = resection == "TP") |> 
   dplyr::arrange(case_barcode, resection)
 
 
@@ -501,8 +501,10 @@ glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |
     lapply(excluded, function(x) { return(unique(c(x,"replicate sample"))) }), excluded))
 
 
+# x-check
 glass.gbm.rnaseq.metadata.all.samples |> 
-  dplyr::filter(excluded == F)
+  dplyr::filter(as.logical(lapply(excluded , function(x){return("replicate sample" %in% x)}))) |> 
+  dplyr::select(aliquot_barcode, excluded)
 
 
 
@@ -538,13 +540,13 @@ glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |
 
 
 glass.gbm.rnaseq.metadata.all.samples |> 
-  dplyr::filter(lapply(excluded , length) > 0) |> 
-  dplyr::select(excluded) |> 
+  dplyr::filter(as.logical(lapply(excluded , function(x){return("1p/19q-codel" %in% x)})) | codel_status.2021 == "codel" | codel_status.2022 == "codel") |> 
+  dplyr::select(aliquot_barcode, codel_status.2021, codel_status.2022, excluded) |> 
   dplyr::mutate(excluded = as.character(lapply(excluded, paste, collapse=", "))) |> 
   as.data.frame()
 
 
-  
+
 #### IDH status ----
 
 
@@ -571,7 +573,7 @@ summary(as.factor(glass.gbm.rnaseq.metadata.all.samples$drop2))
 glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
   dplyr::mutate(excluded = ifelse(drop1 != "N", lapply(excluded, function(x) { return(unique(c(x,"IDH-mut"))) }), excluded)) |> 
   dplyr::mutate(excluded = ifelse(drop2 != "N", lapply(excluded, function(x) { return(unique(c(x,"IDH-status N/A"))) }), excluded)) |> 
-  dplyr::mutate(drop=NULL)
+  dplyr::mutate(drop1=NULL, drop2=NULL)
 
 
 glass.gbm.rnaseq.metadata.all.samples |> 
@@ -582,12 +584,19 @@ glass.gbm.rnaseq.metadata.all.samples |>
 
 
 
-# glass.gbm.rnaseq.metadata.all.samples |> 
-#   dplyr::filter(as.logical(lapply(excluded,function(x){return("IDH-status N/A" %in% x)}))) |> 
-#   dplyr::select(histology.2021, histology.2022, who_classification.2021, who_classification.2022, idh_status.2021, idh_status.2022, excluded) |> 
-#   dplyr::mutate(excluded = as.character(lapply(excluded, paste, collapse=", "))) |> 
-#   as.data.frame() |> 
-#   View()
+glass.gbm.rnaseq.metadata.all.samples |>
+  dplyr::filter(as.logical(lapply(excluded,function(x){return("IDH-status N/A" %in% x)}))) |>
+  dplyr::select(histology.2021, histology.2022, who_classification.2021, who_classification.2022, idh_status.2021, idh_status.2022, excluded) |>
+  dplyr::mutate(excluded = as.character(lapply(excluded, paste, collapse=", "))) |>
+  as.data.frame() |>
+  View()
+
+glass.gbm.rnaseq.metadata.all.samples |>
+  dplyr::filter(as.logical(lapply(excluded, stringr::str_detect, pattern = "IDH-status N/A" ))) |>
+  dplyr::select(histology.2021, histology.2022, who_classification.2021, who_classification.2022, idh_status.2021, idh_status.2022, excluded) |>
+  dplyr::mutate(excluded = as.character(lapply(excluded, paste, collapse=", "))) |>
+  as.data.frame() |>
+  View()
 
 
 
@@ -655,8 +664,8 @@ glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |
   dplyr::ungroup()
 
 
-summary(as.factor(glass.gbm.rnaseq.metadata.all.samples$drop1))
-summary(as.factor(glass.gbm.rnaseq.metadata.all.samples$drop2))
+# summary(as.factor(glass.gbm.rnaseq.metadata.all.samples$drop1))
+# summary(as.factor(glass.gbm.rnaseq.metadata.all.samples$drop2))
 
 
 glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
@@ -665,48 +674,39 @@ glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |
   dplyr::mutate(drop1=NULL, drop2 = NULL)
 
 
-# x-check
-glass.gbm.rnaseq.metadata.all.samples |>
-  dplyr::filter(as.logical(lapply(excluded,function(x){return("Histology N/A" %in% x)}))) |>
-  dplyr::select(histology.2021, histology.2022,
-                who_classification.2021, who_classification.2022,
-                idh_status.2021, idh_status.2022,
-                case_barcode.2022,
-                grade.2021, grade.2022,
-                excluded) |>
-  dplyr::mutate(excluded = as.character(lapply(excluded, paste, collapse=", "))) |>
-  as.data.frame() |>
-  View()
-  
-  
-#### additional / todo ----
+# # x-check
+# glass.gbm.rnaseq.metadata.all.samples |>
+#   dplyr::filter(as.logical(lapply(excluded,function(x){return("Histology N/A" %in% x)}))) |>
+#   dplyr::select(histology.2021, histology.2022,
+#                 who_classification.2021, who_classification.2022,
+#                 idh_status.2021, idh_status.2022,
+#                 case_barcode.2022,
+#                 grade.2021, grade.2022,
+#                 excluded) |>
+#   dplyr::mutate(excluded = as.character(lapply(excluded, paste, collapse=", "))) |>
+#   as.data.frame() |>
+#   View()
+
+#### middle resections ----
 
 
-#'@todo x-check VCFs for ADDITIONAL IDH muts !!
-#'@todo make a definitive call about samples with "NOS" in the WHO classification (IDH mut not specified)
-#'@todo filter those recurrences that start at III or not as GBM
+glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::group_by(case_barcode.2022) |> 
+  dplyr::filter(dplyr::n() > 1) |> 
+  dplyr::arrange(case_barcode.2022, resection) |> 
+  dplyr::mutate(excluded.tmp = (lapply(excluded, length) == 0) & !is.primary & as.numeric(resection) != max(as.numeric(resection))) |> 
+  dplyr::ungroup() |> 
+  dplyr::mutate(excluded = ifelse(excluded.tmp, lapply(excluded, function(x) { return(unique(c(x,"Middle resection"))) }), excluded)) |> 
+  dplyr::mutate(excluded.tmp = NULL)
 
 
-data.frame(pid = c(1,1,2,2,3,3),g = c('IV','IV','III','IV','IV','IV')) |> 
-  dplyr::group_by(pid) |> 
-  dplyr::mutate(drop = dplyr::case_when(
-    any(g != "IV") ~ "Y",
-    T ~ "N"
-  )) |> 
-  dplyr::ungroup()
 
 
-data.frame(a = c('a','b','c'), d=list(c(),c(),c())) |> 
-  dplyr::mutate(e = character())
+## check some examples
 
-x = data.frame(a = c('1:2:3',"4:5","6","","7:8:9:10")) |> 
-  dplyr::mutate(b = strsplit(a, ":")) |> 
-  dplyr::mutate(b.len = lapply(b , length)) |> 
-  dplyr::mutate(f = lapply(b, function(x) { return(as.character(0)) }) ) |> 
-  dplyr::mutate(g = as.list(as.character(f)))
-  #dplyr::mutate(g.len = lapply(g , length)) |> 
-  #dplyr::mutate(h = lapply(g, function(x) { return(c(x,"suff")) }))
-
+glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::filter(case_barcode.2022 == "GLSS-CU-P020") |> 
+  dplyr::select(case_barcode.2022, resection, excluded, exclude.tmp)
 
 
 
@@ -724,8 +724,8 @@ glass.gbm.rnaseq.metadata.all.samples |>
 glass.gbm.rnaseq.metadata.all.samples |> 
   dplyr::filter(
     case_barcode.2021 %in% (glass.gbm.rnaseq.metadata.all.samples |> 
-      dplyr::filter(is.na(excluded.reason)) |> 
-      dplyr::pull(case_barcode.2021))
+                              dplyr::filter(is.na(excluded.reason)) |> 
+                              dplyr::pull(case_barcode.2021))
   ) |> View()
 
 
@@ -739,6 +739,30 @@ glass.gbm.rnaseq.metadata.all.samples |>
 # glass.gbm.rnaseq.metadata.all.samples |> 
 #   dplyr::filter(is.na(excluded.reason)) |> 
 #   View()
+
+
+
+
+#### additional / todo ----
+
+
+#'@todo x-check VCFs for ADDITIONAL IDH muts !!
+#'@todo make a definitive call about samples with "NOS" in the WHO classification (IDH mut not specified)
+
+
+#### final check for each variable ----
+
+
+glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::filter(lapply(excluded,length) == 0) |> 
+  dplyr::mutate(case_barcode.2021 = NULL,
+                treatment_chemotherapy_other_cycles.2022, 
+                comments.2022, idh_codel_subtype.2022,
+                surgery_indication.2022, surgery_extent_of_resection.2022,
+                surgery_laterality.2022, surgery_location.2022
+  ) |> 
+  View()
+
 
 
 
