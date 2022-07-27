@@ -656,7 +656,7 @@ glass.gbm.rnaseq.metadata.all.samples |>
 
 # use any(), to mark all samples that belong to the same patient in one go
 glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
-  dplyr::group_by(case_barcode.2022) |> 
+  dplyr::group_by(case_barcode) |> 
   dplyr::mutate(drop1 = dplyr::case_when( # drop if there is any non-GBM sample that belongs to a given patient
     any(histology.2022 != "Glioblastoma") ~ "Y1",
     any(histology.2021 != "Glioblastoma") ~ "Y2",
@@ -670,7 +670,7 @@ glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |
   dplyr::ungroup()
 
 
-# summary(as.factor(glass.gbm.rnaseq.metadata.all.samples$drop1))
+#summary(as.factor(glass.gbm.rnaseq.metadata.all.samples$drop1))
 # summary(as.factor(glass.gbm.rnaseq.metadata.all.samples$drop2))
 
 
@@ -680,26 +680,21 @@ glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |
   dplyr::mutate(drop1=NULL, drop2 = NULL)
 
 
-# # x-check
-# glass.gbm.rnaseq.metadata.all.samples |>
-#   dplyr::filter(as.logical(lapply(excluded,function(x){return("Histology N/A" %in% x)}))) |>
-#   dplyr::select(histology.2021, histology.2022,
-#                 who_classification.2021, who_classification.2022,
-#                 idh_status.2021, idh_status.2022,
-#                 case_barcode.2022,
-#                 grade.2021, grade.2022,
-#                 excluded) |>
-#   dplyr::mutate(excluded = as.character(lapply(excluded, paste, collapse=", "))) |>
-#   as.data.frame() |>
-#   View()
 
-#### middle resections ----
+# x-check / view [histology]
+glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::filter(histology.2021 != "Glioblastoma" | histology.2022 != "Glioblastoma" | (as.logical(lapply(excluded,function(x){return("Histology not Glioblastoma" %in% x)})))) |> 
+  dplyr::select(aliquot_barcode, histology.2021, histology.2022, excluded) |> 
+  dplyr::mutate(excluded = as.character(lapply(excluded, paste, collapse=", "))) |> 
+  as.data.frame()
+
+
+
+#### last: take out middle resections ----
 
 
 glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
-  dplyr::group_by(case_barcode.2022) |> 
-  dplyr::filter(dplyr::n() > 1) |> 
-  dplyr::arrange(case_barcode.2022, resection) |> 
+  dplyr::group_by(case_barcode) |> 
   dplyr::mutate(excluded.tmp = (lapply(excluded, length) == 0) & !is.primary & as.numeric(resection) != max(as.numeric(resection))) |> 
   dplyr::ungroup() |> 
   dplyr::mutate(excluded = ifelse(excluded.tmp, lapply(excluded, function(x) { return(unique(c(x,"Middle resection"))) }), excluded)) |> 
@@ -707,45 +702,20 @@ glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |
 
 
 
-
-## check some examples
-
-glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
-  dplyr::filter(case_barcode.2022 == "GLSS-CU-P020") |> 
-  dplyr::select(case_barcode.2022, resection, excluded, exclude.tmp)
-
-
-
-# exclude middle resection for samples with more than 2 resections
-glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
-  dplyr::mutate(excluded.reason = ifelse(aliquot_barcode %in% c('GLSS-SM-R056-R2-01R-RNA-DHLJ2T', 'GLSS-SM-R060-R1-01R-RNA-6SGM43', 'GLSS-SM-R064-R1-01R-RNA-GLLBN3'), "interim resection", excluded.reason)) |> 
-  dplyr::mutate(excluded = !is.na(excluded.reason))
-
+# x-check / view [middle resections]
 glass.gbm.rnaseq.metadata.all.samples |> 
-  dplyr::filter(!excluded) |> 
-  dplyr::group_by(case_barcode.2022) |> 
-  dplyr::filter(dplyr::n() != 2)
+  dplyr::group_by(case_barcode) |> 
+  dplyr::filter(any(as.logical(lapply(excluded,function(x){return("Middle resection" %in% x)})))) |> 
+  dplyr::select(aliquot_barcode, case_barcode, resection, excluded) |> 
+  as.data.frame()
 
 
 glass.gbm.rnaseq.metadata.all.samples |> 
-  dplyr::filter(
-    case_barcode.2021 %in% (glass.gbm.rnaseq.metadata.all.samples |> 
-                              dplyr::filter(is.na(excluded.reason)) |> 
-                              dplyr::pull(case_barcode.2021))
-  ) |> View()
-
-
-
-glass.gbm.rnaseq.metadata.all.samples |>
-  dplyr::mutate(excluded.reason = as.factor(excluded.reason)) |>
-  dplyr::pull(excluded.reason) |>
-  summary()
-
-# 
-# glass.gbm.rnaseq.metadata.all.samples |> 
-#   dplyr::filter(is.na(excluded.reason)) |> 
-#   View()
-
+  dplyr::filter(case_barcode == "GLSS-CU-P020") |> 
+  #dplyr::filter(case_barcode == "GLSS-HF-753F") |>
+  #dplyr::filter(case_barcode == "GLSS-MD-0017") |>
+  dplyr::select(case_barcode, resection, excluded) |> 
+  as.data.frame()
 
 
 
