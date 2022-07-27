@@ -310,6 +310,14 @@ tmp.clinical.merge |>
   nrow() == 0)
 
 
+# redundant colums
+tmp.clinical.merge <- tmp.clinical.merge |> 
+  dplyr::mutate(case_barcode.2021 = NULL) |> 
+  dplyr::mutate(case_barcode.2022 = NULL)
+
+
+colnames(tmp.clinical.merge)
+
 
 
 ### check discrepancies 2021 / 2022 ----
@@ -527,7 +535,7 @@ stopifnot(
 
 # use any(), to mark all samples that belong to the same patient in one go
 glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
-  dplyr::group_by(case_barcode.2022) |> 
+  dplyr::group_by(case_barcode) |> 
   dplyr::mutate(drop = dplyr::case_when(
     any(codel_status.2022 == "codel") ~ "Y",
     any(codel_status.2021 == "codel") ~ "Y",
@@ -552,7 +560,7 @@ glass.gbm.rnaseq.metadata.all.samples |>
 
 # use any(), to mark all samples that belong to the same patient in one go
 glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
-  dplyr::group_by(case_barcode.2022) |> 
+  dplyr::group_by(case_barcode) |> 
   dplyr::mutate(drop1 = dplyr::case_when( # drop if there is any IDH mutant sample that belongs to a given patient
     any(idh_status.2022 == "IDHmut") ~ "Y",
     any(idh_status.2021 == "IDHmut") ~ "Y",
@@ -566,37 +574,41 @@ glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |
   dplyr::ungroup()
 
 
-summary(as.factor(glass.gbm.rnaseq.metadata.all.samples$drop1))
-summary(as.factor(glass.gbm.rnaseq.metadata.all.samples$drop2))
+# overview
+# summary(as.factor(glass.gbm.rnaseq.metadata.all.samples$drop1))
+# summary(as.factor(glass.gbm.rnaseq.metadata.all.samples$drop2))
 
 
+# append exclusion labels
 glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
   dplyr::mutate(excluded = ifelse(drop1 != "N", lapply(excluded, function(x) { return(unique(c(x,"IDH-mut"))) }), excluded)) |> 
   dplyr::mutate(excluded = ifelse(drop2 != "N", lapply(excluded, function(x) { return(unique(c(x,"IDH-status N/A"))) }), excluded)) |> 
   dplyr::mutate(drop1=NULL, drop2=NULL)
 
 
+
+# x-check / view [idh-mut]
 glass.gbm.rnaseq.metadata.all.samples |> 
-  dplyr::filter(idh_status.2022 == "IDHmut") |> 
-  dplyr::select(idh_status.2022, excluded) |> 
+  dplyr::filter(idh_status.2021 == "IDHmut" | idh_status.2022 == "IDHmut" | (as.logical(lapply(excluded,function(x){return("IDH-mut" %in% x)})))) |> 
+  dplyr::select(aliquot_barcode, idh_status.2021, idh_status.2022, excluded) |> 
+  dplyr::mutate(excluded = as.character(lapply(excluded, paste, collapse=", "))) |> 
+  as.data.frame()
+
+# x-check / view [idh-mut] - nice imputed example
+glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::filter(case_barcode == "GLSS-19-0279") |> 
+  dplyr::select(aliquot_barcode, idh_status.2021, idh_status.2022, excluded) |> 
   dplyr::mutate(excluded = as.character(lapply(excluded, paste, collapse=", "))) |> 
   as.data.frame()
 
 
 
+# x-check / view [idh N/A]
 glass.gbm.rnaseq.metadata.all.samples |>
   dplyr::filter(as.logical(lapply(excluded,function(x){return("IDH-status N/A" %in% x)}))) |>
-  dplyr::select(histology.2021, histology.2022, who_classification.2021, who_classification.2022, idh_status.2021, idh_status.2022, excluded) |>
+  dplyr::select(aliquot_barcode, histology.2022, who_classification.2022, idh_status.2021, idh_status.2022, excluded) |>
   dplyr::mutate(excluded = as.character(lapply(excluded, paste, collapse=", "))) |>
-  as.data.frame() |>
-  View()
-
-glass.gbm.rnaseq.metadata.all.samples |>
-  dplyr::filter(as.logical(lapply(excluded, stringr::str_detect, pattern = "IDH-status N/A" ))) |>
-  dplyr::select(histology.2021, histology.2022, who_classification.2021, who_classification.2022, idh_status.2021, idh_status.2022, excluded) |>
-  dplyr::mutate(excluded = as.character(lapply(excluded, paste, collapse=", "))) |>
-  as.data.frame() |>
-  View()
+  as.data.frame()
 
 
 
@@ -606,7 +618,7 @@ glass.gbm.rnaseq.metadata.all.samples |>
 
 # use any(), to mark all samples that belong to the same patient in one go
 glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
-  dplyr::group_by(case_barcode.2022) |> 
+  dplyr::group_by(case_barcode) |> 
   dplyr::mutate(drop1 = dplyr::case_when( # drop if there is any grade 2/3 sample that belongs to a given patient
     any(grade.2022 %in% c("II","III")) ~ "Y1",
     any(grade.2021 %in% c("II","III")) ~ "Y2",
