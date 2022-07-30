@@ -1,6 +1,10 @@
 #!/usr/bin/env R
 
 
+# useful link: https://emilhvitfeldt.github.io/r-color-palettes/discrete.html
+
+
+
 subtype_colors <- c('Classical'='#6ba6e5',# blue
                     'Mesenchymal'='#eab509',#mustard
                     'Proneural'='#ff5f68')#red/pink

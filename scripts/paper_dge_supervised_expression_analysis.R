@@ -139,7 +139,7 @@ gsam.gene.expression.all.vst <- gsam.gene.expression.all %>%
 
 
 
-## GLASS ----
+## GLASS 2021 ----
 
 
 
@@ -763,7 +763,7 @@ results.out <- results.out %>%
 
 
 
-# DE unpaired all [GLASS] ----
+# DE unpaired all [GLASS 2021] ----
 
 
 stopifnot(colnames(glass.gene.expression.all) == glass.metadata.all$sid)
@@ -794,10 +794,11 @@ results.out <- results.out %>%
 
 
 glass.gene.expression.all.vst <- DESeqDataSetFromMatrix(glass.gene.expression.all %>%
-                                                         dplyr::filter(rowSums(.) > ncol(.) * 3)
-                                                       , glass.metadata.all, ~condition ) %>% # + resection
+                                                          dplyr::filter(rowSums(.) > ncol(.) * 3)
+                                                        , glass.metadata.all, ~condition ) %>% # + resection
   assay() %>%
   vst(blind=T)
+
 
 
 
