@@ -2,7 +2,7 @@
 
 
 stopifnot(exists("results.out"))
-stopifnot(file.exists("cache/analysis.dge.glass.2022.Rds"))
+stopifnot(file.exists("cache/analysis_DGE_GLASS-2020.Rds"))
 
 
 

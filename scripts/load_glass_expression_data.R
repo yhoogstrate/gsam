@@ -817,7 +817,7 @@ glass.gbm.rnaseq.metadata.all.samples |>
 
 
 
-# select only those that are eligible for the study ----
+## select only those that are eligible for the study ----
 
 
 glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
@@ -830,6 +830,66 @@ glass.gbm.rnaseq.expression.all.samples <- glass.gbm.rnaseq.expression.all.sampl
 
 
 stopifnot(colnames(glass.gbm.rnaseq.expression.all.samples) == glass.gbm.rnaseq.metadata.all.samples$aliquot_barcode)
+
+
+
+## load synapse-portal batch descriptors ----
+
+
+tmp <- 'data/gsam/data/GLASS_GBM_R1-R2/biospecimen_aliquots_syn31121185.tsv' |> 
+  read.table(sep="\t",header=T,stringsAsFactors = F) |> 
+  dplyr::mutate(ROW_ID=NULL) |> 
+  dplyr::mutate(ROW_VERSION=NULL) |> 
+  dplyr::select(aliquot_barcode, aliquot_batch) |> 
+  dplyr::rename(aliquot_batch_synapse = aliquot_batch)
+
+
+glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::left_join(tmp, by=c('aliquot_barcode'='aliquot_barcode'), suffix=c('','')) 
+
+
+rm(tmp)
+
+
+
+## load synapse-portal RNA imputed purities ----
+
+# I suspect these are determined using ESTIMATE and RNA data
+
+tmp <- 'data/gsam/data/GLASS_GBM_R1-R2/analysis_estimate_purity_syn31121157.tsv' |> 
+  read.table(sep="\t",header=T,stringsAsFactors = F) |> 
+  dplyr::mutate(ROW_ID=NULL) |> 
+  dplyr::mutate(ROW_VERSION=NULL)
+
+
+
+glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::left_join(tmp, by=c('aliquot_barcode'='aliquot_barcode'), suffix=c('','')) 
+
+
+rm(tmp)
+
+
+
+
+
+
+# Add DNA TPC to metadata ----
+
+
+# These estimates [2021/legacy] are just not good enough:
+# 
+# glass.gbm.rnaseq.metadata <- glass.gbm.rnaseq.metadata %>%
+#   dplyr::mutate(pid.tmp = gsub("^([^-]+-[^-]+-[^-]+-[^-]+)-.+$","\\1",sid) ) %>%
+#   dplyr::left_join(
+#   read.table("output/tables/cnv/tumor.percentage.estimate_glass.txt") %>%
+#     dplyr::select(c('sample','pct')) %>%
+#     dplyr::mutate(pid.tmp = gsub("^([^-]+-[^-]+-[^-]+-[^-]+)-.+$","\\1",sample) ) %>%
+#     dplyr::rename(tumour.percentage.dna = pct) ,
+#   by = c('pid.tmp' = 'pid.tmp')) %>%
+#   dplyr::mutate(pid.tmp = NULL)
+# 
+# stopifnot(!is.na(glass.gbm.rnaseq.metadata$tumour.percentage.dna))
 
 
 
@@ -852,7 +912,7 @@ glass.gbm.rnaseq.expression.all.samples.vst <- DESeq2::DESeqDataSetFromMatrix(gl
 
 
 
-## PCA ----
+## batches ~ PCA ----
 
 
 plt <- glass.gbm.rnaseq.expression.all.samples.vst |> 
@@ -896,6 +956,9 @@ plt <- glass.gbm.rnaseq.expression.all.samples.vst |>
     tissue.source == "SN" & project == "GLSS" ~ "GLASS:SN",
     T ~ "t.b.d"
   ))
+
+
+saveRDS(plt |>  dplyr::select(aliquot_barcode, deduced.batch),"")
 
 
 # extreme batch effects
@@ -968,25 +1031,6 @@ ggplot(plt |> dplyr::filter(tissue.source == "SN"), aes(x=PC1, y=PC2, label=sid.
   theme_bw()
 
 
-
-
-
-
-# Add TPC to metadata ----
-
-# These estimates are just not good enough:
-# 
-# glass.gbm.rnaseq.metadata <- glass.gbm.rnaseq.metadata %>%
-#   dplyr::mutate(pid.tmp = gsub("^([^-]+-[^-]+-[^-]+-[^-]+)-.+$","\\1",sid) ) %>%
-#   dplyr::left_join(
-#   read.table("output/tables/cnv/tumor.percentage.estimate_glass.txt") %>%
-#     dplyr::select(c('sample','pct')) %>%
-#     dplyr::mutate(pid.tmp = gsub("^([^-]+-[^-]+-[^-]+-[^-]+)-.+$","\\1",sample) ) %>%
-#     dplyr::rename(tumour.percentage.dna = pct) ,
-#   by = c('pid.tmp' = 'pid.tmp')) %>%
-#   dplyr::mutate(pid.tmp = NULL)
-# 
-# stopifnot(!is.na(glass.gbm.rnaseq.metadata$tumour.percentage.dna))
 
 
 
