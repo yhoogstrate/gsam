@@ -447,12 +447,13 @@ tmp.clinical.merge <- tmp.clinical.merge |>
 ## integrate ----
 
 
-glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
+glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |>
+  dplyr::mutate(portion_barcode = gsub("^([^\\-]+)-([^\\-]+)-([^\\-]+)-([^\\-]+)-([0-9]+).+$$","\\1-\\2-\\3-\\4-\\5",aliquot_barcode)) |> 
   dplyr::mutate(sid.label = gsub("^(.)...(-..-....-).(.).*$","\\1\\2\\3", aliquot_barcode)) |> 
   dplyr::mutate(case_barcode = gsub("^(............).+$","\\1", aliquot_barcode)) |> 
   dplyr::mutate(resection = factor(gsub("^.............(..).+$","\\1", aliquot_barcode), levels=c('TP','R1','R2','R3','R4'))) |>  # TP is primary tumour? https://github.com/fpbarthel/GLASS
   dplyr::mutate(is.primary = resection == "TP") |> 
-  dplyr::arrange(case_barcode, resection)
+  dplyr::arrange(case_barcode, resection) 
 
 
 
@@ -772,7 +773,7 @@ rm(tmp,tmp.idh1,tmp.idh2)
 colnames(glass.gbm.rnaseq.metadata.all.samples)
 
 stopifnot(duplicated(glass.gbm.rnaseq.metadata.all.samples$aliquot_barcode) == F)
-stopifnot(glass.gbm.rnaseq.metadata.all.samples$aliquot_barcode %in% colnames(glass.gbm.rnaseq.expression.all.samples))
+stopifnot(colnames(glass.gbm.rnaseq.expression.all.samples) %in% glass.gbm.rnaseq.metadata.all.samples$aliquot_barcode)
 
 
 
@@ -872,11 +873,38 @@ rm(tmp)
 
 
 
+## load RNA imputed / predict TPCs ----
 
 
-# Add DNA TPC to metadata ----
+tmp <- read.table("output/tables/GLASS.tumour.percentage.dna.imputed.rf.txt") |>
+  dplyr::rename(tumour.percentage.dna.imputed.rf.2021 = tumour.percentage.dna.imputed.rf) |> 
+  dplyr::rename(aliquot_barcode = sid)
 
 
+glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::left_join(tmp, by=c('aliquot_barcode'='aliquot_barcode'), suffix=c('','')) 
+
+
+rm(tmp)
+
+
+
+
+# pretty poor correlation, something seems odd w/ the predictions in GLASS/CNV?
+#plot(glass.gbm.rnaseq.metadata$tumour.percentage.dna , glass.gbm.rnaseq.metadata$tumour.percentage.dna.imputed.caret)
+
+#'@todo check w/ CD163 and TMEM144 expression
+
+# Combine table into paired data table ----
+
+
+## DNA/CNV segments imputed TPC to metadata ----
+
+# tmp <- read.table("output/tables/cnv/tumor.percentage.estimate_glass.txt")
+#  dplyr::select(c('sample','pct')) |> 
+#  dplyr::mutate(pid.tmp = gsub("^([^-]+-[^-]+-[^-]+-[^-]+)-.+$","\\1",sample) ) |> 
+#  dplyr::rename(tumour.percentage.dna = pct)
+  
 # These estimates [2021/legacy] are just not good enough:
 # 
 # glass.gbm.rnaseq.metadata <- glass.gbm.rnaseq.metadata %>%
@@ -1033,24 +1061,6 @@ ggplot(plt |> dplyr::filter(tissue.source == "SN"), aes(x=PC1, y=PC2, label=sid.
 
 
 
-
-
-# Add imputed / predict TPCs ----
-
-glass.gbm.rnaseq.metadata <- glass.gbm.rnaseq.metadata %>%
-  dplyr::mutate(tumour.percentage.dna.imputed.caret = NULL) %>%
-  dplyr::mutate(tumour.percentage.dna.imputed.rf = NULL) %>%
-  #dplyr::left_join(read.table("output/tables/GLASS.tumour.percentage.dna.imputed.caret.txt"), by=c('sid'='sid'))%>%
-  dplyr::left_join(read.table("output/tables/GLASS.tumour.percentage.dna.imputed.rf.txt"), by=c('sid'='sid'))
-
-
-
-# pretty poor correlation, something seems odd w/ the predictions in GLASS?
-#plot(glass.gbm.rnaseq.metadata$tumour.percentage.dna , glass.gbm.rnaseq.metadata$tumour.percentage.dna.imputed.caret)
-
-#'@todo check w/ CD163 and TMEM144 expression
-
-# Combine table into paired data table ----
 
 
 
