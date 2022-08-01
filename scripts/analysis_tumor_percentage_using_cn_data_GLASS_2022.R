@@ -77,8 +77,7 @@ ggplot(plt, aes(x=reorder(aliquot_barcode,end), y=end, col=chr17.err)) +
 
 tpc.estimate = data.frame()
 for(bc in levels(dat$aliquot_barcode)) {
-  #bc = "GLSS-CU-P003-R1-01D-WXS-C8CULF" - x-check chr17
-  bc = "GLSS-HK-0003-R1-01D-WGS-R7P485" # plot ex
+  #bc = "TCGA-14-1402-R1-01D-WGS-2EHMQ2" # plot ex
   print(bc)
   
   m <- glass.gbm.rnaseq.metadata.all.samples |> 
@@ -104,7 +103,8 @@ for(bc in levels(dat$aliquot_barcode)) {
 
   
 
-  #png(paste0("output/figures/cnv/glass/2022/", bc ,".tpc.estimate.png"),width=11 * 100,height=6 * 100)
+  png(paste0("output/figures/cnv/glass/2022/", bc ,".tpc.estimate.png"),width=11 * 100,height=6 * 100)
+  
   
   plot(c(min(a$x1), max(a$x2)) , c(-2, 2) ,  type = 'n' )
   abline(v = chrs_hg19_e, col="gray")
@@ -114,6 +114,7 @@ for(bc in levels(dat$aliquot_barcode)) {
     lines(c(b$x1, b$x2), c(b$log2_copy_ratio, b$log2_copy_ratio) , col = (b$num_points > 60) + 1 , lwd=2.5 )
     #lines(c(b$x1, b$x2), c(b$log2_copy_ratio, b$log2_copy_ratio) , col = as.numeric(b$chrom == "chr17") + 1, lwd=2 )
   }
+  
   
   # chr17 84622 190.863.195
   if(F) {
@@ -155,17 +156,21 @@ for(bc in levels(dat$aliquot_barcode)) {
   } else if(bc == "GLSS-HF-EE77-R3-01D-WXS-ZRNNYZ") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr10'))
   } else if(bc == "GLSS-HK-0003-R1-01D-WGS-R7P485") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr8','chr10','chr13','chr15'))
   } else if(bc == "GLSS-LU-00B9-R1-01D-WXS-LM12XS") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr10','chr19'))
+  } else if(bc == "GLSS-LU-00C2-R1-01D-WXS-YYR15P") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr10','chr13','chr15'))
   } else if(bc == "GLSS-LU-00C4-R1-01D-WXS-KYPFOQ") { a <- a %>% dplyr::filter(chrom %in% c('chr10','chr13'))
   } else if(bc == "GLSS-LU-00C4-TP-01D-WXS-S4OOP1") { a <- a %>% dplyr::filter(chrom %in% c('chr10','chr14'))
   } else if(bc == "GLSS-LU-00C7-TP-01D-WXS-WFSIQ7") { a <- a %>% dplyr::filter(chrom %in% c('chr13'))
   } else if(bc == "GLSS-LU-0B12-R1-01D-WXS-NXWOWA") { a <- a %>% dplyr::filter(chrom %in% c('chr7'))
-  } else if(bc == "GLSS-LU-0B13-R1-01D-WXS-F05JM5") { a <- a %>% dplyr::filter(chrom %in% c('chr7'))
+  } else if(bc == "GLSS-LU-0B13-R1-01D-WXS-F05JM5") { a <- a %>% dplyr::filter(chrom %in% c('chr9','chr12','chr13','chr17'))
   } else if(bc == "GLSS-MD-0003-R3-01D-WGS-I78LK2") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr10'))
   } else if(bc == "GLSS-MD-0014-R1-01D-WGS-GLH38H") { a <- a %>% dplyr::filter(chrom %in% c('chr10'))
   } else if(bc == "GLSS-MD-0022-R1-01D-WGS-F5KYZ6") { a <- a %>% dplyr::filter(chrom %in% c('chr7'))
   } else if(bc == "GLSS-MD-0022-TP-01D-WGS-ZAET2D") { a <- a %>% dplyr::filter(chrom %in% c('chr7'))
   } else if(bc == "GLSS-MD-0023-R1-01D-WGS-DQH2SF") { a <- a %>% dplyr::filter(chrom %in% c('chr6','chr7','chr9','chr10'))
+  } else if(bc == "GLSS-MD-0026-TP-01D-WGS-2PPGFK") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr10','chr14'))
   } else if(bc == "GLSS-MD-0042-TP-01D-WGS-R5UYLI") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr10','chr13'))
+  } else if(bc == "GLSS-MD-LP04-R1-01D-WXS-V7XG09") { a <- a %>% dplyr::filter(chrom %in% c('chr1','chr7','chr10','chr13'))
+  } else if(bc == "GLSS-MD-LP04-TP-01D-WXS-05SV1D") { a <- a %>% dplyr::filter(chrom %in% c('chr1','chr7','chr10','chr13'))
   } else if(bc == "GLSS-SM-R056-R2-01D-WXS-A7U2KL") { a <- a %>% dplyr::filter(chrom %in% c('chr10')) 
   } else if(bc == "GLSS-SM-R056-TP-01D-WXS-1BJVV2") { a <- a %>% dplyr::filter(chrom %in% c('chr10')) 
   } else if(bc == "GLSS-SM-R060-R1-01D-WXS-MHAES3") { a <- a %>% dplyr::filter(chrom %in% c('chr6','chr7','chr10')) 
@@ -176,11 +181,8 @@ for(bc in levels(dat$aliquot_barcode)) {
   } else if(bc == "GLSS-SM-R063-R1-01D-WXS-SF2PHH") { a <- a %>% dplyr::filter(chrom %in% c('chr7')) 
   } else if(bc == "GLSS-SM-R063-TP-01D-WXS-UQC9Y9") { a <- a %>% dplyr::filter(chrom %in% c('chr7')) 
   } else if(bc == "GLSS-SM-R064-R1-01D-WXS-GFA2BL") { a <- a %>% dplyr::filter(chrom %in% c('chr10')) 
-  } else if(bc == "GLSS-SM-R064-R2-01D-WXS-606Z2Z") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr10'))
-  
+  } else if(bc == "GLSS-SM-R064-R2-01D-WXS-606Z2Z") { a <- a %>% dplyr::filter(chrom %in% c('chr10'))
   } else if(bc == "GLSS-SM-R064-TP-01D-WXS-16OKWU") { a <- a %>% dplyr::filter(chrom %in% c('chr10')) 
-  } else if(bc == "GLSS-SM-R064-TP-01D-WXS-16OKWU") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr10'))
-  
   } else if(bc == "GLSS-SM-R066-R1-01D-WXS-2R3RRY") { a <- a %>% dplyr::filter(chrom %in% c('chr10'))
   } else if(bc == "GLSS-SM-R066-TP-01D-WXS-YJN4OE") { a <- a %>% dplyr::filter(chrom %in% c('chr10'))
   } else if(bc == "GLSS-SM-R067-R1-01D-WXS-WG6N7X") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr8','chr9','chr10')) 
@@ -193,8 +195,8 @@ for(bc in levels(dat$aliquot_barcode)) {
   } else if(bc == "GLSS-SM-R071-TP-01D-WXS-45QCP2") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr10')) 
   } else if(bc == "GLSS-SM-R072-R1-01D-WXS-XOT8LM") { a <- a %>% dplyr::filter(chrom %in% c('chr10')) 
   } else if(bc == "GLSS-SM-R072-TP-01D-WXS-QZZEMI") { a <- a %>% dplyr::filter(chrom %in% c('chr10')) 
-  } else if(bc == "GLSS-SM-R099-R1-01D-WXS-I52D70") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr10')) 
-  } else if(bc == "GLSS-SM-R099-TP-01D-WXS-5Z45O8") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr10')) 
+  } else if(bc == "GLSS-SM-R099-R1-01D-WXS-I52D70") { a <- a %>% dplyr::filter(chrom %in% c('chr7')) 
+  } else if(bc == "GLSS-SM-R099-TP-01D-WXS-5Z45O8") { a <- a %>% dplyr::filter(chrom %in% c('chr7')) 
   } else if(bc == "GLSS-SM-R100-R1-01D-WXS-O61DWB") { a <- a %>% dplyr::filter(chrom %in% c('chr6','chr13','chr14')) 
   } else if(bc == "GLSS-SM-R100-TP-01D-WXS-9D7AET") { a <- a %>% dplyr::filter(chrom %in% c('chr6','chr13','chr14')) 
   } else if(bc == "GLSS-SM-R101-R1-01D-WXS-04ZGTS") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr10')) 
@@ -203,8 +205,8 @@ for(bc in levels(dat$aliquot_barcode)) {
   } else if(bc == "GLSS-SM-R101-TP-02D-WXS-TKL136") { a <- a %>% dplyr::filter(chrom %in% c('chr10'))
   } else if(bc == "GLSS-SM-R103-R1-01D-WXS-0YX7OK") { a <- a %>% dplyr::filter(chrom %in% c('chr10')) 
   } else if(bc == "GLSS-SM-R103-TP-01D-WXS-TBB9NO") { a <- a %>% dplyr::filter(chrom %in% c('chr10')) 
-  } else if(bc == "GLSS-SM-R106-R1-01D-WXS-B6X7IN") { a <- a %>% dplyr::filter(chrom %in% c('chr7') & log2_copy_ratio > 0) 
-  } else if(bc == "GLSS-SM-R106-TP-01D-WXS-8H4HYR") { a <- a %>% dplyr::filter(chrom %in% c('chr7') & log2_copy_ratio > 0) 
+  } else if(bc == "GLSS-SM-R106-R1-01D-WXS-B6X7IN") { a <- a %>% dplyr::filter(chrom %in% c('chr10') ) 
+  } else if(bc == "GLSS-SM-R106-TP-01D-WXS-8H4HYR") { a <- a %>% dplyr::filter(chrom %in% c('chr10') ) 
   } else if(bc == "GLSS-SM-R107-R1-01D-WXS-66033B") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr10')) 
   } else if(bc == "GLSS-SM-R107-R1-02D-WXS-W7UY7B") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr10'))
   } else if(bc == "GLSS-SM-R107-TP-01D-WXS-NIBO3N") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr10')) 
@@ -214,17 +216,18 @@ for(bc in levels(dat$aliquot_barcode)) {
   } else if(bc == "GLSS-SM-R110-TP-01D-WXS-5XSI28") { a <- a %>% dplyr::filter(chrom %in% c('chr7')) 
   } else if(bc == "GLSS-SN-0001-TP-01D-WGS-J7WGL3") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr10'))
   } else if(bc == "GLSS-SN-0002-R1-01D-WGS-OMWX5F") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr10','chr14','chr18'))
-  } else if(bc == "GLSS-SN-0004-R1-01D-WGS-FVYBOQ") { a <- a %>% dplyr::filter(chrom %in% c('chr3','chr6','chr7','chr8','chr9','chr10','chr12','chr13','chr17'))
+  } else if(bc == "GLSS-SN-0004-R1-01D-WGS-FVYBOQ") { a <- a %>% dplyr::filter(chrom %in% c('chr4','chr5','chr10'))
   } else if(bc == "GLSS-SN-0009-TP-01D-WGS-Z9WB19") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr9'))
-  } else if(bc == "TCGA-06-0152-R1-01D-WGS-EK2VYI") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr9','chr10','chr19','chr20'))
+  } else if(bc == "GLSS-SN-0009-R1-01D-WGS-X1YPCJ") { a <- a %>% dplyr::filter(chrom %in% c('chr7'))
+  } else if(bc == "TCGA-06-0152-R1-01D-WGS-EK2VYI") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr9','chr10'))
   } else if(bc == "TCGA-06-0190-R1-01D-WXS-ODJETQ") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr10')) 
   } else if(bc == "TCGA-06-0190-TP-01D-WXS-6BX2M1") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr10')) 
   } else if(bc == "TCGA-06-0210-R1-01D-WGS-PS45ZE") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr9','chr10'))
   } else if(bc == "TCGA-06-0210-R1-01D-WXS-4MJVD2") { a <- a %>% dplyr::filter(chrom %in% c('chr10')) 
   } else if(bc == "TCGA-06-0210-TP-01D-WXS-MGZTBD") { a <- a %>% dplyr::filter(chrom %in% c('chr10')) 
-  } else if(bc == "TCGA-06-0211-R1-02D-WGS-32OOWA") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr9','chr10'))
+  } else if(bc == "TCGA-06-0211-R1-02D-WGS-32OOWA") { a <- a %>% dplyr::filter(chrom %in% c('chr9','chr10'))
   } else if(bc == "TCGA-06-0211-R1-02D-WXS-X1GNKU") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr10')) 
-  } else if(bc == "TCGA-06-0211-TP-01D-WGS-JJPE5C") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr9','chr10'))
+  } else if(bc == "TCGA-06-0211-TP-01D-WGS-JJPE5C") { a <- a %>% dplyr::filter(chrom %in% c('chr9','chr10'))
   } else if(bc == "TCGA-06-0211-TP-01D-WXS-AS2XJL") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr10'))
   } else if(bc == "TCGA-06-0211-TP-01D-WXS-AS2XJL") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr9','chr10'))
   } else if(bc == "TCGA-14-1034-R1-01D-WGS-L9V6H0") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr10'))
@@ -232,16 +235,15 @@ for(bc in levels(dat$aliquot_barcode)) {
   } else if(bc == "TCGA-14-1034-R1-01D-WXS-NUKYNI") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr10','chr13','chr22')) 
   } else if(bc == "TCGA-14-1034-TP-01D-WGS-2521IS") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr10'))
   } else if(bc == "TCGA-14-1034-TP-01D-WXS-B0AXT9") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr10'))
-  } else if(bc == "TCGA-14-1034-TP-01D-WXS-B0AXT9") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr10','chr13','chr22'))
-  } else if(bc == "TCGA-14-1402-R1-01D-WGS-2EHMQ2") { a <- a %>% dplyr::filter(chrom %in% c('chr9','chr10'))
+  } else if(bc == "TCGA-14-1034-R1-01D-WGS-L9V6H0") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr10','chr13'))
+  } else if(bc == "TCGA-14-1402-R1-01D-WGS-2EHMQ2") { a <- a %>% dplyr::filter(chrom %in% c('chr10'))
   } else if(bc == "TCGA-14-1402-R1-01D-WXS-QGNTYA") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr10'))
   } else if(bc == "TCGA-19-0957-TP-01D-WXS-H59SRY") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr10'))
   
+  }
+  
   
 
-     }
-
-  
   print(paste0(bc, " -> ", str_c(unique(a$chrom), collapse = ",")))
   
 
@@ -259,7 +261,7 @@ for(bc in levels(dat$aliquot_barcode)) {
     dists <- c()
     dist <- 0
     for(i in 1:nrow(a)) {
-      
+
       e <- a[i,]
       
       d <- c(
@@ -267,7 +269,7 @@ for(bc in levels(dat$aliquot_barcode)) {
         (((e$log2_copy_ratio - lfc.p.4) * e$num_points)^2) * 1.1 * 999, # penalize, do never prefer
         (((e$log2_copy_ratio - lfc.p.3) * e$num_points)^2),
         (((e$log2_copy_ratio - lfc.n.1) * e$num_points)^2)
-      )
+      ) 
       d <- min(d)
       dists <- c(dists, d)
       
