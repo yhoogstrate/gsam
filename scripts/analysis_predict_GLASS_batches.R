@@ -148,7 +148,8 @@ ggplot(plt |> dplyr::filter(tissue.source == "MD"), aes(x=PC1, y=PC2, label=sid.
 
 
 
-saveRDS(plt |>  dplyr::select(aliquot_barcode, deduced.batch) |> dplyr::rename(predicted.GLASS.batch = deduced.batch),"cache/analysis_predict_GLASS_batches.R")
+saveRDS(plt |>  dplyr::select(aliquot_barcode, deduced.batch) |> dplyr::rename(predicted.GLASS.batch = deduced.batch),
+        "cache/analysis_predict_GLASS_batches.Rds")
 
 
 

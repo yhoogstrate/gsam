@@ -1,7 +1,7 @@
 #!/usr/bin/env R
 
 
-stopifnot(file.exists('cache/analysis_predict_GLASS_batches.R'))
+stopifnot(file.exists('cache/analysis_predict_GLASS_batches.Rds'))
 
 if(!exists('glass.gbm.rnaseq.metadata.all.samples')) {
   source('scripts/load_glass_expression_data.R') # w/ metadata
@@ -12,7 +12,7 @@ if(!exists('glass.gbm.rnaseq.metadata.all.samples')) {
 
 
 
-tmp <- readRDS("cache/analysis_predict_GLASS_batches.R")
+tmp <- readRDS("cache/analysis_predict_GLASS_batches.Rds")
 
 
 glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
@@ -23,13 +23,13 @@ rm(tmp)
 
 
 
-plot(table(glass.gbm.rnaseq.metadata.all.samples$predicted.GLASS.batch,glass.gbm.rnaseq.metadata.all.samples$aliquot_batch_synapse))
-
-
-plt <- table(glass.gbm.rnaseq.metadata.all.samples$predicted.GLASS.batch,glass.gbm.rnaseq.metadata.all.samples$aliquot_batch_synapse)
-plt <- as.data.frame(table(plt))
-
-
-
-ggplot(plt, aes(x=Var1))+
-  geom_bar(y = Freq)
+# plot(table(glass.gbm.rnaseq.metadata.all.samples$predicted.GLASS.batch,glass.gbm.rnaseq.metadata.all.samples$aliquot_batch_synapse))
+# 
+# 
+# plt <- table(glass.gbm.rnaseq.metadata.all.samples$predicted.GLASS.batch,glass.gbm.rnaseq.metadata.all.samples$aliquot_batch_synapse)
+# plt <- as.data.frame(table(plt))
+# 
+# 
+# 
+# ggplot(plt, aes(x=Var1))+
+#   geom_bar(y = Freq)
