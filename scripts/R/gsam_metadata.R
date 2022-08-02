@@ -17,29 +17,16 @@ source('scripts/R/job_gg_theme.R')
 #gsam.patient.metadata <- read.csv('data/administratie/dbGSAM_PUBLIC_VERSION.csv',stringsAsFactors=F)
 
 
-gsam.patient.metadata <- read.csv('data/gsam/administratie/GSAM_combined_clinical_molecular.csv',stringsAsFactors=F) %>%
-                          dplyr::arrange(studyID) %>%
-                          dplyr::mutate(gender = as.factor(gender))
-
-
-# there's a number of samples of which the gender does not fit with the omics data - omics data determined genders are the corrected ones
-
-gsam.patient.metadata$gender.corrected <- gsam.patient.metadata$gender
-actual.males <- c('AAT', 'AAM', 'AZH', 'HAI', 'FAG')
-gsam.patient.metadata[gsam.patient.metadata$studyID %in% actual.males,]$gender.corrected <- 'Male'
-rm(actual.males)
-
-
-gsam.patient.metadata <- gsam.patient.metadata %>%
-  dplyr::mutate(survival.event = NA) %>%
-  dplyr::mutate(survival.event = ifelse(status == "Deceased", 1, survival.event)) %>%
-  dplyr::mutate(survival.event = ifelse(status == "Censored", 0, survival.event)) %>%
+gsam.patient.metadata <- read.csv('data/gsam/administratie/GSAM_combined_clinical_molecular.csv',stringsAsFactors=F) |> 
+  dplyr::arrange(studyID) |> 
+  dplyr::mutate(gender = ifelse(studyID %in% c('AAT', 'AAM', 'AZH', 'HAI', 'FAG'),"Male",gender)) |>  # there's a number of samples of which the gender does not fit with the omics data - omics data determined genders are the corrected ones
+  dplyr::mutate(gender = as.factor(gender)) |> 
+  dplyr::mutate(survival.events = case_when(
+      status == "Deceased" ~ 1,
+      status == "Censored" ~ 0,
+      T ~ as.numeric(NA))) |> 
   dplyr::mutate(survival.months = survivalDays / 365.0 * 12.0) %>%
-  dplyr::mutate(`X.1` = NULL)
-
-
-
-gsam.patient.metadata <- gsam.patient.metadata |> 
+  dplyr::mutate(`X.1` = NULL) |> 
   dplyr::mutate(bevacizumab.before.recurrence = studyID %in% c('GAA','GAG','CCB','CBI','CBV','AAX','HAD','HAF'))
 
 
@@ -511,17 +498,5 @@ gsam.rna.metadata <- gsam.rna.metadata %>%
 
 
 # 〰 © Dr. Youri Hoogstrate 〰 ----
-
-# summary plots ---- 
-
-# tumour percentages rna samples ----
-
-#ggplot(gsam.rna.metadata , aes(y = tumour.percentage.dna , x = reorder( sid , tumour.percentage.dna) , col=resection)  ) + 
-#  geom_hline(yintercept = 15, col="red", lty=2) + 
-#  geom_point() +
-#  job_gg_theme
-
-
-
 
 

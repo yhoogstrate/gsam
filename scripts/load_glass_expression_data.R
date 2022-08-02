@@ -929,6 +929,38 @@ stopifnot(is.na(glass.gbm.rnaseq.metadata.all.samples$aliquot_barcode) == F)
 
 
 
+
+## add CNV fitted purities 2022 ----
+
+
+# if file does, generate it with: 'scripts/analysis_tumor_percentage_using_cn_data_GLASS_2022.R'
+
+
+tmp <- read.table("output/tables/cnv/tumor.percentage.estimate_glass.2022.all_samples.txt") |> 
+  dplyr::select(portion_barcode, tumor.purity.cnv.pct.2022) |> 
+  dplyr::rename(tumour.percentage.dna.cnv.2022 = tumor.purity.cnv.pct.2022) |> 
+  dplyr::group_by(portion_barcode) |> 
+  dplyr::summarize(tumour.percentage.dna.cnv.2022 = mean(tumour.percentage.dna.cnv.2022, na.rm=T)) |> 
+  dplyr::ungroup()
+
+
+stopifnot(duplicated(tmp$portion_barcode) == F)
+
+
+
+glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::left_join(tmp, by=c('portion_barcode'='portion_barcode'), suffix=c('','')) 
+
+stopifnot(duplicated(glass.gbm.rnaseq.metadata.all.samples$aliquot_barcode) == F)
+
+
+
+rm(tmp)
+
+
+
+
+
 ## plot
 
 glass.gbm.rnaseq.metadata.all.samples$tumour.percentage.dna.cnv.2021

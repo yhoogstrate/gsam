@@ -287,11 +287,11 @@ for(bc in levels(dat$aliquot_barcode)) {
   r = out %>%
     dplyr::arrange(dist) %>%
     dplyr::slice(1) %>%
-    dplyr::mutate(sample = bc,
-                  sample.short = gsub("^([^-]+-[^-]+-[^-]+-[^-]+).+$","\\1",bc),
+    dplyr::mutate(aliquot_barcode.wgs = bc,
+                  #sample.short = gsub("^([^-]+-[^-]+-[^-]+-[^-]+).+$","\\1",bc),
+                  portion_barcode == gsub("^([^\\-]+)-([^\\-]+)-([^\\-]+)-([^\\-]+)-([0-9]+).+$$","\\1-\\2-\\3-\\4-\\5",bc),
                   estimate.purity = p.tpc.estimate,
-                  hoostrate.rf.purity.2021 = p.tpc.hoogstrate.2021,
-                  portion_barcode = gsub("^([^\\-]+)-([^\\-]+)-([^\\-]+)-([^\\-]+)-([0-9]+).+$$","\\1-\\2-\\3-\\4-\\5",bc)
+                  hoogstrate.rf.purity.2021 = p.tpc.hoogstrate.2021
                   )
   tpc.estimate <- rbind(tpc.estimate, r)
   
@@ -319,7 +319,14 @@ for(bc in levels(dat$aliquot_barcode)) {
 }
 
 
-write.table(tpc.estimate , "output/tables/cnv/tumor.percentage.estimate_glass.2022.all_samples.txt")
+# write.table(tpc.estimate |> 
+#               dplyr::select(portion_barcode, aliquot_barcode.wgs, pct, lfc.3p, lfc.4p, lfc.n, dist) |> 
+#               dplyr::rename(tumor.purity.cnv.pct.2022 = pct)|> 
+#               dplyr::rename(tumor.purity.cnv.lfc.3p.2022 = lfc.3p)|> 
+#               dplyr::rename(tumor.purity.cnv.lfc.4p.2022 = lfc.4p)|> 
+#               dplyr::rename(tumor.purity.cnv.lfc.n.2022 = lfc.n)|> 
+#               dplyr::rename(tumor.purity.cnv.dist.2022 = dist)
+#             , "output/tables/cnv/tumor.percentage.estimate_glass.2022.all_samples.txt")
 
 
 

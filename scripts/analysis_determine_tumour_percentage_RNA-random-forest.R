@@ -4,7 +4,7 @@
 # load libs ----
 
 
-library(tidyverse)
+#library(tidyverse)
 library(randomForest)
 library(caret)
 library(ranger)
@@ -526,9 +526,159 @@ plt <- read.table('output/tables/GLASS.tumour.percentage.dna.imputed.caret.txt')
   dplyr::left_join(read.table('output/tables/GLASS.tumour.percentage.dna.imputed.rf.txt') , by=c('sid'='sid'))
 
 
-ggplot(plt, aes(
-  x = tumour.percentage.dna.imputed.caret,
-  y = tumour.percentage.dna.predicted.rf
-)) + geom_point()
+# ggplot(plt, aes(
+#   x = tumour.percentage.dna.imputed.caret,
+#   y = tumour.percentage.dna.predicted.rf
+# )) + geom_point()
+
+
+# 2022 RF imputed purities ----
+
+
+### prep and normalise expression data [aliquot style] ----
+
+gene.metadata.all.patients <- dplyr::full_join(
+  gsam.rnaseq.expression %>%
+    tibble::rownames_to_column('gid') %>%
+    dplyr::select(gid) %>%
+    dplyr::mutate(ensembl_id = gsub('\\..+\\|.+$','',gid) ) %>%
+    dplyr::mutate(hugo_symbol = gsub("^.+\\|([^\\]+)\\|.+$","\\1",gid) ) %>%
+    dplyr::mutate(in.gsam = T) %>%
+    dplyr::mutate(chr = as.factor(gsub("^.+(chr[^:]+):.+$","\\1",gid)))
+  ,
+  glass.gbm.rnaseq.expression.all.samples %>%
+    tibble::rownames_to_column('ensembl_id') %>%
+    dplyr::select(ensembl_id) %>% 
+    dplyr::mutate(in.glass = T)
+  , by = c('ensembl_id'='ensembl_id')) %>%
+  dplyr::left_join(
+    glass.gencode.v19 %>%
+      dplyr::arrange( transcript_id) %>%
+      dplyr::select(c('gene_symbol','gene_id')) %>%
+      dplyr::filter(!duplicated(gene_id)) %>%
+      dplyr::rename(ensembl_id = gene_id) %>%
+      dplyr::rename(hugo_symbol.gencode = gene_symbol) ,
+    by = c ('ensembl_id'='ensembl_id')) %>%
+  dplyr::mutate(hugo_symbol = ifelse(is.na(hugo_symbol) , hugo_symbol.gencode , hugo_symbol )) %>%
+  dplyr::mutate(hugo_symbol.gencode = NULL) %>%
+  dplyr::filter(in.gsam == T & in.glass == T)
+
+
+
+stopifnot(sum(duplicated(gene.metadata.all.patients$ensembl_id)) == 0)
+
+
+
+all.gene.expression.all.patients <- gene.metadata.all.patients |> 
+  dplyr::select(c('gid','ensembl_id')) |> 
+  dplyr::left_join(gsam.rnaseq.expression |> tibble::rownames_to_column('gid'),by=c('gid' = 'gid')) |> 
+  dplyr::left_join(glass.gbm.rnaseq.expression.all.samples %>% tibble::rownames_to_column('ensembl_id'), by=c('ensembl_id' = 'ensembl_id')) |> 
+  dplyr::mutate(gid = NULL) |> 
+  tibble::column_to_rownames('ensembl_id')
+
+
+tmp.metadata <- data.frame(sid = colnames(all.gene.expression.all.patients)) |> 
+  dplyr::mutate(cond = runif(n(),1,2))  |> 
+  dplyr::mutate(cond = round(cond))  |> 
+  dplyr::mutate(cond = paste0("r", cond)) |> 
+  dplyr::mutate(cond = as.factor(cond)) |> 
+  dplyr::left_join(
+    glass.gbm.rnaseq.metadata.all.samples |> 
+      dplyr::select(aliquot_barcode, aliquot_batch_synapse, predicted.GLASS.batch, tumour.percentage.dna.cnv.2022),
+    by=c('sid'='aliquot_barcode')
+  ) |> 
+  dplyr::mutate(aliquot_batch_synapse = ifelse(is.na(aliquot_batch_synapse),"G-SAM", aliquot_batch_synapse)) |> 
+  dplyr::mutate(predicted.GLASS.batch = ifelse(is.na(predicted.GLASS.batch),"G-SAM", predicted.GLASS.batch)) |> 
+  dplyr::left_join(
+    gsam.rna.metadata |>
+      dplyr::select(sid, tumour.percentage.dna)
+    ,by=('sid'='sid')
+  ) |> 
+  tibble::column_to_rownames('sid')
+
+
+stopifnot(rownames(tmp.metadata) == colnames(all.gene.expression.all.patients))
+all.gene.expression.vst.all.patients <- all.gene.expression.all.patients |> 
+  DESeq2::DESeqDataSetFromMatrix(tmp.metadata, ~cond) |> 
+  DESeq2::vst(blind=T) |> 
+  SummarizedExperiment::assay() |> 
+  limma::removeBatchEffect(as.factor(tmp.metadata$aliquot_batch_synapse)) |> # remove batch effects
+  as.data.frame()
+
+
+## A: ~ gsam purities ----
+
+
+
+k <- 150
+candidate.features <- readRDS(file = 'tmp/results.out.Rds') |> 
+  dplyr::select(c(ensembl_id, statistic.gsam.cor.tpc)) |> 
+  dplyr::filter(ensembl_id %in% rownames(all.gene.expression.vst.all.patients)) |> 
+  dplyr::filter(!is.na(statistic.gsam.cor.tpc)) |> 
+  dplyr::arrange(statistic.gsam.cor.tpc) |> 
+  dplyr::mutate(top.low = c(rep(T, k), rep(F, n() - k))) |> 
+  dplyr::arrange(-statistic.gsam.cor.tpc) |> 
+  dplyr::mutate(top.high = c(rep(T, k), rep(F, n() - k))) |> 
+  dplyr::filter(top.high | top.low)
+
+
+
+train.data <- all.gene.expression.vst.all.patients |> 
+  dplyr::select(
+    tmp.metadata |>
+      dplyr::filter(aliquot_batch_synapse == "G-SAM" & !is.na(tumour.percentage.dna)) |>
+      tibble::rownames_to_column('sid') |>
+      dplyr::pull('sid')) |> 
+  t() |> 
+  as.data.frame(stringsAsFactors = F) |> 
+  dplyr::select(candidate.features$ensembl_id) |> 
+  tibble::rownames_to_column('sid') |> 
+  dplyr::left_join(tmp.metadata |> 
+    tibble::rownames_to_column('sid') |> 
+    dplyr::select(c('sid','tumour.percentage.dna')) ,
+    by = c('sid'='sid')) %>%
+  tibble::column_to_rownames('sid') |> 
+  dplyr::relocate(tumour.percentage.dna, .before = tidyselect::everything()) # move to front, easier
+
+
+test.data <- all.gene.expression.vst.all.patients %>%
+  dplyr::select(
+    tmp.metadata |>
+      dplyr::filter(aliquot_batch_synapse != "G-SAM") |>
+      tibble::rownames_to_column('sid') |>
+      dplyr::pull('sid')) |> 
+  t() |> 
+  as.data.frame(stringsAsFactors = F) |> 
+  dplyr::select(candidate.features$ensembl_id)
+
+
+stopifnot(ncol(train.data) == (ncol(test.data) + 1))
+
+
+
+
+
+set.seed(1+3+3+7)
+model.rf.all.patients <- randomForest::randomForest(tumour.percentage.dna ~ .,
+                        data=train.data,
+                        ntree = 5000 )
+
+test.data$tumour.percentage.dna.imputed.rf.2022.all.patients <- predict(model.rf.all.patients, test.data)
+
+write.table(test.data |> 
+    dplyr::select(tumour.percentage.dna.imputed.rf.2022.all.patients), file="output/tables/GLASS.tumour.percentage.dna.imputed.rf.A.2022.all.patients.txt")
+
+
+
+rm(candidate.features, train.data,test.data, model.rf.all.patients)
+
+
+# B: 2022 revision extr.smples [glass purities & 10xCV] ----
+
+
+
+
+
+# 〰 © Dr. Youri Hoogstrate 〰 ----
 
 
