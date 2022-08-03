@@ -491,7 +491,7 @@ glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |
   dplyr::mutate(excluded = strsplit("",":")) # quickest way to get a list of empty characters?
 
 
-#### PCA & batch outliers ----
+#### PCA/batch outliers ----
 # followed from analysis_predict_GLASS_batches.R
 
 glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
@@ -1008,22 +1008,22 @@ rm(tmp)
 
 ## plot
 
-glass.gbm.rnaseq.metadata.all.samples$tumour.percentage.dna.cnv.2021
-glass.gbm.rnaseq.metadata.all.samples$purity.synapse.rna
-glass.gbm.rnaseq.metadata.all.samples$tumour.percentage.dna.imputed.rf.2021
-
-
-plot(
-  glass.gbm.rnaseq.metadata.all.samples$tumour.percentage.dna.cnv.2021,
-  glass.gbm.rnaseq.metadata.all.samples$purity.synapse.rna)
-
-plot(
-  glass.gbm.rnaseq.metadata.all.samples$purity.synapse.rna,
-  glass.gbm.rnaseq.metadata.all.samples$tumour.percentage.dna.imputed.rf.2021)
-
-plot(glass.gbm.rnaseq.metadata.all.samples$tumour.percentage.dna.cnv.2021,
-     glass.gbm.rnaseq.metadata.all.samples$tumour.percentage.dna.imputed.rf.2021)
-
+# glass.gbm.rnaseq.metadata.all.samples$tumour.percentage.dna.cnv.2021
+# glass.gbm.rnaseq.metadata.all.samples$purity.synapse.rna
+# glass.gbm.rnaseq.metadata.all.samples$tumour.percentage.dna.imputed.rf.2021
+# 
+# 
+# plot(
+#   glass.gbm.rnaseq.metadata.all.samples$tumour.percentage.dna.cnv.2021,
+#   glass.gbm.rnaseq.metadata.all.samples$purity.synapse.rna)
+# 
+# plot(
+#   glass.gbm.rnaseq.metadata.all.samples$purity.synapse.rna,
+#   glass.gbm.rnaseq.metadata.all.samples$tumour.percentage.dna.imputed.rf.2021)
+# 
+# plot(glass.gbm.rnaseq.metadata.all.samples$tumour.percentage.dna.cnv.2021,
+#      glass.gbm.rnaseq.metadata.all.samples$tumour.percentage.dna.imputed.rf.2021)
+# 
 
 
 # CNV mismatches the DNA predictions
@@ -1035,7 +1035,8 @@ plot(glass.gbm.rnaseq.metadata.all.samples$tumour.percentage.dna.cnv.2021,
 stopifnot(!exists('glass.gbm.rnaseq.expression.vst'))
 
 
-tmp <- as.factor(paste0('c',round(runif(ncol(glass.gbm.rnaseq.expression.all.samples)))+1) )
+tmp <- as.factor(paste0('c',round(runif(ncol(glass.gbm.rnaseq.expression.all.samples)))+1) ) |> 
+  
 
 glass.gbm.rnaseq.expression.all.samples.vst <- glass.gbm.rnaseq.expression.all.samples |> 
   DESeq2::DESeqDataSetFromMatrix(data.frame(cond = tmp), ~cond) |> 
