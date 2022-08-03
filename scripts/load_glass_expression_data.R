@@ -736,6 +736,167 @@ glass.gbm.rnaseq.metadata.all.samples |>
   as.data.frame()
 
 
+
+
+## load synapse-portal batch descriptors ----
+
+
+tmp <- 'data/gsam/data/GLASS_GBM_R1-R2/biospecimen_aliquots_syn31121185.tsv' |> 
+  read.table(sep="\t",header=T,stringsAsFactors = F) |> 
+  dplyr::mutate(ROW_ID=NULL) |> 
+  dplyr::mutate(ROW_VERSION=NULL) |> 
+  dplyr::select(aliquot_barcode, aliquot_batch) |> 
+  dplyr::rename(aliquot_batch_synapse = aliquot_batch) |> 
+  dplyr::mutate(aliquot_batch_synapse = 
+                  case_when( # see analysis_predict_GLASS_batches.R
+                    aliquot_barcode %in% c("GLSS-CU-R006-TP-01R-RNA-VRCJGW",
+                                           "GLSS-CU-R018-R1-01R-RNA-0OVRM9",
+                                           "GLSS-CU-R019-TP-01R-RNA-S5OA7D",
+                                           "GLSS-CU-R019-R1-01R-RNA-BGF7KM",
+                                           "GLSS-CU-R006-R1-01R-RNA-4EGGFS",
+                                           "GLSS-CU-R017-R1-01R-RNA-S3WCU4"
+                    ) ~ "GLSS-PD-RNA",
+                    aliquot_barcode %in% c("GLSS-MD-LP04-TP-01R-RNA-LTGS2F",
+                                           "GLSS-MD-LP04-R1-01R-RNA-TPSKGU"
+                    ) ~ "GLSS-MD-RNA",
+                    aliquot_barcode %in% c("GLSS-SM-R068-TP-01R-RNA-0UPMYO", "GLSS-SM-R068-R1-01R-RNA-7I5H9P", "GLSS-SM-R071-TP-01R-RNA-OAXGI8", "GLSS-SM-R071-R1-01R-RNA-7AZ6G2",
+                                           "GLSS-SM-R083-TP-01R-RNA-RZOKGO", "GLSS-SM-R083-R1-01R-RNA-8JLBVA", "GLSS-SM-R099-R1-01R-RNA-MNTPMI", "GLSS-SM-R100-TP-01R-RNA-EUI7AZ",
+                                           "GLSS-SM-R100-R1-01R-RNA-46UW5U", "GLSS-SM-R111-TP-01R-RNA-1EFVGV"
+                    ) ~ "GLSS-SM-RNA [A]",
+                    aliquot_barcode %in% c("GLSS-SM-R056-TP-01R-RNA-JWKQQG", "GLSS-SM-R056-R3-01R-RNA-ZNDAN5", "GLSS-SM-R060-TP-01R-RNA-ZI9YVM", "GLSS-SM-R060-R3-01R-RNA-PO2KDQ",
+                                           "GLSS-SM-R061-TP-01R-RNA-AZSPBW", "GLSS-SM-R061-R1-01R-RNA-0NG539", "GLSS-SM-R063-TP-01R-RNA-WIVUSX", "GLSS-SM-R063-R1-01R-RNA-YQOR0G",
+                                           "GLSS-SM-R064-TP-01R-RNA-W6PIW2", "GLSS-SM-R064-R2-01R-RNA-TUJCN7", "GLSS-SM-R065-TP-01R-RNA-OM7S2C", "GLSS-SM-R065-R1-01R-RNA-V35ETA",
+                                           "GLSS-SM-R066-TP-01R-RNA-G9A6CK", "GLSS-SM-R066-R1-01R-RNA-MKHTJ4", "GLSS-SM-R067-TP-01R-RNA-JYXPKW", "GLSS-SM-R067-R1-01R-RNA-O82WJY",
+                                           "GLSS-SM-R070-TP-01R-RNA-QWG60O", "GLSS-SM-R070-R1-01R-RNA-PXOL5Z", "GLSS-SM-R072-TP-01R-RNA-K18OXT", "GLSS-SM-R072-R1-01R-RNA-1DQIND",
+                                           "GLSS-SM-R080-TP-01R-RNA-2N8175", "GLSS-SM-R080-R1-01R-RNA-GHDR0Y", "GLSS-SM-R081-TP-01R-RNA-4GQW1O", "GLSS-SM-R081-R1-01R-RNA-S67IFC",
+                                           "GLSS-SM-R082-TP-01R-RNA-WZ4QXK", "GLSS-SM-R082-R1-01R-RNA-9RBAL7", "GLSS-SM-R085-TP-01R-RNA-92DLZP", "GLSS-SM-R085-R1-01R-RNA-WN1ZYO",
+                                           "GLSS-SM-R087-TP-01R-RNA-M99T61", "GLSS-SM-R087-R1-01R-RNA-Z69T3R", "GLSS-SM-R088-TP-01R-RNA-AAPVD7", "GLSS-SM-R088-R1-01R-RNA-9CCN54",
+                                           "GLSS-SM-R091-TP-01R-RNA-RUF3X9", "GLSS-SM-R091-R1-01R-RNA-M356AA", "GLSS-SM-R093-TP-01R-RNA-KR8RON", "GLSS-SM-R093-R1-01R-RNA-56NKHA",
+                                           "GLSS-SM-R095-TP-01R-RNA-5T2HT4", "GLSS-SM-R095-R1-01R-RNA-BQ7VMI", "GLSS-SM-R096-R1-01R-RNA-HTOE1R", "GLSS-SM-R099-TP-01R-RNA-YGXA72",
+                                           "GLSS-SM-R101-TP-02R-RNA-V4TRVD", "GLSS-SM-R101-R1-02R-RNA-BIXXBZ", "GLSS-SM-R102-TP-01R-RNA-RB5HS0", "GLSS-SM-R102-R1-01R-RNA-8OZGEA",
+                                           "GLSS-SM-R103-TP-01R-RNA-7YEFHB", "GLSS-SM-R103-R1-01R-RNA-TSX1I7", "GLSS-SM-R104-TP-01R-RNA-G52UET", "GLSS-SM-R104-R1-01R-RNA-YF3DT7",
+                                           "GLSS-SM-R105-R1-01R-RNA-C7FINA", "GLSS-SM-R106-TP-01R-RNA-P5JI35", "GLSS-SM-R106-R1-01R-RNA-MFHIBQ", "GLSS-SM-R107-TP-01R-RNA-ZSYP37",
+                                           "GLSS-SM-R107-R1-02R-RNA-1K9XUJ", "GLSS-SM-R108-TP-01R-RNA-KUU8QP", "GLSS-SM-R108-R1-01R-RNA-NICL65", "GLSS-SM-R109-TP-01R-RNA-I4HTPP",
+                                           "GLSS-SM-R109-R1-01R-RNA-R5I1C7", "GLSS-SM-R110-TP-02R-RNA-A85T37", "GLSS-SM-R110-R1-01R-RNA-F7JINL", "GLSS-SM-R111-R1-01R-RNA-WM5ESA",
+                                           "GLSS-SM-R112-TP-01R-RNA-T1QQYH", "GLSS-SM-R112-R1-01R-RNA-V3XS3H"
+                    ) ~ "GLSS-SM-RNA [B]",
+                    aliquot_barcode %in% c("GLSS-SM-R099-R1-01R-RNA-MNTPMI","GLSS-SM-R111-R1-01R-RNA-WM5ESA") ~ as.character(NA), # bit strange how they fit with A and B
+                    T ~ aliquot_batch_synapse
+                  ))
+
+
+glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::left_join(tmp, by=c('aliquot_barcode'='aliquot_barcode'), suffix=c('','')) 
+
+
+rm(tmp)
+
+
+## load synapse-portal RNA imputed purities ----
+
+# I suspect these are determined using ESTIMATE and RNA data
+
+tmp <- 'data/gsam/data/GLASS_GBM_R1-R2/analysis_estimate_purity_syn31121157.tsv' |> 
+  read.table(sep="\t",header=T,stringsAsFactors = F) |> 
+  dplyr::mutate(ROW_ID=NULL) |> 
+  dplyr::mutate(ROW_VERSION=NULL) |> 
+  dplyr::rename(stromal_score.synapse.rna = stromal_score) |> 
+  dplyr::rename(immune_score.synapse.rna = immune_score) |> 
+  dplyr::rename(estimate_score.synapse.rna = estimate_score) |> 
+  dplyr::rename(purity.synapse.rna = purity)
+
+
+
+glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::left_join(tmp, by=c('aliquot_barcode'='aliquot_barcode'), suffix=c('','')) 
+
+
+rm(tmp)
+
+
+
+
+## load RNA imputed / predict TPCs ----
+
+
+tmp <- read.table("output/tables/GLASS.tumour.percentage.dna.imputed.rf.txt") |>
+  dplyr::rename(tumour.percentage.dna.imputed.rf.2021 = tumour.percentage.dna.imputed.rf) |> 
+  dplyr::rename(aliquot_barcode = sid)
+
+
+glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::left_join(tmp, by=c('aliquot_barcode'='aliquot_barcode'), suffix=c('','')) 
+
+
+rm(tmp)
+
+
+
+## DNA/CNV segments imputed TPC to metadata ----
+
+# pretty poor correlation, something seems odd w/ the predictions in GLASS/CNV?
+# These estimates [2021/legacy] are just not good enough:
+#plot(glass.gbm.rnaseq.metadata$tumour.percentage.dna , glass.gbm.rnaseq.metadata$tumour.percentage.dna.imputed.caret)
+
+#'@todo check w/ CD163 and TMEM144 expression
+
+
+tmp <- read.table("output/tables/cnv/tumor.percentage.estimate_glass.txt") |> 
+  dplyr::select(c('sample','pct')) |>
+  dplyr::rename(aliquot_barcode = sample) |> 
+  dplyr::mutate(portion_barcode = gsub("^([^\\-]+)-([^\\-]+)-([^\\-]+)-([^\\-]+)-([0-9]+).+$$","\\1-\\2-\\3-\\4-\\5",aliquot_barcode)) |> 
+  dplyr::mutate(aliquot_barcode = NULL) |> 
+  dplyr::rename(tumour.percentage.dna.cnv.2021 = pct)
+
+
+
+
+stopifnot(duplicated(tmp$portion_barcode) == F)
+
+
+glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::left_join(tmp, by=c('portion_barcode'='portion_barcode'), suffix=c('','')) 
+
+
+rm(tmp)
+
+
+stopifnot(is.na(glass.gbm.rnaseq.metadata.all.samples$aliquot_barcode) == F)
+
+
+
+
+## add CNV fitted purities 2022 ----
+
+
+# if file does, generate it with: 'scripts/analysis_tumor_percentage_using_cn_data_GLASS_2022.R'
+
+
+tmp <- read.table("output/tables/cnv/tumor.percentage.estimate_glass.2022.all_samples.txt") |> 
+  dplyr::select(portion_barcode, tumor.purity.cnv.pct.2022) |> 
+  dplyr::rename(tumour.percentage.dna.cnv.2022 = tumor.purity.cnv.pct.2022) |> 
+  dplyr::group_by(portion_barcode) |> 
+  dplyr::summarize(tumour.percentage.dna.cnv.2022 = mean(tumour.percentage.dna.cnv.2022, na.rm=T)) |> 
+  dplyr::ungroup()
+
+
+stopifnot(duplicated(tmp$portion_barcode) == F)
+
+
+
+glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::left_join(tmp, by=c('portion_barcode'='portion_barcode'), suffix=c('','')) 
+
+stopifnot(duplicated(glass.gbm.rnaseq.metadata.all.samples$aliquot_barcode) == F)
+
+
+
+rm(tmp)
+
+
+
+## :: checks :: ----
+
 ## check w/ VCF mutations ----
 
 
@@ -843,162 +1004,6 @@ glass.gbm.rnaseq.expression.all.samples <- glass.gbm.rnaseq.expression.all.sampl
 stopifnot(colnames(glass.gbm.rnaseq.expression.all.samples) == glass.gbm.rnaseq.metadata.all.samples$aliquot_barcode)
 
 
-
-## load synapse-portal batch descriptors ----
-
-
-tmp <- 'data/gsam/data/GLASS_GBM_R1-R2/biospecimen_aliquots_syn31121185.tsv' |> 
-  read.table(sep="\t",header=T,stringsAsFactors = F) |> 
-  dplyr::mutate(ROW_ID=NULL) |> 
-  dplyr::mutate(ROW_VERSION=NULL) |> 
-  dplyr::select(aliquot_barcode, aliquot_batch) |> 
-  dplyr::rename(aliquot_batch_synapse = aliquot_batch) |> 
-  dplyr::mutate(aliquot_batch_synapse = 
-                  case_when( # see analysis_predict_GLASS_batches.R
-                   aliquot_barcode %in% c("GLSS-CU-R006-TP-01R-RNA-VRCJGW",
-                                          "GLSS-CU-R018-R1-01R-RNA-0OVRM9",
-                                          "GLSS-CU-R019-TP-01R-RNA-S5OA7D",
-                                          "GLSS-CU-R019-R1-01R-RNA-BGF7KM",
-                                          "GLSS-CU-R006-R1-01R-RNA-4EGGFS",
-                                          "GLSS-CU-R017-R1-01R-RNA-S3WCU4"
-                                          ) ~ "GLSS-PD-RNA",
-                   aliquot_barcode %in% c("GLSS-MD-LP04-TP-01R-RNA-LTGS2F",
-                                          "GLSS-MD-LP04-R1-01R-RNA-TPSKGU"
-                                          ) ~ "GLSS-MD-RNA",
-                   aliquot_barcode %in% c("GLSS-SM-R068-TP-01R-RNA-0UPMYO", "GLSS-SM-R068-R1-01R-RNA-7I5H9P", "GLSS-SM-R071-TP-01R-RNA-OAXGI8", "GLSS-SM-R071-R1-01R-RNA-7AZ6G2",
-                                          "GLSS-SM-R083-TP-01R-RNA-RZOKGO", "GLSS-SM-R083-R1-01R-RNA-8JLBVA", "GLSS-SM-R099-R1-01R-RNA-MNTPMI", "GLSS-SM-R100-TP-01R-RNA-EUI7AZ",
-                                          "GLSS-SM-R100-R1-01R-RNA-46UW5U", "GLSS-SM-R111-TP-01R-RNA-1EFVGV"
-                                          ) ~ "GLSS-SM-RNA [A]",
-                   aliquot_barcode %in% c("GLSS-SM-R056-TP-01R-RNA-JWKQQG", "GLSS-SM-R056-R3-01R-RNA-ZNDAN5", "GLSS-SM-R060-TP-01R-RNA-ZI9YVM", "GLSS-SM-R060-R3-01R-RNA-PO2KDQ",
-                                          "GLSS-SM-R061-TP-01R-RNA-AZSPBW", "GLSS-SM-R061-R1-01R-RNA-0NG539", "GLSS-SM-R063-TP-01R-RNA-WIVUSX", "GLSS-SM-R063-R1-01R-RNA-YQOR0G",
-                                          "GLSS-SM-R064-TP-01R-RNA-W6PIW2", "GLSS-SM-R064-R2-01R-RNA-TUJCN7", "GLSS-SM-R065-TP-01R-RNA-OM7S2C", "GLSS-SM-R065-R1-01R-RNA-V35ETA",
-                                          "GLSS-SM-R066-TP-01R-RNA-G9A6CK", "GLSS-SM-R066-R1-01R-RNA-MKHTJ4", "GLSS-SM-R067-TP-01R-RNA-JYXPKW", "GLSS-SM-R067-R1-01R-RNA-O82WJY",
-                                          "GLSS-SM-R070-TP-01R-RNA-QWG60O", "GLSS-SM-R070-R1-01R-RNA-PXOL5Z", "GLSS-SM-R072-TP-01R-RNA-K18OXT", "GLSS-SM-R072-R1-01R-RNA-1DQIND",
-                                          "GLSS-SM-R080-TP-01R-RNA-2N8175", "GLSS-SM-R080-R1-01R-RNA-GHDR0Y", "GLSS-SM-R081-TP-01R-RNA-4GQW1O", "GLSS-SM-R081-R1-01R-RNA-S67IFC",
-                                          "GLSS-SM-R082-TP-01R-RNA-WZ4QXK", "GLSS-SM-R082-R1-01R-RNA-9RBAL7", "GLSS-SM-R085-TP-01R-RNA-92DLZP", "GLSS-SM-R085-R1-01R-RNA-WN1ZYO",
-                                          "GLSS-SM-R087-TP-01R-RNA-M99T61", "GLSS-SM-R087-R1-01R-RNA-Z69T3R", "GLSS-SM-R088-TP-01R-RNA-AAPVD7", "GLSS-SM-R088-R1-01R-RNA-9CCN54",
-                                          "GLSS-SM-R091-TP-01R-RNA-RUF3X9", "GLSS-SM-R091-R1-01R-RNA-M356AA", "GLSS-SM-R093-TP-01R-RNA-KR8RON", "GLSS-SM-R093-R1-01R-RNA-56NKHA",
-                                          "GLSS-SM-R095-TP-01R-RNA-5T2HT4", "GLSS-SM-R095-R1-01R-RNA-BQ7VMI", "GLSS-SM-R096-R1-01R-RNA-HTOE1R", "GLSS-SM-R099-TP-01R-RNA-YGXA72",
-                                          "GLSS-SM-R101-TP-02R-RNA-V4TRVD", "GLSS-SM-R101-R1-02R-RNA-BIXXBZ", "GLSS-SM-R102-TP-01R-RNA-RB5HS0", "GLSS-SM-R102-R1-01R-RNA-8OZGEA",
-                                          "GLSS-SM-R103-TP-01R-RNA-7YEFHB", "GLSS-SM-R103-R1-01R-RNA-TSX1I7", "GLSS-SM-R104-TP-01R-RNA-G52UET", "GLSS-SM-R104-R1-01R-RNA-YF3DT7",
-                                          "GLSS-SM-R105-R1-01R-RNA-C7FINA", "GLSS-SM-R106-TP-01R-RNA-P5JI35", "GLSS-SM-R106-R1-01R-RNA-MFHIBQ", "GLSS-SM-R107-TP-01R-RNA-ZSYP37",
-                                          "GLSS-SM-R107-R1-02R-RNA-1K9XUJ", "GLSS-SM-R108-TP-01R-RNA-KUU8QP", "GLSS-SM-R108-R1-01R-RNA-NICL65", "GLSS-SM-R109-TP-01R-RNA-I4HTPP",
-                                          "GLSS-SM-R109-R1-01R-RNA-R5I1C7", "GLSS-SM-R110-TP-02R-RNA-A85T37", "GLSS-SM-R110-R1-01R-RNA-F7JINL", "GLSS-SM-R111-R1-01R-RNA-WM5ESA",
-                                          "GLSS-SM-R112-TP-01R-RNA-T1QQYH", "GLSS-SM-R112-R1-01R-RNA-V3XS3H"
-                                          ) ~ "GLSS-SM-RNA [B]",
-                   aliquot_barcode %in% c("GLSS-SM-R099-R1-01R-RNA-MNTPMI","GLSS-SM-R111-R1-01R-RNA-WM5ESA") ~ as.character(NA), # bit strange how they fit with A and B
-                   T ~ aliquot_batch_synapse
-                  ))
-
-
-glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
-  dplyr::left_join(tmp, by=c('aliquot_barcode'='aliquot_barcode'), suffix=c('','')) 
-
-
-rm(tmp)
-
-
-
-## load synapse-portal RNA imputed purities ----
-
-# I suspect these are determined using ESTIMATE and RNA data
-
-tmp <- 'data/gsam/data/GLASS_GBM_R1-R2/analysis_estimate_purity_syn31121157.tsv' |> 
-  read.table(sep="\t",header=T,stringsAsFactors = F) |> 
-  dplyr::mutate(ROW_ID=NULL) |> 
-  dplyr::mutate(ROW_VERSION=NULL) |> 
-  dplyr::rename(stromal_score.synapse.rna = stromal_score) |> 
-  dplyr::rename(immune_score.synapse.rna = immune_score) |> 
-  dplyr::rename(estimate_score.synapse.rna = estimate_score) |> 
-  dplyr::rename(purity.synapse.rna = purity)
-
-
-
-glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
-  dplyr::left_join(tmp, by=c('aliquot_barcode'='aliquot_barcode'), suffix=c('','')) 
-
-
-rm(tmp)
-
-
-
-
-## load RNA imputed / predict TPCs ----
-
-
-tmp <- read.table("output/tables/GLASS.tumour.percentage.dna.imputed.rf.txt") |>
-  dplyr::rename(tumour.percentage.dna.imputed.rf.2021 = tumour.percentage.dna.imputed.rf) |> 
-  dplyr::rename(aliquot_barcode = sid)
-
-
-glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
-  dplyr::left_join(tmp, by=c('aliquot_barcode'='aliquot_barcode'), suffix=c('','')) 
-
-
-rm(tmp)
-
-
-
-## DNA/CNV segments imputed TPC to metadata ----
-
-# pretty poor correlation, something seems odd w/ the predictions in GLASS/CNV?
-# These estimates [2021/legacy] are just not good enough:
-#plot(glass.gbm.rnaseq.metadata$tumour.percentage.dna , glass.gbm.rnaseq.metadata$tumour.percentage.dna.imputed.caret)
-
-#'@todo check w/ CD163 and TMEM144 expression
-
-
-tmp <- read.table("output/tables/cnv/tumor.percentage.estimate_glass.txt") |> 
-  dplyr::select(c('sample','pct')) |>
-  dplyr::rename(aliquot_barcode = sample) |> 
-  dplyr::mutate(portion_barcode = gsub("^([^\\-]+)-([^\\-]+)-([^\\-]+)-([^\\-]+)-([0-9]+).+$$","\\1-\\2-\\3-\\4-\\5",aliquot_barcode)) |> 
-  dplyr::mutate(aliquot_barcode = NULL) |> 
-  dplyr::rename(tumour.percentage.dna.cnv.2021 = pct)
-
-
-
-
-stopifnot(duplicated(tmp$portion_barcode) == F)
-
-
-glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
-  dplyr::left_join(tmp, by=c('portion_barcode'='portion_barcode'), suffix=c('','')) 
-
-
-rm(tmp)
-
-
-stopifnot(is.na(glass.gbm.rnaseq.metadata.all.samples$aliquot_barcode) == F)
-
-
-
-
-## add CNV fitted purities 2022 ----
-
-
-# if file does, generate it with: 'scripts/analysis_tumor_percentage_using_cn_data_GLASS_2022.R'
-
-
-tmp <- read.table("output/tables/cnv/tumor.percentage.estimate_glass.2022.all_samples.txt") |> 
-  dplyr::select(portion_barcode, tumor.purity.cnv.pct.2022) |> 
-  dplyr::rename(tumour.percentage.dna.cnv.2022 = tumor.purity.cnv.pct.2022) |> 
-  dplyr::group_by(portion_barcode) |> 
-  dplyr::summarize(tumour.percentage.dna.cnv.2022 = mean(tumour.percentage.dna.cnv.2022, na.rm=T)) |> 
-  dplyr::ungroup()
-
-
-stopifnot(duplicated(tmp$portion_barcode) == F)
-
-
-
-glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
-  dplyr::left_join(tmp, by=c('portion_barcode'='portion_barcode'), suffix=c('','')) 
-
-stopifnot(duplicated(glass.gbm.rnaseq.metadata.all.samples$aliquot_barcode) == F)
-
-
-
-rm(tmp)
 
 
 
