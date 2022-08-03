@@ -5,9 +5,9 @@
 
 
 #library(tidyverse)
-library(randomForest)
-library(caret)
-library(ranger)
+#library(randomForest)
+#library(caret)
+#library(ranger)
 
 
 # load data ----
@@ -532,10 +532,10 @@ plt <- read.table('output/tables/GLASS.tumour.percentage.dna.imputed.caret.txt')
 # )) + geom_point()
 
 
-# 2022 RF imputed purities : aliquot_batch_synapse ----
+# 2022 RF imputed purities ----
 
 
-### prep and normalise expression data [aliquot style] ----
+## prep and normalise expression data ----
 
 gene.metadata.all.patients <- dplyr::full_join(
   gsam.rnaseq.expression %>%
@@ -584,11 +584,10 @@ tmp.metadata <- data.frame(sid = colnames(all.gene.expression.all.patients)) |>
   dplyr::mutate(cond = as.factor(cond)) |> 
   dplyr::left_join(
     glass.gbm.rnaseq.metadata.all.samples |> 
-      dplyr::select(aliquot_barcode, aliquot_batch_synapse, predicted.GLASS.batch, tumour.percentage.dna.cnv.2022),
+      dplyr::select(aliquot_barcode, aliquot_batch_synapse, tumour.percentage.dna.cnv.2022),
     by=c('sid'='aliquot_barcode')
   ) |> 
   dplyr::mutate(aliquot_batch_synapse = ifelse(is.na(aliquot_batch_synapse),"G-SAM", aliquot_batch_synapse)) |> 
-  dplyr::mutate(predicted.GLASS.batch = ifelse(is.na(predicted.GLASS.batch),"G-SAM", predicted.GLASS.batch)) |> 
   dplyr::left_join(
     gsam.rna.metadata |>
       dplyr::select(sid, tumour.percentage.dna)
@@ -605,8 +604,8 @@ all.gene.expression.vst.all.patients <- all.gene.expression.all.patients |>
   DESeq2::DESeqDataSetFromMatrix(tmp.metadata, ~cond) |> 
   DESeq2::vst(blind=T) |> 
   SummarizedExperiment::assay() |> 
-  limma::removeBatchEffect(as.factor(tmp.metadata$predicted.GLASS.batch)) |> # remove batch effects: aliquot_batch_synapse
-  as.data.frame()
+  limma::removeBatchEffect(as.factor(tmp.metadata$aliquot_batch_synapse)) |> # remove batch effects: aliquot_batch_synapse
+  as.data.frame(stringsAsFactors=F)
 
 
 ## A: ~ gsam purities ----
@@ -638,10 +637,11 @@ train.data <- all.gene.expression.vst.all.patients |>
   tibble::rownames_to_column('sid') |> 
   dplyr::left_join(tmp.metadata |> 
     tibble::rownames_to_column('sid') |> 
-    dplyr::select(c('sid','tumour.percentage.dna')) ,
+    dplyr::select(c('sid','tumour.percentage.dna.cnv.2022')) ,
     by = c('sid'='sid')) %>%
   tibble::column_to_rownames('sid') |> 
-  dplyr::relocate(tumour.percentage.dna, .before = tidyselect::everything()) # move to front, easier
+  dplyr::relocate(tumour.percentage.dna.cnv.2022, .before = tidyselect::everything()) # move to front, for convenience
+
 
 
 test.data <- all.gene.expression.vst.all.patients %>%
@@ -666,10 +666,10 @@ model.rf.all.patients <- randomForest::randomForest(tumour.percentage.dna.cnv.20
                         data=train.data,
                         ntree = 5000 )
 
-test.data$tumour.percentage.dna.imputed.rf.2022.all.patients <- predict(model.rf.all.patients, test.data)
+test.data$tumour.percentage.dna.imputed.rf.2022.all.patients.A <- predict(model.rf.all.patients, test.data)
 
 write.table(test.data |> 
-    dplyr::select(tumour.percentage.dna.imputed.rf.2022.all.patients), file="output/tables/GLASS.tumour.percentage.dna.imputed.rf.A.2022.all.patients.txt")
+    dplyr::select(tumour.percentage.dna.imputed.rf.2022.all.patients.A), file="output/tables/GLASS.tumour.percentage.dna.imputed.rf.A.2022.all.patients.A.txt")
 
 
 

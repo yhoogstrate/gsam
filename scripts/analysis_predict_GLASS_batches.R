@@ -333,3 +333,5 @@ ggplot(plt |> dplyr::filter(tissue.source == "MD"), aes(x=PC1, y=PC2, label=sid.
 
 
 
+rm(plt)
+
