@@ -1032,21 +1032,6 @@ stopifnot(colnames(glass.gbm.rnaseq.expression.all.samples) == glass.gbm.rnaseq.
 # CNV mismatches the DNA predictions
 
 
-# VST transform ----
-
-
-stopifnot(!exists('glass.gbm.rnaseq.expression.vst'))
-
-
-tmp <- as.factor(paste0('c',round(runif(ncol(glass.gbm.rnaseq.expression.all.samples)))+1) ) |> 
-  
-
-glass.gbm.rnaseq.expression.all.samples.vst <- glass.gbm.rnaseq.expression.all.samples |> 
-  DESeq2::DESeqDataSetFromMatrix(data.frame(cond = tmp), ~cond) |> 
-  DESeq2::vst(blind=T) |> 
-  SummarizedExperiment::assay() |> 
-  as.data.frame(stringsAsFactors=F)
-
 
 
 

@@ -1,9 +1,34 @@
 #!/usr/bin/env R
 
 
-if(!exists('glass.gbm.rnaseq.expression.all.samples.vst')) {
+if(!exists('glass.gbm.rnaseq.expression.all.samples')) {
   source('scripts/load_glass_expression_data.R')
 }
+
+
+# VST transform ----
+
+
+stopifnot(!exists('glass.gbm.rnaseq.expression.vst'))
+
+
+tmp <- glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::mutate(cond = runif(n(),1,2)) |> 
+  dplyr::mutate(cond = round(cond)) |> 
+  dplyr::mutate(cond = paste0("c",cond)) |> 
+  dplyr::mutate(cond = as.factor(cond))
+
+
+glass.gbm.rnaseq.expression.all.samples.vst <- glass.gbm.rnaseq.expression.all.samples |> 
+  DESeq2::DESeqDataSetFromMatrix(tmp, ~cond) |> 
+  DESeq2::vst(blind=T) |> 
+  SummarizedExperiment::assay() |> 
+  as.data.frame(stringsAsFactors=F)
+
+
+
+rm(tmp)
+
 
 
 # batches ~ PCA ~ plot ----
@@ -149,6 +174,7 @@ ggplot(plt |> dplyr::filter(aliquot_batch_synapse == "GLSS-MD-RNA" | grepl('-MD-
   xlim(-120,270) +
   ylim(-100,200)
 
+
 ## GLSS-PD-RNA ----
 #'@details six of CU presumably should be included
 ggplot(plt |> dplyr::filter(aliquot_batch_synapse == "GLSS-PD-RNA" | grepl('-CU-',aliquot_barcode,fixed=T) ), 
@@ -164,15 +190,15 @@ ggplot(plt |> dplyr::filter(aliquot_batch_synapse == "GLSS-PD-RNA" | grepl('-CU-
 ## GLSS-SM-RNA ----
 #'@details should be split in two batches, with 2 outliers
 
-plt |>
-  dplyr::filter(aliquot_batch_synapse == "GLSS-SM-RNA") |> 
-  dplyr::filter(PC1 > 150) |> 
-  dplyr::pull(aliquot_barcode)
-
-plt |>
-  dplyr::filter(aliquot_batch_synapse == "GLSS-SM-RNA") |> 
-  dplyr::filter(PC1 <= 150) |> 
-  dplyr::pull(aliquot_barcode)
+# plt |>
+#   dplyr::filter(aliquot_batch_synapse == "GLSS-SM-RNA") |> 
+#   dplyr::filter(PC1 > 150) |> 
+#   dplyr::pull(aliquot_barcode)
+# 
+# plt |>
+#   dplyr::filter(aliquot_batch_synapse == "GLSS-SM-RNA") |> 
+#   dplyr::filter(PC1 <= 150) |> 
+#   dplyr::pull(aliquot_barcode)
 
 
 ggplot(plt |> dplyr::filter(aliquot_batch_synapse == "GLSS-SM-RNA" | grepl('-SM-',aliquot_barcode,fixed=T) ), 
@@ -184,6 +210,7 @@ ggplot(plt |> dplyr::filter(aliquot_batch_synapse == "GLSS-SM-RNA" | grepl('-SM-
   xlim(-120,270) +
   ylim(-100,200)
 
+
 ## GLSS-SN-RNA ----
 #'@details batch = good
 ggplot(plt |> dplyr::filter(aliquot_batch_synapse == "GLSS-SN-RNA" | grepl('-xx-',aliquot_barcode,fixed=T) ), 
@@ -194,6 +221,7 @@ ggplot(plt |> dplyr::filter(aliquot_batch_synapse == "GLSS-SN-RNA" | grepl('-xx-
   theme_bw() + 
   xlim(-120,270) +
   ylim(-100,200)
+
 
 ## TCGA-GB-RNA ----
 #'@details batch = good
