@@ -532,7 +532,7 @@ plt <- read.table('output/tables/GLASS.tumour.percentage.dna.imputed.caret.txt')
 # )) + geom_point()
 
 
-# 2022 RF imputed purities ----
+# 2022 RF imputed purities : aliquot_batch_synapse ----
 
 
 ### prep and normalise expression data [aliquot style] ----
@@ -594,7 +594,10 @@ tmp.metadata <- data.frame(sid = colnames(all.gene.expression.all.patients)) |>
       dplyr::select(sid, tumour.percentage.dna)
     ,by=('sid'='sid')
   ) |> 
+  dplyr::mutate(tumour.percentage.dna.cnv.2022 = ifelse(is.na(tumour.percentage.dna.cnv.2022), tumour.percentage.dna, tumour.percentage.dna.cnv.2022)) |> 
+  dplyr::mutate(tumour.percentage.dna = NULL) |> 
   tibble::column_to_rownames('sid')
+
 
 
 stopifnot(rownames(tmp.metadata) == colnames(all.gene.expression.all.patients))
@@ -602,7 +605,7 @@ all.gene.expression.vst.all.patients <- all.gene.expression.all.patients |>
   DESeq2::DESeqDataSetFromMatrix(tmp.metadata, ~cond) |> 
   DESeq2::vst(blind=T) |> 
   SummarizedExperiment::assay() |> 
-  limma::removeBatchEffect(as.factor(tmp.metadata$aliquot_batch_synapse)) |> # remove batch effects
+  limma::removeBatchEffect(as.factor(tmp.metadata$predicted.GLASS.batch)) |> # remove batch effects: aliquot_batch_synapse
   as.data.frame()
 
 
@@ -626,7 +629,7 @@ candidate.features <- readRDS(file = 'tmp/results.out.Rds') |>
 train.data <- all.gene.expression.vst.all.patients |> 
   dplyr::select(
     tmp.metadata |>
-      dplyr::filter(aliquot_batch_synapse == "G-SAM" & !is.na(tumour.percentage.dna)) |>
+      dplyr::filter(aliquot_batch_synapse == "G-SAM" & !is.na(tumour.percentage.dna.cnv.2022)) |>
       tibble::rownames_to_column('sid') |>
       dplyr::pull('sid')) |> 
   t() |> 
@@ -659,7 +662,7 @@ stopifnot(ncol(train.data) == (ncol(test.data) + 1))
 
 
 set.seed(1+3+3+7)
-model.rf.all.patients <- randomForest::randomForest(tumour.percentage.dna ~ .,
+model.rf.all.patients <- randomForest::randomForest(tumour.percentage.dna.cnv.2022 ~ .,
                         data=train.data,
                         ntree = 5000 )
 
@@ -673,7 +676,201 @@ write.table(test.data |>
 rm(candidate.features, train.data,test.data, model.rf.all.patients)
 
 
-# B: 2022 revision extr.smples [glass purities & 10xCV] ----
+## B: ~ glass purities only [10xCV*] ----
+
+# use CNV calls from glass only
+
+# best aantal zonder CNV purity?!
+tmp.metadata |> dplyr::filter(predicted.GLASS.batch != "G-SAM" & is.na(tumour.percentage.dna.cnv.2022))
+
+
+
+test.out.all <- data.frame()
+for(i in 1:10) {
+  print(i)
+
+  train.metadata <- tmp.metadata |> 
+    dplyr::filter( aliquot_batch_synapse != "G-SAM") |> 
+    dplyr::filter(1:n() %% 10 != (i-1) ) |> 
+    dplyr::filter(!is.na(tumour.percentage.dna.cnv.2022)) |> 
+    tibble::rownames_to_column('aliquot_barcode')
+
+  test.metadata <- tmp.metadata |> 
+    dplyr::filter( aliquot_batch_synapse != "G-SAM") |> 
+    dplyr::filter(1:n() %% 10 == (i-1) )|> 
+    tibble::rownames_to_column('aliquot_barcode')
+
+  stopifnot(train.metadata$aliquot_barcode %in% test.metadata$aliquot_barcode == F)
+  
+  
+  train.expression.data <- all.gene.expression.vst.all.patients |> 
+    dplyr::select(train.metadata$aliquot_barcode)
+  test.expression.data <- all.gene.expression.vst.all.patients |> 
+    dplyr::select(test.metadata$aliquot_barcode)
+
+  #'@ correlate train.expression.data genes with purity
+  k <- 1500
+  candidate.features <- train.expression.data |> 
+    t() |> 
+    as.data.frame(stringsAsFactors=F) |> 
+    pbapply::pblapply(cor,y=train.metadata$tumour.percentage.dna.cnv.2022) |> 
+    unlist() |> 
+    data.frame() |> 
+    `colnames<-`('cor') |> 
+    dplyr::filter(!is.na(cor)) |> 
+    dplyr::arrange(cor) |> 
+    dplyr::mutate(top.low = c(rep(T, k), rep(F, n() - k))) |> 
+    dplyr::arrange(-cor) |> 
+    dplyr::mutate(top.high = c(rep(T, k), rep(F, n() - k))) |> 
+    dplyr::filter(top.high | top.low) |> 
+    tibble::rownames_to_column('ensembl_id')
+  
+  
+  train.data <- train.expression.data |> # [rownames(train.expression.data) %in% c(features1, features2),] %>%
+    t() |> 
+    as.data.frame(stringsAsFactors=F) |> 
+    dplyr::select(candidate.features$ensembl_id) |> 
+    tibble::rownames_to_column('aliquot_barcode') |> 
+    dplyr::left_join(train.metadata |>
+                       dplyr::select(aliquot_barcode, tumour.percentage.dna.cnv.2022)
+                       ,by=c('aliquot_barcode'='aliquot_barcode')) |> 
+    dplyr::relocate(tumour.percentage.dna.cnv.2022, .before = tidyselect::everything()) |>  # move to front, easier
+    tibble::column_to_rownames('aliquot_barcode')
+  
+  
+  test.data <- test.expression.data |>#[rownames(train.expression.data) %in% c(features1, features2),] %>%
+    t() |> 
+    as.data.frame(stringsAsFactors=F) |> 
+    dplyr::select(candidate.features$ensembl_id)
+  
+  
+  set.seed(1+3+3+7)
+  features <- Boruta::Boruta(tumour.percentage.dna.cnv.2022 ~. ,
+                             data = train.data ) %>%
+    purrr::pluck('finalDecision') %>%
+    as.data.frame(stringsAsFactor = F) %>%
+    dplyr::rename(boruta.status = '.') %>%
+    tibble::rownames_to_column('ensembl_id') %>%
+    dplyr::filter(boruta.status %in% c("Confirmed","Tentative")) 
+  
+  print(dim(features))
+  dim(train.data)
+  dim(test.data)
+  
+  train.data <- train.data |> 
+    dplyr::select(c(features$ensembl_id, 'tumour.percentage.dna.cnv.2022'))
+  
+  test.data <- test.data |> 
+    dplyr::select(c(features$ensembl_id))
+  
+  dim(train.data)
+  dim(test.data)
+  stopifnot((ncol(test.data) + 1) == ncol(train.data))
+  
+  model.rf <- randomForest::randomForest(tumour.percentage.dna.cnv.2022 ~ .,
+                          data=train.data,
+                          ntree = 5000,
+                          #mtry=3,
+                          
+                          importance=TRUE
+                          
+                          #na.action=na.omit
+  )
+  
+  test.data$tumour.percentage.dna.imputed.rf.2022.all.patients.B <- predict(model.rf, test.data)
+  
+  
+  test.out.all <- test.out.all |> 
+    rbind(test.data |>  dplyr::select('tumour.percentage.dna.imputed.rf.2022.all.patients.B'))
+}
+
+
+
+## plots ----
+
+
+
+plt <- test.out.all |> 
+  tibble::rownames_to_column('aliquot_barcode') |> 
+  dplyr::left_join(
+    tmp.metadata |> 
+      dplyr::select(tumour.percentage.dna.cnv.2022) |> 
+      tibble::rownames_to_column('aliquot_barcode')
+    ,by=c('aliquot_barcode'='aliquot_barcode')
+  ) |> 
+  dplyr::left_join(
+    glass.gbm.rnaseq.metadata.all.samples |> 
+      dplyr::select(aliquot_barcode,purity.synapse.rna,is.primary,predicted.GLASS.batch,aliquot_batch_synapse)
+    ,by=c('aliquot_barcode'='aliquot_barcode')
+  ) |> 
+  dplyr::left_join(
+    read.table("output/tables/GLASS.tumour.percentage.dna.imputed.rf.A.2022.all.patients.txt") |> 
+      tibble::rownames_to_column('aliquot_barcode')
+    ,by=c('aliquot_barcode'='aliquot_barcode')
+  ) |> 
+  dplyr::mutate(dist = abs(tumour.percentage.dna.imputed.rf.2022.all.patients.B - tumour.percentage.dna.cnv.2022))
+
+
+ggplot(plt,aes(x=tumour.percentage.dna.cnv.2022, y=tumour.percentage.dna.imputed.rf.2022.all.patients.B)) +
+  geom_point()
+
+ggplot(plt,aes(x=tumour.percentage.dna.cnv.2022, y=purity.synapse.rna)) +
+  geom_point()
+
+
+ggplot(plt,aes(x=tumour.percentage.dna.cnv.2022, y=tumour.percentage.dna.imputed.rf.2022.all.patients)) +
+  geom_point()
+
+
+ggplot(plt,aes(x=tumour.percentage.dna.cnv.2022,
+               y=tumour.percentage.dna.imputed.rf.2022.all.patients.B,
+               label=aliquot_barcode,
+               col=aliquot_batch_synapse)) + # predicted.GLASS.batch,aliquot_batch_synapse
+  geom_point() +
+  #facet_grid(cols = vars(aliquot_batch_synapse)) +
+  geom_text(data = plt |> dplyr::filter(dist > 30 ))
+
+
+
+ggplot(plt, aes(x=aliquot_batch_synapse, y=dist, col=predicted.GLASS.batch)) +
+  geom_violin(alpha=0.1) + 
+  ggbeeswarm::geom_beeswarm(pch=21,cex=1.2) +
+  youri_gg_theme
+
+
+
+corrplot(cor(as.matrix(plt |>  dplyr::filter(!is.na(tumour.percentage.dna.cnv.2022)) |> tibble::column_to_rownames('aliquot_barcode'))),tl.cex=0.4)
+
+
+
+
+ggplot(plt, aes(x=is.primary, y=tumour.percentage.dna.imputed.rf.2022.all.patients)) +
+  geom_violin(alpha=0.1) + 
+  ggbeeswarm::geom_beeswarm(pch=21,cex=1.2) +
+  youri_gg_theme
+
+
+wilcox.test(
+  plt |> dplyr::filter(is.primary == T) |> dplyr::pull(tumour.percentage.dna.imputed.rf.2022.all.patients),
+  plt |> dplyr::filter(is.primary != T) |> dplyr::pull(tumour.percentage.dna.imputed.rf.2022.all.patients)
+) |> purrr::pluck('p.value')
+
+
+wilcox.test(
+  plt |> dplyr::filter(is.primary == T) |> dplyr::pull(tumour.percentage.dna.imputed.rf.2022.all.patients.B),
+  plt |> dplyr::filter(is.primary != T) |> dplyr::pull(tumour.percentage.dna.imputed.rf.2022.all.patients.B)
+) |> purrr::pluck('p.value')
+
+
+
+wilcox.test(
+  plt |> dplyr::filter(is.primary == T) |> dplyr::pull(tumour.percentage.dna.cnv.2022),
+  plt |> dplyr::filter(is.primary != T) |> dplyr::pull(tumour.percentage.dna.cnv.2022)
+) |> purrr::pluck('p.value')
+
+
+
+
 
 
 

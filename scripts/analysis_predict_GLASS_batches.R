@@ -6,7 +6,7 @@ if(!exists('glass.gbm.rnaseq.expression.all.samples.vst')) {
 }
 
 
-## batches ~ PCA ~ plot ----
+# batches ~ PCA ~ plot ----
 
 
 plt <- glass.gbm.rnaseq.expression.all.samples.vst |> 
@@ -32,26 +32,186 @@ plt <- glass.gbm.rnaseq.expression.all.samples.vst |>
     grepl("CU-R004-P", sid.label) ~ "outlier",
     grepl("G-SM-R099-1", sid.label) ~ "outlier",
     grepl("G-SM-R111-1", sid.label) ~ "outlier",
-    tissue.source == "06" ~ "TCGA",
-    tissue.source == "14" ~ "TCGA",
-    tissue.source == "19" & project == "TCGA" & grepl("19-4065|19-1389", aliquot_barcode) ~ "TCGA",
-    tissue.source == "19" & project == "TCGA" & grepl("19-0957", aliquot_barcode) ~ "GLASS:19",
-    tissue.source == "19" & project == "GLSS" ~ "GLASS:19",
-    tissue.source == "CU" & project == "GLSS" & PC1 < -15 ~ "GLASS:CU [A]",
-    tissue.source == "CU" & project == "GLSS" & PC1 >= -15 ~ "GLASS:CU [B]",
-    tissue.source == "HF" & project == "GLSS" & PC2 < -10 ~ "GLASS:HF [numeric]",
-    tissue.source == "HF" & project == "GLSS" & PC2 >= -10 ~ "GLASS:HF [alpha-numeric]",
-    tissue.source == "HK" & project == "GLSS" ~ "GLASS:HK",
-    tissue.source == "LU" & project == "GLSS" ~ "GLASS:LU",
-    tissue.source == "LX" & project == "GLSS" ~ "GLASS:LX",
-    tissue.source == "MD" & project == "GLSS" ~ "GLASS:MD",
-    tissue.source == "SM" & project == "GLSS" & PC1 > 150 ~ "GLASS:SM [A]",
-    tissue.source == "SM" & project == "GLSS" & PC1 <= 150 ~ "GLASS:SM [B]",
-    tissue.source == "SN" & project == "GLSS" ~ "GLASS:SN",
     T ~ "t.b.d"
   ))
 
 
+# check how well the provided batches are ----
+## combined ----
+ggplot(plt, aes(x=PC1, y=PC2, label=sid.label, col=aliquot_batch_synapse)) +
+  geom_point() +
+  ggrepel::geom_text_repel(cex=3) +
+  theme_bw() + 
+  #facet_grid(cols = vars(aliquot_batch_synapse)) + 
+  xlim(-120,270) +
+  ylim(-100,200)
+
+
+## GLSS-19-RNA ----
+#'@details Batch = good
+ggplot(plt |> dplyr::filter(aliquot_batch_synapse == "GLSS-19-RNA"| grepl('-19-',aliquot_barcode,fixed=T)),
+       aes(x=PC1, y=PC2, label=sid.label, col=aliquot_batch_synapse)) +
+  geom_point() +
+  ggrepel::geom_text_repel(cex=3) +
+  theme_bw() + 
+  xlim(-120,270) +
+  ylim(-100,200)
+
+
+## GLSS-CU-RNA ----
+#'@details Two distinct batches - of which some are presumably GLSS-PD-RNA
+#'@details "GLSS-CU-R006-TP-01R-RNA-VRCJGW","GLSS-CU-R018-R1-01R-RNA-0OVRM9",
+#'@details "GLSS-CU-R019-TP-01R-RNA-S5OA7D","GLSS-CU-R019-R1-01R-RNA-BGF7KM",
+#'@details "GLSS-CU-R006-R1-01R-RNA-4EGGFS","GLSS-CU-R017-R1-01R-RNA-S3WCU4" moved to GLSS-PM-RNA and fixed it
+ggplot(plt |> dplyr::filter(aliquot_batch_synapse == "GLSS-CU-RNA" | grepl('-CU-',aliquot_barcode,fixed=T))
+       , aes(x=PC1, y=PC2, label=aliquot_barcode, col=aliquot_batch_synapse,group=case_barcode)) +
+  geom_line(alpha=0.15,col="black") +
+  geom_point() +
+  ggrepel::geom_text_repel(cex=3) +
+  theme_bw() + 
+  xlim(-120,270) +
+  ylim(-100,200)
+
+
+
+## GLSS-H2-RNA ----
+#'@details Batch = good
+ggplot(plt |> dplyr::filter(aliquot_batch_synapse == "GLSS-H2-RNA"  | grepl('-HF-',aliquot_barcode,fixed=T)), 
+       aes(x=PC1, y=PC2, label=sid.label, col=aliquot_batch_synapse,group=case_barcode)) +
+  geom_line(alpha=0.15,col="black") +
+  geom_point() +
+  ggrepel::geom_text_repel(cex=3) +
+  theme_bw() + 
+  xlim(-120,270) +
+  ylim(-100,200)
+
+
+## GLSS-HF-RNA ----
+#'@details Batch = good
+ggplot(plt |> dplyr::filter(aliquot_batch_synapse == "GLSS-HF-RNA" | grepl('-HF-',aliquot_barcode,fixed=T) ), 
+       aes(x=PC1, y=PC2, label=sid.label, col=aliquot_batch_synapse,group=case_barcode)) +
+  geom_line(alpha=0.15,col="black") +
+  geom_point() +
+  ggrepel::geom_text_repel(cex=3) +
+  theme_bw() + 
+  xlim(-120,270) +
+  ylim(-100,200)
+
+
+## GLSS-HK-RNA ----
+#'@details Batch = good
+ggplot(plt |> dplyr::filter(aliquot_batch_synapse == "GLSS-HK-RNA" | grepl('-HK-',aliquot_barcode,fixed=T) ), 
+       aes(x=PC1, y=PC2, label=sid.label, col=aliquot_batch_synapse,group=case_barcode)) +
+  geom_line(alpha=0.15,col="black") +
+  geom_point() +
+  ggrepel::geom_text_repel(cex=3) +
+  theme_bw() + 
+  xlim(-120,270) +
+  ylim(-100,200)
+
+
+## GLSS-JG-RNA ----
+#'@details Batch = presumably part of -MD-
+#'@details "GLSS-MD-LP04-TP-01R-RNA-LTGS2F" "GLSS-MD-LP04-R1-01R-RNA-TPSKGU" moved to GLASS-MD-RNA
+# batch is now gone
+ggplot(plt |> dplyr::filter(aliquot_batch_synapse == "GLSS-JG-RNA" | grepl('-MD-',aliquot_barcode,fixed=T) ), 
+       aes(x=PC1, y=PC2, label=sid.label, col=aliquot_batch_synapse,group=case_barcode)) +
+  geom_line(alpha=0.15,col="black") +
+  geom_point() +
+  ggrepel::geom_text_repel(cex=3) +
+  theme_bw() + 
+  xlim(-120,270) +
+  ylim(-100,200)
+
+
+
+
+## GLSS-LU-RNA ----
+#'@details Batch = good
+ggplot(plt |> dplyr::filter(aliquot_batch_synapse == "GLSS-LU-RNA" | grepl('-LU-',aliquot_barcode,fixed=T) ), 
+       aes(x=PC1, y=PC2, label=sid.label, col=aliquot_batch_synapse,group=case_barcode)) +
+  geom_line(alpha=0.15,col="black") +
+  geom_point() +
+  ggrepel::geom_text_repel(cex=3) +
+  theme_bw() + 
+  xlim(-120,270) +
+  ylim(-100,200)
+
+
+## GLSS-LU-RNA ----
+#'@details two of JG presumably should be included
+ggplot(plt |> dplyr::filter(aliquot_batch_synapse == "GLSS-MD-RNA" | grepl('-MD-',aliquot_barcode,fixed=T) ), 
+       aes(x=PC1, y=PC2, label=sid.label, col=aliquot_batch_synapse,group=case_barcode)) +
+  geom_line(alpha=0.15,col="black") +
+  geom_point() +
+  ggrepel::geom_text_repel(cex=3) +
+  theme_bw() + 
+  xlim(-120,270) +
+  ylim(-100,200)
+
+## GLSS-PD-RNA ----
+#'@details six of CU presumably should be included
+ggplot(plt |> dplyr::filter(aliquot_batch_synapse == "GLSS-PD-RNA" | grepl('-CU-',aliquot_barcode,fixed=T) ), 
+       aes(x=PC1, y=PC2, label=sid.label, col=aliquot_batch_synapse,group=case_barcode)) +
+  geom_line(alpha=0.15,col="black") +
+  geom_point() +
+  ggrepel::geom_text_repel(cex=3) +
+  theme_bw() + 
+  xlim(-120,270) +
+  ylim(-100,200)
+
+
+## GLSS-SM-RNA ----
+#'@details should be split in two batches, with 2 outliers
+
+plt |>
+  dplyr::filter(aliquot_batch_synapse == "GLSS-SM-RNA") |> 
+  dplyr::filter(PC1 > 150) |> 
+  dplyr::pull(aliquot_barcode)
+
+plt |>
+  dplyr::filter(aliquot_batch_synapse == "GLSS-SM-RNA") |> 
+  dplyr::filter(PC1 <= 150) |> 
+  dplyr::pull(aliquot_barcode)
+
+
+ggplot(plt |> dplyr::filter(aliquot_batch_synapse == "GLSS-SM-RNA" | grepl('-SM-',aliquot_barcode,fixed=T) ), 
+       aes(x=PC1, y=PC2, label=sid.label, col=aliquot_batch_synapse,group=case_barcode)) +
+  geom_line(alpha=0.15,col="black") +
+  geom_point() +
+  ggrepel::geom_text_repel(cex=3) +
+  theme_bw() + 
+  xlim(-120,270) +
+  ylim(-100,200)
+
+## GLSS-SN-RNA ----
+#'@details batch = good
+ggplot(plt |> dplyr::filter(aliquot_batch_synapse == "GLSS-SN-RNA" | grepl('-xx-',aliquot_barcode,fixed=T) ), 
+       aes(x=PC1, y=PC2, label=sid.label, col=aliquot_batch_synapse,group=case_barcode)) +
+  geom_line(alpha=0.15,col="black") +
+  geom_point() +
+  ggrepel::geom_text_repel(cex=3) +
+  theme_bw() + 
+  xlim(-120,270) +
+  ylim(-100,200)
+
+## TCGA-GB-RNA ----
+#'@details batch = good
+ggplot(plt |> dplyr::filter(aliquot_batch_synapse == "TCGA-GB-RNA" | grepl('TCGA',aliquot_barcode,fixed=T) ), 
+       aes(x=PC1, y=PC2, label=sid.label, col=aliquot_batch_synapse,group=case_barcode)) +
+  geom_line(alpha=0.15,col="black") +
+  geom_point() +
+  ggrepel::geom_text_repel(cex=3) +
+  theme_bw() + 
+  xlim(-120,270) +
+  ylim(-100,200)
+
+
+
+
+
+
+# further analysis? ----
 # extreme batch effects
 ggplot(plt, aes(x=PC1, y=PC2, label=sid.label, col=deduced.batch)) +
   geom_point() +
@@ -142,14 +302,6 @@ ggplot(plt |> dplyr::filter(tissue.source == "MD"), aes(x=PC1, y=PC2, label=sid.
   ggrepel::geom_text_repel(cex=3) +
   theme_bw()
 
-
-
-# export ----
-
-
-
-saveRDS(plt |>  dplyr::select(aliquot_barcode, deduced.batch) |> dplyr::rename(predicted.GLASS.batch = deduced.batch),
-        "cache/analysis_predict_GLASS_batches.Rds")
 
 
 

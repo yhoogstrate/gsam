@@ -20,7 +20,7 @@ sel <- glass.gbm.rnaseq.metadata.all.samples |>
 
 
 
-#'@warning there are quite some with both WGS and WXS
+#'@warning there are quite some with both WGS and WXS => take mean
 
 # data from synapse portal
 dat <- 'data/gsam/data/GLASS_GBM_R1-R2/variants_gatk_seg.syn31121137.all_samlpes.tsv' |> 
@@ -77,7 +77,7 @@ ggplot(plt, aes(x=reorder(aliquot_barcode,end), y=end, col=chr17.err)) +
 
 tpc.estimate = data.frame()
 for(bc in levels(dat$aliquot_barcode)) {
-  #bc = "TCGA-14-1402-R1-01D-WGS-2EHMQ2" # plot ex
+  bc = "GLSS-LU-0B12-TP-01D-WXS-JX61DS" # plot ex
   print(bc)
   
   m <- glass.gbm.rnaseq.metadata.all.samples |> 
@@ -125,6 +125,7 @@ for(bc in levels(dat$aliquot_barcode)) {
   } else if(bc == "GLSS-CU-P046-TP-01D-WXS-T8ZFA7") { a <- a %>% dplyr::filter(chrom %in% c('chr2', 'chr6','chr17'))
   } else if(bc == "GLSS-CU-P055-TP-01D-WXS-FS5YF2") { a <- a %>% dplyr::filter(chrom %in% c('chr2', 'chr3','chr4',"chr5","chr10"))
   } else if(bc == "GLSS-CU-P056-R2-01D-WXS-MWYTTF") { a <- a %>% dplyr::filter(chrom %in% c('chr2', 'chr7','chr13'))
+  } else if(bc == "GLSS-CU-P102-TP-01D-WXS-3CTL6N") { a <- a %>% dplyr::filter(chrom %in% c('chr2', 'chr15'))
   } else if(bc == "GLSS-CU-P103-R1-01D-WXS-PFTRVM") { a <- a %>% dplyr::filter(chrom %in% c('chr10', 'chr13'))
   } else if(bc == "GLSS-CU-R005-R1-01D-WXS-78REC1") { a <- a %>% dplyr::filter(chrom %in% c("chr7","chr9",'chr10'))
   } else if(bc == "GLSS-CU-R006-R1-01D-WXS-OQXLD2") { a <- a %>% dplyr::filter(chrom %in% c("chr4","chr7",'chr10','chr13','chr17'))
@@ -160,6 +161,7 @@ for(bc in levels(dat$aliquot_barcode)) {
   } else if(bc == "GLSS-LU-00C4-R1-01D-WXS-KYPFOQ") { a <- a %>% dplyr::filter(chrom %in% c('chr10','chr13'))
   } else if(bc == "GLSS-LU-00C4-TP-01D-WXS-S4OOP1") { a <- a %>% dplyr::filter(chrom %in% c('chr10','chr14'))
   } else if(bc == "GLSS-LU-00C7-TP-01D-WXS-WFSIQ7") { a <- a %>% dplyr::filter(chrom %in% c('chr13'))
+  } else if(bc == "GLSS-LU-0B12-TP-01D-WXS-JX61DS") { a <- a %>% dplyr::filter(chrom %in% c('chr14',"chr16"))
   } else if(bc == "GLSS-LU-0B12-R1-01D-WXS-NXWOWA") { a <- a %>% dplyr::filter(chrom %in% c('chr7'))
   } else if(bc == "GLSS-LU-0B13-R1-01D-WXS-F05JM5") { a <- a %>% dplyr::filter(chrom %in% c('chr9','chr12','chr13','chr17'))
   } else if(bc == "GLSS-MD-0003-R3-01D-WGS-I78LK2") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr10'))
@@ -289,7 +291,7 @@ for(bc in levels(dat$aliquot_barcode)) {
     dplyr::slice(1) %>%
     dplyr::mutate(aliquot_barcode.wgs = bc,
                   #sample.short = gsub("^([^-]+-[^-]+-[^-]+-[^-]+).+$","\\1",bc),
-                  portion_barcode == gsub("^([^\\-]+)-([^\\-]+)-([^\\-]+)-([^\\-]+)-([0-9]+).+$$","\\1-\\2-\\3-\\4-\\5",bc),
+                  portion_barcode = gsub("^([^\\-]+)-([^\\-]+)-([^\\-]+)-([^\\-]+)-([0-9]+).+$$","\\1-\\2-\\3-\\4-\\5",bc),
                   estimate.purity = p.tpc.estimate,
                   hoogstrate.rf.purity.2021 = p.tpc.hoogstrate.2021
                   )
