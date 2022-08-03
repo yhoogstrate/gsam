@@ -89,14 +89,12 @@ glass.gbm.rnaseq.expression.all.samples <- 'data/gsam/data/GLASS_GBM_R1-R2/trans
 # }
 
 #'@todo check what is with the excluded samples in the data overview plot
-#' [?] batch effect?
-#' [?] suspected IDH outliers?
 #' [x] 30 changed subtype ? this is worrysome
 
 
 
 
-# Load metadata ----
+# load metadata ----
 
 
 stopifnot(!exists('glass.gbm.rnaseq.metadata'))
@@ -538,7 +536,7 @@ stopifnot(
 )
 stopifnot(
   glass.gbm.rnaseq.metadata.all.samples |> 
-    dplyr::filter(lapply(excluded , length) > 0) |> 
+    dplyr::filter(lapply(excluded , function(x){return("replicate sample" %in% x)}) > 0) |> 
     nrow() == 6
 )
 
@@ -888,7 +886,7 @@ tmp <- 'data/gsam/data/GLASS_GBM_R1-R2/biospecimen_aliquots_syn31121185.tsv' |>
                                           "GLSS-SM-R109-R1-01R-RNA-R5I1C7", "GLSS-SM-R110-TP-02R-RNA-A85T37", "GLSS-SM-R110-R1-01R-RNA-F7JINL", "GLSS-SM-R111-R1-01R-RNA-WM5ESA",
                                           "GLSS-SM-R112-TP-01R-RNA-T1QQYH", "GLSS-SM-R112-R1-01R-RNA-V3XS3H"
                                           ) ~ "GLSS-SM-RNA [B]",
-                   
+                   aliquot_barcode %in% c("GLSS-SM-R099-R1-01R-RNA-MNTPMI","GLSS-SM-R111-R1-01R-RNA-WM5ESA") ~ as.character(NA), # bit strange how they fit with A and B
                    T ~ aliquot_batch_synapse
                   ))
 
