@@ -867,7 +867,8 @@ results.out <- results.out %>%
 # Import (quick) ----
 
 
-results.out <- readRDS(file = 'tmp/results.out.Rds')
+#results.out <- readRDS(file = 'tmp/results.out.Rds')
+source('scripts/load_results.out.R')
 
 
 # stats ----

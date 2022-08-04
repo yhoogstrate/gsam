@@ -21,7 +21,6 @@ source("scripts/R/gsam_rna-seq_expression.R")
 source("scripts/R/glass_expression_matrix.R") # glass & tcga validation set + metadata
 
 
-# load data ----
 
 
 ## GSAM ----

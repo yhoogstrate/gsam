@@ -34,28 +34,30 @@ dim(expression.data)
 # DE unpaired all [GLASS 2022] ----
 
 # matrix(1:16,4,4) |> as.data.frame() |> dplyr::rowwise() |>  dplyr::mutate(sum = sum(dplyr::across()))
-matrix(1:12,4,3) |> as.data.frame() |> dplyr::mutate(ncol = length(dplyr::across()))
-  
-  
-  dplyr::rowwise() |>  dplyr::mutate(sum = sum(dplyr::across()))
+# matrix(1:12,4,3) |> as.data.frame() |> dplyr::mutate(ncol = length(dplyr::across()))
+# dplyr::rowwise() |>  dplyr::mutate(sum = sum(dplyr::across()))
 
-analysis.dge.glass.2022 <- expression.data |> 
-  #dplyr::filter(rowSums(.) > ncol(.) * 3) |> 
-  dplyr::rowwise() |> 
-  dplyr::mutate(rowsum = sum(dplyr::across())) |> 
-  dplyr::ungroup() |> 
-  dplyr::mutate(ncol = length(dplyr::across()) - 1) |> 
-  dplyr::filter(rowsum > ncol * 3) |> 
-  dplyr::mutate(ncol = NULL, rowsum = NULL) |> 
+analysis.dge.glass.2022 <- expression.data %>%
+  dplyr::filter(rowSums(.) > ncol(.) * 3) %>%
   
-  DESeq2::DESeqDataSetFromMatrix(metadata, ~aliquot_batch_synapse + condition )  |>  # + resection
-  DESeq2::DESeq(parallel = F) |> 
-  DESeq2::results() |> 
-  as.data.frame(stringsAsFactors=F) |> 
-  dplyr::arrange(padj, log2FoldChange) |> 
-  tibble::rownames_to_column('ensembl_id') |> 
-  dplyr::rename_with( ~ paste0(.x, ".glass-2022.res")) |> 
+  #dplyr::rowwise() |> 
+  #dplyr::mutate(rowsum = sum(dplyr::across())) |> 
+  #dplyr::ungroup() |> 
+  #dplyr::mutate(ncol = length(dplyr::across()) - 1) |> 
+  #dplyr::filter(rowsum > ncol * 3) |> 
+  #dplyr::mutate(ncol = NULL, rowsum = NULL) |> 
+  
+  DESeq2::DESeqDataSetFromMatrix(metadata, ~aliquot_batch_synapse + condition ) %>%  # + resection
+  DESeq2::DESeq(parallel = F) %>%
+  DESeq2::results() %>%
+  as.data.frame(stringsAsFactors=F) %>%
+  dplyr::arrange(padj, log2FoldChange) %>%
+  tibble::rownames_to_column('ensembl_id') %>%
+  dplyr::rename_with( ~ paste0(.x, ".glass-2022.res")) %>%
   dplyr::rename(ensembl_id = `ensembl_id.glass-2022.res`)
+
+
+
 
 
 # DE unpaired all [GLASS 2022] ----
@@ -75,6 +77,22 @@ analysis.dge.glass.tpc.2022 <- expression.data %>%
   tibble::rownames_to_column('ensembl_id') %>%
   dplyr::rename_with( ~ paste0(.x, ".glass-2022.tpc.res")) %>%
   dplyr::rename(ensembl_id = `ensembl_id.glass-2022.tpc.res`)
+
+
+
+
+
+
+# export ----
+
+
+saveRDS(analysis.dge.glass.2022, "tmp/analysis_DGE_GLASS-2022.Rds")
+saveRDS(analysis.dge.glass.tpc.2022, "tmp/analysis_DGE_GLASS-2022.tpc.Rds")
+
+
+
+# sandbox ----
+
 
 
 analysis.dge.glass.tpc.2022 |> 
@@ -119,7 +137,7 @@ sig.2022 <- results.out |>
   
   dplyr::mutate(direction.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res > 0 , "up", "down") ) %>%
   dplyr::mutate(direction.glass.tpc.res = ifelse(`log2FoldChange.glass-2022.tpc.res` > 0 , "up", "down") ) %>%
-
+  
   dplyr::mutate(significant.2022 = 
                   padj.gsam.tpc.res < 0.01 &
                   abs(log2FoldChange.gsam.tpc.res) > 0.5 &
@@ -152,26 +170,14 @@ results.out |>
 
 
 
-## plot ? ----
-
-
-
-
-# export ----
-
-
-saveRDS(analysis.dge.glass.2022,"cache/analysis_DGE_GLASS-2022.Rds")
-saveRDS(analysis.dge.glass.tpc.2022,"cache/analysis_DGE_GLASS-2022.tpc.Rds")
-
-
-
 
 # cleanup ----
 
 
 rm(expression.data, metadata)
 
-
+rm(analysis.dge.glass.2022)
+rm(analysis.dge.glass.tpc.2022)
 
 
 
