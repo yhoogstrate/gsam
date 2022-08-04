@@ -792,7 +792,60 @@ glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |
 rm(tmp)
 
 
-## load synapse-portal RNA imputed purities ----
+## load purities ----
+
+
+### Hoogstrate RNA-imputed 2021 ----
+
+
+tmp <- read.table("output/tables/GLASS.tumour.percentage.dna.imputed.rf.txt") |>
+  dplyr::rename(tumour.percentage.dna.imputed.rf.2021 = tumour.percentage.dna.imputed.rf) |> 
+  dplyr::rename(aliquot_barcode = sid)
+
+
+glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::left_join(tmp, by=c('aliquot_barcode'='aliquot_barcode'), suffix=c('','')) 
+
+
+rm(tmp)
+
+
+
+### Hoogstrate DNA/CNV-segments 2021 ----
+
+# pretty poor correlation, something seems odd w/ the predictions in GLASS/CNV?
+# These estimates [2021/legacy] are just not good enough:
+#plot(glass.gbm.rnaseq.metadata$tumour.percentage.dna , glass.gbm.rnaseq.metadata$tumour.percentage.dna.imputed.caret)
+
+#'@todo check w/ CD163 and TMEM144 expression
+
+
+tmp <- read.table("output/tables/cnv/tumor.percentage.estimate_glass.txt") |> 
+  dplyr::select(c('sample','pct')) |>
+  dplyr::rename(aliquot_barcode = sample) |> 
+  dplyr::mutate(portion_barcode = gsub("^([^\\-]+)-([^\\-]+)-([^\\-]+)-([^\\-]+)-([0-9]+).+$$","\\1-\\2-\\3-\\4-\\5",aliquot_barcode)) |> 
+  dplyr::mutate(aliquot_barcode = NULL) |> 
+  dplyr::rename(tumour.percentage.dna.cnv.2021 = pct)
+
+
+
+stopifnot(duplicated(tmp$portion_barcode) == F)
+
+
+glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::left_join(tmp, by=c('portion_barcode'='portion_barcode'), suffix=c('','')) 
+
+
+rm(tmp)
+
+
+stopifnot(is.na(glass.gbm.rnaseq.metadata.all.samples$aliquot_barcode) == F)
+
+
+
+
+
+### Synapse RNA-imputed 2022 ----
 
 # I suspect these are determined using ESTIMATE and RNA data
 
@@ -815,77 +868,45 @@ rm(tmp)
 
 
 
-
-## load RNA imputed / predict TPCs ----
-
-
-tmp <- read.table("output/tables/GLASS.tumour.percentage.dna.imputed.rf.txt") |>
-  dplyr::rename(tumour.percentage.dna.imputed.rf.2021 = tumour.percentage.dna.imputed.rf) |> 
-  dplyr::rename(aliquot_barcode = sid)
-
-
-glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
-  dplyr::left_join(tmp, by=c('aliquot_barcode'='aliquot_barcode'), suffix=c('','')) 
-
-
-rm(tmp)
-
-
-
-## DNA/CNV segments imputed TPC to metadata ----
-
-# pretty poor correlation, something seems odd w/ the predictions in GLASS/CNV?
-# These estimates [2021/legacy] are just not good enough:
-#plot(glass.gbm.rnaseq.metadata$tumour.percentage.dna , glass.gbm.rnaseq.metadata$tumour.percentage.dna.imputed.caret)
-
-#'@todo check w/ CD163 and TMEM144 expression
-
-
-tmp <- read.table("output/tables/cnv/tumor.percentage.estimate_glass.txt") |> 
-  dplyr::select(c('sample','pct')) |>
-  dplyr::rename(aliquot_barcode = sample) |> 
-  dplyr::mutate(portion_barcode = gsub("^([^\\-]+)-([^\\-]+)-([^\\-]+)-([^\\-]+)-([0-9]+).+$$","\\1-\\2-\\3-\\4-\\5",aliquot_barcode)) |> 
-  dplyr::mutate(aliquot_barcode = NULL) |> 
-  dplyr::rename(tumour.percentage.dna.cnv.2021 = pct)
-
-
-
-
-stopifnot(duplicated(tmp$portion_barcode) == F)
-
-
-glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
-  dplyr::left_join(tmp, by=c('portion_barcode'='portion_barcode'), suffix=c('','')) 
-
-
-rm(tmp)
-
-
-stopifnot(is.na(glass.gbm.rnaseq.metadata.all.samples$aliquot_barcode) == F)
-
-
-
-
-## add CNV fitted purities 2022 ----
+### Hoogstrate combined 2022 ----
 
 
 # if file does, generate it with: 'scripts/analysis_tumor_percentage_using_cn_data_GLASS_2022.R'
 
 
-tmp <- read.table("output/tables/cnv/tumor.percentage.estimate_glass.2022.all_samples.txt") |> 
+
+tmp.1 <- read.table("output/tables/cnv/tumor.percentage.estimate_glass.2022.all_samples.txt") |> 
   dplyr::select(portion_barcode, tumor.purity.cnv.pct.2022) |> 
-  dplyr::rename(tumour.percentage.dna.cnv.2022 = tumor.purity.cnv.pct.2022) |> 
   dplyr::group_by(portion_barcode) |> 
-  dplyr::summarize(tumour.percentage.dna.cnv.2022 = mean(tumour.percentage.dna.cnv.2022, na.rm=T)) |> 
+  dplyr::summarize(tumor.purity.cnv.pct.2022 = mean(tumor.purity.cnv.pct.2022, na.rm=T)) |> 
   dplyr::ungroup()
 
+stopifnot(duplicated(tmp.1$portion_barcode) == F)
 
-stopifnot(duplicated(tmp$portion_barcode) == F)
+
+tmp.2 <- read.table('output/tables/GLASS.tumour.percentage.dna.imputed.rf.A.2022.all.patients.B.txt') |> 
+  tibble::rownames_to_column('aliquot_barcode')
+
+
+stopifnot(duplicated(tmp.2$aliquot_barcode) == F)
+
+
+# use CNV fits if available and RNA imputed otherwise
+tmp <- glass.gbm.rnaseq.metadata.all.samples  |> 
+  dplyr::select(aliquot_barcode, portion_barcode) |> 
+  dplyr::left_join(tmp.1, by=c('portion_barcode'='portion_barcode'), suffix=c('','')) |> 
+  dplyr::left_join(tmp.2, by=c('aliquot_barcode'='aliquot_barcode'), suffix=c('','')) |> 
+  dplyr::mutate(tumour.percentage.2022 = ifelse(is.na(tumor.purity.cnv.pct.2022), tumour.percentage.dna.imputed.rf.2022.all.patients.B, tumor.purity.cnv.pct.2022)) |> 
+  dplyr::mutate(tumor.purity.cnv.pct.2022 = NULL) |> 
+  dplyr::mutate(tumour.percentage.dna.imputed.rf.2022.all.patients.B = NULL) |> 
+  dplyr::mutate(portion_barcode = NULL)
+
+rm(tmp.1, tmp.2)
 
 
 
 glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
-  dplyr::left_join(tmp, by=c('portion_barcode'='portion_barcode'), suffix=c('','')) 
+  dplyr::left_join(tmp, by=c('aliquot_barcode'='aliquot_barcode'), suffix=c('','')) 
 
 stopifnot(duplicated(glass.gbm.rnaseq.metadata.all.samples$aliquot_barcode) == F)
 
