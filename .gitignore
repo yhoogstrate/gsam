@@ -2,7 +2,6 @@
 .venv
 /bin
 /ignore
-/tmp
 *.odt
 ~*
 .~*
