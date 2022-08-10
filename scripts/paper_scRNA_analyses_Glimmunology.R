@@ -111,6 +111,9 @@ C6 <- c('CRABP2', 'CILP2', 'DPT', 'FGF7', 'COL10A1', 'FBN1', 'GLT8D2',
         "TNNT3", "ASS1", "PERP","KLHDC7B", "CCL8")
 
 
+
+
+
 # scRNA HGG levi Glimmunology ----
 
 ## A :: Sample_Y ----
@@ -697,6 +700,21 @@ DotPlot(object = object_1, features = list('test'=c('WEE1','HOXA5','HOXA6','HOXD
 
 
 FeaturePlot(object = object_1, features =  c("TROAP","FOXM1","AURKB","TPX2","H3C3","H3C2","TOP2A","DTL"))
+
+
+
+#### CC-2022 (up) ----
+
+
+DotPlot(object = object_1, features =list('C1'=
+ results.out |> dplyr::filter(CC.2022) |> dplyr::pull(hugo_symbol)
+                                            , 'Peri'=c("RGS5", "PDGFRB", "CD248") ), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(x = paste0("Features [C6] in: ",sid))
+ggsave(paste0("output/figures/scRNA/Glimmunology/2022-",sid,"_CC.pdf"),width=7.5, height=4,scale=1.2)
+ggsave(paste0("output/figures/scRNA/Glimmunology/2022-",sid,"_CC.png"),width=7.5, height=4,scale=1.2)
+
+
 
 
 ## GLASS-NL purity ----

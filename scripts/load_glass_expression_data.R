@@ -52,27 +52,21 @@ stopifnot(!exists('glass.gbm.rnaseq.expression')) # old
 #     ))
 
 
-
-glass.gbm.rnaseq.expression.all.samples <- 'data/gsam/data/GLASS_GBM_R1-R2/transcript_count_matrix_all_samples.tsv' |> 
-  read.delim(stringsAsFactors = F) |> 
-  dplyr::mutate(length = NULL) |> # not needed
-  dplyr::left_join(glass.gencode.v19, by=c('target_id' = 'transcript_id')) |>
-  dplyr::filter(!is.na(gene_symbol) ) |> # 1193 transcript id's not matching gtf Ensembl 64
-  dplyr::mutate(target_id = NULL) |> # aggregate @ gene_id level
-  dplyr::mutate(gene_symbol = NULL) |>
-  dplyr::group_by(gene_id) |>
-  dplyr::summarise(across(everything(), list(sum))) |>
-  tibble::remove_rownames() |> 
-  tibble::column_to_rownames('gene_id') |>
-  base::round() |>
-  dplyr::rename_with( ~ gsub(".", "-", .x, fixed = TRUE)) |> 
-  dplyr::rename_with( ~ gsub("_1$", "", .x, fixed = FALSE))
-# dplyr::select( # extremely strong outlier samples !!
-#   -c("GLSS-SM-R068-TP-01R-RNA-0UPMYO", "GLSS-SM-R068-R1-01R-RNA-7I5H9P", # IDH Mut
-#      "GLSS-SM-R071-TP-01R-RNA-OAXGI8", "GLSS-SM-R071-R1-01R-RNA-7AZ6G2", # IDH Mut
-#      "GLSS-SM-R099-R1-01R-RNA-MNTPMI", #"GLSS-SM-R099-TP-01R-RNA-YGXA72",
-#      "GLSS-SM-R100-TP-01R-RNA-EUI7AZ", "GLSS-SM-R100-R1-01R-RNA-46UW5U"  # IDH Mut
-#   ))
+glass.gbm.rnaseq.expression.all.samples <- glass.gbm.rnaseq.expression.all.samples.bak
+# glass.gbm.rnaseq.expression.all.samples <- 'data/gsam/data/GLASS_GBM_R1-R2/transcript_count_matrix_all_samples.tsv' |>
+#   read.delim(stringsAsFactors = F) |>
+#   dplyr::mutate(length = NULL) |> # not needed
+#   dplyr::left_join(glass.gencode.v19, by=c('target_id' = 'transcript_id')) |>
+#   dplyr::filter(!is.na(gene_symbol) ) |> # 1193 transcript id's not matching gtf Ensembl 64
+#   dplyr::mutate(target_id = NULL) |> # aggregate @ gene_id level
+#   dplyr::mutate(gene_symbol = NULL) |>
+#   dplyr::group_by(gene_id) |>
+#   dplyr::summarise(across(everything(), list(sum))) |>
+#   tibble::remove_rownames() |>
+#   tibble::column_to_rownames('gene_id') |>
+#   base::round() |>
+#   dplyr::rename_with( ~ gsub(".", "-", .x, fixed = TRUE)) |>
+#   dplyr::rename_with( ~ gsub("_1$", "", .x, fixed = FALSE))
 
 
 
@@ -499,6 +493,8 @@ glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |
     "GLSS-SM-R111-R1-01R-RNA-WM5ESA" ), 
     lapply(excluded, function(x) { return(unique(c(x,"PCA outlier"))) }), excluded))
 
+
+
 #### replicates ----
 
 # manually find replicates
@@ -710,13 +706,20 @@ glass.gbm.rnaseq.metadata.all.samples |>
 
 #### last: take out middle resections ----
 
-
 glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::mutate(is.excluded = lapply(excluded, length) > 0 ) |> 
+  #dplyr::group_by(case_barcode, is.excluded) |> 
   dplyr::group_by(case_barcode) |> 
-  dplyr::mutate(excluded.tmp = (lapply(excluded, length) == 0) & !is.primary & as.numeric(resection) != max(as.numeric(resection))) |> 
+  dplyr::mutate(excluded.tmp = !is.excluded & !is.primary & as.numeric(resection) != max(as.numeric(resection))) |>
   dplyr::ungroup() |> 
   dplyr::mutate(excluded = ifelse(excluded.tmp, lapply(excluded, function(x) { return(unique(c(x,"Middle resection"))) }), excluded)) |> 
-  dplyr::mutate(excluded.tmp = NULL)
+  dplyr::mutate(is.excluded = F, excluded.tmp = F)
+
+
+
+glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::filter(lapply(excluded, length) == 0) |> 
+  dim()
 
 
 
@@ -733,6 +736,12 @@ glass.gbm.rnaseq.metadata.all.samples |>
   #dplyr::filter(case_barcode == "GLSS-HF-753F") |>
   #dplyr::filter(case_barcode == "GLSS-MD-0017") |>
   dplyr::select(case_barcode, resection, excluded) |> 
+  as.data.frame()
+
+
+glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::filter(case_barcode == "GLSS-HF-57AE") |> 
+  dplyr::select(aliquot_barcode, case_barcode, resection, excluded) |> 
   as.data.frame()
 
 

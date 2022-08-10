@@ -17,7 +17,7 @@ if(!exists('glass.gbm.rnaseq.metadata.all.samples')) {
 
 sel <- glass.gbm.rnaseq.metadata.all.samples |>
   dplyr::filter(lapply(excluded, length) == 0) 
-
+dim(sel)
 
 
 #'@warning there are quite some with both WGS and WXS => take mean
@@ -71,13 +71,14 @@ ggplot(plt, aes(x=reorder(aliquot_barcode,end), y=end, col=chr17.err)) +
 
 
 
+
 # calc distances ----
 
 
 
 tpc.estimate = data.frame()
 for(bc in levels(dat$aliquot_barcode)) {
-  bc = "GLSS-LU-0B12-TP-01D-WXS-JX61DS" # plot ex
+  #bc = "GLSS-SM-R108-R1-01D-WXS-YRYRWN" # plot ex
   print(bc)
   
   m <- glass.gbm.rnaseq.metadata.all.samples |> 
@@ -121,7 +122,6 @@ for(bc in levels(dat$aliquot_barcode)) {
   } else if(bc == "GLSS-19-0266-R1-01D-WXS-0AUVTN") { a <- a %>% dplyr::filter(chrom %in% c('chr3', 'chr7','chr10'))
   } else if(bc == "GLSS-19-0273-R1-01D-WXS-ZEKWL8") { a <- a %>% dplyr::filter(chrom %in% c('chr3', 'chr7','chr10',"chr13","chr16"))
   } else if(bc == "GLSS-CU-P003-TP-01D-WXS-RDWJOX") { a <- a %>% dplyr::filter(chrom %in% c('chr4', 'chr5','chr6',"chr7","chr8","chr9","chr10","chr11"))
-  } else if(bc == "GLSS-CU-P021-TP-01D-WXS-Y82P1D") { a <- a %>% dplyr::filter(chrom %in% c('chr2', 'chr5','chr15'))
   } else if(bc == "GLSS-CU-P046-TP-01D-WXS-T8ZFA7") { a <- a %>% dplyr::filter(chrom %in% c('chr2', 'chr6','chr17'))
   } else if(bc == "GLSS-CU-P055-TP-01D-WXS-FS5YF2") { a <- a %>% dplyr::filter(chrom %in% c('chr2', 'chr3','chr4',"chr5","chr10"))
   } else if(bc == "GLSS-CU-P056-R2-01D-WXS-MWYTTF") { a <- a %>% dplyr::filter(chrom %in% c('chr2', 'chr7','chr13'))
@@ -150,12 +150,14 @@ for(bc in levels(dat$aliquot_barcode)) {
   } else if(bc == "GLSS-HF-3162-R1-01D-WXS-3HVQJ6") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr9','chr10')) 
   } else if(bc == "GLSS-HF-3162-TP-01D-WXS-HTQZ6B") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr9','chr10')) 
   } else if(bc == "GLSS-HF-50F3-R2-01D-WXS-HBGS0K") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr10'))
+  } else if(bc == "GLSS-HF-57AE-R2-01D-WXS-W6LG2P") { a <- a %>% dplyr::filter(chrom %in% c('chr12'))
   } else if(bc == "GLSS-HF-9A7A-TP-01D-WXS-W98DVW") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr10'))
   } else if(bc == "GLSS-HF-DE05-TP-01D-WXS-44QP3Q") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr10'))
   } else if(bc == "GLSS-HF-DF35-R1-01D-WXS-B4D43W") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr10'))
   } else if(bc == "GLSS-HF-EE74-TP-01D-WXS-E5C4YL") { a <- a %>% dplyr::filter(chrom %in% c('chr7'))
   } else if(bc == "GLSS-HF-EE77-R3-01D-WXS-ZRNNYZ") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr10'))
   } else if(bc == "GLSS-HK-0003-R1-01D-WGS-R7P485") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr8','chr10','chr13','chr15'))
+  } else if(bc == "GLSS-HK-0003-TP-01D-WGS-WAGBN9") { a <- a %>% dplyr::filter(chrom %in% c('chr13','chr17'))
   } else if(bc == "GLSS-LU-00B9-R1-01D-WXS-LM12XS") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr10','chr19'))
   } else if(bc == "GLSS-LU-00C2-R1-01D-WXS-YYR15P") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr10','chr13','chr15'))
   } else if(bc == "GLSS-LU-00C4-R1-01D-WXS-KYPFOQ") { a <- a %>% dplyr::filter(chrom %in% c('chr10','chr13'))
@@ -197,6 +199,7 @@ for(bc in levels(dat$aliquot_barcode)) {
   } else if(bc == "GLSS-SM-R071-TP-01D-WXS-45QCP2") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr10')) 
   } else if(bc == "GLSS-SM-R072-R1-01D-WXS-XOT8LM") { a <- a %>% dplyr::filter(chrom %in% c('chr10')) 
   } else if(bc == "GLSS-SM-R072-TP-01D-WXS-QZZEMI") { a <- a %>% dplyr::filter(chrom %in% c('chr10')) 
+  } else if(bc == "GLSS-SM-R095-R1-01D-WXS-2E7A4I") { a <- a %>% dplyr::filter(chrom %in% c('chr10'))
   } else if(bc == "GLSS-SM-R099-R1-01D-WXS-I52D70") { a <- a %>% dplyr::filter(chrom %in% c('chr7')) 
   } else if(bc == "GLSS-SM-R099-TP-01D-WXS-5Z45O8") { a <- a %>% dplyr::filter(chrom %in% c('chr7')) 
   } else if(bc == "GLSS-SM-R100-R1-01D-WXS-O61DWB") { a <- a %>% dplyr::filter(chrom %in% c('chr6','chr13','chr14')) 
@@ -213,12 +216,13 @@ for(bc in levels(dat$aliquot_barcode)) {
   } else if(bc == "GLSS-SM-R107-R1-02D-WXS-W7UY7B") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr10'))
   } else if(bc == "GLSS-SM-R107-TP-01D-WXS-NIBO3N") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr10')) 
   } else if(bc == "GLSS-SM-R108-R1-01D-WXS-YRYRWN") { a <- a %>% dplyr::filter(chrom %in% c('chr10')) 
-  } else if(bc == "GLSS-SM-R108-TP-01D-WXS-KC4OXZ") { a <- a %>% dplyr::filter(chrom %in% c('chr10')) 
+  } else if(bc == "GLSS-SM-R108-TP-01D-WXS-KC4OXZ") { a <- a %>% dplyr::filter(chrom %in% c('chr7')) 
   } else if(bc == "GLSS-SM-R110-R1-01D-WXS-I5HNRJ") { a <- a %>% dplyr::filter(chrom %in% c('chr7')) 
   } else if(bc == "GLSS-SM-R110-TP-01D-WXS-5XSI28") { a <- a %>% dplyr::filter(chrom %in% c('chr7')) 
   } else if(bc == "GLSS-SN-0001-TP-01D-WGS-J7WGL3") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr10'))
   } else if(bc == "GLSS-SN-0002-R1-01D-WGS-OMWX5F") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr10','chr14','chr18'))
   } else if(bc == "GLSS-SN-0004-R1-01D-WGS-FVYBOQ") { a <- a %>% dplyr::filter(chrom %in% c('chr4','chr5','chr10'))
+  } else if(bc == "GLSS-SN-0006-TP-01D-WGS-V6M4DM") { a <- a %>% dplyr::filter(chrom %in% c('chr4'))
   } else if(bc == "GLSS-SN-0009-TP-01D-WGS-Z9WB19") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr9'))
   } else if(bc == "GLSS-SN-0009-R1-01D-WGS-X1YPCJ") { a <- a %>% dplyr::filter(chrom %in% c('chr7'))
   } else if(bc == "TCGA-06-0152-R1-01D-WGS-EK2VYI") { a <- a %>% dplyr::filter(chrom %in% c('chr7','chr9','chr10'))
@@ -321,15 +325,15 @@ for(bc in levels(dat$aliquot_barcode)) {
 }
 
 
-# write.table(tpc.estimate |> 
-#               dplyr::select(portion_barcode, aliquot_barcode.wgs, pct, lfc.3p, lfc.4p, lfc.n, dist) |> 
-#               dplyr::rename(tumor.purity.cnv.pct.2022 = pct)|> 
-#               dplyr::rename(tumor.purity.cnv.lfc.3p.2022 = lfc.3p)|> 
-#               dplyr::rename(tumor.purity.cnv.lfc.4p.2022 = lfc.4p)|> 
-#               dplyr::rename(tumor.purity.cnv.lfc.n.2022 = lfc.n)|> 
+# write.table(tpc.estimate |>
+#               dplyr::select(portion_barcode, aliquot_barcode.wgs, pct, lfc.3p, lfc.4p, lfc.n, dist) |>
+#               dplyr::rename(tumor.purity.cnv.pct.2022 = pct)|>
+#               dplyr::rename(tumor.purity.cnv.lfc.3p.2022 = lfc.3p)|>
+#               dplyr::rename(tumor.purity.cnv.lfc.4p.2022 = lfc.4p)|>
+#               dplyr::rename(tumor.purity.cnv.lfc.n.2022 = lfc.n)|>
 #               dplyr::rename(tumor.purity.cnv.dist.2022 = dist)
 #             , "output/tables/cnv/tumor.percentage.estimate_glass.2022.all_samples.txt")
-
+# 
 
 
 plt <- tpc.estimate |> 

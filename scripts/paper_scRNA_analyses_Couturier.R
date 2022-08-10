@@ -7,9 +7,9 @@ library(tidyverse)
 library(Matrix)
 library(DropletUtils)
 library(Seurat)
-library(infercnv)
-library(AnnotationHub)
-library(ensembldb)
+#library(infercnv)
+#library(AnnotationHub)
+#library(ensembldb)
 
 
 # cluster genes ----
@@ -1319,6 +1319,20 @@ plot(object_1@reductions$pca@feature.loadings[,3],
 FeaturePlot(object = object_1, features = C6)
 
 
+
+#### CC-2022 (up) ----
+
+
+DotPlot(object = object_1, features =list('C1'=
+      results.out |> dplyr::filter(CC.2022) |> dplyr::pull(hugo_symbol)
+                                             , 'Peri'=c("RGS5", "PDGFRB", "CD248") ), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(x = paste0("Features [C6] in: ",sid))
+ggsave(paste0("output/figures/scRNA/Couturier/2022-",sid,"_CC.pdf"),width=7.5, height=4,scale=1.2)
+ggsave(paste0("output/figures/scRNA/Couturier/2022-",sid,"_CC.png"),width=7.5, height=4,scale=1.2)
+
+
+
 ## BT346 [poor separation or high tumor?] ----
 
 
@@ -2252,6 +2266,19 @@ FeaturePlot(object = object_1, features =  "PERP" )
 #FeaturePlot(object = object_1, features =  "CCL8" )
 
 
+
+#### CC-2022 (up) ----
+
+
+DotPlot(object = object_1, features =list('C4'=CC.2022 , 'Peri'=c("RGS5", "PDGFRB", "CD248") ), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(x = paste0("Features [C6] in: ",sid))
+ggsave(paste0("output/figures/scRNA/Couturier/2022-",sid,"_CC.pdf"),width=7.5, height=4,scale=1.2)
+ggsave(paste0("output/figures/scRNA/Couturier/2022-",sid,"_CC.png"),width=7.5, height=4,scale=1.2)
+
+
+
+
 ## BT364 [1+2/2] :: T,MG,OD ----
 
 
@@ -2725,6 +2752,20 @@ FeaturePlot(object = object_1, features = C6[1:8])
 FeaturePlot(object = object_1, features = C6[9:16])
 FeaturePlot(object = object_1, features = C6[17:24])
 FeaturePlot(object = object_1, features = C6[25:33])
+
+
+#### CC-2022 (up) ----
+
+
+DotPlot(object = object_1, features =list('C1'=
+                                            
+                                            results.out |> dplyr::filter(CC.2022) |> dplyr::pull(hugo_symbol)
+                                            , 'Peri'=c("RGS5", "PDGFRB", "CD248") ), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(x = paste0("Features [C6] in: ",sid))
+ggsave(paste0("output/figures/scRNA/Couturier/2022-",sid,"_CC.pdf"),width=7.5, height=4,scale=1.2)
+ggsave(paste0("output/figures/scRNA/Couturier/2022-",sid,"_CC.png"),width=7.5, height=4,scale=1.2)
+
 
 
 
@@ -4042,6 +4083,19 @@ FeaturePlot(object = object_1, features = C6[17:24])
 FeaturePlot(object = object_1, features = C6[25:33])
 
 FeaturePlot(object = object_1, features = c("FBN1","COL1A1","RGS5", "CD248"),pt.size = 0.01 * 20)
+
+
+#### CC-2022 (up) ----
+
+
+DotPlot(object = object_1, features =list('C1'=
+                                            results.out |> dplyr::filter(CC.2022) |> dplyr::pull(hugo_symbol)
+                                            , 'Peri'=c("RGS5", "PDGFRB", "CD248") ), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(x = paste0("Features [C6] in: ",sid))
+ggsave(paste0("output/figures/scRNA/Couturier/2022-",sid,"_CC.pdf"),width=7.5, height=4,scale=1.2)
+ggsave(paste0("output/figures/scRNA/Couturier/2022-",sid,"_CC.png"),width=7.5, height=4,scale=1.2)
+
 
 
 

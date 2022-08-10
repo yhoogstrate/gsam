@@ -941,12 +941,24 @@ FeaturePlot(object = object_1, features =  "PERP" )
 FeaturePlot(object = object_1, features =  "CCL8" )
 
 
+#### CC-2022 (up) ----
+
+
+DotPlot(object = object_1, features =list('C1'=
+                                            results.out |> dplyr::filter(CC.2022) |> dplyr::pull(hugo_symbol)
+                                          , 'Peri'=c("RGS5", "PDGFRB", "CD248") ), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(x = paste0("Features [C6] in: ",sid))
+ggsave(paste0("output/figures/scRNA/Yuan//2022-",sid,"_CC.pdf"),width=7.5, height=4,scale=1.2)
+ggsave(paste0("output/figures/scRNA/Yuan//2022-",sid,"_CC.png"),width=7.5, height=4,scale=1.2)
+
+
 
 ## D :: GSM2758474_PJ025 :: T,MG,TC ----
 # Glioblastoma, WHO grade IV, idh1 status: wt, EGFR-ampli
 
-
 rm(object_1, sid)
+gc()
 
 sid <- 'GSM2758474_PJ025'
 object_1 <- Read10X(data.dir = paste0("data/scRNA/GSE103224_Yuan/",sid))
@@ -977,8 +989,8 @@ print(paste0("Median(nFeature_RNA) in ",sid, " = ",round(median(object_1$nFeatur
 # plot variable features with and without labels
 
 plot1 <- VariableFeaturePlot(object_1)
-plot2 <- LabelPoints(plot = plot1, points = top10, repel = TRUE)
-CombinePlots(plots = list(plot1, plot2))     
+LabelPoints(plot = plot1, points = top10, repel = TRUE)
+#CombinePlots(plots = list(plot1, plot2))     
 
 ### scaling of data 
 #Shifts the expression of each gene, so that the mean expression across cells is 0
@@ -1352,6 +1364,18 @@ FeaturePlot(object = object_1, features =  "KLHDC7B" )
 
 
 
+#### CC-2022 (up) ----
+
+
+DotPlot(object = object_1, features =list('C1'=
+                                            results.out |> dplyr::filter(CC.2022) |> dplyr::pull(hugo_symbol)
+                                          , 'Peri'=c("RGS5", "PDGFRB", "CD248") ), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(x = paste0("Features [C6] in: ",sid))
+ggsave(paste0("output/figures/scRNA/Yuan//2022-",sid,"_CC.pdf"),width=7.5, height=4,scale=1.2)
+ggsave(paste0("output/figures/scRNA/Yuan//2022-",sid,"_CC.png"),width=7.5, height=4,scale=1.2)
+
+
 
 
 #### C2 ~ neuronal ----
@@ -1687,8 +1711,8 @@ print(paste0("Median(nFeature_RNA) in ",sid, " = ",round(median(object_1$nFeatur
 # plot variable features with and without labels
 
 plot1 <- VariableFeaturePlot(object_1)
-plot2 <- LabelPoints(plot = plot1, points = top10, repel = TRUE)
-CombinePlots(plots = list(plot1, plot2))     
+LabelPoints(plot = plot1, points = top10, repel = TRUE)
+#CombinePlots(plots = list(plot1, plot2))     
 
 
 ### scaling of data
@@ -2020,6 +2044,21 @@ FeaturePlot(object = object_1, features =  "PERP" )
 FeaturePlot(object = object_1, features =  "CCL8" )
 
 
+
+#### CC-2022 (up) ----
+
+
+DotPlot(object = object_1, features =list('C1'=
+                                            results.out |> dplyr::filter(CC.2022) |> dplyr::pull(hugo_symbol)
+                                          , 'Peri'=c("RGS5", "PDGFRB", "CD248") ), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(x = paste0("Features [C6] in: ",sid))
+ggsave(paste0("output/figures/scRNA/Yuan/2022-",sid,"_CC.pdf"),width=7.5, height=4,scale=1.2)
+ggsave(paste0("output/figures/scRNA/Yuan/2022-",sid,"_CC.png"),width=7.5, height=4,scale=1.2)
+
+
+
+
 ### Find DE genes voor 5 ----
 
 dge <- FindMarkers(object_1, ident.1 = '5')
@@ -2155,6 +2194,11 @@ object_1$seurat_clusters <- factor(object_1$seurat_clusters, levels=c(
 
 
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "seurat_clusters") +
+  guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
+  labs(subtitle=sid)
+
+
+DimPlot(object_1, reduction = "pca", label = TRUE, pt.size = .8, group.by = "seurat_clusters") +
   guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
   labs(subtitle=sid)
 
@@ -2474,6 +2518,18 @@ FeaturePlot(object = object_1, features =  "PERP" )
 # FeaturePlot(object = object_1, features =  "KLHDC7B" )
 #FeaturePlot(object = object_1, features =  "CCL8" )
 
+
+
+#### CC-2022 (up) ----
+
+
+DotPlot(object = object_1, features =list('C1'=
+                                            results.out |> dplyr::filter(CC.2022) |> dplyr::pull(hugo_symbol)
+                                          , 'Peri'=c("RGS5", "PDGFRB", "CD248") ), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(x = paste0("Features [C6] in: ",sid))
+ggsave(paste0("output/figures/scRNA/Yuan//2022-",sid,"_CC.pdf"),width=7.5, height=4,scale=1.2)
+ggsave(paste0("output/figures/scRNA/Yuan//2022-",sid,"_CC.png"),width=7.5, height=4,scale=1.2)
 
 
 
