@@ -486,14 +486,16 @@ gsam.rna.metadata <- gsam.rna.metadata %>%
   dplyr::mutate(tmp = NULL) %>%
   dplyr::mutate( pat.with.IDH = as.logical(pat.with.IDH) )
 
-## Add neuron_oligodendrocyte_endothelial_EM_PCA_scores ----
+## Add PCA signatuers 2021 ----
 
+# neuron_oligodendrocyte_endothelial_EM_PCA_scores
 
-gsam.rna.metadata <- gsam.rna.metadata %>%
+gsam.rna.metadata <- gsam.rna.metadata |> 
   dplyr::left_join(
-  read.table('data/gsam/output/tables/principal_DE_cluster_components.txt') %>%
-    dplyr::mutate(sid = gsub("^GSAM.","",pid), pid=NULL)
-  , by=c('sid'='sid')) 
+  read.table('data/gsam/output/tables/principal_DE_cluster_components.txt') |> 
+    dplyr::mutate(sid = gsub("^GSAM.","",pid), pid=NULL) |> 
+    dplyr::rename_with( ~ paste0(.x,".2021") ,  .cols=matches("compon|signatu",perl=T) ) 
+  , by=c('sid'='sid'), suffix=c('','')) 
 
 
 
