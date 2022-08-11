@@ -385,7 +385,7 @@ tmp.export <- signature.c0.fuzzy |>
   dplyr::left_join(signature.c1.collagen, by=c('sid'='sid'), suffix=c('','')) |> 
   dplyr::left_join(signature.c2.endothelial, by=c('sid'='sid'), suffix=c('','')) |> 
   dplyr::left_join(signature.c3.oligodendrocyte, by=c('sid'='sid'), suffix=c('','')) |> 
-  dplyr::left_join(signature.c4.neuron, by=c('sid'='sid'), suffix=c('',''))
+  dplyr::left_join(signature.c4.neuron, by=c('sid'='sid'), suffix=c('','')) 
 
 
 write.table(tmp.export , "output/tables/principal_DE_cluster_components_2022.txt")

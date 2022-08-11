@@ -34,32 +34,34 @@ dim(expression.data)
 
 # DE unpaired all [GLASS 2022] ----
 
-# # matrix(1:16,4,4) |> as.data.frame() |> dplyr::rowwise() |>  dplyr::mutate(sum = sum(dplyr::across()))
-# # matrix(1:12,4,3) |> as.data.frame() |> dplyr::mutate(ncol = length(dplyr::across()))
-# # dplyr::rowwise() |>  dplyr::mutate(sum = sum(dplyr::across()))
-# 
-# analysis.dge.glass.2022 <- expression.data %>%
-#   dplyr::filter(rowSums(.) > ncol(.) * 3) %>%
-#   
+# - have no elegant substitution for rowsums and ncol filter in 1 cmd
 #   #dplyr::rowwise() |> 
 #   #dplyr::mutate(rowsum = sum(dplyr::across())) |> 
 #   #dplyr::ungroup() |> 
 #   #dplyr::mutate(ncol = length(dplyr::across()) - 1) |> 
 #   #dplyr::filter(rowsum > ncol * 3) |> 
 #   #dplyr::mutate(ncol = NULL, rowsum = NULL) |> 
-#   
-#   DESeq2::DESeqDataSetFromMatrix(metadata, ~aliquot_batch_synapse + condition ) %>%  # + resection
-#   DESeq2::DESeq(parallel = F) %>%
-#   DESeq2::results() %>%
-#   as.data.frame(stringsAsFactors=F) %>%
-#   dplyr::arrange(padj, log2FoldChange) %>%
-#   tibble::rownames_to_column('ensembl_id') %>%
-#   dplyr::rename_with( ~ paste0(.x, ".glass-2022.res")) %>%
-#   dplyr::rename(ensembl_id = `ensembl_id.glass-2022.res`)
-# 
-# 
-# 
-# saveRDS(analysis.dge.glass.2022, "tmp/analysis_DGE_GLASS-2022.Rds")
+
+
+
+stopifnot(sum(is.na(expression.data)) == 0)
+stopifnot(sum(is.na(metadata$tumour.percentage.2022)) == 0)
+stopifnot(metadata$aliquot_barcode == colnames(expression.data))
+
+analysis.dge.glass.2022 <- expression.data %>%
+  dplyr::filter(rowSums(.) > ncol(.) * 3) %>%
+  DESeq2::DESeqDataSetFromMatrix(metadata, ~aliquot_batch_synapse + condition ) %>%  # + resection
+  DESeq2::DESeq(parallel = T) %>%
+  DESeq2::results() %>%
+  as.data.frame(stringsAsFactors=F) %>%
+  dplyr::arrange(padj, log2FoldChange) %>%
+  tibble::rownames_to_column('ensembl_id') %>%
+  dplyr::rename_with( ~ paste0(.x, ".glass-2022.res")) %>%
+  dplyr::rename(ensembl_id = `ensembl_id.glass-2022.res`)
+
+
+
+saveRDS(analysis.dge.glass.2022, "tmp/analysis_DGE_GLASS-2022.Rds")
 
 
 

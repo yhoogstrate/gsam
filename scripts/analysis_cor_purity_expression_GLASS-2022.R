@@ -50,7 +50,11 @@ cor.stats <- expression.vst |> # remove batch effects: aliquot_batch_synapse
   tidyr::pivot_wider(names_from = key, values_from = value) |> 
   dplyr::select(ensembl_id, estimate.cor, statistic.t, p.value) |> 
   dplyr::rename_with( ~ paste0(.x, ".glass-2022.cor.tpc")) |> 
-  dplyr::rename(`ensembl_id` = `ensembl_id.glass-2022.cor.tpc`)
+  dplyr::rename(`ensembl_id` = `ensembl_id.glass-2022.cor.tpc`) |> 
+  dplyr::mutate(`estimate.cor.glass-2022.cor.tpc` = as.numeric( `estimate.cor.glass-2022.cor.tpc` )) |> 
+  dplyr::mutate(`statistic.t.glass-2022.cor.tpc` = as.numeric( `statistic.t.glass-2022.cor.tpc` )) |> 
+  dplyr::mutate(`p.value.glass-2022.cor.tpc` = as.numeric( `p.value.glass-2022.cor.tpc` )) |> 
+  as.data.frame()
 
 
 # export ----

@@ -2,7 +2,31 @@
 
 # load generic file ----
 
-results.out <- readRDS(file = 'tmp/results.out.Rds') 
+results.out <- readRDS(file = 'tmp/results.out.Rds') |> 
+  
+  dplyr::mutate(`p.value.glass.cor.tpc` = NULL) |>        # obsolete: 2021 rev
+  dplyr::mutate(`estimate.glass.cor.tpc` = NULL) |>       # obsolete: 2021 rev
+  dplyr::mutate(`statistic.glass.cor.tpc` = NULL) |>      # obsolete: 2021 rev
+  
+  dplyr::mutate(`baseMean.glass.res` = NULL) |>           # obsolete: 2021 rev
+  dplyr::mutate(`baseMean.glass.tpc.res` = NULL) |>       # obsolete: 2021 rev
+  
+  dplyr::mutate(`lfcSE.glass.res` = NULL) |>              # obsolete: 2021 rev
+  dplyr::mutate(`lfcSE.glass.tpc.res` = NULL) |>          # obsolete: 2021 rev
+  
+  dplyr::mutate(`log2FoldChange.glass.res` = NULL) |>     # obsolete: 2021 rev
+  dplyr::mutate(`log2FoldChange.glass.tpc.res` = NULL) |> # obsolete: 2021 rev
+  
+  dplyr::mutate(`padj.glass.res` = NULL) |>               # obsolete: 2021 rev
+  dplyr::mutate(`padj.glass.tpc.res` = NULL) |>           # obsolete: 2021 rev
+  
+  dplyr::mutate(`pvalue.glass.res` = NULL) |>             # obsolete: 2021 rev
+  dplyr::mutate(`pvalue.glass.tpc.res` = NULL) |>         # obsolete: 2021 rev
+  
+  dplyr::mutate(`stat.glass.res` = NULL) |>               # obsolete: 2021 rev
+  dplyr::mutate(`stat.glass.tpc.res` = NULL)              # obsolete: 2021 rev
+  
+
 
 
 
