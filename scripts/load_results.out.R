@@ -32,10 +32,21 @@ results.out <- readRDS(file = 'tmp/results.out.Rds') |>
 
 # DGE GLASS 2022 ----
 
+## no correction ----
+
+tmp <- readRDS("tmp/analysis_DGE_GLASS-2022.Rds") 
+
+results.out <- results.out |> 
+  dplyr::left_join(
+    tmp,
+    by=c('ensembl_id'='ensembl_id'), suffix=c('','')
+  )
+
+rm(tmp)
+
+## w/ correctioon ----
 
 tmp <- readRDS("tmp/analysis_DGE_GLASS-2022.tpc.Rds") 
-#|> 
-#  dplyr::rename_with( ~ gsub(".res", ".tpc.res", .x, fixed = TRUE))
 
 
 results.out <- results.out |> 
