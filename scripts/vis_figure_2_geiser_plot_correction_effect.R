@@ -13,22 +13,22 @@
 plt <- results.out %>%
   dplyr::filter(!is.na(statistic.gsam.cor.tpc)) |>  # TPC correlation G-SAM
   dplyr::filter(!is.na(`statistic.t.glass-2022.cor.tpc`)) |> # TPC correlation GLASS
-  dplyr::filter(!is.na(log2FoldChange.gsam.res)) %>%
-  dplyr::filter(!is.na(log2FoldChange.gsam.tpc.res)) %>%
-  dplyr::filter(!is.na(`log2FoldChange.glass-2022.res`)) %>%
-  dplyr::filter(!is.na(`log2FoldChange.glass-2022.tpc.res`)) %>%
-  dplyr::mutate(is.limited.gsam.res = as.character(abs(log2FoldChange.gsam.res) > 2.5)) %>% # change pch to something that is limited
-  dplyr::mutate(log2FoldChange.gsam.res = ifelse(log2FoldChange.gsam.res > 2.5, 2.5 , log2FoldChange.gsam.res)) %>%
-  dplyr::mutate(log2FoldChange.gsam.res = ifelse(log2FoldChange.gsam.res < -2.5, -2.5 , log2FoldChange.gsam.res)) %>%
-  dplyr::mutate(is.limited.gsam.tpc.res = as.character(abs(log2FoldChange.gsam.tpc.res) > 2.5)) %>% # change pch to something that is limited
-  dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res > 2.5, 2.5 , log2FoldChange.gsam.tpc.res)) %>%
-  dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res < -2.5, -2.5 , log2FoldChange.gsam.tpc.res)) %>%
-  dplyr::mutate(is.limited.glass.res = as.character(abs(log2FoldChange.glass.res) > 2.5)) %>% # change pch to something that is limited
-  dplyr::mutate(log2FoldChange.glass.res = ifelse(log2FoldChange.glass.res > 2.5, 2.5 , log2FoldChange.glass.res)) %>%
-  dplyr::mutate(log2FoldChange.glass.res = ifelse(log2FoldChange.glass.res < -2.5, -2.5 , log2FoldChange.glass.res)) %>%
-  dplyr::mutate(is.limited.glass.tpc.res = as.character(abs(log2FoldChange.glass.tpc.res) > 2.5)) %>% # change pch to something that is limited
-  dplyr::mutate(log2FoldChange.glass.tpc.res = ifelse(log2FoldChange.glass.tpc.res > 2.5, 2.5 , log2FoldChange.glass.tpc.res)) %>%
-  dplyr::mutate(log2FoldChange.glass.tpc.res = ifelse(log2FoldChange.glass.tpc.res < -2.5, -2.5 , log2FoldChange.glass.tpc.res)) %>% 
+  dplyr::filter(!is.na(log2FoldChange.gsam.res)) |> 
+  dplyr::filter(!is.na(log2FoldChange.gsam.tpc.res)) |> 
+  dplyr::filter(!is.na(`log2FoldChange.glass-2022.res`)) |> 
+  dplyr::filter(!is.na(`log2FoldChange.glass-2022.tpc.res`))  |> 
+  dplyr::mutate(is.limited.gsam.res = as.character(abs(log2FoldChange.gsam.res) > 2)) %>% # change pch to something that is limited
+  dplyr::mutate(log2FoldChange.gsam.res = ifelse(log2FoldChange.gsam.res > 2, 2 , log2FoldChange.gsam.res)) %>%
+  dplyr::mutate(log2FoldChange.gsam.res = ifelse(log2FoldChange.gsam.res < -2, -2 , log2FoldChange.gsam.res)) %>%
+  dplyr::mutate(is.limited.gsam.tpc.res = as.character(abs(log2FoldChange.gsam.tpc.res) > 2)) %>% # change pch to something that is limited
+  dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res > 2, 2 , log2FoldChange.gsam.tpc.res)) %>%
+  dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res < -2, -2 , log2FoldChange.gsam.tpc.res)) %>%
+  dplyr::mutate(is.limited.glass.res = as.character(abs(`log2FoldChange.glass-2022.res`) > 2)) %>% # change pch to something that is limited
+  dplyr::mutate(`log2FoldChange.glass-2022.res` = ifelse(`log2FoldChange.glass-2022.res` > 2, 2 , `log2FoldChange.glass-2022.res`)) %>%
+  dplyr::mutate(`log2FoldChange.glass-2022.res` = ifelse(`log2FoldChange.glass-2022.res` < -2, -2 , `log2FoldChange.glass-2022.res`)) %>%
+  dplyr::mutate(is.limited.glass.tpc.res = as.character(abs(`log2FoldChange.glass-2022.tpc.res`) > 2)) %>% # change pch to something that is limited
+  dplyr::mutate(`log2FoldChange.glass-2022.tpc.res` = ifelse(`log2FoldChange.glass-2022.tpc.res` > 2, 2 , `log2FoldChange.glass-2022.tpc.res`)) %>%
+  dplyr::mutate(`log2FoldChange.glass-2022.tpc.res` = ifelse(`log2FoldChange.glass-2022.tpc.res` < -2, -2 , `log2FoldChange.glass-2022.tpc.res`)) %>% 
   dplyr::mutate(is.mg.or.tam = !is.na(McKenzie_celltype_top_human_specificity) & McKenzie_celltype_top_human_specificity == "microglia/TAM")
 
 
@@ -55,18 +55,18 @@ plt.expanded <- rbind(
     dplyr::select(hugo_symbol, log2FoldChange, cor.stat, is.limited, dataset, DESeq2.tcp.corrected, padj, is.mg.or.tam)
   ,
   plt %>%
-    dplyr::rename(log2FoldChange = log2FoldChange.glass.res) %>%
-    dplyr::rename(padj = padj.glass.res) %>%
-    dplyr::rename(cor.stat = statistic.glass.cor.tpc) %>%
+    dplyr::rename(log2FoldChange = `log2FoldChange.glass-2022.res`) %>%
+    dplyr::rename(padj = `padj.glass-2022.res`) %>%
+    dplyr::rename(cor.stat = `statistic.t.glass-2022.cor.tpc`) %>%
     dplyr::rename(is.limited = is.limited.glass.res) %>%
     dplyr::mutate(dataset = "GLASS") %>%
     dplyr::mutate(DESeq2.tcp.corrected = F) %>%
     dplyr::select(hugo_symbol, log2FoldChange, cor.stat, is.limited, dataset, DESeq2.tcp.corrected, padj, is.mg.or.tam)
   ,
   plt %>%
-    dplyr::rename(log2FoldChange = log2FoldChange.glass.tpc.res) %>%
-    dplyr::rename(padj = padj.glass.tpc.res) %>%
-    dplyr::rename(cor.stat = statistic.glass.cor.tpc) %>%
+    dplyr::rename(log2FoldChange = `log2FoldChange.glass-2022.tpc.res`) %>%
+    dplyr::rename(padj = `padj.glass-2022.tpc.res`) %>%
+    dplyr::rename(cor.stat = `statistic.t.glass-2022.cor.tpc`) %>%
     dplyr::rename(is.limited = is.limited.glass.tpc.res) %>%
     dplyr::mutate(dataset = "GLASS") %>%
     dplyr::mutate(DESeq2.tcp.corrected = T) %>%
@@ -98,16 +98,16 @@ ggplot(plt.expanded, aes(x = log2FoldChange ,
   geom_vline(xintercept = 0, col="gray60",lwd=0.5) +
   geom_point(size=2.2, data = subset(plt.expanded, `is.mg.or.tam` == F)) +
   geom_point(size=2.2, data = subset(plt.expanded, `is.mg.or.tam` == T)) +
-  geom_smooth(data = subset(plt.expanded, padj > 0.05 &  is.limited == FALSE),
+  geom_smooth(data = subset(plt.expanded, abs(cor.stat) > 7.5 &  is.limited == FALSE),
               aes(group=1),
               method="lm",
               se = FALSE,  formula=y ~ x, orientation="y", col="#ff2929", show.legend=F ) +
   ggrepel::geom_text_repel(data=subset(plt.expanded, show.label  & log2FoldChange > 0), size=2.5 , 
-                  segment.size = 0.25, segment.linetype = 1, nudge_x = 3.1, 
-                  direction = "y", hjust = "left", col="black", nudge_y = -4.8 ) +
+                           segment.size = 0.25, segment.linetype = 1, nudge_x = 3.1, 
+                           direction = "y", hjust = "left", col="black", nudge_y = -4.8 ) +
   ggrepel::geom_text_repel(data=subset(plt.expanded, show.label  & log2FoldChange < 0), size=2.5 ,
-                  segment.size = 0.25, segment.linetype = 1, nudge_x = -3.1, 
-                  direction = "y", hjust = "right", col="black", nudge_y = -4.8 ) +
+                           segment.size = 0.25, segment.linetype = 1, nudge_x = -3.1, 
+                           direction = "y", hjust = "right", col="black", nudge_y = -4.8 ) +
   scale_shape_manual(values = c('TRUE'= 23, 'FALSE' = 21)   )  +
   scale_color_manual(values = c('FALSE' = '#00000040', 'TRUE' = '#000000aa')) +
   scale_fill_manual(values = dataset_colors <- c('G-SAM' = '#e69356', 'GLASS' = '#69a4d5', 'no-mg-or-tam'='white') ) + 
