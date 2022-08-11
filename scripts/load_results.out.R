@@ -84,6 +84,15 @@ go.0031012 <- c("MMP25","ANOS1","DCN","SEMA3B","SERPINB1","MYOC","TIMP2","VCAN",
                 "PSAP","S100A10","ADAMTSL2","HRNR","S100A6","MMP17","SMOC1","LRRTM3","EGFL6","LRIG2","L1CAM",
                 "TGM2","COL11A2","COL5A2","COL15A1","C6orf15","LRRC3C","PRSS1","VIT","DEFA1","COL6A6","COLQ","LINGO4","GPC2","ANG","COL28A1","MUC5AC","LINGO3","ELFN1","ORM2","ORM1","DEFA1B","TMEFF1","MARCOL","OC90","LRRC24","TRIL","GH1","MMP12","SPON1","ANXA8","RBP3","GDF10","MMP28","PRSS2")
 
+
+results.out <- results.out |> 
+  dplyr::mutate(EM.GO.0031012 = hugo_symbol %in% go.0031012)
+
+
+rm(go.0031012)
+
+
+
 # RNA-seq rCor clusters  ----
 
 # C6.2021 <- c('CRABP2', 'CILP2', 'DPT', 'FGF7', 'COL10A1', 'FBN1', 'GLT8D2',

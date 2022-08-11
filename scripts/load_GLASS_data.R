@@ -52,21 +52,20 @@ stopifnot(!exists('glass.gbm.rnaseq.expression')) # old
 #     ))
 
 
-glass.gbm.rnaseq.expression.all.samples <- glass.gbm.rnaseq.expression.all.samples.bak
-# glass.gbm.rnaseq.expression.all.samples <- 'data/gsam/data/GLASS_GBM_R1-R2/transcript_count_matrix_all_samples.tsv' |>
-#   read.delim(stringsAsFactors = F) |>
-#   dplyr::mutate(length = NULL) |> # not needed
-#   dplyr::left_join(glass.gencode.v19, by=c('target_id' = 'transcript_id')) |>
-#   dplyr::filter(!is.na(gene_symbol) ) |> # 1193 transcript id's not matching gtf Ensembl 64
-#   dplyr::mutate(target_id = NULL) |> # aggregate @ gene_id level
-#   dplyr::mutate(gene_symbol = NULL) |>
-#   dplyr::group_by(gene_id) |>
-#   dplyr::summarise(across(everything(), list(sum))) |>
-#   tibble::remove_rownames() |>
-#   tibble::column_to_rownames('gene_id') |>
-#   base::round() |>
-#   dplyr::rename_with( ~ gsub(".", "-", .x, fixed = TRUE)) |>
-#   dplyr::rename_with( ~ gsub("_1$", "", .x, fixed = FALSE))
+glass.gbm.rnaseq.expression.all.samples <- 'data/gsam/data/GLASS_GBM_R1-R2/transcript_count_matrix_all_samples.tsv' |>
+  read.delim(stringsAsFactors = F) |>
+  dplyr::mutate(length = NULL) |> # not needed
+  dplyr::left_join(glass.gencode.v19, by=c('target_id' = 'transcript_id')) |>
+  dplyr::filter(!is.na(gene_symbol) ) |> # 1193 transcript id's not matching gtf Ensembl 64
+  dplyr::mutate(target_id = NULL) |> # aggregate @ gene_id level
+  dplyr::mutate(gene_symbol = NULL) |>
+  dplyr::group_by(gene_id) |>
+  dplyr::summarise(across(everything(), list(sum))) |>
+  tibble::remove_rownames() |>
+  tibble::column_to_rownames('gene_id') |>
+  base::round() |>
+  dplyr::rename_with( ~ gsub(".", "-", .x, fixed = TRUE)) |>
+  dplyr::rename_with( ~ gsub("_1$", "", .x, fixed = FALSE))
 
 
 
