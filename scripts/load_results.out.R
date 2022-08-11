@@ -86,35 +86,80 @@ go.0031012 <- c("MMP25","ANOS1","DCN","SEMA3B","SERPINB1","MYOC","TIMP2","VCAN",
 
 # RNA-seq rCor clusters  ----
 
-C6.2021 <- c('CRABP2', 'CILP2', 'DPT', 'FGF7', 'COL10A1', 'FBN1', 'GLT8D2',
-             'IRX3', 'MFAP5', 'MFAP4', "COL8A2", "FNDC1", "MMP11", "MFAP2",
-             "COL1A2", "COL1A1", "COL5A1", "ADAMTS2", "TPSB2", "KRT8", "OMD",
-             "OGN", "MME", "MLPH", "MRC1L1", "PTGFR", "TWIST2", "C5orf46",
-             "TNNT3", "ASS1", "PERP","KLHDC7B", "CCL8")
+# C6.2021 <- c('CRABP2', 'CILP2', 'DPT', 'FGF7', 'COL10A1', 'FBN1', 'GLT8D2',
+#              'IRX3', 'MFAP5', 'MFAP4', "COL8A2", "FNDC1", "MMP11", "MFAP2",
+#              "COL1A2", "COL1A1", "COL5A1", "ADAMTS2", "TPSB2", "KRT8", "OMD",
+#              "OGN", "MME", "MLPH", "MRC1L1", "PTGFR", "TWIST2", "C5orf46",
+#              "TNNT3", "ASS1", "PERP","KLHDC7B", "CCL8")
 
+
+
+tmp.1 <- readRDS('cache/h.2022.Rds')
+tmp.2 <- data.frame(gid = tmp.1$labels[rev(tmp.1$order)]) |> 
+  dplyr::mutate(C0.start = which(gid == "ENSG00000119714.11_5|GPR68|chr14:91698876-91720269(-)")) |> 
+  dplyr::mutate(C0.end = which(gid == "ENSG00000105697.9_4|HAMP|chr19:35771619-35776046(+)")) |> 
+  
+  dplyr::mutate(C1.start = which(gid == "ENSG00000130487.8_2|KLHDC7B|chr22:50984632-50989452(+)")) |> 
+  dplyr::mutate(C1.end = which(gid == "ENSG00000122420.10_5|PTGFR|chr1:78769568-79006386(+)")) |>  
+  
+  dplyr::mutate(C2.start = which(gid == "ENSG00000128917.8_4|DLL4|chr15:41221538-41231271(+)")) |> 
+  dplyr::mutate(C2.end = which(gid == "ENSG00000085563.14_5|ABCB1|chr7:87132949-87342639(-)")) |> 
+  
+  dplyr::mutate(C3.start = which(gid == "ENSG00000132702.13_3|HAPLN2|chr1:156589123-156595517(+)")) |> 
+  dplyr::mutate(C3.end = which(gid == "ENSG00000099822.3_3|HCN2|chr19:589881-617159(+)")) |> 
+
+  # SEPT12 does not fit with c3 or c4
+  
+  dplyr::mutate(C4.start = which(gid == "ENSG00000185272.14_3|RBM11|chr21:15588451-15600693(+)")) |> 
+  dplyr::mutate(C4.end = which(gid == "ENSG00000178773.15_6|CPNE7|chr16:89642166-89663654(+)")) |> 
+  
+  
+  dplyr::mutate(C4s1.start = which(gid == "ENSG00000185272.14_3|RBM11|chr21:15588451-15600693(+)")) |> 
+  dplyr::mutate(C4s1.end = which(gid == "ENSG00000054356.14_5|PTPRN|chr2:220154345-220174370(-)")) |> 
+
+  dplyr::mutate(C4s2.start = which(gid == "ENSG00000133392.18_5|MYH11|chr16:15796992-15950885(-)")) |> 
+  dplyr::mutate(C4s2.end = which(gid == "ENSG00000178773.15_6|CPNE7|chr16:89642166-89663654(+)")) |> 
+  
+  dplyr::mutate(cluster.2022 = case_when(
+    dplyr::row_number() >= C0.start & dplyr::row_number() <= C0.end ~ "C0",
+    dplyr::row_number() >= C1.start & dplyr::row_number() <= C1.end ~ "C1",
+    dplyr::row_number() >= C2.start & dplyr::row_number() <= C2.end ~ "C2",
+    dplyr::row_number() >= C3.start & dplyr::row_number() <= C3.end ~ "C3",
+    dplyr::row_number() >= C4.start & dplyr::row_number() <= C4.end ~ "C4",
+    dplyr::row_number() >= C4.start & dplyr::row_number() <= C4.end ~ "C4",
+    T ~ "-"
+  )) |> 
+  
+  dplyr::mutate(C0.start = NULL, C0.end = NULL,
+                C1.start = NULL, C1.end = NULL,
+                C2.start = NULL, C2.end = NULL,
+                C3.start = NULL, C3.end = NULL,
+                C4.start = NULL, C4.end = NULL) |> 
+  
+  dplyr::mutate(cluster.2022 = factor(cluster.2022, levels = c("C0", "C1", "C2", "C3", "C4", "-"))) |> 
+  
+  dplyr::mutate(C0.2022 = cluster.2022 == "C0") |> 
+  dplyr::mutate(C1.2022 = cluster.2022 == "C1") |> 
+  dplyr::mutate(C2.2022 = cluster.2022 == "C2") |> 
+  dplyr::mutate(C3.2022 = cluster.2022 == "C3") |> 
+  dplyr::mutate(C4.2022 = cluster.2022 == "C4") |> 
+  
+  dplyr::mutate(C4s1.2022 = dplyr::row_number() >= C4s1.start & dplyr::row_number() <= C4s1.end ) |> 
+  dplyr::mutate(C4s2.2022 = dplyr::row_number() >= C4s2.start & dplyr::row_number() <= C4s2.end ) |> 
+  
+  dplyr::mutate(C4s1.start = NULL, C4s1.end = NULL, 
+                C4s2.start = NULL, C4s2.end = NULL)
+
+rm(tmp.1)
 
 
 results.out <- results.out |> 
-  dplyr::mutate(CC.2022 = hugo_symbol %in% c(
-    "KLHDC7B",
-    "CD28",
-    "JCHAIN",
-    "FPR2",
-    "CCL13",
-    "COL1A2",
-    "COL1A1",
-    "COL5A1",
-    "MMP11",
-    "KRT8",
-    "COL12A1",
-    "COL10A1",
-    "CILP2",
-    "TRPV4",
-    "RPSB2",
-    "TPSB2",
-    "TPSAB1",
-    "CPA3", "LRRC15", "DPT", "MME", "C5rof46", "PTGFR"
-  ) )
+  dplyr::left_join(tmp.2, by=c('gid'='gid'), suffix=c('','') )
+
+
+rm(tmp.2)
+
+
 
 
 

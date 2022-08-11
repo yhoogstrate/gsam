@@ -158,6 +158,25 @@ recursiveCorPlot(plt.data, plt.labels |>
 ggsave("output/figures/recursiveCorPlot.2022.svg", height=30, width=30) # then average, then ward.D1?
 
 
+hclust <- recursiveCorPlot(plt.data |> 
+                             tibble::rownames_to_column('hugo_symbol') |> 
+                             dplyr::left_join(plt.labels |> dplyr::select(hugo_symbol, gid),by=c('hugo_symbol'='hugo_symbol')) |> 
+                             tibble::column_to_rownames('gid') |> 
+                             dplyr::mutate(hugo_symbol=NULL)
+                             , plt.labels |> 
+                   dplyr::mutate(EM.GO.0031012 = hugo_symbol %in% go.0031012) |> 
+                   tibble::column_to_rownames('gid') |> 
+                   dplyr::mutate(hugo_symbol = NULL) |> 
+                   dplyr::mutate(astrocyte = ifelse(is.na( astrocyte ), F, astrocyte)) |> 
+                   dplyr::mutate(endothelial = ifelse(is.na( endothelial ), F, endothelial)) |> 
+                   dplyr::mutate(neuron = ifelse(is.na( neuron ), F, neuron)) |> 
+                   dplyr::mutate(oligodendrocyte = ifelse(is.na( oligodendrocyte ), F, oligodendrocyte)) |> 
+                   dplyr::mutate(Neftel.AC = NULL,Neftel.NPC1 = NULL,Neftel.NPC2 = NULL,Neftel.OPC = NULL,Neftel.MES1 = NULL,Neftel.MES2 = NULL )
+                 , 3.6, 3,"ward.D2", TRUE)
+
+#saveRDS(hclust, "cache/h.2022.Rds")
+
+
 
 #h <- cor_cor_plot(plt, labels, 3,6, method="ward.D2")
 #ggsave("output/figures/cor_ward.D2x.pdf", height=30, width=30) # then average, then ward.D1?
