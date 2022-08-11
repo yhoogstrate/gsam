@@ -2979,10 +2979,10 @@ FeaturePlot(object = object_1, features = C6)
 
 
 DotPlot(object = object_1, features =list('C1'=
-                                            results.out |> dplyr::filter(CC.2022) |> dplyr::pull(hugo_symbol)
+                                            results.out |> dplyr::filter(C1.2022) |> dplyr::pull(hugo_symbol)
                                           , 'Peri'=c("RGS5", "PDGFRB", "CD248") ), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-  labs(x = paste0("Features [C6] in: ",sid))
+  labs(x = paste0("Features [C1] in: ",sid))
 ggsave(paste0("output/figures/scRNA/Diaz/2022-",sid,"_C6.pdf"),width=7.5, height=4,scale=1.2)
 ggsave(paste0("output/figures/scRNA/Diaz/2022-",sid,"_C6.png"),width=7.5, height=4,scale=1.2)
 

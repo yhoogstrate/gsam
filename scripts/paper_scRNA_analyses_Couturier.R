@@ -1324,10 +1324,10 @@ FeaturePlot(object = object_1, features = C6)
 
 
 DotPlot(object = object_1, features =list('C1'=
-      results.out |> dplyr::filter(CC.2022) |> dplyr::pull(hugo_symbol)
-                                             , 'Peri'=c("RGS5", "PDGFRB", "CD248") ), group.by = "seurat_clusters") +
+      results.out |> dplyr::filter(C1.2022) |> dplyr::pull(hugo_symbol)
+                                             , 'Peri'=c("RGS5", "PDGFRB", "CD248")), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-  labs(x = paste0("Features [C6] in: ",sid))
+  labs(x = paste0("Features [C1] in: ",sid))
 ggsave(paste0("output/figures/scRNA/Couturier/2022-",sid,"_CC.pdf"),width=7.5, height=4,scale=1.2)
 ggsave(paste0("output/figures/scRNA/Couturier/2022-",sid,"_CC.png"),width=7.5, height=4,scale=1.2)
 
@@ -2270,12 +2270,14 @@ FeaturePlot(object = object_1, features =  "PERP" )
 #### CC-2022 (up) ----
 
 
-DotPlot(object = object_1, features =list('C4'=CC.2022 , 'Peri'=c("RGS5", "PDGFRB", "CD248") ), group.by = "seurat_clusters") +
+
+DotPlot(object = object_1, features =list('C1'=
+                                            results.out |> dplyr::filter(C1.2022) |> dplyr::pull(hugo_symbol)
+                                          , 'Peri'=c("RGS5", "PDGFRB", "CD248")), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-  labs(x = paste0("Features [C6] in: ",sid))
+  labs(x = paste0("Features [C1] in: ",sid))
 ggsave(paste0("output/figures/scRNA/Couturier/2022-",sid,"_CC.pdf"),width=7.5, height=4,scale=1.2)
 ggsave(paste0("output/figures/scRNA/Couturier/2022-",sid,"_CC.png"),width=7.5, height=4,scale=1.2)
-
 
 
 
@@ -2759,10 +2761,10 @@ FeaturePlot(object = object_1, features = C6[25:33])
 
 DotPlot(object = object_1, features =list('C1'=
                                             
-                                            results.out |> dplyr::filter(CC.2022) |> dplyr::pull(hugo_symbol)
+                                            results.out |> dplyr::filter(C1.2022) |> dplyr::pull(hugo_symbol)
                                             , 'Peri'=c("RGS5", "PDGFRB", "CD248") ), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-  labs(x = paste0("Features [C6] in: ",sid))
+  labs(x = paste0("Features [C1] in: ",sid))
 ggsave(paste0("output/figures/scRNA/Couturier/2022-",sid,"_CC.pdf"),width=7.5, height=4,scale=1.2)
 ggsave(paste0("output/figures/scRNA/Couturier/2022-",sid,"_CC.png"),width=7.5, height=4,scale=1.2)
 
@@ -4089,10 +4091,10 @@ FeaturePlot(object = object_1, features = c("FBN1","COL1A1","RGS5", "CD248"),pt.
 
 
 DotPlot(object = object_1, features =list('C1'=
-                                            results.out |> dplyr::filter(CC.2022) |> dplyr::pull(hugo_symbol)
+                                            results.out |> dplyr::filter(C1.2022) |> dplyr::pull(hugo_symbol)
                                             , 'Peri'=c("RGS5", "PDGFRB", "CD248") ), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-  labs(x = paste0("Features [C6] in: ",sid))
+  labs(x = paste0("Features [C1] in: ",sid))
 ggsave(paste0("output/figures/scRNA/Couturier/2022-",sid,"_CC.pdf"),width=7.5, height=4,scale=1.2)
 ggsave(paste0("output/figures/scRNA/Couturier/2022-",sid,"_CC.png"),width=7.5, height=4,scale=1.2)
 
