@@ -124,4 +124,10 @@ ggplot(plt.expanded, aes(x = log2FoldChange ,
 ##ggsave('output/figures/geiser_plot_mckenzy_immune_tam_double.pdf', height=5.75 * 1.1 * 1.1,width=12 * 1.1)
 
 
+# clean-up ----
+
+rm(plt, plt.expanded)
+
+
+
 
