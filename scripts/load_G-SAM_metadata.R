@@ -19,6 +19,7 @@ source('scripts/R/job_gg_theme.R')
 
 gsam.patient.metadata <- read.csv('data/gsam/administratie/GSAM_combined_clinical_molecular.csv',stringsAsFactors=F) |> 
   dplyr::arrange(studyID) |> 
+  dplyr::mutate(initialMGMT = NULL) |> 
   dplyr::mutate(gender = ifelse(studyID %in% c('AAT', 'AAM', 'AZH', 'HAI', 'FAG'),"Male",gender)) |>  # there's a number of samples of which the gender does not fit with the omics data - omics data determined genders are the corrected ones
   dplyr::mutate(gender = as.factor(gender)) |> 
   dplyr::mutate(survival.events = case_when(
@@ -486,16 +487,27 @@ gsam.rna.metadata <- gsam.rna.metadata %>%
   dplyr::mutate(tmp = NULL) %>%
   dplyr::mutate( pat.with.IDH = as.logical(pat.with.IDH) )
 
-## Add PCA signatuers 2021 ----
+## Add PCA signatures 2021 ----
 
 # neuron_oligodendrocyte_endothelial_EM_PCA_scores
 
 gsam.rna.metadata <- gsam.rna.metadata |> 
   dplyr::left_join(
-  read.table('data/gsam/output/tables/principal_DE_cluster_components.txt') |> 
-    dplyr::mutate(sid = gsub("^GSAM.","",pid), pid=NULL) |> 
-    dplyr::rename_with( ~ paste0(.x,".2021") ,  .cols=matches("compon|signatu",perl=T) ) 
-  , by=c('sid'='sid'), suffix=c('','')) 
+    read.table('data/gsam/output/tables/principal_DE_cluster_components.txt') |> 
+      dplyr::mutate(sid = gsub("^GSAM.","",pid), pid=NULL) |> 
+      dplyr::rename_with( ~ paste0(.x,".2021") ,  .cols=matches("compon|signatu",perl=T) ) 
+    , by=c('sid'='sid'), suffix=c('','')) 
+
+
+
+## Add PCA signatures 2022 ----
+
+# neuron_oligodendrocyte_endothelial_EM_PCA_scores
+
+gsam.rna.metadata <- gsam.rna.metadata |> 
+  dplyr::left_join(
+    read.table('output/tables/principal_DE_cluster_components_2022.txt')
+    , by=c('sid'='sid'), suffix=c('','')) 
 
 
 

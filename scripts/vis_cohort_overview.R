@@ -28,7 +28,81 @@ source("scripts/R/glass_expression_matrix.R") # glass & tcga validation set
 
 # G-SAM ----
 
-# we hebben max 122 pairs?
+## as s.table ----
+
+
+tmp <- gsam.rna.metadata |> 
+  dplyr::filter(blacklist.pca == F) |>  # er zijn patienten met 1 goede en 1 slechte resectie
+  dplyr::filter(pat.with.IDH == F) |> 
+  dplyr::filter(sid %in% c('BAI2', 'CAO1-replicate', 'FAB2', 'GAS2-replicate') == F ) |> 
+  dplyr::arrange(pid, as.character(resection)) |> 
+  dplyr::mutate(pid = as.factor(as.character(pid))) |> 
+  dplyr::left_join(gsam.patient.metadata %>% dplyr::select(c('studyID','treatedWithTMZ','treatedWithRT','HM')) , by = c('pid' = 'studyID')) %>%
+  dplyr::left_join(gsam.patient.metadata |>
+    dplyr::select(
+      studyID,
+      mgmtPrimary,mgmtRecurrent,
+      extentOfResectionFirstSurgery,extentOfResectionSecondSurgery,
+      bevacizumab.before.recurrence,
+      status, survivalDays, progressionFreeDays, survivalFromSecondSurgeryDays
+    )
+    ,by=c('pid'='studyID'),suffix=c('','')) |> 
+  dplyr::mutate(MGMT = gsub("ylated","",ifelse(resection == "r1",mgmtPrimary,mgmtRecurrent))) |> 
+  dplyr::mutate(extent = ifelse(resection == "r1",extentOfResectionFirstSurgery,extentOfResectionSecondSurgery)) |> 
+  dplyr::mutate(extent = case_when(
+    is.na(extent) ~ as.character(NA),
+    extent == "Biopsy" ~ "Biopsy",
+    T ~ "Resection"
+  )) |> 
+  dplyr::mutate(IDH = ifelse(pat.with.IDH,"+","-")) |> 
+  dplyr::rename(TMZ = treatedWithTMZ) |> 
+  dplyr::rename(RT = treatedWithRT) |> 
+  dplyr::mutate(GlioVis.Maj = case_when(
+    gliovis.majority_call == "Classical" ~ "CL",
+    gliovis.majority_call == "Mesenchymal" ~ "MES",
+    gliovis.majority_call == "Proneural" ~ "PN",
+    T ~ as.character(NA),
+  )) |> 
+  dplyr::mutate(GlioVis.Maj = ifelse(tumour.percentage.dna < 15, NA ,GlioVis.Maj)) |> 
+  dplyr::mutate(
+    sig.C0.fuz = round(rna.signature.C0.fuzzy.2022,2),
+    sig.C1.col = round(rna.signature.C1.collagen.2022,2),
+    sig.C2.end = round(rna.signature.C2.endothelial.2022,2),
+    sig.C3.oli = round(rna.signature.C3.oligodendrocyte.2022,2),
+    sig.C4.neu = round(rna.signature.C4.neuron.2022,2)
+  ) |> 
+  dplyr::rename(
+    svvl.stat = status,
+    svvl.r1.days = survivalDays,
+    pfs.days = progressionFreeDays,
+    svvl.r2.days = survivalFromSecondSurgeryDays
+  ) |> 
+  dplyr::mutate(angio = ifelse(bevacizumab.before.recurrence, "Bevacizumab", "No")) |> 
+  dplyr::mutate(purity = ifelse(is.na(tumour.percentage.dna),NA,paste0(tumour.percentage.dna, "%"))) |> 
+  dplyr::select(sid, pid, resection, IDH, TMZ, RT, angio, HM, purity, svvl.stat, svvl.r1.days, pfs.days, svvl.r2.days, GlioVis.Maj, MGMT, extent, sig.C0.fuz, sig.C1.col, sig.C2.end, sig.C3.oli, sig.C4.neu) |> 
+  dplyr::mutate(sid = gsub('-new','.n',sid))
+head(tmp)
+
+
+
+#'@todo tumour treating fields
+#'@todo exp therapies
+#'@todo NMF vectors [pas na nieuwe bepaling]
+
+
+
+openxlsx::createWorkbook(creator = "Dr. Youri Hoogstrate",
+                         title = "Clinical information G-SAM study",
+                         subject = "Clinical information",
+                         category = "G-SAM study") -> wb
+openxlsx::addWorksheet(wb, "Sheet1 - Sample information") 
+openxlsx::writeDataTable(wb,sheet = "Sheet1 - Sample information", x=tmp)
+openxlsx::saveWorkbook(wb,file= "output/tables/tab_S1_clinical_information.xlsx",overwrite=T)
+
+
+
+
+## fig 2021 ----
 
 #plt.expanded %>% dplyr::filter(pid == "GAO")
 #GAO = duplicated !?
@@ -171,10 +245,13 @@ plt.expanded %>%
 
 
 
-
 # GLASS ----
 
 
+
+
+
+## fig 2021 ----
 
 
 c1  <- c("GLSS-SM-R068-TP-01R-RNA-0UPMYO", "GLSS-SM-R068-R1-01R-RNA-7I5H9P",

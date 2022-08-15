@@ -32,8 +32,8 @@ plt.expanded <- rbind(
 ) %>%
   dplyr::filter(!is.na(statistic.gsam.cor.tpc) & !is.na(log2FoldChange.gsam.res)) %>%
   dplyr::mutate(limited = abs(log2FoldChange.gsam.res) > 2.5) %>%
-  dplyr::mutate(log2FoldChange.gsam.res = ifelse(limited & log2FoldChange.gsam.res < 0, -2.5, log2FoldChange.gsam.res)) %>%
-  dplyr::mutate(log2FoldChange.gsam.res = ifelse(limited & log2FoldChange.gsam.res > 0, 2.5, log2FoldChange.gsam.res)) %>%
+  dplyr::mutate(log2FoldChange.gsam.res = ifelse(limited & log2FoldChange.gsam.res < 0, -2, log2FoldChange.gsam.res)) %>%
+  dplyr::mutate(log2FoldChange.gsam.res = ifelse(limited & log2FoldChange.gsam.res > 0, 2, log2FoldChange.gsam.res)) %>%
   dplyr::mutate(panel = factor(panel, levels = c('chr7 genes', 'chr10 genes') )) |> 
   dplyr::mutate()
 
@@ -51,11 +51,12 @@ ggplot(plt.expanded, aes(x = log2FoldChange.gsam.res, y = statistic.gsam.cor.tpc
   scale_fill_manual(values=c('chr7'='#6ba6e5AA','chr10'='#eab509AA','other'='white' , "chr10 label"='red',"chr7 label"='red')) + 
   scale_color_manual(values=c('chr7'='#6ba6e5AA','chr10'='#eab509AA','other'='white' , "chr10 label"='red',"chr7 label"='red')) + 
   youri_gg_theme +
-  xlim(-2.75, 2.75)
+  xlim(-2.25, 2.25)
 
 
-# ggsave("output/figures/figure_S4_AB_geiser_chr7_chr10.png",width=10,height=5)
-# ggsave("output/figures/figure_S4_AB_geiser_chr7_chr10.pdf",width=10,height=5)
+ggsave("output/figures/figure_S4_AB_geiser_chr7_chr10.png",width=10,height=4)
+ggsave("output/figures/figure_S4_AB_geiser_chr7_chr10.pdf",width=10,height=4)
+
 
 
 # Figure S4 [stats chr7&chr10] ----
@@ -72,66 +73,78 @@ plt <-
   dplyr::ungroup()
 
 
-ggplot(plt, aes(x=reorder(chr, order),y=log2FoldChange.gsam.res)) +
-  ggbeeswarm::geom_quasirandom(cex=0.5,width=0.27, alpha=0.5) +
-  geom_boxplot(outlier.shape = NA, col=alpha("white",1),fill=NA,lwd=1.5, width=0.75,coef=0) +
-  geom_boxplot(outlier.shape = NA, col=alpha("red",1),fill=NA,alpha=0.75, width=0.75,coef=0) +
+
+## stats ----
+
+
+
+tmp <- data.frame(chr = unique(plt$chr)) |> 
+  dplyr::mutate(pval = lapply(chr , function(x, data){
+    return(
+      t.test(
+        data |> dplyr::filter(chr != x) |> dplyr::pull(log2FoldChange.gsam.res),
+        data |> dplyr::filter(chr == x) |> dplyr::pull(log2FoldChange.gsam.res),
+        var.equal=T )$p.value
+    )
+  }, data=plt)) |>
+  dplyr::mutate(padj.fdr = p.adjust(pval, method="fdr"))
+
+
+tmp |> 
+  dplyr::filter(padj.fdr < 0.01)
+
+## add stats to plt ----
+
+
+plt <- plt |> 
+  dplyr::left_join(
+    tmp |>
+                     dplyr::select(chr, padj.fdr) |> 
+                     dplyr::mutate(padj.fdr = format.pval(padj.fdr,digits=1))
+                     , by=c('chr'='chr'),suffix=c('','')) |> 
+  dplyr::mutate(padj.fdr = ifelse(duplicated(chr),NA,padj.fdr)) 
+
+
+
+
+## plot ----
+
+
+
+ggplot(plt, aes(x=reorder(chr, order),y=log2FoldChange.gsam.res, label=padj.fdr)) +
+  ggbeeswarm::geom_quasirandom(cex=0.5,width=0.31, alpha=0.5) +
+  geom_boxplot(outlier.shape = NA, col=alpha("white",1),fill=NA,lwd=1.1, width=0.80,coef=0) +
+  geom_boxplot(outlier.shape = NA, col=alpha("red",1),fill=NA,alpha=0.75, width=0.80,coef=0) +
+  geom_label(y = -0.72,col="blue",alpha=0.75, label.size = NA, cex=3.2) +
   theme_bw() +
   ylim(-0.7,0.7) +
-  labs(x = NULL, y = "log2FoldChange, no correction (G-SAM)")
-
-
-t.test(
-  plt |> dplyr::filter(chr != "chr10") |> dplyr::pull(log2FoldChange.gsam.res),
-  plt |> dplyr::filter(chr == "chr10") |> dplyr::pull(log2FoldChange.gsam.res),
-  var.equal=T )$p.value
-
-t.test(
-  plt |> dplyr::filter(chr != "chr10") |> dplyr::pull(log2FoldChange.gsam.tpc.res),
-  plt |> dplyr::filter(chr == "chr10") |> dplyr::pull(log2FoldChange.gsam.tpc.res),
-  var.equal=T )$p.value
-
-
-t.test(
-  plt |> dplyr::filter(chr != "chr19") |> dplyr::pull(log2FoldChange.gsam.res),
-  plt |> dplyr::filter(chr == "chr19") |> dplyr::pull(log2FoldChange.gsam..res),
-  var.equal=T )$p.value
-
-t.test(
-  plt |> dplyr::filter(chr != "chr19") |> dplyr::pull(log2FoldChange.gsam.tpc.res),
-  plt |> dplyr::filter(chr == "chr19") |> dplyr::pull(log2FoldChange.gsam.tpc.res),
-  var.equal=T )$p.value
-
-
-t.test(
-  plt |> dplyr::filter(chr == "chr7") |> dplyr::pull(log2FoldChange.gsam.res),
-  plt |> dplyr::filter(chr != "chr7") |> dplyr::pull(log2FoldChange.gsam.res),
-  var.equal = T)$p.value
-
-t.test(
-  plt |> dplyr::filter(chr == "chr1") |> dplyr::pull(log2FoldChange.gsam.res),
-  plt |> dplyr::filter(chr != "chr1") |> dplyr::pull(log2FoldChange.gsam.res), var.equal=T)$p.value
+  labs(x = NULL, y = "log2FoldChange")
 
 
 
-# Figure S4 CDE-FGH ----
+ggsave("output/figures/figure_S4C_LFC_per_chr.png",width=10,height=3)
+ggsave("output/figures/figure_S4C_LFC_per_chr.pdf",width=10,height=3)
 
 
-plt <- results.out %>%
-  dplyr::mutate(log2FoldChange.gsam.res = NULL) %>% # force using corrected 
-  dplyr::mutate(log2FoldChange.glass.res = NULL) %>% # force using corrected 
-  dplyr::filter(!is.na(log2FoldChange.gsam.tpc.res)  & !is.na(statistic.gsam.cor.tpc) ) %>%
-  dplyr::mutate(is.limited.gsam.tpc.res = as.character(abs(log2FoldChange.gsam.tpc.res) > 3)) %>% # change pch to something that is limited
-  dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res > 3, 3 , log2FoldChange.gsam.tpc.res)) %>%
-  dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res < -3, -3 , log2FoldChange.gsam.tpc.res)) %>%
+
+# Figure S4 DEF-GHI ----
+
+
+plt <- results.out |> 
   
-  dplyr::mutate(direction.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res > 0 , "up", "down") ) %>%
-  dplyr::mutate(direction.glass.tpc.res = ifelse(log2FoldChange.glass.tpc.res > 0 , "up", "down") ) %>%
+  #dplyr::filter(!is.na(log2FoldChange.gsam.tpc.res)  & !is.na(statistic.gsam.cor.tpc) ) |> 
+  
+  #dplyr::mutate(is.limited.gsam.tpc.res = as.character(abs(log2FoldChange.gsam.tpc.res) > 3)) |> 
+  #dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res > 3, 3 , log2FoldChange.gsam.tpc.res)) |> 
+  #dplyr::mutate(log2FoldChange.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res < -3, -3 , log2FoldChange.gsam.tpc.res)) |> 
+  
+  dplyr::mutate(direction.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res > 0 , "up", "down") ) |> 
+  dplyr::mutate(`direction.glass-2022.tpc.res` = ifelse(`log2FoldChange.glass-2022.tpc.res` > 0 , "up", "down") ) |> 
   dplyr::mutate(significant = 
                   padj.gsam.tpc.res < 0.01 &
-                  abs(log2FoldChange.gsam.tpc.res) > 0.5 & #padj.glass.tpc.res < 0.05
-                  abs(log2FoldChange.glass.tpc.res) > 0.5 & 
-                  direction.gsam.tpc.res == direction.glass.tpc.res #lfcSE.gsam.tpc.res < 0.3 &
+                  abs(log2FoldChange.gsam.tpc.res) > 0.5 & 
+                  abs(`log2FoldChange.glass-2022.tpc.res`) > 0.5 & 
+                  `direction.gsam.tpc.res` == `direction.glass-2022.tpc.res` 
   ) %>%
   dplyr::mutate(show.label.gains = hugo_symbol %in% c(
     "AKT1","AKT3","EGFR", "PDGFRA","MET", "PIK3C2B", "MDM2","MDM4", "CDK4",
@@ -159,7 +172,7 @@ plt.expanded <- rbind(
     dplyr::rename(cor.tpc = statistic.gsam.cor.tpc) %>%
     dplyr::rename(log2FoldChange = log2FoldChange.gsam.tpc.res) %>%
     dplyr::rename(show.label = show.label.gains) %>% 
-    dplyr::mutate(marker.genes = "Common gains") %>%
+    dplyr::mutate(marker.genes = "Commonly gained") %>%
     dplyr::mutate(dataset = "G-SAM") %>%
     dplyr::select(hugo_symbol, cor.tpc, log2FoldChange, show.label, dataset, significant, marker.genes)
   ,
@@ -175,31 +188,31 @@ plt.expanded <- rbind(
     dplyr::rename(cor.tpc = statistic.gsam.cor.tpc) %>%
     dplyr::rename(log2FoldChange = log2FoldChange.gsam.tpc.res) %>%
     dplyr::rename(show.label = show.label.losses) %>% 
-    dplyr::mutate(marker.genes = "Common losses") %>%
+    dplyr::mutate(marker.genes = "Commonly lost") %>%
     dplyr::mutate(dataset = "G-SAM") %>%
     dplyr::select(hugo_symbol, cor.tpc, log2FoldChange, show.label, dataset, significant, marker.genes)
   ,
   plt %>% 
-    dplyr::rename(cor.tpc = statistic.glass.cor.tpc) %>%
-    dplyr::rename(log2FoldChange = log2FoldChange.glass.tpc.res) %>%
+    dplyr::rename(cor.tpc = `statistic.t.glass-2022.cor.tpc`) %>%
+    dplyr::rename(log2FoldChange = `log2FoldChange.glass-2022.tpc.res`) %>%
     dplyr::rename(show.label = show.label.gains) %>% 
-    dplyr::mutate(marker.genes = "Common gains") %>%
+    dplyr::mutate(marker.genes = "Commonly gained") %>%
     dplyr::mutate(dataset = "GLASS") %>%
     dplyr::select(hugo_symbol, cor.tpc, log2FoldChange, show.label, dataset, significant, marker.genes)
   ,
   plt %>% 
-    dplyr::rename(cor.tpc = statistic.glass.cor.tpc) %>%
-    dplyr::rename(log2FoldChange = log2FoldChange.glass.tpc.res) %>%
+    dplyr::rename(cor.tpc = `statistic.t.glass-2022.cor.tpc`) %>%
+    dplyr::rename(log2FoldChange = `log2FoldChange.glass-2022.tpc.res`) %>%
     dplyr::rename(show.label = show.label.other) %>% 
     dplyr::mutate(marker.genes = "Other") %>%
     dplyr::mutate(dataset = "GLASS") %>%
     dplyr::select(hugo_symbol, cor.tpc, log2FoldChange, show.label, dataset, significant, marker.genes)
   ,
   plt %>% 
-    dplyr::rename(cor.tpc = statistic.glass.cor.tpc) %>%
-    dplyr::rename(log2FoldChange = log2FoldChange.glass.tpc.res) %>%
+    dplyr::rename(cor.tpc = `statistic.t.glass-2022.cor.tpc`) %>%
+    dplyr::rename(log2FoldChange = `log2FoldChange.glass-2022.tpc.res`) %>%
     dplyr::rename(show.label = show.label.losses) %>% 
-    dplyr::mutate(marker.genes = "Common losses") %>%
+    dplyr::mutate(marker.genes = "Commonly lost") %>%
     dplyr::mutate(dataset = "GLASS") %>%
     dplyr::select(hugo_symbol, cor.tpc, log2FoldChange, show.label, dataset, significant, marker.genes)
 ) %>%
@@ -235,8 +248,8 @@ ggplot(plt.expanded, aes(x = log2FoldChange, y = cor.tpc, shape=limited,
   labs(x="log2FC R1. vs R2 (unpaired; tumour-% corrected)", y="Correlation t-statistic with tumour-%")
 
 
-# ggsave("output/figures/figure_S4_CDE-FGH_geiser_gains_losses_other.pdf", width=10,height=7.5)
-# ggsave("output/figures/figure_S4_CDE-FGH_geiser_gains_losses_other.png", width=10,height=7.5)
+ggsave("output/figures/figure_S4_CDE-FGH_geiser_gains_losses_other.pdf", width=10,height=7.5)
+ggsave("output/figures/figure_S4_CDE-FGH_geiser_gains_losses_other.png", width=10,height=7.5)
 
 
 
