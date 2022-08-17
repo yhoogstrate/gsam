@@ -7,9 +7,6 @@ library(tidyverse) # for distinct() function
 library(readxl)
 
 
-source('scripts/R/job_gg_theme.R')
-
-
 # ---- patient metadata ----
 
 
