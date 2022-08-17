@@ -349,7 +349,7 @@ rm(tmp)
 
 
 
-# ---- gliovis subtypes -----
+## gliovis subtypes ----
 
 # https://gliovis.shinyapps.io/GlioVis/
 
@@ -378,7 +378,13 @@ tmp <- read.csv('output/tables/gliovis/GlioVis_-_Visualization_Tools_for_Glioma_
                      dplyr::rename(ssGSEA.Classical = Classical_pval) %>%
                      dplyr::rename(ssGSEA.Mesenchymal = Mesenchymal_pval) %>%
                      dplyr::rename(ssGSEA.Proneural = Proneural_pval)
-                   , by=c('Sample' = 'Sample'))
+                   , by=c('Sample' = 'Sample')) |> 
+  dplyr::rename(gliovis.ssGSEA.Proneural.score = ssGSEA.Proneural.score) |> 
+  dplyr::rename(gliovis.ssGSEA.Classical.score = ssGSEA.Classical.score) |> 
+  dplyr::rename(gliovis.ssGSEA.Mesenchymal.score = ssGSEA.Mesenchymal.score) |> 
+  dplyr::rename(gliovis.ssGSEA.Proneural = ssGSEA.Proneural) |> 
+  dplyr::rename(gliovis.ssGSEA.Classical = ssGSEA.Classical) |> 
+  dplyr::rename(gliovis.ssGSEA.Mesenchymal = ssGSEA.Mesenchymal)
 
 
 stopifnot(tmp$gliovis.svm_call == tmp$svm.subtype.call)
@@ -393,12 +399,66 @@ tmp <- tmp %>%
 
 
 
-
 gsam.rna.metadata <- gsam.rna.metadata %>%
-  dplyr::left_join(tmp, by=c('sid' = 'Sample' ))
+  dplyr::left_join(tmp, by=c('sid' = 'Sample'),suffix = c('',''))
 
 
 rm(tmp)
+
+
+
+## ssGSEA [ssgsea.GBM.classification] 2022 ----
+
+# all data have been ran in a single batch
+# see: analysis_ssGSEA.R
+
+tmp <- read.table("output/tables/ssgsea.GBM.classification_p_result_tmp.gct.txt") |> 
+  tibble::rownames_to_column('sid') |> 
+  dplyr::filter(grepl("^(GLSS|TCGA)",sid) == F) |> 
+  dplyr::mutate(sid = gsub(".","-",sid, fixed=T)) |> 
+  dplyr::rename(ssGSEA.2022.Proneural.enrichment_score = Proneural) |> 
+  dplyr::rename(ssGSEA.2022.Classical.enrichment_score  = Classical ) |> 
+  dplyr::rename(ssGSEA.2022.Mesenchymal.enrichment_score = Mesenchymal) |> 
+  dplyr::rename(ssGSEA.2022.Proneural_pval = Proneural_pval) |> 
+  dplyr::rename(ssGSEA.2022.Classical_pval = Classical_pval) |> 
+  dplyr::rename(ssGSEA.2022.Mesenchymal_pval = Mesenchymal_pval)
+stopifnot(tmp$sid %in% gsam.rna.metadata$sid) # ensure match
+
+
+
+tmp.call <- tmp |> 
+  tidyr::pivot_longer(c(ssGSEA.2022.Proneural.enrichment_score, ssGSEA.2022.Classical.enrichment_score, ssGSEA.2022.Mesenchymal.enrichment_score),
+                      values_to = "enrichment_score", names_to = 'subtype.es') |> 
+  dplyr::mutate(subtype.es = gsub('ssGSEA.2022.','',subtype.es)) |>  
+  dplyr::mutate(subtype.es = gsub('.enrichment_score','',subtype.es)) |> 
+  tidyr::pivot_longer(c(ssGSEA.2022.Proneural_pval, ssGSEA.2022.Classical_pval, ssGSEA.2022.Mesenchymal_pval),
+                      values_to = "pval", names_to = 'subtype.pval') |> 
+  dplyr::mutate(subtype.pval = gsub('ssGSEA.2022.','',subtype.pval)) |> 
+  dplyr::mutate(subtype.pval = gsub('_pval','',subtype.pval)) |> 
+  dplyr::filter(subtype.es == subtype.pval) |> 
+  dplyr::rename(ssGSEA.2022.subtype = subtype.es, sutype.pval = NULL ) |> 
+  dplyr::group_by(sid) |> 
+  dplyr::filter(pval == min(pval)) |> 
+  dplyr::ungroup() |> 
+  dplyr::select(c('sid','ssGSEA.2022.subtype')) |> 
+  dplyr::group_by(sid) |> 
+  dplyr::summarise(ssGSEA.2022.subtype = as.factor(paste(ssGSEA.2022.subtype, collapse="|"))) |> 
+  dplyr::ungroup()
+stopifnot(tmp.call$sid %in% tmp$sid) # ensure match
+stopifnot(tmp$sid %in% tmp.call$sid) # ensure match
+
+
+
+gsam.rna.metadata <- gsam.rna.metadata |> 
+  dplyr::left_join(tmp.call , by=c('sid'='sid'), suffix=c('','')) 
+
+gsam.rna.metadata <- gsam.rna.metadata |> 
+  dplyr::left_join(tmp , by=c('sid'='sid'), suffix=c('','')) 
+
+
+rm(tmp.call, tmp)
+
+
 
 
 ## NMF stats ----
