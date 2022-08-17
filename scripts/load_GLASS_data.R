@@ -152,31 +152,56 @@ stopifnot(grepl(".",glass.gbm.rnaseq.metadata.all.samples$sample_barcode,fixed=T
 
 
 
-## subtypes ----
+## subtypes [GlioVis] ----
 
 
-# subtype data from Synapse portal 7 jan 2021
+# load subtype data from Synapse portal 7 jan 2021
 tmp.subtype.2021 <- read.table('data/gsam/data/GLASS_GBM_R1-R2/GLASS.GBM.subtypes.from.Synapse.portal.tsv', header=T,stringsAsFactors = F) |>  # https://www.synapse.org/#!Synapse:syn21441635/tables/
   dplyr::select(c('aliquot_barcode','subtype')) |> 
   dplyr::mutate(subtype = as.factor(subtype)) |> 
-  dplyr::rename(GBM.transcriptional.subtype.Synapse = subtype)
+  dplyr::rename(GBM.transcriptional.subtype.Synapse.2021 = subtype)
 stopifnot(duplicated(tmp.subtype.2021$aliquot_barcode) == FALSE)
 
 
-# new subtype data from Synapse portal 21 jul 2022
-tmp.subtype.2022 <- read.table('data/gsam/data/GLASS_GBM_R1-R2/GLASS.GBM.subtypes.from.Synapse.portal.all_samples.tsv', header=T,stringsAsFactors = F) |>
+# load (new) subtype data from Synapse portal 21 jul 2022
+tmp.subtype.synapse.2022 <- read.table('data/gsam/data/GLASS_GBM_R1-R2/GLASS.GBM.subtypes.from.Synapse.portal.all_samples.tsv', header=T,stringsAsFactors = F) |>
   dplyr::group_by(aliquot_barcode) |> 
   dplyr::filter(p_value == min(p_value)) |> 
-  #dplyr::filter(enrichment_score == min(enrichment_score)) |> 
   dplyr::ungroup() |> 
   dplyr::select(c('aliquot_barcode','signature_name')) |> 
   dplyr::mutate(signature_name = as.factor(signature_name)) |> 
-  dplyr::rename(GBM.transcriptional.subtype.Synapse = signature_name) |> 
+  dplyr::rename(ssGSEA.Synapse.subtype.2022 = signature_name) |> 
   dplyr::group_by(aliquot_barcode) |> 
-  dplyr::summarise(GBM.transcriptional.subtype.Synapse = as.factor(paste(GBM.transcriptional.subtype.Synapse, collapse="|"))) |> 
+  dplyr::summarise(ssGSEA.Synapse.subtype.2022 = as.factor(paste(ssGSEA.Synapse.subtype.2022, collapse="|"))) |> 
   dplyr::ungroup()
-stopifnot(nrow(tmp.subtype.2022$aliquot_barcode) == 425)
-stopifnot(duplicated(tmp.subtype.2022$aliquot_barcode) == FALSE) # - some have equal prob's so should have been merged/collapsed
+stopifnot(nrow(tmp.subtype.synapse.2022$aliquot_barcode) == 425)
+stopifnot(duplicated(tmp.subtype.synapse.2022$aliquot_barcode) == FALSE) # - some have equal prob's so should have been merged/collapsed
+
+
+
+tmp.subtype.synapse.2022 <- tmp.subtype.synapse.2022 |> 
+  dplyr::left_join(
+    read.table('data/gsam/data/GLASS_GBM_R1-R2/GLASS.GBM.subtypes.from.Synapse.portal.all_samples.tsv', header=T,stringsAsFactors = F) |>
+    dplyr::group_by(aliquot_barcode) |> 
+    dplyr::select(aliquot_barcode, signature_name, p_value) |> 
+    tidyr::pivot_wider(names_from = signature_name, values_from = p_value) |> 
+    tibble::column_to_rownames('aliquot_barcode') |> 
+    dplyr::rename_with( ~ paste0("ssGSEA.Synapse.subtype.2022.", .x, ".pval")) |> 
+    tibble::rownames_to_column('aliquot_barcode'),
+    by=c('aliquot_barcode'='aliquot_barcode'))
+
+
+tmp.subtype.synapse.2022 <- tmp.subtype.synapse.2022 |> 
+  dplyr::left_join(
+    read.table('data/gsam/data/GLASS_GBM_R1-R2/GLASS.GBM.subtypes.from.Synapse.portal.all_samples.tsv', header=T,stringsAsFactors = F) |>
+      dplyr::group_by(aliquot_barcode) |> 
+      dplyr::select(aliquot_barcode, signature_name, enrichment_score) |> 
+      tidyr::pivot_wider(names_from = signature_name, values_from = enrichment_score) |> 
+      tibble::column_to_rownames('aliquot_barcode') |> 
+      dplyr::rename_with( ~ paste0("ssGSEA.Synapse.subtype.2022.", .x, ".enrichment_score")) |> 
+      tibble::rownames_to_column('aliquot_barcode'),
+    by=c('aliquot_barcode'='aliquot_barcode'))
+
 
 
 #'@details [-] x-check same subtype names are used consistently throughout
@@ -189,12 +214,68 @@ warning('2022 subtypes contain inconfident calls with equal probabilities')
 warning('Format of 2021 and 2022 subtype data differs')
 
 
-tmp.subtype.merge <- dplyr::full_join(tmp.subtype.2021,tmp.subtype.2022,
+tmp.subtype.merge <- dplyr::full_join(tmp.subtype.2021,tmp.subtype.synapse.2022,
                                       by=c('aliquot_barcode'='aliquot_barcode'),
-                                      suffix = c('.2021','.2022'))
+                                      suffix = c('',''))
 
 
-rm(tmp.subtype.2021, tmp.subtype.2022)
+rm(tmp.subtype.2021, tmp.subtype.synapse.2022)
+
+
+
+
+### ssGSEA [ssgsea.GBM.classification] 2022 ----
+
+# all data have been ran in a single batch
+# see: analysis_ssGSEA.R
+
+tmp <- read.table("output/tables/ssgsea.GBM.classification_p_result_tmp.gct.txt") |> 
+  tibble::rownames_to_column('aliquot_barcode') |> 
+  dplyr::filter(grepl("^(GLSS|TCGA)", aliquot_barcode)) |> 
+  dplyr::mutate(aliquot_barcode = gsub(".","-",aliquot_barcode, fixed=T)) |> 
+  dplyr::rename(ssGSEA.2022.Proneural.enrichment_score = Proneural) |> 
+  dplyr::rename(ssGSEA.2022.Classical.enrichment_score  = Classical ) |> 
+  dplyr::rename(ssGSEA.2022.Mesenchymal.enrichment_score = Mesenchymal) |> 
+  dplyr::rename(ssGSEA.2022.Proneural_pval = Proneural_pval) |> 
+  dplyr::rename(ssGSEA.2022.Classical_pval = Classical_pval) |> 
+  dplyr::rename(ssGSEA.2022.Mesenchymal_pval = Mesenchymal_pval)
+stopifnot(tmp$aliquot_barcode %in% tmp.subtype.merge$aliquot_barcode) # ensure match
+
+
+
+tmp.call <- tmp |> 
+  tidyr::pivot_longer(c(ssGSEA.2022.Proneural.enrichment_score, ssGSEA.2022.Classical.enrichment_score, ssGSEA.2022.Mesenchymal.enrichment_score),
+                      values_to = "enrichment_score", names_to = 'subtype.es') |> 
+  dplyr::mutate(subtype.es = gsub('ssGSEA.2022.','',subtype.es)) |>  
+  dplyr::mutate(subtype.es = gsub('.enrichment_score','',subtype.es)) |> 
+  tidyr::pivot_longer(c(ssGSEA.2022.Proneural_pval, ssGSEA.2022.Classical_pval, ssGSEA.2022.Mesenchymal_pval),
+                      values_to = "pval", names_to = 'subtype.pval') |> 
+  dplyr::mutate(subtype.pval = gsub('ssGSEA.2022.','',subtype.pval)) |> 
+  dplyr::mutate(subtype.pval = gsub('_pval','',subtype.pval)) |> 
+  dplyr::filter(subtype.es == subtype.pval) |> 
+  dplyr::rename(ssGSEA.2022.subtype = subtype.es, sutype.pval = NULL ) |> 
+  dplyr::group_by(aliquot_barcode) |> 
+  dplyr::filter(pval == min(pval)) |> 
+  dplyr::ungroup() |> 
+  dplyr::select(c('aliquot_barcode','ssGSEA.2022.subtype')) |> 
+  dplyr::group_by(aliquot_barcode) |> 
+  dplyr::summarise(ssGSEA.2022.subtype = as.factor(paste(ssGSEA.2022.subtype, collapse="|"))) |> 
+  dplyr::ungroup()
+stopifnot(tmp.call$aliquot_barcode %in% tmp$aliquot_barcode) # ensure match
+stopifnot(tmp$aliquot_barcode %in% tmp.call$aliquot_barcode) # ensure match
+
+
+
+tmp.subtype.merge <- tmp.subtype.merge |> 
+  dplyr::left_join(tmp.call , by=c('aliquot_barcode'='aliquot_barcode'), suffix=c('','')) 
+
+tmp.subtype.merge <- tmp.subtype.merge |> 
+  dplyr::left_join(tmp , by=c('aliquot_barcode'='aliquot_barcode'), suffix=c('','')) 
+
+
+rm(tmp.call, tmp)
+
+
 
 
 
@@ -204,18 +285,18 @@ rm(tmp.subtype.2021, tmp.subtype.2022)
 #'@details [v] check if all 2021 labels are in the 2022 data
 stopifnot(
   (tmp.subtype.merge |> 
-    dplyr::filter(is.na(GBM.transcriptional.subtype.Synapse.2022)) |> 
+    dplyr::filter(is.na(ssGSEA.Synapse.subtype.2022)) |> 
     nrow()) == 0)
 
-#'@details [-] check actual discordant labels
-# tmp.subtype.merge |> 
-#   dplyr::filter(!is.na(GBM.transcriptional.subtype.Synapse.2021)) |> 
-#   dplyr::mutate(equal.prob = grepl("|",GBM.transcriptional.subtype.Synapse.2022,fixed=T)) |> 
-#   dplyr::mutate(mismatch = stringr::str_detect(as.character(GBM.transcriptional.subtype.Synapse.2022), as.character(GBM.transcriptional.subtype.Synapse.2021)) == F) |> 
-#   dplyr::mutate(discrepancy.type = dplyr::case_when(mismatch ~ "discordant call", equal.prob ~ "uncertain call", T ~ "" )) |> 
-#   dplyr::filter(discrepancy.type != "") |>
-#   dplyr::mutate(label.switch = paste0(GBM.transcriptional.subtype.Synapse.2021 , " (2021) -to-> ", GBM.transcriptional.subtype.Synapse.2022, " (2022)")) |> 
-#   dplyr::select(aliquot_barcode, discrepancy.type, label.switch)
+#' #'@details [-] check actual discordant labels
+#' tmp.subtype.merge |>
+#'   dplyr::filter(!is.na(GBM.transcriptional.subtype.Synapse.2021)) |>
+#'   dplyr::mutate(equal.prob = grepl("|",ssGSEA.Synapse.subtype.2022,fixed=T)) |>
+#'   dplyr::mutate(mismatch = stringr::str_detect(as.character(ssGSEA.Synapse.subtype.2022), as.character(GBM.transcriptional.subtype.Synapse.2021)) == F) |>
+#'   dplyr::mutate(discrepancy.type = dplyr::case_when(mismatch ~ "discordant call", equal.prob ~ "uncertain call", T ~ "" )) |>
+#'   dplyr::filter(discrepancy.type != "") |>
+#'   dplyr::mutate(label.switch = paste0(GBM.transcriptional.subtype.Synapse.2021 , " (2021) -to-> ", ssGSEA.Synapse.subtype.2022, " (2022)")) |>
+#'   dplyr::select(aliquot_barcode, discrepancy.type, label.switch)
 warning("considerable discrepancies between 2021 & 2022 subtype calling")
 
 
