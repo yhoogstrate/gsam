@@ -3,10 +3,8 @@
 # load libs ----
 
 
-library(tidyverse)
+library(e1071)
 
-# library(tidyverse)
-# #library(NMF) - use one from wang
 # #install.packages('NMF')
 # library(scales)
 # 
@@ -39,10 +37,13 @@ source('scripts/load_G-SAM_expression_data.R')
 source('scripts/load_GLASS_data.R')
 
 
+source('scripts/load_results.out.R')
+
+
 source('data/wang/msig.library.12.R')  # no license w/ code provided, can't include it in source tree
 
-source('scripts/R/subtype_genes.R')
-source('scripts/R/wang_glioma_intrinsic_genes.R')
+#source('scripts/R/subtype_genes.R')
+#source('scripts/R/wang_glioma_intrinsic_genes.R')
 
 
 #'@todo move to vis_GITS_space.R
@@ -167,14 +168,7 @@ tmp.out <- tmp.out |>
 
 
 
-
-#'@todo compare error w/ purirty?
-
-
-
 ## PCA:1-2 over NMF:1,2,4 ----
-
-
 
 tmp.pca <- tmp.out %>%
   dplyr::select(c("sid", "NMF:7k:1", "NMF:7k:2", "NMF:7k:4")) %>% # 1 = CL, 2 = PN, 4 = MES
@@ -392,7 +386,32 @@ tmp.out <- tmp.out |>
   dplyr::left_join(tmp.fit.df, by=c('sid'='sid'),suffix=c('',''))
 
 
-rm(tmp.model, tmp.fit, tmp.fit.df)
+rm(tmp.fit, tmp.fit.df)
+
+
+
+## define contours for SVM ----
+
+resolution <- 250 # 1000 x 1000 data points
+
+off_x <- (max(-tmp.out$`NMF:150:PC1`) - min(-tmp.out$`NMF:150:PC1`)) * 0.025
+off_y <- (max(-tmp.out$`NMF:150:PC2`) - min(-tmp.out$`NMF:150:PC2`)) * 0.025
+
+
+range_pc1 = seq(from = min(-tmp.out$`NMF:150:PC1`) - off_x, to = max(-tmp.out$`NMF:150:PC1`) + off_x, length.out = resolution)
+range_pc2 = seq(from = min(-tmp.out$`NMF:150:PC2`) - off_y, to = max(-tmp.out$`NMF:150:PC2`) + off_y, length.out = resolution)
+
+range_df = expand.grid('NMF:150:PC1' = range_pc1, 'NMF:150:PC2' = range_pc2)
+gits.contours <- data.frame(class = predict(tmp.model , newdata = range_df)) |> 
+  cbind(range_df) |> 
+  dplyr::select(c('class', 'NMF:150:PC1', 'NMF:150:PC2')) |> 
+  dplyr::mutate(type="Contour")
+
+rm(tmp.model, resolution, off_x, off_y, range_pc1, range_pc2, range_df)
+
+
+#saveRDS(gits.contours, file="cache/analysis_GITS_space_GITS_contours.Rds")
+
 
 
 ## eucl dist for pairs ----
