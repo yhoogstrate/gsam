@@ -205,6 +205,77 @@ rm(tmp.2)
 
 
 
+# TCGA NMF full set ---
+
+
+stopifnot(results.out |>
+  dplyr::filter(!is.na(TCGA.subtype.marker)) |> 
+  nrow() == 3*50)
+
+
+
+if(!exists('gencode.31')) {
+  source('scripts/R/gsam_rna-seq_expression.R')
+}
+
+
+
+if(!exists('glass.gencode.v19')) {
+  source('scripts/load_GLASS_data.R')
+}
+
+
+tmp <- openxlsx::read.xlsx('data/gsam/data/wang/1-s2.0-S1535610817302532-mmc2.xlsx','Glioma intrinsic genes',startRow = 2) |> 
+  dplyr::mutate(ID=NULL) |> 
+  dplyr::mutate(`Subtyping_Signature_Gene?` = NULL) |> 
+  dplyr::rename(`wang.glioma.intrinsic.gene` = `U133A_Gene?`) |> 
+  dplyr::filter(wang.glioma.intrinsic.gene == "YES") |> 
+  dplyr::mutate(wang.glioma.intrinsic.gene = wang.glioma.intrinsic.gene == "YES") |> 
+  dplyr::left_join(
+    gencode.31 |> 
+      dplyr::mutate(ENS.31 = gsub("\\..+$","",ENSG)) |> 
+      dplyr::select(ENS.31, GENE) |> 
+      dplyr::group_by(GENE) |> 
+      dplyr::filter(ENS.31 == min(ENS.31)) |> 
+      dplyr::ungroup(),
+      by=c('Gene_Symbol' = 'GENE')
+  ) |>
+  dplyr::left_join(
+    glass.gencode.v19 |> 
+      dplyr::select(gene_symbol, gene_id) |> 
+      dplyr::distinct() |> 
+      dplyr::rename(ENS.19 = gene_id) |> 
+      dplyr::group_by(gene_symbol) |> 
+      dplyr::filter(ENS.19 == min(ENS.19)) |> 
+      dplyr::ungroup()
+      ,
+    by=c('Gene_Symbol' = 'gene_symbol')
+  )  |> 
+  dplyr::mutate(ENS = ifelse(is.na(ENS.31), ENS.19, ENS.31)) |> 
+  dplyr::mutate(ENS.31 = NULL) |> 
+  dplyr::mutate(ENS.19 = NULL) |> 
+  dplyr::mutate(Gene_Symbol = NULL)
+stopifnot(nrow(tmp) == 7425)
+
+
+
+results.out <- results.out |> 
+  dplyr::left_join(tmp, by=c('ensembl_id'='ENS'), suffix=c('','') )
+
+
+rm(tmp)
+
+
+
+
+results.out |> 
+  dplyr::filter(!is.na(wang.glioma.intrinsic.gene)) |> 
+  nrow()
+
+# 7321/7425 matching gene annotations
+
+
+
 
 
 
