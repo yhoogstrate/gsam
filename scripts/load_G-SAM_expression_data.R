@@ -4,7 +4,7 @@
 
 
 if(!exists("gsam.rna.metadata")) {
-  source('scripts/R/gsam_metadata.R')
+  source('scripts/load_G-SAM_metadata.R')
 }
 
 if(!exists("gsam.viii.rnaseq")) {
