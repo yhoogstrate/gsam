@@ -30,8 +30,12 @@ subtype_colors_ext['Proneural|Classical'] <- mixcol(subtype_colors_ext['Proneura
 #subtype_colors_ext['Classical|Proneural'] <- mixcol(subtype_colors_ext['Proneural'] , subtype_colors_ext['Classical'] )
 
 subtype_colors_nmf2022 <- c('NMF meta-feature 1'='#6ba6e5',# blue
-                        'NMF meta-feature 3'='#eab509',#mustard
-                        'NMF meta-feature 2'='#ff5f68')#red/pink
+                            'NMF meta-feature 3'='#eab509',#mustard
+                            'NMF meta-feature 2'='#ff5f68')#red/pink
+
+subtype_colors_ssGSEA <- c('ssGSEA CL score'='#6ba6e5',# blue
+                            'ssGSEA MES score'='#eab509',#mustard
+                            'ssGSEA PN score'='#ff5f68')#red/pink
 
 
 
