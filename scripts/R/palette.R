@@ -3,11 +3,11 @@
 
 # useful link: https://emilhvitfeldt.github.io/r-color-palettes/discrete.html
 
-mixcol <- function(c1, c2) {
+mixcol <- function(c1, c2, ratio=0.5) {
   m1 <- col2rgb(c1)
   m2 <- col2rgb(c2)
   
-  m <- (m1 + m2) / 2
+  m <- (ratio * m2) + ((1 - ratio) * m1)
   
   return(rgb(m[1,],m[2,],m[3,], maxColorValue = 255))
 }
@@ -20,6 +20,9 @@ subtype_colors_ext <- subtype_colors
 subtype_colors_ext['Proneural|Classical'] <- mixcol(subtype_colors_ext['Proneural'] , subtype_colors_ext['Classical'] )
 subtype_colors_ext['Classical|Proneural'] <- mixcol(subtype_colors_ext['Proneural'] , subtype_colors_ext['Classical'] )
 
+subtype_colors_nmf2002 <- c('NMF H-matrix dim 1'='#6ba6e5',# blue
+                        'NMF H-matrix dim 3'='#eab509',#mustard
+                        'NMF H-matrix dim 2'='#ff5f68')#red/pink
 
 
 

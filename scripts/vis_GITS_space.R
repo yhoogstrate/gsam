@@ -146,23 +146,197 @@ ggplot(plt.expanded, aes(x=-`NMF:150:PC1`,y=-`NMF:150:PC2`, group=pid, col =`GIT
   theme(axis.title = element_text(face = "bold",size = rel(1))) +
   theme(legend.position = 'bottom') +
   theme(text = element_text(family = 'Arial'))
-  
 
-
-
-
-
-
-
-
+rm(plt, plt.expanded)
 
 
 
 ## fig s1a ----
 
+
+
+plt <- rbind(
+  gsam.rna.metadata |>
+    
+    dplyr::filter(blacklist.pca == F) %>%
+    dplyr::filter(pat.with.IDH == F) %>%
+    dplyr::filter(
+      sid %in% c('BAI2', 'CAO1-replicate', 'FAB2', 'GAS2-replicate') == F
+    ) %>%
+    dplyr::filter(tumour.percentage.dna >= 15) |>
+    
+    dplyr::mutate(is.primary = resection == "r1") |> 
+    dplyr::select(
+      `sid`,
+      `NMF:150:1`,
+      `NMF:150:2`,
+      `NMF:150:3`,
+      `NMF:150:membership`,
+      `GITS.150.svm.2022.subtype`
+    )
+  ,
+  glass.gbm.rnaseq.metadata.all.samples |>
+    dplyr::mutate(is.primary = resection == "TP") |> 
+    dplyr::select(
+      `aliquot_barcode`,
+      `NMF:150:1`,
+      `NMF:150:2`,
+      `NMF:150:3`,
+      `NMF:150:membership`,
+      `GITS.150.svm.2022.subtype`
+    ) |>
+    dplyr::rename(sid = aliquot_barcode)) |> 
+  
+  dplyr::mutate(max.1 = pmax(`NMF:150:2`, `NMF:150:3`) )  |> 
+  dplyr::mutate(max.2 = pmax(`NMF:150:1`, `NMF:150:3`) ) |> 
+  dplyr::mutate(max.3 = pmax(`NMF:150:1`, `NMF:150:2`) ) |> 
+  
+  dplyr::mutate(diff.1 = ifelse(`NMF:150:1` > max.1, `NMF:150:1` , 0) ) |>
+  dplyr::mutate(diff.2 = ifelse(`NMF:150:2` > max.2, `NMF:150:2`, 0) ) |>
+  dplyr::mutate(diff.3 = ifelse(`NMF:150:3` > max.3, `NMF:150:3` , 0) ) |>
+  
+  dplyr::mutate(order =  order(order(-diff.1, -diff.2, -diff.3))) |>
+  dplyr::mutate(max.1 = NULL, max.2 = NULL, max.3 = NULL, diff.1 = NULL, diff.2 = NULL, diff.3 = NULL) |>
+  dplyr::arrange(order) |> 
+  
+  tidyr::pivot_longer(cols=c(`NMF:150:1`, `NMF:150:2`, `NMF:150:3`),names_to = 'NMF H-matrix meta-feature') |> 
+  dplyr::mutate(`NMF H-matrix meta-feature` = gsub("NMF:150:","NMF meta-feature ",`NMF H-matrix meta-feature`)) 
+
+
+
+plt.line.based <- rbind(
+  plt |>  dplyr::mutate(value=0),
+  plt
+)
+
+
+
+ggplot(plt.line.based, aes(x=reorder(sid, order), xend=reorder(sid, order), y =value, yend = 0,
+                           #fill=`GITS.150.svm.2022.subtype`,
+                           col=`GITS.150.svm.2022.subtype`
+                           )) +
+  #geom_point()  +
+  #geom_segment() +
+  #geom_bar(stat="identity",lwd=0.2) +
+  geom_line(aes(group=sid),lwd=0.425) +
+  facet_grid(rows = vars(`NMF H-matrix meta-feature`)) +
+  scale_color_manual(values = mixcol(subtype_colors, c("black","black","black"),0.15) ) + 
+  labs(col = 'ssGSEA subtype', y = "NMF H-matrix values", x = NULL) + 
+  theme_bw() +
+  theme(
+    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
+    strip.background = element_rect(colour="white",fill="white"),
+    axis.title = element_text(face = "bold",size = rel(1)),
+    axis.text.x = element_blank(),
+    legend.position = 'bottom',
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    axis.ticks.x=element_blank(),
+    panel.border = element_rect(colour = "black", fill=NA, size=1.25),
+    strip.text = element_text(size = 8) # facet size
+  ) 
+
+ggsave("output/figures/2022_figure_S1A.pdf", width=8.3 / 2,height=8.3/4, scale=2)
+
+
+
+
+
 ## fig s1b ----
 
+
+tmp.pca <- readRDS('tmp/analysis_GITS_space_GITS_PCA_150.Rds')
+
+
+plt <- data.frame(PC = colnames(tmp.pca$x),
+                  var_explained=(tmp.pca$sdev)^2/sum((tmp.pca$sdev)^2)) %>%
+  dplyr::mutate(label = paste0(round(var_explained * 100,1),"%"))
+
+ggplot(plt, aes(x=PC,y=var_explained, group=1, label=label)) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
+  geom_col(fill="gray60", col="black", lwd=0.4) +
+  geom_line()+
+  geom_label(y = 0.35, size=4) +
+  geom_point(size=4)+
+  labs(title="Scree plot: PCA on NMF H-matrix", x= NULL, y="Variance by PC explained") +
+  theme_bw()  +
+  theme(
+    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
+    strip.background = element_rect(colour="white",fill="white"),
+    axis.title = element_text(face = "bold",size = rel(1)),
+    #axis.text.x = element_blank(),
+    legend.position = 'bottom',
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    axis.ticks.x = element_blank(),
+    panel.border = element_rect(colour = "black", fill=NA, size=1.25)
+  ) 
+
+ggsave("output/figures/2022_figure_S1B.pdf", width=8.3 / 4,height=8.3/4, scale=2)
+
+
+rm(tmp.pca)
+
+
 ## fig s1c ----
+
+
+tmp.pca <- readRDS('tmp/analysis_GITS_space_GITS_PCA_150.Rds')
+
+
+# PC being a prcomp object
+data <- data.frame(obsnames=row.names(tmp.pca$x), tmp.pca$x, varnames='NMF meta-feature 1')
+data <- data.frame(obsnames=row.names(tmp.pca$x), tmp.pca$x)
+datapc <- data.frame(varnames=rownames(tmp.pca$rotation), tmp.pca$rotation) %>%
+  dplyr::mutate(varnames = gsub('NMF:150:','NMF meta-feature ', varnames))
+  
+
+x = "PC1"
+y = "PC2"
+mult <- min((max(data[, y]) - min(data[, y]) / (max(datapc[, y]) - min(datapc[, y]))),
+            (max(data[, x]) - min(data[, x]) / (max(datapc[, x]) - min(datapc[, x]))))
+datapc <- transform(datapc,
+                    v1 = .7 * mult * (get(x)),
+                    v2 = .7 * mult * (get(y)))
+
+
+ggplot(data, aes(x=PC1, y=PC2, col=varnames)) +
+  geom_point(size=3,  col='black', fill='gray60', pch=21, alpha=0.85) +
+  coord_equal() +
+  geom_segment(data=datapc, aes(x=0, y=0, xend=v1, yend=v2), arrow=arrow(length=unit(0.4,"cm")), lwd=1.75, alpha=0.9) +
+  ggrepel::geom_label_repel(data=datapc, aes(x=v1, y=v2, label=varnames), size = 3,
+                            vjust=0.6, show.legend=F, col="black") +
+  labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", fill = "Sub-type (GlioVis)") +
+  scale_color_manual(values = mixcol(subtype_colors_nmfm,rep("black",length(subtype_colors_nmfm)),0.15),
+                     labels = c('NMF meta-feature 2'='CL',
+                                                              'NMF meta-feature 1'='MES',
+                                                              'NMF meta-feature 3'='PN')) +
+  labs(col = "Associated with") +
+  theme_bw()  +
+  theme(
+    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
+    #strip.background = element_rect(colour="white",fill="white"),
+    axis.title = element_text(face = "bold",size = rel(1)),
+    #axis.text.x = element_blank(),
+    legend.position = 'bottom',
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    axis.ticks.x = element_blank(),
+    panel.border = element_rect(colour = "black", fill=NA, size=1.25)
+  ) 
+
+ggsave("output/figures/2022_figure_S1C.pdf", width=8.3 / 4,height=8.3/4, scale=2)
+
+
+
+
+
 
 ## fig s1d ----
 
@@ -183,20 +357,6 @@ ggplot(plt.expanded, aes(x=-`NMF:150:PC1`,y=-`NMF:150:PC2`, group=pid, col =`GIT
 
 #'@todo error.m x purity
 
-
-
-plt <- data.frame(PC= paste0("PC",1:3),
-                  var_explained=(tmp.pca$sdev)^2/sum((tmp.pca$sdev)^2)) %>%
-  dplyr::mutate(label = paste0(round(var_explained * 100,1),"%"))
-
-ggplot(plt, aes(x=PC,y=var_explained, group=1, label=label))+
-  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
-  geom_col(fill="gray60", col="black", lwd=0.4) +
-  geom_line()+
-  geom_label(y = 0.35, size=4) +
-  geom_point(size=4)+
-  labs(title="Scree plot: PCA on NMF (for p=3)", x= NULL, y="Variance in NMF V-matrix explained") +
-  theme_bw()
 
 
 
@@ -509,68 +669,6 @@ ggplot(tmp.out, aes(x=`NMF:7k:3`, y=`NMF:150:1`, col=ds)) +
 
 
 ### some plots ----
-
-# 
-# plt <- data.frame(PC= paste0("PC",1:3),
-#                   var_explained=(tmp.pca$sdev)^2/sum((tmp.pca$sdev)^2)) %>%
-#   dplyr::mutate(label = paste0(round(var_explained * 100,1),"%"))
-# 
-# ggplot(plt, aes(x=PC,y=var_explained, group=1, label=label))+
-#   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
-#   geom_col(fill="gray60", col="black", lwd=0.4) +
-#   geom_line()+
-#   geom_label(y = 0.35, size=4) + 
-#   geom_point(size=4)+
-#   labs(title="Scree plot: PCA on NMF (for p=3)", x= NULL, y="Variance in NMF V-matrix explained") + 
-#   theme_bw()
-
-
-
-p1 = ggplot(tmp.out , aes(x=`NMF:7k:PC1`, y=`NMF:7k:PC2`, col=`NMF:7k:membership`)) +
-  geom_point() +
-  theme_bw()
-
-p2 = ggplot(tmp.out , aes(x=`NMF:7k:PC1`, y=`NMF:7k:PC2`, col=ds)) +
-  geom_point() +
-  theme_bw()
-
-p1+p2
-
-
-PCbiplot <- function(PC, x="PC1", y="PC2") {
-  # PC being a prcomp object
-  data <- data.frame(obsnames=row.names(PC$x), PC$x, varnames='NMF meta-feature 1')
-  datapc <- data.frame(varnames=rownames(PC$rotation), PC$rotation) %>%
-    dplyr::mutate(varnames = gsub('NMF:123456.','NMF meta-feature ', varnames))
-  
-  #print(head(datapc$varnames))
-  #print(head(datapc))
-  
-  mult <- min(
-    (max(data[,y]) - min(data[,y])/(max(datapc[,y])-min(datapc[,y]))),
-    (max(data[,x]) - min(data[,x])/(max(datapc[,x])-min(datapc[,x])))
-  )
-  datapc <- transform(datapc,
-                      v1 = .7 * mult * (get(x)),
-                      v2 = .7 * mult * (get(y))
-  )
-  
-  ggplot(data, aes(x=PC1, y=PC2, col=varnames)) +
-    geom_point(size=2.5,  col='black', fill='gray', pch=21) +
-    coord_equal() +
-    geom_segment(data=datapc, aes(x=0, y=0, xend=v1, yend=v2), arrow=arrow(length=unit(0.4,"cm")), lwd=1.3, alpha=0.7) +
-    geom_label_repel(data=datapc, aes(x=v1, y=v2, label=varnames), size = 3.5, vjust=1, show.legend=F) +
-    youri_gg_theme +
-    labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", fill = "Sub-type (GlioVis)") +
-    scale_color_manual(values = subtype_colors_nmfm, labels = c('NMF meta-feature 2'='Classical',
-                                                                'NMF meta-feature 1'='Mesenchymal',
-                                                                'NMF meta-feature 3'='Proneural')) +
-    labs(col = "Associated sub-type")
-  #+ theme(legend.position = "none")
-}
-
-
-PCbiplot(p)
 
 
 

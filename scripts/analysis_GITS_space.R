@@ -15,7 +15,6 @@ library(e1071)
 # library(patchwork)
 # library(circlize)
 # library(ggrepel)
-# library(e1071)
 # 
 # library(splancs) # https://stackoverflow.com/questions/17571602/r-filter-coordinates
 # library(combinat)
@@ -314,6 +313,11 @@ tmp.out <- tmp.out |>
       tibble::rownames_to_column('sid'),
     by=c('sid'='sid'),suffix=c('','')
   ) 
+
+
+# saveRDS(tmp.pca, file="tmp/analysis_GITS_space_GITS_PCA_150.Rds")
+rm(tmp.pca)
+
 
 
 ## Re-classification within GITs space ----
