@@ -289,9 +289,10 @@ tmp.pca <- readRDS('tmp/analysis_GITS_space_GITS_PCA_150.Rds')
 
 
 # PC being a prcomp object
-data <- data.frame(obsnames=row.names(tmp.pca$x), tmp.pca$x, varnames='NMF meta-feature 1')
-data <- data.frame(obsnames=row.names(tmp.pca$x), tmp.pca$x)
-datapc <- data.frame(varnames=rownames(tmp.pca$rotation), tmp.pca$rotation) %>%
+data <- data.frame(obsnames=row.names(tmp.pca$x), tmp.pca$x) |> 
+  dplyr::mutate(PC1 = -PC1, PC2 = -PC2) # same orientation as first rivision
+datapc <- data.frame(varnames=rownames(tmp.pca$rotation), tmp.pca$rotation) |> 
+  dplyr::mutate(PC1 = -PC1, PC2 = -PC2) |>  # same orientation as first rivision
   dplyr::mutate(varnames = gsub('NMF:150:','NMF meta-feature ', varnames))
   
 
@@ -310,12 +311,12 @@ ggplot(data, aes(x=PC1, y=PC2, col=varnames)) +
   geom_segment(data=datapc, aes(x=0, y=0, xend=v1, yend=v2), arrow=arrow(length=unit(0.4,"cm")), lwd=1.75, alpha=0.9) +
   ggrepel::geom_label_repel(data=datapc, aes(x=v1, y=v2, label=varnames), size = 3,
                             vjust=0.6, show.legend=F, col="black") +
-  labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", fill = "Sub-type (GlioVis)") +
-  scale_color_manual(values = mixcol(subtype_colors_nmfm,rep("black",length(subtype_colors_nmfm)),0.15),
-                     labels = c('NMF meta-feature 2'='CL',
-                                                              'NMF meta-feature 1'='MES',
-                                                              'NMF meta-feature 3'='PN')) +
   labs(col = "Associated with") +
+  labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", fill = "Sub-type (GlioVis)") +
+  scale_color_manual(values = mixcol(subtype_colors_nmf2022, rep("black",length(subtype_colors_nmf2022)),0.15),
+                     labels = c('NMF meta-feature 2'='PN',
+                                                              'NMF meta-feature 1'='CL',
+                                                              'NMF meta-feature 3'='MES')) +
   theme_bw()  +
   theme(
     # text = element_text(family = 'Arial'), seems to require a postscript equivalent
@@ -340,9 +341,264 @@ ggsave("output/figures/2022_figure_S1C.pdf", width=8.3 / 4,height=8.3/4, scale=2
 
 ## fig s1d ----
 
+
+
+
+plt <- rbind(
+  gsam.rna.metadata |>
+    
+    dplyr::filter(blacklist.pca == F) %>%
+    dplyr::filter(pat.with.IDH == F) %>%
+    dplyr::filter(
+      sid %in% c('BAI2', 'CAO1-replicate', 'FAB2', 'GAS2-replicate') == F
+    ) %>%
+    dplyr::filter(tumour.percentage.dna >= 15) |>
+    
+    dplyr::mutate(is.primary = resection == "r1") |> 
+    dplyr::select(
+      sid,
+      pid,
+      is.primary,
+      `NMF:150:PC1`,
+      `NMF:150:PC2`,
+      ssGSEA.2022.subtype,
+      GITS.150.svm.2022.subtype
+    ) |> 
+    dplyr::mutate(dataset = "G-SAM")
+  ,
+  glass.gbm.rnaseq.metadata.all.samples |>
+    dplyr::mutate(is.primary = resection == "TP") |> 
+    dplyr::select(
+      aliquot_barcode,
+      case_barcode,
+      is.primary,
+      `NMF:150:PC1`,
+      `NMF:150:PC2`,
+      ssGSEA.2022.subtype,
+      GITS.150.svm.2022.subtype
+    ) |>
+    dplyr::rename(sid = aliquot_barcode) |>
+    dplyr::rename(pid = case_barcode) |> 
+    dplyr::mutate(dataset = "GLASS")
+)
+
+
+
+
+ggplot(plt, aes(x=-`NMF:150:PC1`, y=-`NMF:150:PC2`, fill=ssGSEA.2022.subtype)) +
+  geom_point(size=3,  col='black', pch=21, alpha=0.85) +
+  coord_equal() +
+  labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", fill = "Subtype (ssGSEA)") +
+  scale_fill_manual(values = mixcol(subtype_colors_ext,rep("black",length(subtype_colors_ext)),0.15),
+                    label=c('Mesenchymal'='MES','Proneural'='PN','Classical'='CL','Proneural|Classical'='PN|CL')) +
+  theme_bw()  +
+  theme(
+    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
+    #strip.background = element_rect(colour="white",fill="white"),
+    axis.title = element_text(face = "bold",size = rel(1)),
+    #axis.text.x = element_blank(),
+    legend.position = 'bottom',
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    axis.ticks.x = element_blank(),
+    panel.border = element_rect(colour = "black", fill=NA, size=1.25)
+  ) +
+  guides(fill=guide_legend(ncol=2))
+
+ggsave("output/figures/2022_figure_S1D.pdf", width=8.3 / 4,height=8.3/4, scale=2)
+
+
+
+
+
+
+
 ## fig s1e ----
 
+
+
+plt <- rbind(
+  gsam.rna.metadata |>
+    
+    dplyr::filter(blacklist.pca == F) %>%
+    dplyr::filter(pat.with.IDH == F) %>%
+    dplyr::filter(
+      sid %in% c('BAI2', 'CAO1-replicate', 'FAB2', 'GAS2-replicate') == F
+    ) %>%
+    dplyr::filter(tumour.percentage.dna >= 15) |>
+    
+    dplyr::mutate(is.primary = resection == "r1") |> 
+    dplyr::select(
+      sid,
+      pid,
+      is.primary,
+      `NMF:150:PC1`,
+      `NMF:150:PC2`,
+      ssGSEA.2022.subtype,
+      GITS.150.svm.2022.subtype
+    ) |> 
+    dplyr::mutate(dataset = "G-SAM")
+  ,
+  glass.gbm.rnaseq.metadata.all.samples |>
+    dplyr::mutate(is.primary = resection == "TP") |> 
+    dplyr::select(
+      aliquot_barcode,
+      case_barcode,
+      is.primary,
+      `NMF:150:PC1`,
+      `NMF:150:PC2`,
+      ssGSEA.2022.subtype,
+      GITS.150.svm.2022.subtype
+    ) |>
+    dplyr::rename(sid = aliquot_barcode) |>
+    dplyr::rename(pid = case_barcode) |> 
+    dplyr::mutate(dataset = "GLASS")
+)
+
+
+plt.contours <- readRDS("cache/analysis_GITS_space_GITS_contours.Rds") |> 
+  dplyr::mutate(`ssGSEA.2022.subtype` = class, `pid` = NA)
+
+
+ggplot(plt, aes(x=-`NMF:150:PC1`, y=-`NMF:150:PC2`, fill=ssGSEA.2022.subtype, group=pid)) +
+  theme_bw() +
+  geom_raster(data = plt.contours, alpha=0.15) +
+  geom_contour(data=  plt.contours,
+               aes(z=as.numeric(class)), 
+               colour="gray40", 
+               size=0.25, 
+               lty=2,
+               breaks=c(1.5,2.5)) +
+  geom_point(size=3,  col='black', pch=21, alpha=0.7) +
+  coord_equal() +
+  labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", fill = "Subtype (ssGSEA)") +
+  scale_fill_manual(values = mixcol(subtype_colors_ext,rep("black",length(subtype_colors_ext)),0.1),
+                    label=c('Mesenchymal'='MES','Proneural'='PN','Classical'='CL','Proneural|Classical'='PN|CL')) +
+  theme_bw()  +
+  theme(
+    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
+    #strip.background = element_rect(colour="white",fill="white"),
+    axis.title = element_text(face = "bold",size = rel(1)),
+    #axis.text.x = element_blank(),
+    legend.position = 'bottom',
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    axis.ticks.x = element_blank(),
+    panel.border = element_rect(colour = "black", fill=NA, size=1.25)
+  ) +
+  guides(fill=guide_legend(ncol=2))
+
+ggsave("output/figures/2022_figure_S1E.pdf", width=8.3 / 4,height=8.3/4, scale=2)
+
+
+
+
+
+
 ## fig s1f ----
+
+
+
+
+plt <- rbind(
+  gsam.rna.metadata |>
+    
+    dplyr::filter(blacklist.pca == F) %>%
+    dplyr::filter(pat.with.IDH == F) %>%
+    dplyr::filter(
+      sid %in% c('BAI2', 'CAO1-replicate', 'FAB2', 'GAS2-replicate') == F
+    ) %>%
+    dplyr::filter(tumour.percentage.dna >= 15) |>
+    
+    dplyr::mutate(is.primary = resection == "r1") |> 
+    dplyr::select(
+      sid,
+      pid,
+      is.primary,
+      `NMF:150:PC1`,
+      `NMF:150:PC2`,
+      ssGSEA.2022.subtype,
+      GITS.150.svm.2022.subtype
+    ) |> 
+    dplyr::mutate(dataset = "G-SAM")
+  ,
+  glass.gbm.rnaseq.metadata.all.samples |>
+    dplyr::mutate(is.primary = resection == "TP") |> 
+    dplyr::select(
+      aliquot_barcode,
+      case_barcode,
+      is.primary,
+      `NMF:150:PC1`,
+      `NMF:150:PC2`,
+      ssGSEA.2022.subtype,
+      GITS.150.svm.2022.subtype
+    ) |>
+    dplyr::rename(sid = aliquot_barcode) |>
+    dplyr::rename(pid = case_barcode) |> 
+    dplyr::mutate(dataset = "GLASS")
+) |> 
+  dplyr::mutate(
+    misclass = case_when(
+      grepl("|",ssGSEA.2022.subtype,fixed=T) ~ "?",
+      ssGSEA.2022.subtype != GITS.150.svm.2022.subtype ~ ".",
+      T ~ " "
+    )
+  ) |> 
+  dplyr::filter(misclass != " ")
+
+
+plt.contours <- readRDS("cache/analysis_GITS_space_GITS_contours.Rds") |> 
+  dplyr::mutate(`ssGSEA.2022.subtype` = class, `pid` = NA, misclass=".")
+
+
+ggplot(plt, aes(x=-`NMF:150:PC1`, y=-`NMF:150:PC2`, fill=ssGSEA.2022.subtype, group=pid, shape=misclass)) +
+  theme_bw() +
+  geom_raster(data = plt.contours, alpha=0.15) +
+  geom_contour(data=  plt.contours,
+               aes(z=as.numeric(class)), 
+               colour="gray40", 
+               size=0.25, 
+               lty=2,
+               breaks=c(1.5,2.5)) +
+  geom_point(data = plt |>  dplyr::filter(misclass != " ") ,size=3,  col='black', pch=21, alpha=0.7) +
+  geom_point(data = plt |>  dplyr::filter(misclass == "?"),
+             col = 'black',  size=1.2) + # pch=4,
+  geom_point(data = plt |>  dplyr::filter(misclass == "."),
+             col = 'black', size=0.8) + # pch=19, 
+  coord_equal() +
+  labs(x="PC1 on NMF meta-features",
+       y="PC2 on NMF meta-features", 
+       fill = "Subtype (ssGSEA)", 
+       shape="") +
+  scale_fill_manual(values = mixcol(subtype_colors_ext,rep("black",length(subtype_colors_ext)),0.1),
+                    label=c('Mesenchymal'='MES','Proneural'='PN','Classical'='CL','Proneural|Classical'='PN|CL')) +
+  scale_shape_manual(values=c("?"=4,"."=19),
+                     label=c('?'='ssGSEA undecisive','.'='GITS ~ ssGSEA discordant')) +
+  theme_bw()  +
+  theme(
+    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
+    #strip.background = element_rect(colour="white",fill="white"),
+    axis.title = element_text(face = "bold",size = rel(1)),
+    #axis.text.x = element_blank(),
+    legend.position = 'bottom',
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    axis.ticks.x = element_blank(),
+    panel.border = element_rect(colour = "black", fill=NA, size=1.25)
+  ) +
+  guides(fill="none") #guide_legend(ncol=2)
+
+ggsave("output/figures/2022_figure_S1F.pdf", width=8.3 / 4,height=8.3/4, scale=2)
+
+
+
+
 
 ## fig s1g ----
 

@@ -4,13 +4,22 @@
 # useful link: https://emilhvitfeldt.github.io/r-color-palettes/discrete.html
 
 mixcol <- function(c1, c2, ratio=0.5) {
+  n <- names(c1)
+
   m1 <- col2rgb(c1)
   m2 <- col2rgb(c2)
   
   m <- (ratio * m2) + ((1 - ratio) * m1)
-  
-  return(rgb(m[1,],m[2,],m[3,], maxColorValue = 255))
+  r <- rgb(m[1,],m[2,],m[3,], maxColorValue = 255)
+  names(r) <- n
+
+  return(r)
 }
+
+
+mixcol(subtype_colors_nmf2022, rep("black",length(subtype_colors_nmf2022)),0.15)
+
+
 
 subtype_colors <- c('Classical'='#6ba6e5',# blue
                     'Mesenchymal'='#eab509',#mustard
@@ -18,11 +27,11 @@ subtype_colors <- c('Classical'='#6ba6e5',# blue
 
 subtype_colors_ext <- subtype_colors
 subtype_colors_ext['Proneural|Classical'] <- mixcol(subtype_colors_ext['Proneural'] , subtype_colors_ext['Classical'] )
-subtype_colors_ext['Classical|Proneural'] <- mixcol(subtype_colors_ext['Proneural'] , subtype_colors_ext['Classical'] )
+#subtype_colors_ext['Classical|Proneural'] <- mixcol(subtype_colors_ext['Proneural'] , subtype_colors_ext['Classical'] )
 
-subtype_colors_nmf2002 <- c('NMF H-matrix dim 1'='#6ba6e5',# blue
-                        'NMF H-matrix dim 3'='#eab509',#mustard
-                        'NMF H-matrix dim 2'='#ff5f68')#red/pink
+subtype_colors_nmf2022 <- c('NMF meta-feature 1'='#6ba6e5',# blue
+                        'NMF meta-feature 3'='#eab509',#mustard
+                        'NMF meta-feature 2'='#ff5f68')#red/pink
 
 
 
