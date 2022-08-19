@@ -441,7 +441,8 @@ tmp.paired <- tmp.out |>
   dplyr::group_by(pid) |> 
   dplyr::filter(n() > 1) |> 
   dplyr::ungroup() |> 
-  tidyr::pivot_wider(names_from = resection, 
+  tidyr::pivot_wider(id_cols=  pid,
+                     names_from = resection, 
                      values_from = c(sid, `NMF:150:PC1.n`, `NMF:150:PC2.n`, GITS.150.svm.2022.subtype )) |> 
   dplyr::mutate(`NMF:150:PCA:eucledian.dist` =
                   sqrt((`NMF:150:PC1.n_primary` - `NMF:150:PC1.n_recurrence`)^2 +
