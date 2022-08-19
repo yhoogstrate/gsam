@@ -1007,14 +1007,109 @@ ggplot(plt.line.based, aes(x=reorder(sid, order), y=`ssGSEA pval`, group=sid, co
   ) +
   guides(fill=guide_legend(ncol=2))
 
-ggsave("output/figures/2022_figure_S1K.pdf", width=8.3 / 4,height=8.3/4, scale=2)
-
-
-
+ggsave("output/figures/2022_figure_S1L.pdf", width=8.3 / 4,height=8.3/4, scale=2)
 
 
 
 ## fig s2 ----
+
+
+plt <- rbind(
+  gsam.rna.metadata |>
+    
+    dplyr::filter(blacklist.pca == F) %>%
+    dplyr::filter(pat.with.IDH == F) %>%
+    dplyr::filter(
+      sid %in% c('BAI2', 'CAO1-replicate', 'FAB2', 'GAS2-replicate') == F
+    ) %>%
+    dplyr::filter(tumour.percentage.dna >= 15) |>
+    dplyr::mutate(is.primary = ifelse(resection == "r1","primary","recurrent")) |> 
+    
+    dplyr::select(
+      `sid`,
+      `pid`,
+      `is.primary`,
+      
+      `NMF:150:PCA:eucledian.dist`,
+      
+      `GITS.150.svm.2022.subtype`
+    ) |> 
+    dplyr::mutate(dataset = "G-SAM")
+  ,
+  glass.gbm.rnaseq.metadata.all.samples |>
+    dplyr::mutate(is.primary = ifelse(resection == "TP","primary","recurrent")) |> 
+    dplyr::select(
+      `aliquot_barcode`,
+      `case_barcode`,
+      `is.primary`,
+      
+      `NMF:150:PCA:eucledian.dist`,
+      
+      `GITS.150.svm.2022.subtype`
+    ) |>
+    dplyr::rename(sid = aliquot_barcode) |>
+    dplyr::rename(pid = case_barcode) |>
+    dplyr::mutate(dataset = "GLASS")
+) |> 
+  dplyr::group_by(pid) |> # filter for matching pairs
+  dplyr::filter(n() == 2) |> 
+  dplyr::ungroup() |>
+  dplyr::mutate(`GITS.150.svm.2022.subtype` = case_when(
+    `GITS.150.svm.2022.subtype` == "Proneural" ~ "PN",
+    `GITS.150.svm.2022.subtype` == "Classical" ~ "CL",
+    `GITS.150.svm.2022.subtype` == "Mesenchymal" ~ "MES"
+  )) |> 
+  tidyr::pivot_wider(id_cols = pid, 
+                     names_from = c(is.primary),
+                     values_from = c(sid,`GITS.150.svm.2022.subtype`, `NMF:150:PCA:eucledian.dist`, `dataset`)) |> 
+  dplyr::mutate(stable = ifelse(`GITS.150.svm.2022.subtype_primary` == `GITS.150.svm.2022.subtype_recurrent`, "stable","transition"))
+
+stopifnot(plt$`NMF:150:PCA:eucledian.dist_primary` == plt$`NMF:150:PCA:eucledian.dist_recurrent`)
+
+
+plt <- plt |>
+  dplyr::rename(`NMF:150:PCA:eucledian.dist` = `NMF:150:PCA:eucledian.dist_primary`) |> 
+  dplyr::mutate(`NMF:150:PCA:eucledian.dist_recurrent` = NULL) |> 
+  dplyr::rename(`dataset` = `dataset_primary`) |> 
+  dplyr::mutate(`dataset_recurrent` = NULL) |> 
+  dplyr::mutate(`GITS.150.svm.2022.subtype_primary` = paste0("from: ", `GITS.150.svm.2022.subtype_primary`)) |> 
+  dplyr::mutate(`GITS.150.svm.2022.subtype_recurrent` = paste0("to: ", `GITS.150.svm.2022.subtype_recurrent`))
+
+
+#, group = type
+ggplot(plt, aes(x=GITS.150.svm.2022.subtype_recurrent, y=`NMF:150:PCA:eucledian.dist`)) +
+  facet_grid(rows = vars(GITS.150.svm.2022.subtype_primary), space="free_x") +
+  #ylim(0, 4.3) +
+  geom_violin(width=1.05,aes(fill=stable)) +
+  geom_boxplot(width=0.1,outlier.shape = NA,alpha=0.5)  +
+  ggbeeswarm::geom_quasirandom(aes(fill=dataset), pch=21,size=3, cex=4) +
+  labs(x = NULL, y = "Euclidean distance GITS space", fill = "") +
+  scale_fill_manual(values = c('stable'='gray90', 'transition'='white',dataset_colors['G-SAM'], dataset_colors['GLASS'] )) +
+  theme_bw()  +
+  theme(
+    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
+    #strip.background = element_rect(colour="white",fill="white"),
+    axis.title = element_text(face = "bold",size = rel(1)),
+    #axis.text.x = element_blank(),
+    legend.position = 'bottom',
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    axis.ticks.x = element_blank(),
+    #strip.text = element_text(size = 7),
+    panel.border = element_rect(colour = "black", fill=NA, size=1.25)
+  ) +
+  guides(fill=guide_legend(ncol=2))
+
+
+
+ggsave("output/figures/2022_figure_S2.pdf", width=8.3 / 4,height=8.3/4, scale=2)
+
+
+
+
+
 
 ## fig s3a ----
 

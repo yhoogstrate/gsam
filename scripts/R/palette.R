@@ -16,8 +16,8 @@ mixcol <- function(c1, c2, ratio=0.5) {
   return(r)
 }
 
-
-mixcol(subtype_colors_nmf2022, rep("black",length(subtype_colors_nmf2022)),0.15)
+# test func
+#mixcol(subtype_colors_nmf2022, rep("black",length(subtype_colors_nmf2022)),0.15)
 
 
 
