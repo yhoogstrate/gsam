@@ -304,19 +304,23 @@ tmp.pca <- tmp.out %>%
   prcomp()
 
 
+
+# split them as PCA object needs to be stored as well
+tmp <- tmp.pca |> 
+  purrr::pluck('x') |> 
+  as.data.frame() |> 
+  dplyr::rename_with( ~ paste0("NMF:150:", .x)) |> 
+  tibble::rownames_to_column('sid') |> 
+  dplyr::mutate(`NMF:150:PC1.n` = as.numeric(scale(`NMF:150:PC1`))) |> 
+  dplyr::mutate(`NMF:150:PC2.n` = as.numeric(scale(`NMF:150:PC2`)))
+
+
 tmp.out <- tmp.out |> 
-  dplyr::left_join(
-    tmp.pca |> 
-      purrr::pluck('x') |> 
-      as.data.frame() |> 
-      dplyr::rename_with( ~ paste0("NMF:150:", .x)) |> 
-      tibble::rownames_to_column('sid'),
-    by=c('sid'='sid'),suffix=c('','')
-  ) 
+  dplyr::left_join( tmp, by=c('sid'='sid'),suffix=c('','') )
 
 
 # saveRDS(tmp.pca, file="tmp/analysis_GITS_space_GITS_PCA_150.Rds")
-rm(tmp.pca)
+rm(tmp.pca, tmp)
 
 
 
@@ -430,10 +434,7 @@ tmp.out <- tmp.out |>
 
 
 tmp.paired <- tmp.out |> 
-  dplyr::select(sid, pid, `NMF:150:PC1`, `NMF:150:PC2`, GITS.150.svm.2022.subtype) |> 
-  dplyr::mutate(`NMF:150:PC1.n` = as.numeric(scale(`NMF:150:PC1`))) |> 
-  dplyr::mutate(`NMF:150:PC2.n` = as.numeric(scale(`NMF:150:PC2`))) |> 
-  dplyr::mutate(`NMF:150:PC1` = NULL, `NMF:150:PC2` = NULL) |> 
+  dplyr::select(sid, pid, `NMF:150:PC1.n`, `NMF:150:PC2.n`, GITS.150.svm.2022.subtype) |> 
   dplyr::mutate(resection = case_when(
     grepl("GLSS|TCGA", sid) ~ ifelse(gsub("^.............(..).+$","\\1",sid) == "TP", "primary", "recurrence"),
     T ~ ifelse(gsub("^...(.).*?$","R\\1",sid) == "R1", "primary", "recurrence")
@@ -489,6 +490,9 @@ saveRDS(
     `NMF:150:PC1`,
     `NMF:150:PC2`,
     `NMF:150:PC3`,
+    
+    `NMF:150:PC1.n`,
+    `NMF:150:PC2.n`,
     
     `NMF:7k:1`,
     `NMF:7k:2`,
