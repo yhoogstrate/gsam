@@ -151,6 +151,156 @@ rm(plt, plt.expanded)
 
 
 
+### MES ----
+
+
+
+
+plt <- rbind(
+  gsam.rna.metadata |>
+    
+    dplyr::filter(blacklist.pca == F) %>%
+    dplyr::filter(pat.with.IDH == F) %>%
+    dplyr::filter(
+      sid %in% c('BAI2', 'CAO1-replicate', 'FAB2', 'GAS2-replicate') == F
+    ) %>%
+    dplyr::filter(tumour.percentage.dna >= 15) |>
+    
+    dplyr::mutate(is.primary = resection == "r1") |> 
+    dplyr::select(
+      sid,
+      pid,
+      is.primary,
+      `NMF:150:PC1`,
+      `NMF:150:PC2`,
+      GITS.150.svm.2022.subtype
+    ) |> 
+    dplyr::mutate(dataset = "G-SAM") |> 
+    dplyr::mutate(batch = dataset)
+  ,
+  glass.gbm.rnaseq.metadata.all.samples |>
+    dplyr::mutate(is.primary = resection == "TP") |> 
+    dplyr::select(
+      aliquot_barcode,
+      case_barcode,
+      is.primary,
+      `NMF:150:PC1`,
+      `NMF:150:PC2`,
+      GITS.150.svm.2022.subtype,
+      aliquot_batch_synapse
+    ) |>
+    dplyr::rename(sid = aliquot_barcode) |>
+    dplyr::rename(pid = case_barcode) |> 
+    dplyr::mutate(dataset = "GLASS") |> 
+    dplyr::rename(batch = aliquot_batch_synapse)
+)
+
+
+
+
+# Add initial subtype
+tmp.initial.subtype <- plt |> 
+  dplyr::group_by(pid) |> 
+  dplyr::filter(n() == 2) |> 
+  dplyr::ungroup() |> 
+  dplyr::filter(is.primary) |> 
+  dplyr::select(pid, GITS.150.svm.2022.subtype) |> 
+  dplyr::rename(subtype.primary = GITS.150.svm.2022.subtype)
+
+plt <- plt |> 
+  dplyr::left_join(tmp.initial.subtype, by=c('pid'='pid'), suffix=c('',''))
+rm(tmp.initial.subtype)
+
+
+# Add primary's as xend and yend to the pairs
+tmp.segment <- plt |>
+  dplyr::mutate(batch = NULL) |> 
+  dplyr::mutate(subtype.primary = NULL) |>
+  dplyr::mutate(is.primary = ifelse(is.primary,"primary","recurrence")) |> 
+  dplyr::group_by(pid) |>
+  dplyr::filter(n() == 2) |>
+  dplyr::ungroup() |>
+  tidyr::pivot_wider(names_from = is.primary,
+                     values_from = c(sid, `NMF:150:PC1`, `NMF:150:PC2`, `GITS.150.svm.2022.subtype`)) |>
+  dplyr::mutate(
+    `NMF:150:PC1_primary`  = NULL,
+    `NMF:150:PC2_primary` = NULL,
+    `GITS.150.svm.2022.subtype_primary` = NULL,
+    `sid_recurrence` = NULL,
+    `pid` = NULL
+  )
+
+plt <- plt |> 
+  dplyr::left_join(tmp.segment, by=c('sid'='sid_primary'), suffix=c('',''))
+rm(tmp.segment)
+
+
+# plt <- plt |> 
+#   dplyr::filter(dataset == "GLASS")
+
+
+# make facets
+plt.expanded <- rbind(
+  plt |> dplyr::mutate(facet = "Classical") |>
+    dplyr::mutate(highlight = subtype.primary == facet),
+  plt |> dplyr::mutate(facet = "Mesenchymal")  |> 
+    dplyr::mutate(highlight = subtype.primary == facet),
+  plt |> dplyr::mutate(facet = "Proneural")  |> 
+    dplyr::mutate(highlight = subtype.primary == facet)
+) |> 
+  dplyr::filter(facet ==  "Mesenchymal")
+
+
+
+plt.contours <- readRDS("cache/analysis_GITS_space_GITS_contours.Rds") |> 
+  dplyr::mutate(`GITS.150.svm.2022.subtype` = class, `pid` = NA, batch=NA)
+
+
+
+ggplot(plt.expanded, aes(x=-`NMF:150:PC1`,y=-`NMF:150:PC2`, group=pid, col =`batch`,
+                         fill =`batch`,
+                         label = batch)) +
+  geom_raster(data = plt.contours, alpha=0.05) +
+  geom_contour(data=  plt.contours,
+               aes(z=as.numeric(class)), 
+               colour="gray40", 
+               size=0.25, 
+               lty=2,
+               breaks=c(1.75,2.25)) +
+  facet_grid(cols = vars(facet)) +
+  geom_point(data = plt.expanded |> dplyr::filter(highlight == F) , size=2.5 * 0.65, alpha=0.15, col="black",pch=21, fill='gray80') +
+  geom_segment(data= plt.expanded |> dplyr::filter(highlight == T & `GITS.150.svm.2022.subtype_recurrence` == 'Classical') , # fill.arrow is no aesthetic (yet?)
+               aes(xend = -`NMF:150:PC1_recurrence`, yend=-`NMF:150:PC2_recurrence`), arrow.fill = subtype_colors['Classical'], col=rgb(0,0,0,0.6),
+               lwd = 0.35,
+               arrow = arrow(ends = "last", type = "closed",  angle=15, length = unit(0.135 * 0.65, "inches"))) +
+  #geom_segment(data= plt.expanded |> dplyr::filter(highlight == T & `GITS.150.svm.2022.subtype_recurrence` == 'Mesenchymal') , # fill.arrow is no aesthetic (yet?)
+  #             aes(xend = -`NMF:150:PC1_recurrence`, yend=-`NMF:150:PC2_recurrence`), arrow.fill = subtype_colors['Mesenchymal'], col=rgb(0,0,0,0.6),
+  #             lwd = 0.35,
+  #             arrow = arrow(ends = "last", type = "closed",  angle=15, length = unit(0.135 * 0.65, "inches"))) +
+  geom_segment(data= plt.expanded |> dplyr::filter(highlight == T & `GITS.150.svm.2022.subtype_recurrence` == 'Proneural') , # fill.arrow is no aesthetic (yet?)
+               aes(xend = -`NMF:150:PC1_recurrence`, yend=-`NMF:150:PC2_recurrence`), arrow.fill = subtype_colors['Proneural'], col=rgb(0,0,0,0.6),
+               lwd = 0.35,
+               arrow = arrow(ends = "last", type = "closed",  angle=15, length = unit(0.135 * 0.65, "inches"))) +
+  geom_point(data = plt.expanded |>  dplyr::filter(highlight == T & is.primary), aes(fill = `GITS.150.svm.2022.subtype`), size=2.5 * 0.65, alpha=0.8, col="black",pch=21) +
+  theme(strip.background = element_blank(), strip.text = element_blank()) +
+  geom_text(data = plt.expanded |> 
+                             dplyr::filter(is.primary == F &
+                                           subtype.primary == "Mesenchymal" &
+                                             GITS.150.svm.2022.subtype != "Mesenchymal"
+                                             )
+                             ) +
+  scale_fill_manual(values = subtype_colors) +
+  scale_color_manual(values = subtype_colors) +
+  labs(x = "PC1 on NMF meta-features", y = "PC2 on NMF meta-features", fill = "Subtype") +
+  theme_bw() +
+  theme(axis.title = element_text(face = "bold",size = rel(1))) +
+  theme(legend.position = 'bottom')
+
+rm(plt, plt.expanded)
+
+
+
+
 ## fig s1a ----
 
 
@@ -1107,11 +1257,144 @@ ggplot(plt, aes(x=GITS.150.svm.2022.subtype_recurrent, y=`NMF:150:PCA:eucledian.
 ggsave("output/figures/2022_figure_S2.pdf", width=8.3 / 4,height=8.3/4, scale=2)
 
 
-
+rm(plt)
 
 
 
 ## fig s3a ----
+
+
+
+
+plt <- rbind(
+  gsam.rna.metadata |>
+    
+    dplyr::filter(blacklist.pca == F) %>%
+    dplyr::filter(pat.with.IDH == F) %>%
+    dplyr::filter(
+      sid %in% c('BAI2', 'CAO1-replicate', 'FAB2', 'GAS2-replicate') == F
+    ) %>%
+    dplyr::filter(tumour.percentage.dna >= 15) |>
+    dplyr::mutate(is.primary = ifelse(resection == "r1","primary","recurrent")) |> 
+    
+    dplyr::select(
+      `sid`,
+      `pid`,
+      `is.primary`,
+      
+      `NMF:150:PC1.n`,
+      `NMF:150:PC2.n`,
+      
+      `GITS.150.svm.2022.subtype`
+    ) 
+  ,
+  glass.gbm.rnaseq.metadata.all.samples |>
+    dplyr::mutate(is.primary = ifelse(resection == "TP","primary","recurrent")) |> 
+    dplyr::select(
+      `aliquot_barcode`,
+      `case_barcode`,
+      `is.primary`,
+      
+      `NMF:150:PC1.n`,
+      `NMF:150:PC2.n`,
+      
+      `GITS.150.svm.2022.subtype`
+    ) |>
+    dplyr::rename(sid = aliquot_barcode) |>
+    dplyr::rename(pid = case_barcode) 
+) |> 
+  dplyr::group_by(pid) |> # filter for matching pairs
+  dplyr::filter(n() == 2) |> 
+  dplyr::ungroup() |>
+  tidyr::pivot_wider(id_cols = pid, 
+                     names_from = c(is.primary),
+                     values_from = c(sid,`GITS.150.svm.2022.subtype`,  `NMF:150:PC1.n`, `NMF:150:PC2.n`)) |> 
+  dplyr::mutate(`NMF:150:PC1.n_recurrent` = `NMF:150:PC1.n_recurrent` - `NMF:150:PC1.n_primary`)|> 
+  dplyr::mutate(`NMF:150:PC2.n_recurrent` = `NMF:150:PC2.n_recurrent` - `NMF:150:PC2.n_primary`)|> 
+  dplyr::mutate(`NMF:150:PC1.n_primary` = `NMF:150:PC1.n_primary` - `NMF:150:PC1.n_primary`)|> 
+  dplyr::mutate(`NMF:150:PC2.n_primary` = `NMF:150:PC2.n_primary` - `NMF:150:PC2.n_primary`) |> 
+  dplyr::mutate(subtype.primary = `GITS.150.svm.2022.subtype_primary`) |> 
+  tidyr::pivot_longer(
+    cols = c(
+      `sid_primary`,
+      `sid_recurrent`,
+      
+      `GITS.150.svm.2022.subtype_primary`,
+      `GITS.150.svm.2022.subtype_recurrent`,
+      
+      `NMF:150:PC1.n_primary`,
+      `NMF:150:PC1.n_recurrent`,
+      
+      `NMF:150:PC2.n_primary`,
+      `NMF:150:PC2.n_recurrent`
+    ),
+    names_to = c('.value','resection'),
+    names_pattern = "(.+)_(.+)"
+  )
+
+
+m.r <- plt %>%
+  dplyr::filter(resection == "recurrent") |> 
+  dplyr::group_by(subtype.primary) %>%
+  dplyr::summarise(`NMF:150:PC1.n` = mean(`NMF:150:PC1.n`), 
+                   `NMF:150:PC2.n` = mean(`NMF:150:PC2.n`)) |> 
+  dplyr::ungroup() %>%
+  dplyr::mutate(pid = "Mean",
+            sid = "Mean",
+            `GITS.150.svm.2022.subtype` = "Mean",
+            resection = "recurrent")
+
+m.p <- m.r |> dplyr::mutate(`NMF:150:PC1.n` = 0 , `NMF:150:PC2.n` = 0 , resection = "primary")
+
+
+plt <- rbind(plt, m.p, m.r)
+rm(m.p, m.r)
+
+
+
+ggplot(plt, aes(x = -`NMF:150:PC1.n`, y= -`NMF:150:PC2.n`, group=pid, col=subtype.primary, fill=GITS.150.svm.2022.subtype)) +
+  facet_grid(cols = vars(subtype.primary)) +
+  geom_line(data = plt |> dplyr::filter(pid != "Mean") ,alpha=0.75, lwd=1) +
+  geom_point(data = plt |> dplyr::filter(resection == "recurrent" & sid != "Mean"),size=3, pch=21,col="black",stroke=0.8)  +
+  geom_line(data = plt |> dplyr::filter(pid == "Mean") , lwd=1.2, col="black") +
+  geom_point(data = plt |> dplyr::filter(resection == "recurrent" & sid == "Mean"),size=3, pch=21,col="black",fill="white",stroke=0.8)  +
+  scale_color_manual(values = subtype_colors, 
+                     guide = "none") +
+  scale_fill_manual(values = subtype_colors) +
+  scale_x_continuous(breaks = c(0)) +
+  scale_y_continuous(breaks = c(0)) +
+  coord_equal() +
+  labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", fill="Subtype") +
+  theme_bw()  +
+  theme(
+    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
+    #strip.background = element_rect(colour="white",fill="white"),
+    axis.title = element_text(face = "bold",size = rel(1)),
+    
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank(),
+    
+    legend.position = 'bottom',
+    #panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    #panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    #strip.text = element_text(size = 7),
+    panel.border = element_rect(colour = "black", fill=NA, size=1.25)
+  ) +
+  guides(fill=guide_legend(ncol=3))
+
+
+
+ggsave("output/figures/2022_figure_S3a.pdf", width=8.3 / 2,height=8.3/4, scale=2)
+
+
+rm(plt)
+
+
 
 ## fig s3b ----
 

@@ -415,12 +415,10 @@ gits.contours <- data.frame(class = predict(tmp.model , newdata = range_df)) |>
   dplyr::select(c('class', 'NMF:150:PC1', 'NMF:150:PC2')) |> 
   dplyr::mutate(type="Contour")
 
-rm(tmp.model, resolution, off_x, off_y, range_pc1, range_pc2, range_df)
+rm(resolution, off_x, off_y, range_pc1, range_pc2, range_df)
 
 
 #saveRDS(gits.contours, file="cache/analysis_GITS_space_GITS_contours.Rds")
-
-
 
 ## eucl dist for pairs ----
 
@@ -473,6 +471,133 @@ tmp.out <- tmp.out |>
 rm(tmp.paired)
 
 
+## calc proprtional segments ----
+
+# 1. vind de lijn tussen R1 en R2
+# 2. reken de hoek uit
+# 3. maak k=150 lijnen met deze hoek, startend vanuit R1, en maak deze structureel langer
+#  - predict de klasse hiervan
+
+
+
+tmp.out <- tmp.out |> 
+  dplyr::mutate(pid = case_when(
+    grepl("GLSS|TCGA", sid) ~ gsub("^(............).+$","\\1",sid),
+    T ~ gsub("^(...).+$","\\1",sid)
+  ))
+
+
+change_length_line <- function(x1, y1, x2, y2, length_new) {
+  # From the  line between points (x1, y1) , (x2 ,y2),
+  # we want to create a new line with an identical angle
+  # but of length `length_new`.
+  
+  dy <- y2 - y1
+  dx <- x2 - x1
+  
+  #slope <- dy / dx
+  angle <- atan2(dy , dx) # in rads
+  
+  length_x_new <- cos(angle) * length_new
+  length_y_new <- sin(angle) * length_new
+  
+  x2_new <- x1 + length_x_new
+  y2_new <- y1 + length_y_new
+
+  return(c("x"=x2_new, "y"=y2_new))
+    
+  # return (data.frame(x = c(x1, x2_new) ,
+  #                    y = c(y1, y2_new) ,
+  #                    point = as.factor(c("initial start", "new end"))))
+}
+
+
+
+calc_transitions <- function(x1, y1, x2, y2) {
+  # for testing:
+  #x1 = 1
+  #y1 = 1
+  #x2 = 4
+  #y2 = 3.5
+
+  d = sqrt((x1 - x2)^2 + (y1 - y2)^2) # dist
+  
+    
+  res <- 150
+  df <- data.frame(pct = (0:(res-1) / (res-1))) |>
+    dplyr::mutate(line = lapply(pct * d, change_length_line, x1=x1,y1=y1,x2=x2,y2=y2)) |> 
+    dplyr::mutate(x2 = unlist(lapply(line, function(x){return(x['x'])} ))) |> 
+    dplyr::mutate(y2 = unlist(lapply(line, function(x){return(x['y'])} ))) |> 
+    dplyr::mutate(line = NULL) |> 
+    tibble::remove_rownames()
+
+  df$pred <- as.character(predict(tmp.model, newdata = df |>
+                    dplyr::mutate(pct =  NULL) |>
+                    dplyr::rename(`NMF:150:PC1` = x2) |>
+                    dplyr::rename(`NMF:150:PC2` = y2)
+                  ))
+
+  df <- rbind(
+    df[1,] |> 
+      dplyr::mutate(pred = "*init")
+    ,
+    df,
+    df[res,]|> 
+      dplyr::mutate(pred = "end*")
+  ) |>
+    tibble::remove_rownames() 
+  
+
+  df.transitions <- df |> 
+    dplyr::mutate(transition = ifelse(pred != lag(pred), T ,F))|> 
+    dplyr::mutate(transition.previous_pred = lag(pred)) |> 
+    dplyr::mutate(transition.boundary_x2 = (lag(x2) + x2) / 2) |> 
+    dplyr::mutate(transition.boundary_y2 = (lag(y2) + y2) / 2) |> 
+    dplyr::mutate(transition.pct = (lag(pct) + pct) / 2) |> 
+    dplyr::mutate(transition.type = paste0(transition.previous_pred, "->",pred)) |> 
+    dplyr::select(transition, transition.boundary_x2, transition.boundary_y2, transition.pct, transition.type) |> 
+    dplyr::filter(transition == T) |> 
+    dplyr::mutate(transition = NULL)
+
+  return(df.transitions)
+}
+#calc_transitions(1,1,4,3.5)
+
+
+
+tmp.paired <- tmp.out |> 
+  dplyr::select(sid, pid,
+                `NMF:150:PC1`, `NMF:150:PC2`,
+                `NMF:150:PCA:eucledian.dist`,
+                GITS.150.svm.2022.subtype) |> 
+  dplyr::mutate(resection = case_when(
+    grepl("GLSS|TCGA", sid) ~ ifelse(gsub("^.............(..).+$","\\1",sid) == "TP", "primary", "recurrence"),
+    T ~ ifelse(gsub("^...(.).*?$","R\\1",sid) == "R1", "primary", "recurrence")
+  )) |> 
+  dplyr::group_by(pid) |> 
+  dplyr::filter(n() > 1) |> 
+  dplyr::ungroup() |> 
+  tidyr::pivot_wider(id_cols=  c(pid),
+                     names_from = resection, 
+                     values_from = c(sid, `NMF:150:PC1`, `NMF:150:PC2`, GITS.150.svm.2022.subtype, `NMF:150:PCA:eucledian.dist` )) |> 
+  dplyr::rename(`NMF:150:PCA:eucledian.dist` = `NMF:150:PCA:eucledian.dist_primary`) |>  # manual has no clear way of keeping columns in pivot_wider?
+  dplyr::mutate(`NMF:150:PCA:eucledian.dist_recurrence` = NULL) |> 
+  dplyr::rowwise() |> 
+  dplyr::mutate(transition.segments = list(calc_transitions(`NMF:150:PC1_primary`, `NMF:150:PC2_primary`,
+                            `NMF:150:PC1_recurrence`,`NMF:150:PC2_recurrence`))) |> 
+  dplyr::ungroup()
+
+
+
+
+# tmp.out <- tmp.out |> 
+#   dplyr::left_join(tmp.paired, by=c('pid'='pid'),suffix=c('','')) |> 
+#   dplyr::mutate(pid = NULL)
+# 
+# 
+# rm(tmp.paired)
+# 
+# 
 
 
 # export ----
