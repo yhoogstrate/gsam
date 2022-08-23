@@ -301,8 +301,6 @@ rm(plt, plt.expanded)
 ### 3050 ----
 
 
-
-
 plt <- rbind(
   gsam.rna.metadata |>
     
@@ -889,8 +887,6 @@ ggsave("output/figures/2022_figure_S1F.pdf", width=8.3 / 4,height=8.3/4, scale=2
 ## fig s1g ----
 
 
-
-
 plt <- rbind(
   gsam.rna.metadata |>
     
@@ -904,7 +900,7 @@ plt <- rbind(
     dplyr::mutate(is.primary = resection == "r1") |> 
     dplyr::select(
       sid,
-
+      
       `NMF:150:1`,
       `NMF:150:2`,
       `NMF:150:3`,
@@ -947,13 +943,13 @@ plt <- rbind(
     `ssGSEA subtype` == "ssGSEA.2022.Classical.enrichment_score" ~ "CL"
   )) |> 
   dplyr::filter((`NMF meta-feature` == "NMF:150:1" &  `ssGSEA subtype` == "CL") |
-                (  `NMF meta-feature` == "NMF:150:2" &  `ssGSEA subtype` == "PN") |
-                 ( `NMF meta-feature` == "NMF:150:3" &  `ssGSEA subtype` == "MES")) |> 
+                  (  `NMF meta-feature` == "NMF:150:2" &  `ssGSEA subtype` == "PN") |
+                  ( `NMF meta-feature` == "NMF:150:3" &  `ssGSEA subtype` == "MES")) |> 
   dplyr::mutate(facet = paste0(`NMF meta-feature`," ~ " , `ssGSEA subtype`)) |> 
   dplyr::mutate(needle = case_when(`ssGSEA subtype` == "CL" ~ "Classical",
-                                     `ssGSEA subtype` == "MES" ~ "Mesenchymal",
-                                     `ssGSEA subtype` == "PN" ~ "Proneural"
-                                     )) |> 
+                                   `ssGSEA subtype` == "MES" ~ "Mesenchymal",
+                                   `ssGSEA subtype` == "PN" ~ "Proneural"
+  )) |> 
   dplyr::mutate(facet.target = stringr::str_detect(ssGSEA.2022.subtype, `needle`)) |> 
   dplyr::mutate(`needle` = NULL) |> 
   dplyr::mutate(
@@ -998,6 +994,114 @@ ggplot(plt, aes(x=`ssGSEA enrichment score`, y=`NMF contribution`, fill=`ssGSEA.
   guides() #guide_legend(ncol=2)
 
 ggsave("output/figures/2022_figure_S1G.pdf", width=8.3 / 2,height=8.3/5, scale=2)
+
+
+
+## fig s1g equivalent for NMF:7k ----
+
+# 1 = CL, 2 = PN, 4 = MES
+plt <- rbind(
+  gsam.rna.metadata |>
+    
+    dplyr::filter(blacklist.pca == F) %>%
+    dplyr::filter(pat.with.IDH == F) %>%
+    dplyr::filter(
+      sid %in% c('BAI2', 'CAO1-replicate', 'FAB2', 'GAS2-replicate') == F
+    ) %>%
+    dplyr::filter(tumour.percentage.dna >= 15) |>
+    dplyr::select(
+      sid,
+      
+      `NMF:7k:1`,
+      `NMF:7k:2`,
+      `NMF:7k:3`,
+      `NMF:7k:4`,
+      
+      ssGSEA.2022.Classical.enrichment_score,
+      ssGSEA.2022.Proneural.enrichment_score,
+      tumour.percentage.dna,
+      ssGSEA.2022.Mesenchymal.enrichment_score,
+      
+      ssGSEA.2022.subtype
+    ) |> 
+    dplyr::rename(purity = tumour.percentage.dna) |>
+    dplyr::mutate(dataset = "G-SAM")
+  ,
+  glass.gbm.rnaseq.metadata.all.samples |>
+    dplyr::filter(tumour.percentage.2022 > 15) |> 
+    dplyr::select(
+      aliquot_barcode,
+      
+      `NMF:7k:1`,
+      `NMF:7k:2`,
+      `NMF:7k:3`,
+      `NMF:7k:4`,
+      
+      ssGSEA.2022.Classical.enrichment_score,
+      ssGSEA.2022.Proneural.enrichment_score,
+      tumour.percentage.2022,
+      ssGSEA.2022.Mesenchymal.enrichment_score,
+      
+      ssGSEA.2022.subtype
+    ) |>
+    dplyr::rename(sid = aliquot_barcode) |>
+    dplyr::rename(purity = tumour.percentage.2022) |>
+    dplyr::mutate(dataset = "GLASS")
+) |> 
+  tidyr::pivot_longer(cols=c(`NMF:7k:1`, `NMF:7k:2`,`NMF:7k:3`,`NMF:7k:4`),names_to="NMF meta-feature",values_to="NMF contribution") |> 
+  tidyr::pivot_longer(cols=c(`ssGSEA.2022.Proneural.enrichment_score`,`ssGSEA.2022.Mesenchymal.enrichment_score`,purity,`ssGSEA.2022.Classical.enrichment_score`),
+                      names_to="ssGSEA subtype", values_to="ssGSEA enrichment score") |> 
+  dplyr::mutate(`ssGSEA subtype` = case_when(
+    `ssGSEA subtype` == "ssGSEA.2022.Proneural.enrichment_score" ~ "PN",
+    `ssGSEA subtype` == "ssGSEA.2022.Mesenchymal.enrichment_score" ~ "MES",
+    `ssGSEA subtype` == "ssGSEA.2022.Classical.enrichment_score" ~ "CL",
+    T ~ "purity"
+  )) |> 
+  dplyr::filter((`NMF meta-feature` == "NMF:7k:1" &  `ssGSEA subtype` == "CL") |
+                  (  `NMF meta-feature` == "NMF:7k:2" &  `ssGSEA subtype` == "PN") |
+                  (  `NMF meta-feature` == "NMF:7k:3" &  `ssGSEA subtype` == "purity") |
+                  ( `NMF meta-feature` == "NMF:7k:4" &  `ssGSEA subtype` == "MES")) |> 
+  dplyr::mutate(facet = paste0(`NMF meta-feature`," ~ " , `ssGSEA subtype`)) |> 
+  dplyr::mutate(needle = case_when(`ssGSEA subtype` == "CL" ~ "Classical",
+                                   `ssGSEA subtype` == "MES" ~ "Mesenchymal",
+                                   `ssGSEA subtype` == "PN" ~ "Proneural",
+                                   `ssGSEA subtype` == "purity" ~ "Purity"
+  )) |> 
+  dplyr::mutate(facet.target = stringr::str_detect(ssGSEA.2022.subtype, `needle`)) |> 
+  dplyr::mutate(`ssGSEA.2022.subtype` = as.character(`ssGSEA.2022.subtype`)) |> 
+  dplyr::mutate(`ssGSEA.2022.subtype` = ifelse(facet == "NMF:7k:3 ~ purity","-",`ssGSEA.2022.subtype`)) |> 
+  dplyr::mutate(`needle` = NULL)
+
+
+
+
+ggplot(plt, aes(x=`ssGSEA enrichment score`, y=`NMF contribution`, fill=`ssGSEA.2022.subtype`)) +
+  facet_grid(cols = vars(`facet`), scales = "free") +
+  ggpubr::stat_cor(aes(shape=NULL, col=NULL, fill=NULL), method = "pearson") +
+  geom_point(size=3, col='black', pch=21, alpha=0.7) +
+  labs(y="NMF meta-feature score", 
+       fill = "Subtype (ssGSEA)",
+       shape="") +
+  scale_fill_manual(values = c(mixcol(subtype_colors_ext,rep("black",length(subtype_colors_ext)),0.1),"-"="gray60"),
+                    label=c('Mesenchymal'='MES','Proneural'='PN','Classical'='CL','Proneural|Classical'='PN|CL',"-"="")) +
+  theme_bw()  +
+  theme(
+    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
+    #strip.background = element_rect(colour="white",fill="white"),
+    axis.title = element_text(face = "bold",size = rel(1)),
+    #axis.text.x = element_blank(),
+    legend.position = 'bottom',
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    #axis.ticks.x = element_blank(),
+    panel.border = element_rect(colour = "black", fill=NA, size=1.25)
+  ) +
+  guides() #guide_legend(ncol=2)
+
+
+ggsave("output/figures/2022_figure_S1G_equivalent_for_NMF_7K.pdf", width=8.3 / 2,height=8.3/5, scale=2)
 
 
 
@@ -1669,9 +1773,10 @@ p1 <- ggplot(plt.expanded |> dplyr::filter(type=="a"), aes(x = x , y = reorder(p
     panel.grid.minor.x = element_blank(),
     panel.grid.major.y = element_blank(),
     panel.grid.minor.y = element_blank(),
-    panel.border = element_rect(colour = "black", fill=NA, size=1.25)
+    panel.border = element_rect(colour = "black", fill=NA, size=1.1)
   ) +
-  scale_color_manual(values = c(subtype_colors, 'Hyper-mutant' = 'gray40'), guide = guide_legend(title = NULL, title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75))
+  scale_color_manual(values = c(subtype_colors, 'Hyper-mutant' = 'gray40'), guide = guide_legend(title = NULL, title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75)) +
+  scale_y_discrete(expand=expansion(add = 1.5))
 
 
 p2 <- ggplot(plt.expanded |> dplyr::filter(type=="b"), aes(x = x , y = reorder(pid, d), col = subtype, group=segment)) +
@@ -1694,13 +1799,15 @@ p2 <- ggplot(plt.expanded |> dplyr::filter(type=="b"), aes(x = x , y = reorder(p
     panel.grid.minor.x = element_blank(),
     panel.grid.major.y = element_blank(),
     panel.grid.minor.y = element_blank(),
-    panel.border = element_rect(colour = "black", fill=NA, size=1.25)
+    panel.border = element_rect(colour = "black", fill=NA, size=1.1)
   ) +
-  scale_color_manual(values = c(subtype_colors, 'Hyper-mutant' = 'gray40'), guide = guide_legend(title = NULL, title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75))
+  scale_color_manual(values = c(subtype_colors, 'Hyper-mutant' = 'gray40'), guide = guide_legend(title = NULL, title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75)) +
+  scale_y_discrete(expand=expansion(add = 1.5))
 
 
 p1 + p2
 ggsave("output/figures/2022_figure_S3b.pdf", width=8.3 / 2,height=8.3/2, scale=2)
+ggsave("output/figures/2022_figure_S3b.svg", width=8.3 / 2,height=8.3/2, scale=2)
 
 
 

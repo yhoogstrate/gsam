@@ -681,3 +681,20 @@ saveRDS(
 
 # 〰 © Dr. Youri Hoogstrate 〰 ----
 
+
+tmp.out = readRDS(file = "cache/analysis_GITS_space.Rds") |> 
+  tibble::column_to_rownames(sid)
+
+
+library(M3C)
+tsne(t(tmp.out |>
+         dplyr::select(`NMF:150:1`, `NMF:150:2`, `NMF:150:3`)),
+     labels = as.factor(tmp.out$GITS.150.svm.2022.subtype),
+     perplex=20)
+
+
+umap(t(tmp.out |>
+         dplyr::select(`NMF:150:1`, `NMF:150:2`, `NMF:150:3`)),
+     labels = as.factor(tmp.out$GITS.150.svm.2022.subtype))
+
+
