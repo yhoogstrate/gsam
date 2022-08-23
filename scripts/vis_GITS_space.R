@@ -18,7 +18,6 @@ source('scripts/R/palette.R')
 
 
 
-
 plt <- rbind(
   gsam.rna.metadata |>
     
@@ -297,6 +296,144 @@ ggplot(plt.expanded, aes(x=-`NMF:150:PC1`,y=-`NMF:150:PC2`, group=pid, col =`bat
   theme(legend.position = 'bottom')
 
 rm(plt, plt.expanded)
+
+
+### 3050 ----
+
+
+
+
+plt <- rbind(
+  gsam.rna.metadata |>
+    
+    dplyr::filter(blacklist.pca == F) %>%
+    dplyr::filter(pat.with.IDH == F) %>%
+    dplyr::filter(
+      sid %in% c('BAI2', 'CAO1-replicate', 'FAB2', 'GAS2-replicate') == F
+    ) %>%
+    dplyr::filter(tumour.percentage.dna >= 15) |>
+    
+    dplyr::mutate(is.primary = resection == "r1") |> 
+    dplyr::select(
+      sid,
+      pid,
+      is.primary,
+      `NMF:150:PC1`,
+      `NMF:150:PC2`,
+      GITS.150.svm.2022.subtype
+    ) |> 
+    dplyr::mutate(dataset = "G-SAM")
+  ,
+  glass.gbm.rnaseq.metadata.all.samples |>
+    dplyr::mutate(is.primary = resection == "TP") |> 
+    dplyr::select(
+      aliquot_barcode,
+      case_barcode,
+      is.primary,
+      `NMF:150:PC1`,
+      `NMF:150:PC2`,
+      GITS.150.svm.2022.subtype
+    ) |>
+    dplyr::rename(sid = aliquot_barcode) |>
+    dplyr::rename(pid = case_barcode) |> 
+    dplyr::mutate(dataset = "GLASS")
+) |> 
+  dplyr::filter(grepl("3050",pid))
+
+
+
+
+# Add initial subtype
+tmp.initial.subtype <- plt |> 
+  dplyr::group_by(pid) |> 
+  dplyr::filter(n() == 2) |> 
+  dplyr::ungroup() |> 
+  dplyr::filter(is.primary) |> 
+  dplyr::select(pid, GITS.150.svm.2022.subtype) |> 
+  dplyr::rename(subtype.primary = GITS.150.svm.2022.subtype)
+
+plt <- plt |> 
+  dplyr::left_join(tmp.initial.subtype, by=c('pid'='pid'), suffix=c('',''))
+rm(tmp.initial.subtype)
+
+
+# Add primary's as xend and yend to the pairs
+tmp.segment <- plt |>
+  dplyr::mutate(subtype.primary = NULL) |>
+  dplyr::mutate(is.primary = ifelse(is.primary,"primary","recurrence")) |> 
+  dplyr::group_by(pid) |>
+  dplyr::filter(n() == 2) |>
+  dplyr::ungroup() |>
+  tidyr::pivot_wider(names_from = is.primary,
+                     values_from = c(sid, `NMF:150:PC1`, `NMF:150:PC2`, `GITS.150.svm.2022.subtype`)) |>
+  dplyr::mutate(
+    `NMF:150:PC1_primary`  = NULL,
+    `NMF:150:PC2_primary` = NULL,
+    `GITS.150.svm.2022.subtype_primary` = NULL,
+    `sid_recurrence` = NULL,
+    `pid` = NULL
+  )
+
+plt <- plt |> 
+  dplyr::left_join(tmp.segment, by=c('sid'='sid_primary'), suffix=c('',''))
+rm(tmp.segment)
+
+
+# plt <- plt |> 
+#   dplyr::filter(dataset == "GLASS")
+
+
+# make facets
+plt.expanded <- rbind(
+  plt |> dplyr::mutate(facet = "Classical") |>
+    dplyr::mutate(highlight = subtype.primary == facet),
+  plt |> dplyr::mutate(facet = "Mesenchymal")  |> 
+    dplyr::mutate(highlight = subtype.primary == facet),
+  plt |> dplyr::mutate(facet = "Proneural")  |> 
+    dplyr::mutate(highlight = subtype.primary == facet)
+)
+
+
+
+plt.contours <- readRDS("cache/analysis_GITS_space_GITS_contours.Rds") |> 
+  dplyr::mutate(`GITS.150.svm.2022.subtype` = class, `pid` = NA)
+
+
+
+ggplot(plt.expanded, aes(x=-`NMF:150:PC1`,y=-`NMF:150:PC2`, group=pid, col =`GITS.150.svm.2022.subtype`,fill =`GITS.150.svm.2022.subtype`)) +
+  geom_raster(data = plt.contours, alpha=0.05) +
+  geom_contour(data=  plt.contours,
+               aes(z=as.numeric(class)), 
+               colour="gray40", 
+               size=0.25, 
+               lty=2,
+               breaks=c(1.75,2.25)) +
+  facet_grid(cols = vars(facet)) +
+  geom_point(data = plt.expanded |> dplyr::filter(highlight == F) , size=2.5 * 0.65, alpha=0.15, col="black",pch=21, fill='gray80') +
+  geom_segment(data= plt.expanded |> dplyr::filter(highlight == T & `GITS.150.svm.2022.subtype_recurrence` == 'Classical') , # fill.arrow is no aesthetic (yet?)
+               aes(xend = -`NMF:150:PC1_recurrence`, yend=-`NMF:150:PC2_recurrence`), arrow.fill = subtype_colors['Classical'], col=rgb(0,0,0,0.6),
+               lwd = 0.35,
+               arrow = arrow(ends = "last", type = "closed",  angle=15, length = unit(0.135 * 0.65, "inches"))) +
+  geom_segment(data= plt.expanded |> dplyr::filter(highlight == T & `GITS.150.svm.2022.subtype_recurrence` == 'Mesenchymal') , # fill.arrow is no aesthetic (yet?)
+               aes(xend = -`NMF:150:PC1_recurrence`, yend=-`NMF:150:PC2_recurrence`), arrow.fill = subtype_colors['Mesenchymal'], col=rgb(0,0,0,0.6),
+               lwd = 0.35,
+               arrow = arrow(ends = "last", type = "closed",  angle=15, length = unit(0.135 * 0.65, "inches"))) +
+  geom_segment(data= plt.expanded |> dplyr::filter(highlight == T & `GITS.150.svm.2022.subtype_recurrence` == 'Proneural') , # fill.arrow is no aesthetic (yet?)
+               aes(xend = -`NMF:150:PC1_recurrence`, yend=-`NMF:150:PC2_recurrence`), arrow.fill = subtype_colors['Proneural'], col=rgb(0,0,0,0.6),
+               lwd = 0.35,
+               arrow = arrow(ends = "last", type = "closed",  angle=15, length = unit(0.135 * 0.65, "inches"))) +
+  geom_point(data = plt.expanded |>  dplyr::filter(highlight == T & is.primary), aes(fill = `GITS.150.svm.2022.subtype`), size=2.5 * 0.65, alpha=0.8, col="black",pch=21) +
+  theme(strip.background = element_blank(), strip.text = element_blank()) +
+  scale_fill_manual(values = subtype_colors) +
+  scale_color_manual(values = subtype_colors) +
+  labs(x = "PC1 on NMF meta-features", y = "PC2 on NMF meta-features", fill = "Subtype") +
+  theme_bw() +
+  theme(axis.title = element_text(face = "bold",size = rel(1))) +
+  theme(legend.position = 'bottom') +
+  theme(text = element_text(family = 'Arial'))
+
+rm(plt, plt.expanded)
+
 
 
 
@@ -1397,6 +1534,119 @@ rm(plt)
 
 
 ## fig s3b ----
+
+
+plt <- rbind(
+  gsam.rna.metadata |>
+    
+    dplyr::filter(blacklist.pca == F) %>%
+    dplyr::filter(pat.with.IDH == F) %>%
+    dplyr::filter(
+      sid %in% c('BAI2', 'CAO1-replicate', 'FAB2', 'GAS2-replicate') == F
+    ) %>%
+    dplyr::filter(tumour.percentage.dna >= 15) |>
+
+    dplyr::select(
+      `pid`,
+      `NMF:150:PCA:eucledian.dist`,
+    ) 
+  ,
+  glass.gbm.rnaseq.metadata.all.samples |>
+    dplyr::select(
+      `case_barcode`,
+      `NMF:150:PCA:eucledian.dist`,
+    ) |>
+    dplyr::rename(pid = case_barcode) 
+) |> 
+  dplyr::filter(!is.na(`NMF:150:PCA:eucledian.dist`)) |> 
+  dplyr::distinct() |> 
+  dplyr::mutate(pid = as.character(pid))
+
+
+
+plt.expanded <- readRDS('tmp/analysis_GITS_space.transition.segments.Rds') |> 
+  dplyr::left_join(plt, by=c('pid'='pid')) |> 
+  dplyr::mutate(x = pct_transition * `NMF:150:PCA:eucledian.dist` ) |> 
+  dplyr::group_by(pid) |> 
+  dplyr::mutate(d = max(x)) |> 
+  dplyr::mutate(init = x == min(x)) |> 
+  dplyr::mutate(second = order(x) == 2) |> 
+  dplyr::mutate(end = x == max(x)) |> 
+  dplyr::mutate(n = n()) |> 
+  dplyr::ungroup() |> 
+  dplyr::rename(subtype = pred)
+
+
+plt.expanded <- plt.expanded |> 
+  dplyr::left_join(
+    plt.expanded |> 
+      dplyr::filter(init) |> 
+      dplyr::select(pid, subtype) |> 
+      dplyr::rename(subtype.init = subtype),
+    by=c('pid'='pid'), suffix=c('','')
+  )
+
+
+plt.expanded <- plt.expanded |> 
+  dplyr::left_join(
+    plt.expanded |> 
+      dplyr::filter(second) |> 
+      dplyr::select(pid, x) |> 
+      dplyr::rename(x.init = x),
+    by=c('pid'='pid'), suffix=c('','')
+  )
+
+
+plt.expanded <- rbind(
+  plt.expanded |> dplyr::mutate(type ="a"),
+  plt.expanded |> dplyr::mutate(type ="b") |> 
+    dplyr::mutate(x = x - x.init) |> 
+    dplyr::mutate(d = ifelse(n == 2, -x.init,d - x.init))
+) |> 
+  dplyr::mutate(dataset = grepl("TCGA|GLSS",pid))
+
+
+
+p1 <- ggplot(plt.expanded |> dplyr::filter(type=="a"), aes(x = x , y = reorder(pid, d), col = subtype, group=segment)) +
+  #geom_point(cex=1) +
+  geom_path(lwd = 0.8) + 
+  facet_grid(rows = vars(subtype.init), scales = "free", space="free_y") + 
+  labs(x = "Distance GITS space",
+       y=NULL,
+       col = "Distance within Subtype space") +
+  theme_light() +
+  theme(
+    text = element_text(family = 'Helvetica'),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = 'bottom',
+    plot.title = element_text(face = "bold", size = rel(1.2), hjust = 0.5),
+    axis.text.y = element_text(size = 6)
+  ) +
+  theme(strip.background = element_blank(), strip.text = element_blank()) +
+  scale_color_manual(values = c(subtype_colors, 'Hyper-mutant' = 'gray40'), guide = guide_legend(title = NULL, title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75))
+
+
+p2 <- ggplot(plt.expanded |> dplyr::filter(type=="b"), aes(x = x , y = reorder(pid, d), col = subtype, group=pid)) +
+  #geom_point(cex=1) +
+  geom_line(lwd = 0.8) + 
+  facet_grid(rows = vars(subtype.init), scales = "free", space="free_y") + 
+  labs(x = "Distance GITS space",
+       y=NULL,
+       col = "Distance within Subtype space") +
+  theme_light() +
+  theme(
+    text = element_text(family = 'Helvetica'),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = 'bottom',
+    plot.title = element_text(face = "bold", size = rel(1.2), hjust = 0.5),
+    axis.text.y = element_text(size = 6)
+  ) +
+  theme(strip.background = element_blank(), strip.text = element_blank()) +
+  scale_color_manual(values = c(subtype_colors, 'Hyper-mutant' = 'gray40'), guide = guide_legend(title = NULL, title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75))
+
+
+p1 + p2
+ggsave("/tmp/test.pdf",width=10*1.4,height=10*1.4)
 
 
 

@@ -479,7 +479,7 @@ rm(tmp.paired)
 #  - predict de klasse hiervan
 
 
-
+# x-check GLSS−HF−3050
 tmp.out <- tmp.out |> 
   dplyr::mutate(pid = case_when(
     grepl("GLSS|TCGA", sid) ~ gsub("^(............).+$","\\1",sid),
@@ -513,7 +513,7 @@ change_length_line <- function(x1, y1, x2, y2, length_new) {
 
 
 
-calc_transitions <- function(x1, y1, x2, y2) {
+calc_transitions <- function(pid, x1, y1, x2, y2) {
   # for testing:
   #x1 = 1
   #y1 = 1
@@ -538,30 +538,50 @@ calc_transitions <- function(x1, y1, x2, y2) {
                   ))
 
   df <- rbind(
-    df[1,] |> 
-      dplyr::mutate(pred = "*init")
-    ,
+    df[1,] |> dplyr::mutate(pred = "*init"), 
     df,
-    df[res,]|> 
-      dplyr::mutate(pred = "end*")
+    df[res,] |> dplyr::mutate(pred = "end*")
   ) |>
-    tibble::remove_rownames() 
+    tibble::remove_rownames()
   
 
   df.transitions <- df |> 
-    dplyr::mutate(transition = ifelse(pred != lag(pred), T ,F))|> 
-    dplyr::mutate(transition.previous_pred = lag(pred)) |> 
-    dplyr::mutate(transition.boundary_x2 = (lag(x2) + x2) / 2) |> 
-    dplyr::mutate(transition.boundary_y2 = (lag(y2) + y2) / 2) |> 
-    dplyr::mutate(transition.pct = (lag(pct) + pct) / 2) |> 
-    dplyr::mutate(transition.type = paste0(transition.previous_pred, "->",pred)) |> 
-    dplyr::select(transition, transition.boundary_x2, transition.boundary_y2, transition.pct, transition.type) |> 
-    dplyr::filter(transition == T) |> 
-    dplyr::mutate(transition = NULL)
-
+    dplyr::mutate(pct_from = lag(pct),
+                  x2_from = lag(x2),
+                  y2_from = lag(y2),
+                  pred_from = lag(pred)) |> 
+    dplyr::rename(pct_to = pct,
+                  x2_to = x2,
+                  y2_to = y2,
+                  pred_to = pred) |> 
+    dplyr::mutate(transition.status = ifelse(pred_from != pred_to, T ,F)) |> 
+    dplyr::mutate(x2_transition = (x2_from + x2_to) / 2) |> 
+    dplyr::mutate(y2_transition = (y2_from + y2_to) / 2) |> 
+    dplyr::mutate(pct_transition = (pct_from + pct_to) / 2) |> 
+    dplyr::filter(transition.status)
+  
+  df.transitions <- df.transitions |> 
+    tidyr::pivot_longer(cols = c(`pct_to`,`x2_to`,`y2_to`,`pred_to`,`pct_from`,`x2_from`,`y2_from`,`pred_from`),
+                        names_to = c('.value','status'),
+                        names_pattern="(.+)_(.+)") |> 
+    dplyr::filter(pred %in% c('*init', 'end*') == F) |> 
+    dplyr::arrange(pct) |>
+    dplyr::mutate(segment= paste0( "segment.",pid,".",((1:n())+1) %/% 2)) |> 
+    dplyr::mutate(pid = pid) |> 
+    dplyr::mutate(
+      transition.status = NULL,
+      status = NULL,
+      pct = NULL,  
+      x2 = NULL,
+      y2 = NULL
+    )
+  
+  
   return(df.transitions)
 }
-#calc_transitions(1,1,4,3.5)
+#calc_transitions("id", 1,1,4,3.5)
+calc_transitions("id", -1.237046,   0.5114374,
+                       -0.2791471, -0.8142251) # GLSS-HF-3050
 
 
 
@@ -583,21 +603,37 @@ tmp.paired <- tmp.out |>
   dplyr::rename(`NMF:150:PCA:eucledian.dist` = `NMF:150:PCA:eucledian.dist_primary`) |>  # manual has no clear way of keeping columns in pivot_wider?
   dplyr::mutate(`NMF:150:PCA:eucledian.dist_recurrence` = NULL) |> 
   dplyr::rowwise() |> 
-  dplyr::mutate(transition.segments = list(calc_transitions(`NMF:150:PC1_primary`, `NMF:150:PC2_primary`,
+  dplyr::mutate(transition.segments = list(calc_transitions(pid, `NMF:150:PC1_primary`, `NMF:150:PC2_primary`,
                             `NMF:150:PC1_recurrence`,`NMF:150:PC2_recurrence`))) |> 
   dplyr::ungroup()
 
 
+segments <- data.table::rbindlist(tmp.paired$transition.segments) |> 
+  as.data.frame()
 
 
-# tmp.out <- tmp.out |> 
-#   dplyr::left_join(tmp.paired, by=c('pid'='pid'),suffix=c('','')) |> 
-#   dplyr::mutate(pid = NULL)
-# 
-# 
-# rm(tmp.paired)
-# 
-# 
+
+# check if first matches metadata
+tmp <- segments |> 
+  dplyr::group_by(pid) |> 
+  dplyr::filter(pct_transition == min(pct_transition)) |> 
+  dplyr::select(pid, pred) |> 
+  dplyr::left_join(tmp.paired |> dplyr::select(pid, GITS.150.svm.2022.subtype_primary), by=c('pid'='pid'))
+stopifnot(tmp$pred == tmp$GITS.150.svm.2022.subtype_primary)
+rm(tmp)
+
+tmp <- segments |> 
+  dplyr::group_by(pid) |> 
+  dplyr::filter(pct_transition == max(pct_transition)) |> 
+  dplyr::select(pid, pred) |> 
+  dplyr::left_join(tmp.paired |> dplyr::select(pid, GITS.150.svm.2022.subtype_recurrence), by=c('pid'='pid'))
+stopifnot(tmp$pred == tmp$GITS.150.svm.2022.subtype_recurrence)
+rm(tmp)
+
+
+saveRDS(segments, 'tmp/analysis_GITS_space.transition.segments.Rds')
+rm(segments, tmp.paired)
+
 
 
 # export ----
