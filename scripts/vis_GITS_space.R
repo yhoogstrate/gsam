@@ -1545,25 +1545,34 @@ plt <- rbind(
       sid %in% c('BAI2', 'CAO1-replicate', 'FAB2', 'GAS2-replicate') == F
     ) %>%
     dplyr::filter(tumour.percentage.dna >= 15) |>
-
     dplyr::select(
       `pid`,
       `NMF:150:PCA:eucledian.dist`,
-    ) 
+    ) |> 
+    dplyr::left_join(gsam.patient.metadata |> 
+                       dplyr::select(`studyID`, `HM`),
+                     by=c('pid'='studyID'),suffix=c('','')) |> 
+    dplyr::mutate(HM = case_when(
+      HM == "No" ~ F,
+      HM == "Yes" ~ T, 
+      T ~ as.logical(NA)
+    ))
   ,
   glass.gbm.rnaseq.metadata.all.samples |>
     dplyr::select(
       `case_barcode`,
       `NMF:150:PCA:eucledian.dist`,
+      `HM`
     ) |>
     dplyr::rename(pid = case_barcode) 
 ) |> 
   dplyr::filter(!is.na(`NMF:150:PCA:eucledian.dist`)) |> 
   dplyr::distinct() |> 
-  dplyr::mutate(pid = as.character(pid))
+  dplyr::mutate(pid = as.character(pid)) |> 
+  dplyr::mutate(facet.HM.determinated = is.na(HM))
 
 
-
+# load transition segments 
 plt.expanded <- readRDS('tmp/analysis_GITS_space.transition.segments.Rds') |> 
   dplyr::left_join(plt, by=c('pid'='pid')) |> 
   dplyr::mutate(x = pct_transition * `NMF:150:PCA:eucledian.dist` ) |> 
@@ -1577,6 +1586,7 @@ plt.expanded <- readRDS('tmp/analysis_GITS_space.transition.segments.Rds') |>
   dplyr::rename(subtype = pred)
 
 
+# add initial subtype to each segment, for facetting
 plt.expanded <- plt.expanded |> 
   dplyr::left_join(
     plt.expanded |> 
@@ -1586,7 +1596,7 @@ plt.expanded <- plt.expanded |>
     by=c('pid'='pid'), suffix=c('','')
   )
 
-
+# add position of second segment, to normalize for right facet
 plt.expanded <- plt.expanded |> 
   dplyr::left_join(
     plt.expanded |> 
@@ -1596,62 +1606,106 @@ plt.expanded <- plt.expanded |>
     by=c('pid'='pid'), suffix=c('','')
   )
 
+# plt.expanded <- plt.expanded |>
+#  dplyr::filter(pid == 'GLSS-HF-DE05')
+# print(plt.expanded)
 
+
+# add HM status
 plt.expanded <- rbind(
-  plt.expanded |> dplyr::mutate(type ="a"),
-  plt.expanded |> dplyr::mutate(type ="b") |> 
-    dplyr::mutate(x = x - x.init) |> 
+  plt.expanded,
+  plt.expanded |>
+    dplyr::filter(init == T) |>
+    dplyr::filter(!is.na(HM) & HM == T) |>
+    dplyr::mutate(x = - 0.025) |>
+    dplyr::mutate(subtype = "Hyper-mutant") |>
+    dplyr::mutate(segment = paste0("segment.",pid, ".HM")),
+  
+  plt.expanded |>
+    dplyr::filter(init == T) |>
+    dplyr::filter(!is.na(HM) & HM == T) |>
+    dplyr::mutate(x = - 0.05) |>
+    dplyr::mutate(subtype = "Hyper-mutant") |>
+    dplyr::mutate(segment = paste0("segment.",pid, ".HM"))
+)
+print(plt.expanded)
+
+
+
+# make facettes
+plt.expanded <- rbind(
+  plt.expanded |>
+    dplyr::mutate(type ="a")
+  ,
+  plt.expanded |>
+    dplyr::mutate(type ="b") |>
+    dplyr::mutate(x = case_when(
+      subtype == "Hyper-mutant" & x == -0.025 ~ -2.75,
+      subtype == "Hyper-mutant" & x == -0.05 ~ -2.75 - 0.04,
+      T ~ x - x.init)) |>
     dplyr::mutate(d = ifelse(n == 2, -x.init,d - x.init))
-) |> 
+) |>
   dplyr::mutate(dataset = grepl("TCGA|GLSS",pid))
 
 
 
+
 p1 <- ggplot(plt.expanded |> dplyr::filter(type=="a"), aes(x = x , y = reorder(pid, d), col = subtype, group=segment)) +
-  #geom_point(cex=1) +
-  geom_path(lwd = 0.8) + 
-  facet_grid(rows = vars(subtype.init), scales = "free", space="free_y") + 
+  geom_line(lwd = 0.8) + 
+  facet_grid(rows = vars(facet.HM.determinated, subtype.init), scales = "free", space="free_y") + 
   labs(x = "Distance GITS space",
        y=NULL,
        col = "Distance within Subtype space") +
-  theme_light() +
-  theme(
-    text = element_text(family = 'Helvetica'),
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    legend.position = 'bottom',
-    plot.title = element_text(face = "bold", size = rel(1.2), hjust = 0.5),
-    axis.text.y = element_text(size = 6)
-  ) +
+  theme_bw()  +
   theme(strip.background = element_blank(), strip.text = element_blank()) +
+  theme(
+    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
+    #strip.background = element_rect(colour="white",fill="white"),
+    axis.title = element_text(face = "bold",size = rel(1)),
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank(),
+    legend.position = 'bottom',
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    panel.border = element_rect(colour = "black", fill=NA, size=1.25)
+  ) +
   scale_color_manual(values = c(subtype_colors, 'Hyper-mutant' = 'gray40'), guide = guide_legend(title = NULL, title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75))
 
 
-p2 <- ggplot(plt.expanded |> dplyr::filter(type=="b"), aes(x = x , y = reorder(pid, d), col = subtype, group=pid)) +
+p2 <- ggplot(plt.expanded |> dplyr::filter(type=="b"), aes(x = x , y = reorder(pid, d), col = subtype, group=segment)) +
   #geom_point(cex=1) +
   geom_line(lwd = 0.8) + 
-  facet_grid(rows = vars(subtype.init), scales = "free", space="free_y") + 
+  facet_grid(rows = vars(facet.HM.determinated, subtype.init), scales = "free", space="free_y") + 
   labs(x = "Distance GITS space",
        y=NULL,
        col = "Distance within Subtype space") +
-  theme_light() +
-  theme(
-    text = element_text(family = 'Helvetica'),
-    axis.text.x = element_text(angle = 45, hjust = 1),
-    legend.position = 'bottom',
-    plot.title = element_text(face = "bold", size = rel(1.2), hjust = 0.5),
-    axis.text.y = element_text(size = 6)
-  ) +
+  theme_bw()  +
   theme(strip.background = element_blank(), strip.text = element_blank()) +
+  theme(
+    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
+    #strip.background = element_rect(colour="white",fill="white"),
+    axis.title = element_text(face = "bold",size = rel(1)),
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank(),
+    legend.position = 'bottom',
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    panel.border = element_rect(colour = "black", fill=NA, size=1.25)
+  ) +
   scale_color_manual(values = c(subtype_colors, 'Hyper-mutant' = 'gray40'), guide = guide_legend(title = NULL, title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75))
 
 
 p1 + p2
-ggsave("/tmp/test.pdf",width=10*1.4,height=10*1.4)
+ggsave("output/figures/2022_figure_S3b.pdf", width=8.3 / 2,height=8.3/2, scale=2)
 
 
 
 
-#'@todo error.m x purity
+## todo NMF error.m x purity ----
 
 
 
@@ -7110,6 +7164,5 @@ plot(net,
 
 
 
-
-
 # 〰 © Dr. Youri Hoogstrate 〰 ----
+
