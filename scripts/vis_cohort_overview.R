@@ -56,13 +56,29 @@ tmp <- gsam.rna.metadata |>
   dplyr::mutate(IDH = ifelse(pat.with.IDH,"+","-")) |> 
   dplyr::rename(TMZ = treatedWithTMZ) |> 
   dplyr::rename(RT = treatedWithRT) |> 
-  dplyr::mutate(GlioVis.Maj = case_when(
-    gliovis.majority_call == "Classical" ~ "CL",
-    gliovis.majority_call == "Mesenchymal" ~ "MES",
-    gliovis.majority_call == "Proneural" ~ "PN",
-    T ~ as.character(NA),
-  )) |> 
-  dplyr::mutate(GlioVis.Maj = ifelse(tumour.percentage.dna < 15, NA ,GlioVis.Maj)) |> 
+  
+  dplyr::rename( `ssGSEA subtype` = `ssGSEA.2022.subtype` ) |> 
+  dplyr::rename( `ssGSEA CL enrichment score` = `ssGSEA.2022.Classical.enrichment_score` ) |> 
+  dplyr::rename( `ssGSEA CL pval` = `ssGSEA.2022.Classical_pval` ) |> 
+  dplyr::rename( `ssGSEA MES enrichment score` = `ssGSEA.2022.Mesenchymal.enrichment_score` ) |> 
+  dplyr::rename( `ssGSEA MES pval` = `ssGSEA.2022.Mesenchymal_pval` ) |> 
+  dplyr::rename( `ssGSEA PN enrichment score` = `ssGSEA.2022.Proneural.enrichment_score` ) |> 
+  dplyr::rename( `ssGSEA PN pval` = `ssGSEA.2022.Proneural_pval` ) |> 
+
+  dplyr::rename( `NMF:150 meta-feature 1` = `NMF:150:1` ) |>
+  dplyr::rename( `NMF:150 meta-feature 2` = `NMF:150:2` ) |>
+  dplyr::rename( `NMF:150 meta-feature 3` = `NMF:150:3` ) |>
+  
+  dplyr::rename( `NMF:150 PC1` = `NMF:150:PC1` ) |>
+  dplyr::rename( `NMF:150 PC2` = `NMF:150:PC2` ) |>
+  
+  dplyr::rename( `NMF:150 PC1 (scaled)` = `NMF:150:PC1.n` ) |>
+  dplyr::rename( `NMF:150 PC2 (scaled)` = `NMF:150:PC2.n` ) |>
+  dplyr::rename( `NMF:150 PC1-2 (scaled) eucledian dist` = `NMF:150:PCA:eucledian.dist` ) |>
+  
+  dplyr::rename( `GITS NMF:150 subtype` = `GITS.150.svm.2022.subtype` ) |>
+
+  #dplyr::mutate(GlioVis.Maj = ifelse(tumour.percentage.dna < 15, NA ,GlioVis.Maj)) |> 
   dplyr::mutate(
     sig.C0.fuz = round(rna.signature.C0.fuzzy.2022,2),
     sig.C1.col = round(rna.signature.C1.collagen.2022,2),
@@ -78,15 +94,26 @@ tmp <- gsam.rna.metadata |>
   ) |> 
   dplyr::mutate(angio = ifelse(bevacizumab.before.recurrence, "Bevacizumab", "No")) |> 
   dplyr::mutate(purity = ifelse(is.na(tumour.percentage.dna),NA,paste0(tumour.percentage.dna, "%"))) |> 
-  dplyr::select(sid, pid, resection, IDH, TMZ, RT, angio, HM, purity, svvl.stat, svvl.r1.days, pfs.days, svvl.r2.days, GlioVis.Maj, MGMT, extent, sig.C0.fuz, sig.C1.col, sig.C2.end, sig.C3.oli, sig.C4.neu) |> 
+  dplyr::select(sid, pid, resection, 
+                extent, purity,
+                IDH,HM, MGMT, 
+                TMZ, RT, angio, 
+                svvl.stat, svvl.r1.days, pfs.days, svvl.r2.days,
+                `ssGSEA subtype` ,
+                `ssGSEA CL enrichment score` , `ssGSEA CL pval` , 
+                `ssGSEA MES enrichment score` , `ssGSEA MES pval` ,
+                `ssGSEA PN enrichment score` , `ssGSEA PN pval` , 
+                `NMF:150 meta-feature 1`, `NMF:150 meta-feature 2`, `NMF:150 meta-feature 3`,
+                `NMF:150 PC1`, `NMF:150 PC2`,
+                `NMF:150 PC1 (scaled)`, `NMF:150 PC2 (scaled)`,
+                `NMF:150 PC1-2 (scaled) eucledian dist`,
+                `GITS NMF:150 subtype`, `GITS travel segments` ,
+                sig.C0.fuz, sig.C1.col, sig.C2.end, sig.C3.oli, sig.C4.neu) |> 
   dplyr::mutate(sid = gsub('-new','.n',sid))
 head(tmp)
 
 
-
-#'@todo tumour treating fields
 #'@todo exp therapies
-#'@todo NMF vectors [pas na nieuwe bepaling]
 
 
 

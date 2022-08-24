@@ -580,6 +580,32 @@ gsam.rna.metadata <- gsam.rna.metadata |>
 rm(tmp)
 
 
+## Add GITS travel segments ----
+
+
+tmp <- readRDS('cache/analysis_GITS_space.transition.segments.Rds') |> 
+  dplyr::group_by(segment) |> 
+  dplyr::mutate(status = ifelse(pct_transition == min(pct_transition), "from","to")) |> 
+  dplyr::ungroup() |> 
+  dplyr::mutate(segment.str = paste0(pred," [",round(pct_transition * 100,2),"%, PC1-scaled=",round(x2_transition,4),", PC2-scaled=",round(y2_transition,4),"]")) |> 
+  tidyr::pivot_wider(id_cols = segment, names_from = status,
+                     values_from = c(
+                       pid, segment.str
+                     )) |> 
+  dplyr::mutate(segment = NULL, pid_to = NULL) |> 
+  dplyr::rename(pid = pid_from) |> 
+  dplyr::mutate(`GITS travel segments` = paste0(segment.str_from , ' -> ', segment.str_to)) |> 
+  dplyr::select(pid, `GITS travel segments`) |> 
+  dplyr::group_by(pid) |> 
+  dplyr::summarise(`GITS travel segments` = paste0(`GITS travel segments`, collapse = " -> "))
+
+gsam.rna.metadata <- gsam.rna.metadata |> 
+  dplyr::left_join(tmp, by=c('pid'='pid'), suffix=c('','')) 
+
+rm(tmp)
+
+
+
 # 〰 © Dr. Youri Hoogstrate 〰 ----
 
 
