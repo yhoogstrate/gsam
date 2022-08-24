@@ -11,19 +11,18 @@ library(ggplot2)
 
 source("scripts/R/palette.R")
 
-source("scripts/R/job_gg_theme.R")
-source("scripts/R/youri_gg_theme.R")
+#source("scripts/R/job_gg_theme.R")
+#source("scripts/R/youri_gg_theme.R")
 
 
-source("scripts/R/ligands.R")
-source("scripts/R/subtype_genes.R")
+#source("scripts/R/ligands.R")
+#source("scripts/R/subtype_genes.R")
+#source('scripts/R/wang_glioma_intrinsic_genes.R')
 
-source("scripts/R/gsam_metadata.R")
-source("scripts/R/gsam_rna-seq_expression.R")
+source("scripts/load_G-SAM_metadata.R")
+source("scripts/load_G-SAM_expression_data.R")
 
-source('scripts/R/wang_glioma_intrinsic_genes.R')
-
-source("scripts/R/glass_expression_matrix.R") # glass & tcga validation set
+source("scripts/load_GLASS_data.R") # glass & tcga validation set
 
 
 # G-SAM ----

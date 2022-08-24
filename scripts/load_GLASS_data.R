@@ -1044,9 +1044,6 @@ rm(tmp)
 # 
 
 
-rm(tmp,tmp.idh1,tmp.idh2)
-
-
 ## final check for each variable ----
 
 ### metadata ----
@@ -1130,7 +1127,7 @@ rm(tmp)
 
 # Notably, there were a few initial gliomas that demonstrated a mutational frequency above 10 mutations per Mb. However, the ‘hypermutation’ classification was restricted to only patients with this level at recurrence since these likely reflect different evolutionary paths.
 # Hypermutation was defined for all recurrent tumors that had more than 10 mutations per megabase sequenced, as described previously (Barthel et al., 2019)
-tmp <- tmp.clinical.2022 <- read.table('data/gsam/data/GLASS_GBM_R1-R2/GLASS.analysis_mut_freq.syn32908224.tsv',sep="\t",header=T,stringsAsFactors = F) |> 
+tmp <- read.table('data/gsam/data/GLASS_GBM_R1-R2/GLASS.analysis_mut_freq.syn32908224.tsv',sep="\t",header=T,stringsAsFactors = F) |> 
   dplyr::mutate(HM = coverage_adj_mut_freq2 > 10) |> 
   dplyr::select(case_barcode, HM)
 
