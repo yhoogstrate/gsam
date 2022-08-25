@@ -606,6 +606,27 @@ rm(tmp)
 
 
 
+## Add EPIC scores ----
+
+
+tmp <- readRDS(file ='tmp/out.epic.Rds') |>
+  purrr::pluck('mRNAProportions') |> 
+  dplyr::rename(`EPIC: B-cells` = `EPIC.Bcells`) |> 
+  dplyr::rename(`EPIC: CAFs` = `EPIC.CAFs`) |> 
+  dplyr::rename(`EPIC: CD4 T-cells` = `EPIC.CD4_Tcells`) |> 
+  dplyr::rename(`EPIC: CD8 T-cells` = `EPIC.CD8_Tcells`) |> 
+  dplyr::rename(`EPIC: Endothelial` = `EPIC.Endothelial`) |> 
+  dplyr::rename(`EPIC: Macrophages` = `EPIC.Macrophages`) |> 
+  dplyr::rename(`EPIC: NK-cells` = `EPIC.NKcells`) |> 
+  dplyr::rename(`EPIC: other cells` = `EPIC.otherCells`)
+
+gsam.rna.metadata <- gsam.rna.metadata |> 
+  dplyr::left_join(tmp, by=c('sid'='sid'), suffix=c('','')) 
+
+rm(tmp)
+
+
+
 # 〰 © Dr. Youri Hoogstrate 〰 ----
 
 
