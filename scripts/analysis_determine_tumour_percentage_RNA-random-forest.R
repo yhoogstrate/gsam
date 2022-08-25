@@ -1139,6 +1139,27 @@ wilcox.test(
 ) |> purrr::pluck('p.value')
 
 
+## plot again, from metadata ----
+
+
+#glass.gbm.rnaseq.metadata.all.samples$tumour.percentage.2022.source
+
+ggplot(glass.gbm.rnaseq.metadata.all.samples, 
+       aes(x=tumor.purity.cnv.pct.2022,
+           y=tumour.percentage.dna.imputed.rf.2022.all.patients.B,
+           label=sid.label)) +
+  geom_point() +
+  ggrepel::geom_text_repel(data = glass.gbm.rnaseq.metadata.all.samples |>  dplyr::filter(
+    abs(
+      tumor.purity.cnv.pct.2022 - tumour.percentage.dna.imputed.rf.2022.all.patients.B
+    ) > 25
+    
+  ))
+
+
+#glass.gbm.rnaseq.metadata.all.samples$tumor.purity.cnv.pct.2022
+#glass.gbm.rnaseq.metadata.all.samples$tumour.percentage.dna.imputed.rf.2022.all.patients.B
+
 
 # 〰 © Dr. Youri Hoogstrate 〰 ----
 

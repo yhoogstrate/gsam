@@ -837,7 +837,7 @@ tmp <- 'data/gsam/data/GLASS_GBM_R1-R2/biospecimen_aliquots_syn31121185.tsv' |>
   dplyr::select(aliquot_barcode, aliquot_batch) |> 
   dplyr::rename(aliquot_batch_synapse = aliquot_batch) |> 
   dplyr::mutate(aliquot_batch_synapse = 
-                  case_when( # see analysis_predict_GLASS_batches.R
+                  dplyr::case_when( # see analysis_predict_GLASS_batches.R
                     aliquot_barcode %in% c("GLSS-CU-R006-TP-01R-RNA-VRCJGW",
                                            "GLSS-CU-R018-R1-01R-RNA-0OVRM9",
                                            "GLSS-CU-R019-TP-01R-RNA-S5OA7D",
@@ -985,9 +985,12 @@ tmp <- glass.gbm.rnaseq.metadata.all.samples  |>
   dplyr::select(aliquot_barcode, portion_barcode) |> 
   dplyr::left_join(tmp.1, by=c('portion_barcode'='portion_barcode'), suffix=c('','')) |> 
   dplyr::left_join(tmp.2, by=c('aliquot_barcode'='aliquot_barcode'), suffix=c('','')) |> 
-  dplyr::mutate(tumour.percentage.2022 = ifelse(is.na(tumor.purity.cnv.pct.2022), tumour.percentage.dna.imputed.rf.2022.all.patients.B, tumor.purity.cnv.pct.2022)) |> 
-  dplyr::mutate(tumor.purity.cnv.pct.2022 = NULL) |> 
-  dplyr::mutate(tumour.percentage.dna.imputed.rf.2022.all.patients.B = NULL) |> 
+  dplyr::mutate(tumour.percentage.2022.source = ifelse(is.na(tumor.purity.cnv.pct.2022), "RNA-imputation", "CNV segment profiles")) |> 
+  dplyr::mutate(tumour.percentage.2022 = ifelse(tumour.percentage.2022.source == "RNA-imputation",
+                                                tumour.percentage.dna.imputed.rf.2022.all.patients.B, 
+                                                tumor.purity.cnv.pct.2022)) |> 
+  #dplyr::mutate(tumor.purity.cnv.pct.2022 = NULL) |> 
+  #dplyr::mutate(tumour.percentage.dna.imputed.rf.2022.all.patients.B = NULL) |> 
   dplyr::mutate(portion_barcode = NULL)
 
 rm(tmp.1, tmp.2)

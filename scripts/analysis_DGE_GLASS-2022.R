@@ -5,7 +5,7 @@
 
 
 if(!exists('glass.gbm.rnaseq.metadata.all.samples') | !exists('glass.gbm.rnaseq.expression.all.samples')) {
-  source('scripts/load_glass_expression_data.R')
+  source('scripts/load_GLASS_data.R')
 }
 
 
@@ -18,6 +18,7 @@ metadata <- glass.gbm.rnaseq.metadata.all.samples |>
   dplyr::mutate(aliquot_batch_synapse = gsub("-",".",aliquot_batch_synapse,fixed=T)) |>  
   dplyr::mutate(aliquot_batch_synapse = as.factor(aliquot_batch_synapse)) |> 
   dplyr::mutate(tpc = 1 - (tumour.percentage.2022 / 100))
+  
 
 
 
@@ -75,7 +76,7 @@ stopifnot(metadata$aliquot_barcode == colnames(expression.data))
 analysis.dge.glass.tpc.2022 <- expression.data %>%
   dplyr::filter(rowSums(.) > ncol(.) * 3) %>%
   DESeq2::DESeqDataSetFromMatrix(metadata, ~ aliquot_batch_synapse + tpc + condition) %>% # + resection
-  DESeq2::DESeq(parallel = T) %>%
+  DESeq2::DESeq(parallel = F) %>%
   DESeq2::results() %>%
   as.data.frame(stringsAsFactors=F) %>%
   dplyr::arrange(padj, log2FoldChange) %>%
@@ -83,6 +84,10 @@ analysis.dge.glass.tpc.2022 <- expression.data %>%
   dplyr::rename_with( ~ paste0(.x, ".glass-2022.tpc.res")) %>%
   dplyr::rename(ensembl_id = `ensembl_id.glass-2022.tpc.res`)
 
+
+analysis.dge.glass.tpc.2022 |>
+  dplyr::filter(ensembl_id == "ENSG00000164692") |> 
+  dplyr::mutate(`baseMean.glass-2022.tpc.res` = NULL)
 
 
 
@@ -96,6 +101,7 @@ saveRDS(analysis.dge.glass.tpc.2022, "tmp/analysis_DGE_GLASS-2022.tpc.Rds")
 
 
 # sandbox ----
+
 
 
 ## view pwr ----

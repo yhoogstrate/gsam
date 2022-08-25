@@ -4,10 +4,12 @@
 # load data -----
 
 
-source('scripts/load_results.out.R')
+if(!exists('results.out')) {
+  source('scripts/load_results.out.R')
+}
 
 
-## Figure 3 B,C,D,E re-styled double ----
+## Figure 2 B,C,D,E re-styled double ----
 
 
 # show CD14, CD74, CD163,
@@ -85,10 +87,50 @@ plt.expanded <- rbind(
     is.mg.or.tam == F ~ "no-mg-or-tam",
     is.mg.or.tam == T ~ dataset
   )) %>%
-  dplyr::mutate(show.label = hugo_symbol %in% c("CD33", "CD84", "FCER1G", "GPR34", "CD14","CD74", "CD163")) %>% 
+  dplyr::mutate(show.label = hugo_symbol %in% c("CD33", "CD84", "FCER1G", "GPR34", "CD14","CD74", "CD163"
+                                                #, "TMEM144","RBFOX3"
+                                                )) %>% 
   dplyr::rename(`Purity corrected` = DESeq2.tcp.corrected) 
 
 
+
+
+# ggplot(plt.expanded, aes(x = log2FoldChange ,
+#                          y =  cor.stat,
+#                          shape = is.limited ,
+#                          col =  is.limited ,
+#                          label = hugo_symbol,
+#                          #size = is.limited  ,
+#                          fill = col  ) ) +
+#   facet_grid(rows = vars(dataset), cols=vars(`Purity corrected`), scales = "free") +
+#   geom_hline(yintercept = 0, col="gray60",lwd=0.5) +
+#   geom_vline(xintercept = 0, col="gray60",lwd=0.5) +
+#   geom_point(size=2.2, data = subset(plt.expanded, `is.mg.or.tam` == F)) +
+#   geom_point(size=2.2, data = subset(plt.expanded, `is.mg.or.tam` == T)) +
+#   geom_smooth(data = subset(plt.expanded, abs(cor.stat) > 6.5 &  is.limited == FALSE),
+#               aes(group=1),
+#               method="lm",
+#               se = FALSE,  formula=y ~ x, orientation="y", col="#ff2929", show.legend=F ) +
+#   ggrepel::geom_text_repel(data=subset(plt.expanded, show.label  & log2FoldChange > 0), size=2.5 , 
+#                            segment.size = 0.25, segment.linetype = 1, nudge_x = 3.1, 
+#                            direction = "y", hjust = "left", col="black", nudge_y = -4.8 ) +
+#   ggrepel::geom_text_repel(data=subset(plt.expanded, show.label  & log2FoldChange < 0), size=2.5 ,
+#                            segment.size = 0.25, segment.linetype = 1, nudge_x = -3.1, 
+#                            direction = "y", hjust = "right", col="black", nudge_y = -4.8 ) +
+#   scale_shape_manual(values = c('TRUE'= 23, 'FALSE' = 21)   )  +
+#   scale_color_manual(values = c('FALSE' = '#00000040', 'TRUE' = '#000000aa')) +
+#   scale_fill_manual(values = dataset_colors <- c('G-SAM' = '#e69356', 'GLASS' = '#69a4d5', 'no-mg-or-tam'='white') ) + 
+#   theme_bw() + 
+#   labs(x = "log2FC R1 vs. R2",
+#        y="Correlation t-statistic with tumour percentage",
+#        shape = "Truncated at x-axis",
+#        size="Truncated at x-axis",
+#        col="Truncated at x-axis") +
+#   ggpubr::stat_cor(
+#     data = subset(plt.expanded, abs(cor.stat) > 6.5 &  is.limited == FALSE),
+#     aes(col=NULL,fill=NULL,shape=NULL), method="pearson" ) +
+#   xlim(-2.5,2.5)
+# 
 
 
 ggplot(plt.expanded, aes(x = log2FoldChange ,
@@ -103,30 +145,75 @@ ggplot(plt.expanded, aes(x = log2FoldChange ,
   geom_vline(xintercept = 0, col="gray60",lwd=0.5) +
   geom_point(size=2.2, data = subset(plt.expanded, `is.mg.or.tam` == F)) +
   geom_point(size=2.2, data = subset(plt.expanded, `is.mg.or.tam` == T)) +
-  geom_smooth(data = subset(plt.expanded, abs(cor.stat) > 7.5 &  is.limited == FALSE),
+  geom_smooth(data = subset(plt.expanded, abs(cor.stat) > 6.5 &  is.limited == FALSE),
               aes(group=1),
               method="lm",
-              se = FALSE,  formula=y ~ x, orientation="y", col="#ff2929", show.legend=F ) +
-  ggrepel::geom_text_repel(data=subset(plt.expanded, show.label  & log2FoldChange > 0), size=2.5 , 
-                           segment.size = 0.25, segment.linetype = 1, nudge_x = 3.1, 
-                           direction = "y", hjust = "left", col="black", nudge_y = -4.8 ) +
-  ggrepel::geom_text_repel(data=subset(plt.expanded, show.label  & log2FoldChange < 0), size=2.5 ,
-                           segment.size = 0.25, segment.linetype = 1, nudge_x = -3.1, 
-                           direction = "y", hjust = "right", col="black", nudge_y = -4.8 ) +
+              se = FALSE,  formula=y ~ x, orientation="y",col="#ff2929", show.legend=F ) +
+    ggrepel::geom_text_repel(data=subset(plt.expanded, show.label  & log2FoldChange > 0), size=2.5 ,
+                             segment.size = 0.25, segment.linetype = 1, nudge_x = 3.1,
+                             direction = "y", hjust = "left", col="black", nudge_y = -4.8 ) +
+    ggrepel::geom_text_repel(data=subset(plt.expanded, show.label  & log2FoldChange < 0), size=2.5 ,
+                             segment.size = 0.25, segment.linetype = 1, nudge_x = -3.1,
+                             direction = "y", hjust = "right", col="black", nudge_y = -4.8 ) +
   scale_shape_manual(values = c('TRUE'= 23, 'FALSE' = 21)   )  +
   scale_color_manual(values = c('FALSE' = '#00000040', 'TRUE' = '#000000aa')) +
   scale_fill_manual(values = dataset_colors <- c('G-SAM' = '#e69356', 'GLASS' = '#69a4d5', 'no-mg-or-tam'='white') ) + 
-  youri_gg_theme + 
+  theme_bw()  +
+  theme(
+    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
+    #strip.background = element_rect(colour="white",fill="white"),
+    axis.title = element_text(face = "bold",size = rel(1)),
+    #axis.text.x = element_blank(),
+    legend.position = 'bottom',
+    #panel.grid.major.x = element_blank(),
+    #panel.grid.minor.x = element_blank(),
+    #panel.grid.major.y = element_blank(),
+    #panel.grid.minor.y = element_blank(),
+    #axis.ticks.x = element_blank(),
+    panel.border = element_rect(colour = "black", fill=NA, size=1.25)
+  ) +
   labs(x = "log2FC R1 vs. R2",
        y="Correlation t-statistic with tumour percentage",
        shape = "Truncated at x-axis",
        size="Truncated at x-axis",
        col="Truncated at x-axis") +
-  xlim(-2.5,2.5)
+  xlim(-2.5,2.5) +
+  ggpubr::stat_cor(
+    aes(col=NULL,fill=NULL,shape=NULL),
+    method="spearman")
+
+
+
+# tmp = plt.expanded |> 
+#   dplyr::filter(dataset == "G-SAM" & `Purity corrected` == "Tumor cell-% uncorrected") |> 
+#   dplyr::mutate(y =  log2FoldChange, x= cor.stat)
+# 
+# reg<-lm(formula = y ~ x,
+#         data=tmp |> 
+#           dplyr::filter(abs(x) > 5 & is.limited == F)
+# )
+# coeff<-coefficients(reg)          
+# intercept<-coeff[1]
+# slope<- coeff[2]
+# 
+# print(slope)
+# # 
+# # 
+# 
+# ggplot(tmp, aes(y = y,  x =  x)) +
+#   geom_point() +
+#   geom_abline(intercept = intercept, slope = slope, color="red", 
+#                linetype="dashed", size=1.5)
+# 
+# 
 
 
 
 ##ggsave('output/figures/geiser_plot_mckenzy_immune_tam_double.pdf', height=5.75 * 1.1 * 1.1,width=12 * 1.1)
+
+
+
+
 
 
 # clean-up ----

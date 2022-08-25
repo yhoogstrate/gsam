@@ -40,6 +40,7 @@ plt <- rbind(
     dplyr::mutate(dataset = "G-SAM")
   ,
   glass.gbm.rnaseq.metadata.all.samples |>
+    dplyr::filter(tumour.percentage.2022 >= 15) |>
     dplyr::mutate(is.primary = resection == "TP") |> 
     dplyr::select(
       aliquot_barcode,
@@ -53,6 +54,28 @@ plt <- rbind(
     dplyr::rename(pid = case_barcode) |> 
     dplyr::mutate(dataset = "GLASS")
 )
+
+tmp.n.gsam <- plt |> 
+  dplyr::filter(dataset == "G-SAM") |> 
+  nrow()
+tmp.n.glass <- plt |> 
+  dplyr::filter(dataset == "GLASS") |> 
+  nrow()
+
+tmp.p.gsam <- plt |> 
+  dplyr::filter(dataset == "G-SAM") |> 
+  dplyr::group_by(pid) |> 
+  dplyr::filter(n() > 1) |> 
+  dplyr::pull(pid) |> 
+  unique() |> 
+  length()
+tmp.p.glass <- plt |> 
+  dplyr::filter(dataset == "GLASS") |> 
+  dplyr::group_by(pid) |> 
+  dplyr::filter(n() > 1) |> 
+  dplyr::pull(pid) |> 
+  unique() |> 
+  length()
 
 
 
@@ -93,10 +116,7 @@ plt <- plt |>
 rm(tmp.segment)
 
 
-# plt <- plt |> 
-#   dplyr::filter(dataset == "GLASS")
 
-  
 # make facets
 plt.expanded <- rbind(
   plt |> dplyr::mutate(facet = "Classical") |>
@@ -106,6 +126,10 @@ plt.expanded <- rbind(
   plt |> dplyr::mutate(facet = "Proneural")  |> 
     dplyr::mutate(highlight = subtype.primary == facet)
 )
+
+
+
+
 
 
 
@@ -142,9 +166,12 @@ ggplot(plt.expanded, aes(x=-`NMF:150:PC1`,y=-`NMF:150:PC2`, group=pid, col =`GIT
   scale_color_manual(values = subtype_colors) +
   labs(x = "PC1 on NMF meta-features", y = "PC2 on NMF meta-features", fill = "Subtype") +
   theme_bw() +
-  theme(axis.title = element_text(face = "bold",size = rel(1))) +
+  theme(axis.title = element_text(face = "bold", size = rel(1))) +
   theme(legend.position = 'bottom') +
-  theme(text = element_text(family = 'Arial'))
+  ggtitle(paste0("G-SAM: n=",tmp.n.gsam, ", pairs=", tmp.p.gsam, "    -    GLASS: n=",tmp.n.glass, ", pairs=", tmp.p.glass)) +
+  theme(
+    panel.border = element_rect(colour = "black", fill=NA, size=1.1)
+  )
 
 rm(plt, plt.expanded)
 

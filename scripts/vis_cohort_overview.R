@@ -43,7 +43,9 @@ tmp <- gsam.rna.metadata |>
       mgmtPrimary,mgmtRecurrent,
       extentOfResectionFirstSurgery,extentOfResectionSecondSurgery,
       bevacizumab.before.recurrence,
-      status, survivalDays, progressionFreeDays, survivalFromSecondSurgeryDays
+      status, survivalDays, progressionFreeDays, survivalFromSecondSurgeryDays,
+      
+      otherTreatmentsBeforeSecondSurgery, treatmentDetailsFirstPD, treatmentDetailsFourthPD, treatmentDetailsSecondPD, treatmentDetailsThirdPD
     )
     ,by=c('pid'='studyID'),suffix=c('','')) |> 
   dplyr::mutate(MGMT = gsub("ylated","",ifelse(resection == "r1",mgmtPrimary,mgmtRecurrent))) |> 
@@ -108,7 +110,12 @@ tmp <- gsam.rna.metadata |>
                 `NMF:150 PC1 (scaled)`, `NMF:150 PC2 (scaled)`,
                 `NMF:150 PC1-2 (scaled) eucledian dist`,
                 `GITS NMF:150 subtype`, `GITS travel segments` ,
-                sig.C0.fuz, sig.C1.col, sig.C2.end, sig.C3.oli, sig.C4.neu) |> 
+                sig.C0.fuz, sig.C1.col, sig.C2.end, sig.C3.oli, sig.C4.neu,
+                
+                otherTreatmentsBeforeSecondSurgery, 
+                treatmentDetailsFirstPD, treatmentDetailsFourthPD,
+                treatmentDetailsSecondPD, treatmentDetailsThirdPD
+                ) |> 
   dplyr::mutate(sid = gsub('-new','.n',sid))
 head(tmp)
 

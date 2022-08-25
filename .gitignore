@@ -42,3 +42,5 @@ output/tables/gliovis-subtype-input-table.csv
 /*.png
 infercnv
 /host
+*.copy
+scripts/analysis_DGE_GLASS-2022_job.R

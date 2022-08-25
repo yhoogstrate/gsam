@@ -9,9 +9,7 @@ if(!exists('glass.gbm.rnaseq.metadata.all.samples') | !exists('glass.gbm.rnaseq.
 }
 
 
-# shape data ----
-
-# glass.gbm.rnaseq.metadata.all.samples
+## shape data ----
 
 
 stopifnot(glass.gbm.rnaseq.metadata.all.samples$aliquot_barcode == colnames(glass.gbm.rnaseq.expression.all.samples))
@@ -23,7 +21,9 @@ tmp.metadata <- glass.gbm.rnaseq.metadata.all.samples |>
   dplyr::mutate(cond = as.factor(cond))
 
 
+
 expression.vst <- glass.gbm.rnaseq.expression.all.samples |> 
+  dplyr::select(tmp.metadata$aliquot_barcode) |> 
   DESeq2::DESeqDataSetFromMatrix(tmp.metadata, ~cond) |> 
   DESeq2::vst(blind=T) |> 
   SummarizedExperiment::assay() |> 
@@ -32,7 +32,7 @@ expression.vst <- glass.gbm.rnaseq.expression.all.samples |>
 
 
 
-# perform cor ----
+## perform cor ----
 
 
 stopifnot(colnames(expression.vst) == tmp.metadata$aliquot_barcode)
@@ -41,6 +41,7 @@ cor.stats <- expression.vst |> # remove batch effects: aliquot_batch_synapse
   t() |> 
   as.data.frame(stringsAsFactors=F) |> 
   pbapply::pblapply(cor.test , y=tmp.metadata$tumour.percentage.2022, method = "pearson") |> 
+  #pbapply::pblapply(cor.test , y=tmp.metadata$tumour.percentage.dna.imputed.rf.2022.all.patients.B, method = "pearson") |>
   unlist() |> 
   data.frame() |> 
   `colnames<-`('value') |> 
@@ -57,13 +58,13 @@ cor.stats <- expression.vst |> # remove batch effects: aliquot_batch_synapse
   as.data.frame()
 
 
-# export ----
+## export ----
 
 
 saveRDS(cor.stats, file='tmp/analysis_cor_purity_expression_GLASS-2022.Rds')
 
 
-# cleanup ----
+## cleanup ----
 
 
 rm(expression.vst, tmp.metadata, cor.stats)
