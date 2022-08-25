@@ -101,6 +101,8 @@ tmp <- gsam.rna.metadata |>
                 IDH,HM, MGMT, 
                 TMZ, RT, angio, 
                 svvl.stat, svvl.r1.days, pfs.days, svvl.r2.days,
+                
+                # subtype
                 `ssGSEA subtype` ,
                 `ssGSEA CL enrichment score` , `ssGSEA CL pval` , 
                 `ssGSEA MES enrichment score` , `ssGSEA MES pval` ,
@@ -110,8 +112,21 @@ tmp <- gsam.rna.metadata |>
                 `NMF:150 PC1 (scaled)`, `NMF:150 PC2 (scaled)`,
                 `NMF:150 PC1-2 (scaled) eucledian dist`,
                 `GITS NMF:150 subtype`, `GITS travel segments` ,
+                
+                # epic
+                `EPIC: B-cells` ,
+                `EPIC: CAFs` ,
+                `EPIC: CD4 T-cells` ,
+                `EPIC: CD8 T-cells` ,
+                `EPIC: Endothelial` ,
+                `EPIC: Macrophages` ,
+                `EPIC: NK-cells` ,
+                `EPIC: other cells` ,
+                
+                # signatures
                 sig.C0.fuz, sig.C1.col, sig.C2.end, sig.C3.oli, sig.C4.neu,
                 
+                # therapy (extra)
                 otherTreatmentsBeforeSecondSurgery, 
                 treatmentDetailsFirstPD, treatmentDetailsFourthPD,
                 treatmentDetailsSecondPD, treatmentDetailsThirdPD
