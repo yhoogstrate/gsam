@@ -146,7 +146,7 @@ ggplot(plt.expanded, aes(x=-`NMF:150:PC1`,y=-`NMF:150:PC2`, group=pid, col =`GIT
                size=0.25, 
                lty=2,
                breaks=c(1.75,2.25)) +
-  facet_grid(cols = vars(facet)) +
+  facet_grid(rows = vars(facet)) +
   geom_point(data = plt.expanded |> dplyr::filter(highlight == F) , size=2.5 * 0.65, alpha=0.15, col="black",pch=21, fill='gray80') +
   geom_segment(data= plt.expanded |> dplyr::filter(highlight == T & `GITS.150.svm.2022.subtype_recurrence` == 'Classical') , # fill.arrow is no aesthetic (yet?)
                aes(xend = -`NMF:150:PC1_recurrence`, yend=-`NMF:150:PC2_recurrence`), arrow.fill = subtype_colors['Classical'], col=rgb(0,0,0,0.6),
@@ -168,10 +168,14 @@ ggplot(plt.expanded, aes(x=-`NMF:150:PC1`,y=-`NMF:150:PC2`, group=pid, col =`GIT
   theme_bw() +
   theme(axis.title = element_text(face = "bold", size = rel(1))) +
   theme(legend.position = 'bottom') +
-  ggtitle(paste0("G-SAM: n=",tmp.n.gsam, ", pairs=", tmp.p.gsam, "    -    GLASS: n=",tmp.n.glass, ", pairs=", tmp.p.glass)) +
-  theme(
-    panel.border = element_rect(colour = "black", fill=NA, size=1.1)
-  )
+  labs(caption=paste0("G-SAM: n=",tmp.n.gsam, ", pairs=", tmp.p.gsam, " GLASS: n=",tmp.n.glass, ", pairs=", tmp.p.glass)  ) +
+  theme(panel.border = element_rect(colour = "black", fill=NA, size=1.1)  )
+
+
+ggsave("output/figures/2022_figure_1c.pdf", width=8.3 / 4,height=8.3/4 * 2.8, scale=2)
+ggsave("output/figures/2022_figure_1c.svg", width=8.3 / 4,height=8.3/4 * 2.8, scale=2)
+
+
 
 rm(plt, plt.expanded)
 
