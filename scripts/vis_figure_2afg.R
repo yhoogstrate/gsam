@@ -194,8 +194,7 @@ tmp.n.pairs.leq.15 <-  tmp.paired |>
   length()
 
 
-#p1 <- 
-ggplot(plt, aes(x = reorder(pid, rank), y=y, col=sign, label=label)) +
+p1 <- ggplot(plt, aes(x = reorder(pid, rank), y=y, col=sign, label=label)) +
   ggplot2::geom_point(data = subset(plt, resection == "primary"), pch=19, cex=1.2, alpha=0.8) +
   ggplot2::geom_path(arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.125, "inches")) , alpha = 0.8, lwd=1.05 )  +
   ggplot2::scale_color_manual(values = c('increase'='#bb5f6c', 'decrease'='#79b1b1'),guide="none") +
@@ -205,7 +204,7 @@ ggplot(plt, aes(x = reorder(pid, rank), y=y, col=sign, label=label)) +
     y = NULL,
     x = NULL, #"G-SAM patient",
     col = NULL, #$"Longitudinal direction",
-    caption = paste0("Pairs = ",(tmp.n.pairs.below.15 + tmp.n.pairs.leq.15), " (",tmp.n.pairs.leq.15," \u2265 15%, ",tmp.n.pairs.below.15," < 15%)")
+    caption = paste0("Pairs = ",(tmp.n.pairs.below.15 + tmp.n.pairs.leq.15), " (",tmp.n.pairs.leq.15," >= 15%, ",tmp.n.pairs.below.15," < 15%)")
   ) +
   ggplot2::theme_bw()  +
   ggplot2::theme(
@@ -213,16 +212,18 @@ ggplot(plt, aes(x = reorder(pid, rank), y=y, col=sign, label=label)) +
     #strip.background = element_rect(colour="white",fill="white"),
     axis.title = element_text(face = "bold",size = rel(1)),
     legend.position = 'bottom',
-    #axis.text.x = element_text(angle = 90, hjust = 0.5)
+    
+    #axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
     axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    
     panel.grid.major.x = element_blank(),
     panel.grid.minor.x = element_blank(),
     panel.grid.major.y = element_blank(),
     panel.grid.minor.y = element_blank(),
-    axis.ticks.x = element_blank(),
     panel.border = element_rect(colour = "black", fill=NA, size=1.1)
   ) 
-ggsave("output/figures/2022_figure_2a_top.pdf", width=8.3 ,height=8.3/2.5 , scale=2)
+#ggsave("output/figures/2022_figure_2a_top.pdf", width=8.3 ,height=8.3/2.5 , scale=2)
 
 
 
@@ -248,7 +249,6 @@ plt <- tmp.paired |>
     BRCA2,ATM,SETD2,ARID2,KMT2C,KMT2D,
     NF1,ERBB3,
     EGFR,TP53BP1,TP53,PIK3R1,PIK3CA,TSC2,
-    # PI3K, TP53Signaling, Wnt, Telomere, RTK, RAS, DNADamage, primary7, primary10, recurrent7, recurrent10, cnStatusEGFRs,
     
     cnStatusRB1s,
     cnStatusNF1s,
@@ -282,15 +282,24 @@ plt <- tmp.paired |>
   dplyr::mutate(ypanel = factor(ypanel, levels=c('A','B','C','D')))
   
 
+tmp.n.pairs.below.15 <- tmp.paired |>
+  dplyr::filter(has.low.purity.sample) |> 
+  dplyr::pull(pid) |> 
+  unique() |> 
+  length()
+tmp.n.pairs.leq.15 <-  tmp.paired |>
+  dplyr::filter(!has.low.purity.sample) |> 
+  dplyr::pull(pid) |> 
+  unique() |> 
+  length()
 
 
-#p2 <- 
-ggplot(plt, aes(x = reorder(pid, rank), y=variable, fill = value)) +
+
+p2 <- ggplot(plt, aes(x = reorder(pid, rank), y=variable, fill = value)) +
   facet_grid(cols=vars(panel), rows=vars(ypanel), scales="free", space="free") + 
   geom_tile(colour = "black", size = 0.3) +
   theme_bw() +
   #coord_equal() +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5,hjust = 1), legend.position = 'bottom') +
   scale_fill_manual(values = c( subtype_colors ,
                                 "Wildtype"="white",
                                 "No"="white",
@@ -301,26 +310,47 @@ ggplot(plt, aes(x = reorder(pid, rank), y=variable, fill = value)) +
                                 "Yes" = "#2e415e", # zelfde als stable #2e415e
                                 
                                 "NA"="grey"  )) + 
-  labs(y=NULL,x=NULL)
+  ggplot2::theme_bw()  +
+  ggplot2::theme(
+    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
+    #strip.background = element_rect(colour="white",fill="white"),
+    axis.title = element_text(face = "bold",size = rel(1)),
+    legend.position = 'bottom',
+    
+    #axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    panel.border = element_rect(colour = "black", fill=NA, size=1.1)
+  ) +
+  labs(y=NULL,x=NULL,fill = NULL,
+       caption = paste0("Pairs = ",(tmp.n.pairs.below.15 + tmp.n.pairs.leq.15), " (",tmp.n.pairs.leq.15," >= 15% ",tmp.n.pairs.below.15," < 15%)")
+       ) +
+  guides(fill=guide_legend(ncol=10))
 
 
 
 
-#p1 / p2 +  plot_layout(heights = c(2, 1))
+p1 / p2 +  plot_layout(heights = c(2, 1.4))
 
 
 
 
 
-ggsave("output/figures/epic_tumor_percentage_traversal_vertical.pdf", width = 16 * 1.05, height=11.5 * 1.05)
+#ggsave("output/figures/epic_tumor_percentage_traversal_vertical.pdf", width = 16 * 1.05, height=11.5 * 1.05)
+ggsave("output/figures/2022_figure_2a.pdf", width=8.3 ,height=8.3/1.5 , scale=2)
+ggsave("output/figures/2022_figure_2a.svg", width=8.3 ,height=8.3/1.5 , scale=2)
 
 
 
 
 
 
-
-rm(plt)
+rm(plt, tmp.n.pairs.below.15, tmp.n.pairs.leq.15, p1, p2)
 
 
 
