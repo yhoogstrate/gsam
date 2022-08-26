@@ -75,7 +75,7 @@ plt <- tmp.single |>
                              'EPIC: Macrophages',
                              'NMF:150:3'
                              ), values_to = 'y', names_to = 'type') |>  # separate the panels for CD4, Macrrophage and NMF W3 (MES)
-  dplyr::mutate(panel = ifelse(has.low.purity.sample,"Patients with purity < 15% sample(s)", "Patients with purity >= 15% for both samples")) |> 
+  dplyr::mutate(panel = ifelse(has.low.purity.sample,"Patients with purity < 15% sample(s)", "Patients with purity \u2265 15% for both samples")) |> 
   dplyr::filter((has.low.purity.sample & type == "NMF:150:3") == F) |> 
   dplyr::group_by(pid, type) |> 
   dplyr::mutate(`sign` = ifelse((y == max(y) & resection == "recurrence") | (y == min(y) & resection == "primary") , "increase", "decrease")) |> 
