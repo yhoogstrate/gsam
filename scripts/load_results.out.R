@@ -164,7 +164,7 @@ tmp.2 <- data.frame(gid = tmp.1$labels[rev(tmp.1$order)]) |>
   dplyr::mutate(C4s2.start = which(gid == "ENSG00000133392.18_5|MYH11|chr16:15796992-15950885(-)")) |> 
   dplyr::mutate(C4s2.end = which(gid == "ENSG00000178773.15_6|CPNE7|chr16:89642166-89663654(+)")) |> 
   
-  dplyr::mutate(cluster.2022 = case_when(
+  dplyr::mutate(cluster.2022 = dplyr::case_when(
     dplyr::row_number() >= C0.start & dplyr::row_number() <= C0.end ~ "C0",
     dplyr::row_number() >= C1.start & dplyr::row_number() <= C1.end ~ "C1",
     dplyr::row_number() >= C2.start & dplyr::row_number() <= C2.end ~ "C2",
