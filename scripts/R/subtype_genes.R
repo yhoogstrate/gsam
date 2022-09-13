@@ -3,7 +3,7 @@
 # load expression data for matching ----
 
 if(!exists('gencode.31')) {
-  source('scripts/R/gsam_rna-seq_expression.R')
+  source('scripts/load_G-SAM_expression_data.R')
 }
 
 

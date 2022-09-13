@@ -3,22 +3,29 @@
 # load libs ----
 
 
+library(recursiveCorPlot)
+
+
 # load data ----
 
+
 source('scripts/load_results.out.R')
+source('scripts/load_G-SAM_expression_data.R')
 
 
 # prepare data ----
 
+
 ## genes ----
+
 
 metadata.genes <- results.out |> 
     dplyr::select(-contains("glass.tpc")) |>  # remove 2021/small batch
     
-    dplyr::filter( !is.na(log2FoldChange.gsam.tpc.res)   ) %>%
-    dplyr::filter( !is.na(`log2FoldChange.glass-2022.tpc.res`)  ) %>%
-    dplyr::filter( !is.na(padj.gsam.tpc.res)   ) %>%
-    dplyr::filter( !is.na(`padj.glass-2022.tpc.res`)  ) %>%
+    dplyr::filter(!is.na(log2FoldChange.gsam.tpc.res)) %>%
+    dplyr::filter(!is.na(`log2FoldChange.glass-2022.tpc.res`)) %>%
+    dplyr::filter(!is.na(padj.gsam.tpc.res)) %>%
+    dplyr::filter(!is.na(`padj.glass-2022.tpc.res`)) %>%
     
     dplyr::mutate(direction.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res > 0 , "up", "down")) %>%
     dplyr::mutate(`direction.glass-2022.tpc.res` = ifelse(`log2FoldChange.glass-2022.tpc.res` > 0 , "up", "down")) %>%
@@ -31,7 +38,33 @@ metadata.genes <- results.out |>
     
     dplyr::filter(significant.2022 == T)
 
-print(paste0("Genes part of recursive clustering: ", nrow(metadata.genes)))
+
+k.genes <- nrow(metadata.genes)
+print(paste0("Genes part of recursive clustering: ", k.genes))
+
+
+
+## expression data ----
+
+
+sel <- gsam.rna.metadata |> 
+  dplyr::filter(blacklist.pca == F) |> 
+  dplyr::filter(pat.with.IDH == F) |> 
+  dplyr::filter(sid %in% c('BAI2', 'CAO1-replicate', 'FAB2', 'GAS2-replicate') == F ) |>  # replicates
+  dplyr::filter(tumour.percentage.dna >= 15) |> 
+  dplyr::pull(sid)
+n.gsam.samples <- length(sel)
+
+
+gsam.gene.expression.all <- gsam.rnaseq.expression |> 
+  dplyr::select(sel)
+stopifnot(colnames(gsam.gene.expression.all) == sel)
+
+
+gsam.gene.expression.all.vst <- gsam.gene.expression.all %>%
+  DESeq2::DESeqDataSetFromMatrix(data.frame(cond = as.factor(paste0("r",round(runif( ncol(.) , 1, 2))))) , ~cond) %>%
+  DESeq2::vst(blind=T) %>%
+  SummarizedExperiment::assay()
 
 
 
@@ -40,89 +73,29 @@ print(paste0("Genes part of recursive clustering: ", nrow(metadata.genes)))
 
 
 plt.labels <- metadata.genes %>%
-  
-  dplyr::mutate(direction_up = ifelse(log2FoldChange.gsam.tpc.res > 0 , T, F) ) %>% 
-  dplyr::mutate(direction_down = ifelse(log2FoldChange.gsam.tpc.res < 0 , T, F) ) %>% 
-  
-  dplyr::mutate(TCGA.CL = ifelse(!is.na(TCGA.subtype.marker) & TCGA.subtype.marker == "TCGA-CL" , T, F) ) %>% 
-  dplyr::mutate(TCGA.MES = ifelse(!is.na(TCGA.subtype.marker) & TCGA.subtype.marker == "TCGA-MES" , T, F) ) %>% 
-  dplyr::mutate(TCGA.PN = ifelse(!is.na(TCGA.subtype.marker) & TCGA.subtype.marker == "TCGA-PN" , T, F) ) %>% 
-  
-  dplyr::mutate(Patel.Cell.cycle = ifelse(!is.na(patel.scRNAseq.cluster) & patel.scRNAseq.cluster == "Cell cycle" , T, F) ) %>% 
-  dplyr::mutate(Patel.Complete.Immune.response = ifelse(!is.na(patel.scRNAseq.cluster) & patel.scRNAseq.cluster == "Complete/Immune response" , T, F) ) %>% 
-  dplyr::mutate(Patel.Hypoxia = ifelse(!is.na(patel.scRNAseq.cluster) & patel.scRNAseq.cluster == "Hypoxia" , T, F) ) %>% 
-  
-  dplyr::rename(Neftel.AC = neftel.meta.module.AC) %>% 
-  dplyr::rename(Neftel.NPC1 = neftel.meta.module.NPC1) %>% 
-  dplyr::rename(Neftel.NPC2 = neftel.meta.module.NPC2) %>% 
-  dplyr::rename(Neftel.OPC = neftel.meta.module.OPC) %>% 
-  dplyr::rename(Neftel.MES1 = neftel.meta.module.MES1) %>% 
-  dplyr::rename(Neftel.MES2 = neftel.meta.module.MES2) %>% 
-  
+  dplyr::mutate(`McKenzie_celltype_top_human_specificity` = as.factor(.data$`McKenzie_celltype_top_human_specificity`)) |> 
   dplyr::rename(`Extracellular Matrix` = EM.struct.constituent) %>%
-  
-  dplyr::select(c('gid', 'hugo_symbol' , 'McKenzie_celltype_top_human_specificity', 'direction_up', 'direction_down',
-                  TCGA.CL, TCGA.MES, TCGA.PN ,
-                  Patel.Cell.cycle, Patel.Complete.Immune.response, Patel.Hypoxia, 
-                  Neftel.AC, Neftel.OPC, Neftel.MES1, Neftel.MES2, Neftel.NPC1, Neftel.NPC2,
-                  `Extracellular Matrix`
-                  
-                  ,significant.2022,
-                  
-                  direction.gsam.tpc.res ,log2FoldChange.gsam.tpc.res,  
-                  `direction.glass-2022.tpc.res` ,`log2FoldChange.glass-2022.tpc.res`
+  dplyr::select(c('gid', 'hugo_symbol' , `McKenzie_celltype_top_human_specificity`, 
+                  `Extracellular Matrix`, `EM.GO.0031012`,
+                  `direction.glass-2022.tpc.res`
   )) |> 
-  reshape2::dcast(hugo_symbol +
-                    direction_up + direction_down + 
-                    TCGA.CL + TCGA.MES + TCGA.PN +
-                    Neftel.AC + Neftel.NPC1 + Neftel.NPC2 + Neftel.OPC + Neftel.MES1 + Neftel.MES2 + 
-                    Patel.Cell.cycle + Patel.Complete.Immune.response + Patel.Hypoxia +
-                    `Extracellular Matrix` +
-                    gid ~ `McKenzie_celltype_top_human_specificity`, fill = NA,fun.aggregate = as.logical) |> 
-  dplyr::mutate('NA'=NULL) %>% 
   
-  dplyr::mutate(direction_up = ifelse(direction_up , T, F) ) %>% # F functions as T, NA as F, for dcast2
-  dplyr::mutate(direction_down = ifelse(direction_down , T, F) ) %>% # F functions as T, NA as F, for dcast2
-  
-  dplyr::mutate(TCGA.CL = ifelse(TCGA.CL , F, NA) ) %>%
-  dplyr::mutate(TCGA.MES = ifelse(TCGA.MES , F, NA) ) %>%
-  dplyr::mutate(TCGA.PN = ifelse(TCGA.PN , F, NA) ) %>%
-  
-  dplyr::mutate(Neftel.AC = ifelse(Neftel.AC , F, NA) ) %>%
-  dplyr::mutate(Neftel.NPC1 = ifelse(Neftel.NPC1 , F, NA) ) %>%
-  dplyr::mutate(Neftel.NPC2 = ifelse(Neftel.NPC2 , F, NA) ) %>%
-  dplyr::mutate(Neftel.OPC = ifelse(Neftel.OPC , F, NA) ) %>%
-  dplyr::mutate(Neftel.MES1 = ifelse(Neftel.MES1 , F, NA) ) %>%
-  dplyr::mutate(Neftel.MES2 = ifelse(Neftel.MES2 , F, NA) ) %>%
-  
-  dplyr::mutate(`Extracellular Matrix` = ifelse(`Extracellular Matrix` , T, F) ) %>%
-  
-  dplyr::mutate(Patel.Cell.cycle = ifelse(Patel.Cell.cycle , F, NA) ) %>%
-  dplyr::mutate(Patel.Complete.Immune.response = ifelse(Patel.Complete.Immune.response , F, NA) ) %>%
-  dplyr::mutate(Patel.Hypoxia = ifelse(Patel.Hypoxia , F, NA) ) %>%
-  
-  dplyr::mutate(TCGA.CL = NULL , TCGA.MES = NULL , TCGA.PN = NULL ,
-                Patel.Cell.cycle = NULL , Patel.Complete.Immune.response = NULL , Patel.Hypoxia = NULL)
+  dplyr::mutate(decoy = T) |> 
+  tidyr::pivot_wider(names_from = `direction.glass-2022.tpc.res`, values_from = decoy, values_fill = FALSE) |> 
+  dplyr::mutate(`NA` = NULL) |> 
+  as.data.frame() |> 
+
+  dplyr::mutate(decoy = T) |> 
+  tidyr::pivot_wider(names_from = `McKenzie_celltype_top_human_specificity`, values_from = decoy, values_fill = FALSE) |> 
+  dplyr::mutate(`NA` = NULL) |> 
+  as.data.frame()
+
+if(!'TAM' %in% colnames(plt.labels)) {
+  plt.labels$TAM <- FALSE
+}
 
 
 
-gsam.gene.expression.all.vst <- gsam.gene.expression.all %>%
-  DESeq2::DESeqDataSetFromMatrix(data.frame(cond = as.factor(paste0("r",round(runif( ncol(.) , 1, 2))))) , ~cond) %>%
-  DESeq2::vst(blind=T) %>%
-  SummarizedExperiment::assay() 
-
-
-
-sel = gsam.rna.metadata |> 
-  dplyr::filter(blacklist.pca == F & pat.with.IDH == F) |> 
-  dplyr::mutate(sid = paste0("GSAM-",sid)) |> 
-  dplyr::filter(sid %in% colnames(gsam.gene.expression.all.vst)) |>  # low res
-  dplyr::pull(sid)
-
-
-gsam.gene.expression.all.vst |>
-  as.data.frame(stringsAsFactors=F) |> 
-  dplyr::select(sel) 
 
 
 
@@ -142,39 +115,37 @@ stopifnot(rownames(plt.data) == plt.labels$hugo_symbol)
 sum(duplicated(plt.labels$hugo_symbol)) == 0
 sum(duplicated(rownames(plt.data))) == 0
 
-recursiveCorPlot(plt.data, plt.labels |> 
-                   dplyr::mutate(EM.GO.0031012 = hugo_symbol %in% go.0031012) |> 
+recursiveCorPlot::recursiveCorPlot(plt.data, plt.labels |> 
                    tibble::column_to_rownames('hugo_symbol') |> 
-                   dplyr::mutate(gid = NULL) |> 
-                   dplyr::mutate(astrocyte = ifelse(is.na( astrocyte ), F, astrocyte)) |> 
-                   dplyr::mutate(endothelial = ifelse(is.na( endothelial ), F, endothelial)) |> 
-                   dplyr::mutate(neuron = ifelse(is.na( neuron ), F, neuron)) |> 
-                   dplyr::mutate(oligodendrocyte = ifelse(is.na( oligodendrocyte ), F, oligodendrocyte)) |> 
-                   dplyr::mutate(Neftel.AC = NULL,Neftel.NPC1 = NULL,Neftel.NPC2 = NULL,Neftel.OPC = NULL,Neftel.MES1 = NULL,Neftel.MES2 = NULL )
-                 , 3.6, 3)
+                   dplyr::mutate(gid = NULL),
+                 font_scale = 3.6,
+                 legend_scale = 3,
+                 method = "ward.D2",
+                 caption = paste0("Genes: n=",       k.genes, ", ",
+                                  "G-SAM samples: n=",n.gsam.samples ," ",
+                                  "(", n.gsam.samples," >= 15%, 0 < 15%)"),
+                 return_h_object = FALSE
+                 )
 
 
 
-ggsave("output/figures/recursiveCorPlot.2022.svg", height=30, width=30) # then average, then ward.D1?
 
 
-hclust <- recursiveCorPlot(plt.data |> 
-                             tibble::rownames_to_column('hugo_symbol') |> 
-                             dplyr::left_join(plt.labels |> dplyr::select(hugo_symbol, gid),by=c('hugo_symbol'='hugo_symbol')) |> 
-                             tibble::column_to_rownames('gid') |> 
-                             dplyr::mutate(hugo_symbol=NULL)
-                             , plt.labels |> 
-                   dplyr::mutate(EM.GO.0031012 = hugo_symbol %in% go.0031012) |> 
-                   tibble::column_to_rownames('gid') |> 
-                   dplyr::mutate(hugo_symbol = NULL) |> 
-                   dplyr::mutate(astrocyte = ifelse(is.na( astrocyte ), F, astrocyte)) |> 
-                   dplyr::mutate(endothelial = ifelse(is.na( endothelial ), F, endothelial)) |> 
-                   dplyr::mutate(neuron = ifelse(is.na( neuron ), F, neuron)) |> 
-                   dplyr::mutate(oligodendrocyte = ifelse(is.na( oligodendrocyte ), F, oligodendrocyte)) |> 
-                   dplyr::mutate(Neftel.AC = NULL,Neftel.NPC1 = NULL,Neftel.NPC2 = NULL,Neftel.OPC = NULL,Neftel.MES1 = NULL,Neftel.MES2 = NULL )
-                 , 3.6, 3,"ward.D2", TRUE)
+ggsave("output/figures/2022_figure_3_recursiveCorPlot.pdf", height=30, width=30) # then average, then ward.D1?
+ggsave("output/figures/2022_figure_3_recursiveCorPlot.svg", height=30, width=30) # then average, then ward.D1?
 
-#saveRDS(hclust, "cache/h.2022.Rds")
+
+
+
+h <- recursiveCorPlot(plt.data, plt.labels |> 
+                   tibble::column_to_rownames('hugo_symbol') |> 
+                   dplyr::mutate(gid = NULL),
+                 font_scale = 3.6,
+                 legend_scale = 3,
+                 method = "ward.D2", 
+                 return_h_object = TRUE)
+
+#saveRDS(h, "cache/h.2022.Rds")
 
 
 

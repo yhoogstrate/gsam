@@ -19,11 +19,11 @@ gsam.patient.metadata <- read.csv('data/gsam/administratie/GSAM_combined_clinica
   dplyr::mutate(initialMGMT = NULL) |> 
   dplyr::mutate(gender = ifelse(studyID %in% c('AAT', 'AAM', 'AZH', 'HAI', 'FAG'),"Male",gender)) |>  # there's a number of samples of which the gender does not fit with the omics data - omics data determined genders are the corrected ones
   dplyr::mutate(gender = as.factor(gender)) |> 
-  dplyr::mutate(survival.events = case_when(
+  dplyr::mutate(survival.events = dplyr::case_when(
       status == "Deceased" ~ 1,
       status == "Censored" ~ 0,
       T ~ as.numeric(NA))) |> 
-  dplyr::mutate(survival.months = survivalDays / 365.0 * 12.0) %>%
+  dplyr::mutate(survival.months = survivalDays / 365.0 * 12.0) |> 
   dplyr::mutate(`X.1` = NULL) |> 
   dplyr::mutate(bevacizumab.before.recurrence = studyID %in% c('GAA','GAG','CCB','CBI','CBV','AAX','HAD','HAF'))
 
@@ -36,54 +36,54 @@ gsam.patient.metadata <- read.csv('data/gsam/administratie/GSAM_combined_clinica
 # it remains unclear what files are missing
 
 
-gsam.wes.samples <- data.frame(file = Sys.glob('data/gsam/DNA/dna_data_2020/request_962/PDexport/decrypted/*/mapped_sample/*.bam')) %>%
-  dplyr::mutate(wesid1 = gsub("^.+/decrypted/([^/]+)/.+$","\\1", file)) %>% #   #dplyr::mutate(wesid2 = gsub("^.+_([^\\.]+)\\..+$","\\1", file))
-  dplyr::mutate(batch = as.factor(gsub("_.+$","",wesid1))) %>%
+gsam.wes.samples <- data.frame(file = Sys.glob('data/gsam/DNA/dna_data_2020/request_962/PDexport/decrypted/*/mapped_sample/*.bam')) |> 
+  dplyr::mutate(wesid1 = gsub("^.+/decrypted/([^/]+)/.+$","\\1", file))  |>  #   #dplyr::mutate(wesid2 = gsub("^.+_([^\\.]+)\\..+$","\\1", file))
+  dplyr::mutate(batch = as.factor(gsub("_.+$","",wesid1)))  |> 
   dplyr::mutate(wesid1 = gsub("^.+_","",wesid1))
 
 
 
 
 
-gsam.cnv.metadata <- read.delim("data/gsam/DNA/sample codes sanger gsam.txt",stringsAsFactors=FALSE) %>%
-  dplyr::mutate(pid = gsub("[1-2]$","",donor_ID)) %>%
-  dplyr::select(c("donor_ID", "pid", "PD_ID", "donor_sex", "donor_age_at_diagnosis","Concentration.at.QC..ng.ul.","Volume.at.QC..ul.","Amount.at.QC..ug.")) %>%
+gsam.cnv.metadata <- read.delim("data/gsam/DNA/sample codes sanger gsam.txt",stringsAsFactors=FALSE) |> 
+  dplyr::mutate(pid = gsub("[1-2]$","",donor_ID))  |> 
+  dplyr::select(c("donor_ID", "pid", "PD_ID", "donor_sex", "donor_age_at_diagnosis","Concentration.at.QC..ng.ul.","Volume.at.QC..ul.","Amount.at.QC..ug.")) |> 
   dplyr::full_join(
     
-    read.delim('data/gsam/output/tables/cnv_copynumber-ratio.cnr_log2_all.txt',stringsAsFactors=F) %>%
-      dplyr::select( - c('chromosome', 'start', 'end', 'gene') ) %>%
-      dplyr::slice_head(n=1) %>%
-      t() %>%
-      as.data.frame() %>%
-      tibble::rownames_to_column('cnv.table.id') %>%
-      dplyr::mutate(V1 = NULL) %>%
-      dplyr::mutate(sid = gsub("\\.b[12]$","",cnv.table.id) ) %>%
-      dplyr::mutate(batch =  as.factor(gsub("^[^\\.]+\\.","",cnv.table.id))) %>%
+    read.delim('data/gsam/output/tables/cnv_copynumber-ratio.cnr_log2_all.txt',stringsAsFactors=F) |>
+      dplyr::select( - c('chromosome', 'start', 'end', 'gene') ) |>
+      dplyr::slice_head(n=1) |>
+      t() |>
+      as.data.frame() |>
+      tibble::rownames_to_column('cnv.table.id') |>
+      dplyr::mutate(V1 = NULL) |>
+      dplyr::mutate(sid = gsub("\\.b[12]$","",cnv.table.id) ) |>
+      dplyr::mutate(batch =  as.factor(gsub("^[^\\.]+\\.","",cnv.table.id))) |>
       dplyr::mutate(CNVKIT.output = T)
     
-    , by=c('PD_ID' = 'sid')) %>%
-  dplyr::left_join(gsam.patient.metadata , by=c('pid' = 'studyID')) %>%
-  dplyr::mutate(donor_sex = NULL) %>%
+    , by=c('PD_ID' = 'sid')) |>
+  dplyr::left_join(gsam.patient.metadata , by=c('pid' = 'studyID')) |>
+  dplyr::mutate(donor_sex = NULL) |>
   dplyr::left_join(
-    read.delim('data/gsam/output/tables/dna/idh_mutations.txt', stringsAsFactors = F, header=F) %>%
+    read.delim('data/gsam/output/tables/dna/idh_mutations.txt', stringsAsFactors = F, header=F) |>
       `colnames<-`(c('PD_ID' , 'IDH.mutation', 'IDH.mutation.call.status', 'IDH.mutation.VAF', 'IDH.mutation.count')),
-  by = c('PD_ID'='PD_ID')) %>%
-  dplyr::select(c('donor_ID', 'pid', 'PD_ID', 'IDH1', 'IDH.mutation', 'IDH.mutation.call.status', 'IDH.mutation.VAF', 'IDH.mutation.count','CNVKIT.output')) %>%
-  dplyr::mutate(tmp = ifelse(is.na(IDH.mutation), 'NA' , IDH.mutation)) %>%
-  dplyr::mutate(tmp = case_when( # BAW EAF FAD and JAF are all IDH1 and IDH2 negative in Kaspars paper but apparently positive in this file. actual mutation not given.
-                tmp == "NA" ~ '0',
-                tmp == '-' ~ '1' , 
-                TRUE ~ '2'
-                ))    %>%
-  dplyr::group_by(pid) %>%
-  dplyr::mutate(pat.with.IDH = max(tmp), data = cur_data() )  %>%
-  dplyr::ungroup() %>%
-  dplyr::mutate(tmp = NULL, data=NULL) %>%
-  as.data.frame() %>%
-  dplyr::mutate(pat.with.IDH = ifelse(pat.with.IDH == 0, NA , pat.with.IDH)) %>%
-  dplyr::mutate(pat.with.IDH = ifelse(pat.with.IDH == 1, F , pat.with.IDH)) %>%
-  dplyr::mutate(pat.with.IDH = ifelse(pat.with.IDH == 2, T , pat.with.IDH))  %>%
-  dplyr::mutate(resection = gsub("^...(.).*$","R\\1", donor_ID) ) %>%
+    by = c('PD_ID'='PD_ID')) |>
+  dplyr::select(c('donor_ID', 'pid', 'PD_ID', 'IDH1', 'IDH.mutation', 'IDH.mutation.call.status', 'IDH.mutation.VAF', 'IDH.mutation.count','CNVKIT.output')) |>
+  dplyr::mutate(tmp = ifelse(is.na(IDH.mutation), 'NA' , IDH.mutation)) |>
+  dplyr::mutate(tmp = dplyr::case_when( # BAW EAF FAD and JAF are all IDH1 and IDH2 negative in Kaspars paper but apparently positive in this file. actual mutation not given.
+    tmp == "NA" ~ '0',
+    tmp == '-' ~ '1' , 
+    TRUE ~ '2'
+  ))    |>
+  dplyr::group_by(pid) |>
+  dplyr::mutate(pat.with.IDH = max(tmp), data = dplyr::cur_data() )  |>
+  dplyr::ungroup() |>
+  dplyr::mutate(tmp = NULL, data=NULL) |>
+  as.data.frame() |>
+  dplyr::mutate(pat.with.IDH = ifelse(pat.with.IDH == 0, NA , pat.with.IDH)) |>
+  dplyr::mutate(pat.with.IDH = ifelse(pat.with.IDH == 1, F , pat.with.IDH)) |>
+  dplyr::mutate(pat.with.IDH = ifelse(pat.with.IDH == 2, T , pat.with.IDH))  |>
+  dplyr::mutate(resection = gsub("^...(.).*$","R\\1", donor_ID) ) |>
   dplyr::mutate(resection = ifelse(resection == "RN", NA ,resection) )
 
 

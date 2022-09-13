@@ -1332,6 +1332,86 @@ ggsave(paste0("output/figures/scRNA/Couturier/2022-",sid,"_CC.pdf"),width=7.5, h
 ggsave(paste0("output/figures/scRNA/Couturier/2022-",sid,"_CC.png"),width=7.5, height=4,scale=1.2)
 
 
+#### Wang Sub-types ----
+
+
+object_t <- subset(object_1, class == "T")
+object_t <- RunPCA(object_t, features = subtype.classical$symbol, reduction.name = 'pca.subtype.cl', reduction.key = 'PCcl')
+object_t <- RunPCA(object_t, features = subtype.mesenchymal$symbol, reduction.name = 'pca.subtype.mes', reduction.key = 'PCmes')
+object_t <- RunPCA(object_t, features = subtype.proneural$symbol, reduction.name = 'pca.subtype.pn', reduction.key = 'PCpn')
+
+if(sum(object_t@reductions$pca.subtype.mes@feature.loadings[,1] < 0) > sum(object_t@reductions$pca.subtype.mes@feature.loadings[,1] > 0)) {
+  object_t@reductions$pca.subtype.mes@cell.embeddings[,1] <- object_t@reductions$pca.subtype.mes@cell.embeddings[,1] * -1
+}
+if(sum(object_t@reductions$pca.subtype.cl@feature.loadings[,1] < 0) > sum(object_t@reductions$pca.subtype.cl@feature.loadings[,1] > 0)) {
+  object_t@reductions$pca.subtype.cl@cell.embeddings[,1] <- object_t@reductions$pca.subtype.cl@cell.embeddings[,1] * -1
+}
+if(sum(object_t@reductions$pca.subtype.pn@feature.loadings[,1] < 0) > sum(object_t@reductions$pca.subtype.pn@feature.loadings[,1] > 0)) {
+  object_t@reductions$pca.subtype.pn@cell.embeddings[,1] <- object_t@reductions$pca.subtype.pn@cell.embeddings[,1] * -1
+}
+
+
+
+DotPlot(object = object_t, features = list('MES (Wang)'=subtype.mesenchymal$symbol,
+                                           'CL (Wang)'=subtype.classical$symbol,
+                                           'PN (Wang)'=subtype.proneural$symbol
+                                           
+), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+
+
+object_sty <- merge(subset(object_1, class != "T"), object_t)
+object_sty@reductions <- object_t@reductions
+object_sty@reductions$umap <- object_1@reductions$umap
+rm(object_t)
+
+
+FeaturePlot(object = object_sty, features = c("PCcl_1","PCmes_1","PCpn_1"), max.cutoff = 5)
+
+
+
+#rm(object_sty)
+
+
+
+#### Neftel Sub-types ----
+
+source('scripts/R/neftel_meta_modules.R')
+
+object_t <- subset(object_1, class == "T")
+object_t <- RunPCA(object_t, features = neftel.meta.modules.MES2.tt2, reduction.name = 'pca.subtype.mes2', reduction.key = 'PCmes2')
+object_t <- RunPCA(object_t, features = neftel.meta.modules.MES1.tt2, reduction.name = 'pca.subtype.mes1', reduction.key = 'PCmes1')
+object_t <- RunPCA(object_t, features = neftel.meta.modules.AC.tt2, reduction.name = 'pca.subtype.ac', reduction.key = 'PCac')
+object_t <- RunPCA(object_t, features = neftel.meta.modules.OPC.tt2, reduction.name = 'pca.subtype.opc', reduction.key = 'PCopc')
+object_t <- RunPCA(object_t, features = neftel.meta.modules.NPC1.tt2, reduction.name = 'pca.subtype.npc1', reduction.key = 'PCnpc1')
+object_t <- RunPCA(object_t, features = neftel.meta.modules.NPC2.tt2, reduction.name = 'pca.subtype.npc2', reduction.key = 'PCnpc2')
+
+if(sum(object_t@reductions$pca.subtype.mes2@feature.loadings[,1] < 0) > sum(object_t@reductions$pca.subtype.mes2@feature.loadings[,1] > 0)) {
+  object_t@reductions$pca.subtype.mes2@cell.embeddings[,1] <- object_t@reductions$pca.subtype.mes2@cell.embeddings[,1] * -1
+}
+
+# DotPlot(object = object_t, features = list('MES2 (Neftel)'=neftel.meta.modules.MES2.tt2,
+#                                            'CL (Wang)'=subtype.classical$symbol,
+#                                            'PN (Wang)'=subtype.proneural$symbol
+#                                            
+# ), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+# 
+
+
+
+object_sty <- merge(subset(object_1, class != "T"), object_t)
+object_sty@reductions <- object_t@reductions
+object_sty@reductions$umap <- object_1@reductions$umap
+rm(object_t)
+
+
+FeaturePlot(object = object_sty, features = c("PCmes2_1","PCmes1_1",
+                                              "PCac_1","PCopc_1",
+                                              "PCnpc1_1","PCnpc2_2"))
+
+
+
+rm(object_sty)
+
 
 ## BT346 [poor separation or high tumor?] ----
 
