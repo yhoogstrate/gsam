@@ -1802,8 +1802,10 @@ p1 <- ggplot(plt.expanded |> dplyr::filter(type=="a"), aes(x = x , y = reorder(p
     panel.grid.minor.y = element_blank(),
     panel.border = element_rect(colour = "black", fill=NA, size=1.1)
   ) +
-  scale_color_manual(values = c(subtype_colors, 'Hyper-mutant' = 'gray40'), guide = guide_legend(title = NULL, title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75)) +
-  scale_y_discrete(expand=expansion(add = 1.5))
+  scale_color_manual(values = c(subtype_colors), 
+                     label=c('Mesenchymal'='MES','Proneural'='PN','Classical'='CL'),
+                     guide = guide_legend(title = NULL, title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75)) +
+  scale_y_discrete(expand=expansion(add = 0.8))
 
 
 p2 <- ggplot(plt.expanded |> dplyr::filter(type=="b"), aes(x = x , y = reorder(pid, d), col = subtype, group=segment)) +
@@ -1828,12 +1830,15 @@ p2 <- ggplot(plt.expanded |> dplyr::filter(type=="b"), aes(x = x , y = reorder(p
     panel.grid.minor.y = element_blank(),
     panel.border = element_rect(colour = "black", fill=NA, size=1.1)
   ) +
-  scale_color_manual(values = c(subtype_colors, 'Hyper-mutant' = 'gray40'), guide = guide_legend(title = NULL, title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75)) +
-  scale_y_discrete(expand=expansion(add = 1.5))
+  scale_color_manual(values = c(subtype_colors), 
+                     label=c('Mesenchymal'='MES','Proneural'='PN','Classical'='CL'),
+                     guide = guide_legend(title = NULL, title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75)) +
+  scale_y_discrete(expand=expansion(add = 0.8))
 
 
-p1 + p2
+p1 + p2 + patchwork::plot_annotation(caption =  paste0("G-SAM: n=",n.gsam, "  -  GLASS: n=",n.glass," pairs" ))
 
+rm(n.gsam, n.glass)
 
 
 
