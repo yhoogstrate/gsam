@@ -3,14 +3,14 @@
 # load data ----
 
 
-# results.out
+source('scripts/load_results.out.R')
 
 
-# Figure S4 AB chr7, chr10, PTEN + EGFR ----
+# Figure S4ab chr7, chr10, PTEN + EGFR ----
 
 
 
-plt <- results.out %>%
+plt <- results.out |> 
   dplyr::mutate(mark.chr7 = chr == "chr7") |> 
   dplyr::mutate(mark.chr10 = chr == "chr10") |> 
   dplyr::mutate(show.label.chr7 = grepl("EGFR",hugo_symbol)) |> 
@@ -45,21 +45,47 @@ ggplot(plt.expanded, aes(x = log2FoldChange.gsam.res, y = statistic.gsam.cor.tpc
   geom_point(data = subset(plt.expanded, status == "other"), size=1.8, col="#00000044") +
   geom_point(data = subset(plt.expanded, status %in% c("chr7", "chr10")), size=2.5, col="black") +
   geom_point(data = subset(plt.expanded, grepl("label", status)), size=2.75, fill="red", col="black") +
-  ggrepel::geom_text_repel(data=subset(plt.expanded, status == "chr7 label"),  size=2.5 , nudge_x = -3.1, direction = "y", hjust = "right", segment.size=0.35) + 
-  ggrepel::geom_text_repel(data=subset(plt.expanded, status == "chr10 label"),  size=2.5 ,nudge_x = 3.1, direction = "y", hjust = "left", segment.size=0.35) + 
+  ggrepel::geom_text_repel(data=subset(plt.expanded, status == "chr7 label"),  size=2.5 , nudge_x = -3.1, direction = "y", hjust = "right", segment.size=0.35, show.legend  = FALSE) + 
+  ggrepel::geom_text_repel(data=subset(plt.expanded, status == "chr10 label"),  size=2.5 ,nudge_x = 3.1, direction = "y", hjust = "left", segment.size=0.35, show.legend  = FALSE) + 
   scale_shape_manual(values = c('TRUE' = 23, 'FALSE' = 21)) +
-  scale_fill_manual(values=c('chr7'='#6ba6e5AA','chr10'='#eab509AA','other'='white' , "chr10 label"='red',"chr7 label"='red')) + 
-  scale_color_manual(values=c('chr7'='#6ba6e5AA','chr10'='#eab509AA','other'='white' , "chr10 label"='red',"chr7 label"='red')) + 
-  youri_gg_theme +
-  xlim(-2.25, 2.25)
+  scale_fill_manual(values=c('chr7'='#6ba6e5AA','chr10'='#eab509AA','other'='white' , "chr10 label"='red',"chr7 label"='red'), guide="none") + 
+  scale_color_manual(values=c('chr7'='#6ba6e5AA','chr10'='#eab509AA','other'='white' , "chr10 label"='red',"chr7 label"='red'), guide="none") + 
+  theme_bw()  +
+  scale_x_continuous(breaks = c(0), limits=c(-2.25,2.25)) +
+  scale_y_continuous(breaks = c(0)) +
+  theme(
+    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
+    #strip.background = element_rect(colour="white",fill="white"),
+    axis.title = element_text(face = "bold",size = rel(1)),
+    #axis.text.x = element_blank(),
+    legend.position = 'bottom',
+    
+    panel.grid.major.x = element_line(colour = 'grey20', size=0.5),
+    panel.grid.major.y = element_line(colour = 'grey20', size=0.5),
+    
+    panel.grid.minor.x = element_blank(),
+    panel.grid.minor.y = element_blank(),
+
+    panel.border = element_rect(colour = "black", fill=NA, size=1.25)
+  ) +
+  guides(fill=guide_legend(ncol=8)) +
+  labs(caption = "G-SAM: n=287 samples", 
+       x="log2FC DESeq2 primary vs. recurrent (G-SAM; naive)",
+       y="t-stat correlation tumor purity (G-SAM)")
 
 
-ggsave("output/figures/figure_S4_AB_geiser_chr7_chr10.png",width=10,height=4)
-ggsave("output/figures/figure_S4_AB_geiser_chr7_chr10.pdf",width=10,height=4)
+
+ggsave("output/figures/2022_figure_S4ab_geiser_chr7_chr10.pdf", width=8.3 / 2,height=8.3/5, scale=2.25)
+ggsave("output/figures/2022_figure_S4ab_geiser_chr7_chr10.svg", width=8.3 / 2,height=8.3/5, scale=2.25)
 
 
 
-# Figure S4 [stats chr7&chr10] ----
+
+
+
+
+
+# Figure S4c [stats chr7&chr10] ----
 
 
 plt <-
@@ -93,6 +119,8 @@ tmp <- data.frame(chr = unique(plt$chr)) |>
 tmp |> 
   dplyr::filter(padj.fdr < 0.01)
 
+
+
 ## add stats to plt ----
 
 
@@ -102,7 +130,19 @@ plt <- plt |>
                      dplyr::select(chr, padj.fdr) |> 
                      dplyr::mutate(padj.fdr = format.pval(padj.fdr,digits=1))
                      , by=c('chr'='chr'),suffix=c('','')) |> 
-  dplyr::mutate(padj.fdr = ifelse(duplicated(chr),NA,padj.fdr)) 
+  dplyr::mutate(padj.fdr = ifelse(duplicated(chr),NA,padj.fdr)) |> 
+  dplyr::arrange(order) |> 
+  # add newlines for or after label:
+  dplyr::mutate(tmp = !is.na(padj.fdr)) |> 
+  dplyr::group_by(tmp, ) |> 
+  dplyr::mutate(prefix = ifelse(1:n() %% 2 == 0, "before", "after")) |> 
+  dplyr::mutate(padj.fdr = case_when(
+    tmp == T & prefix == "before" ~ paste0("\n",padj.fdr),
+    tmp == T & prefix == "after"  ~ paste0(padj.fdr,"\n"),
+    T ~ as.character(NA)
+  )) |> 
+  dplyr::ungroup() |> 
+  dplyr::mutate(tmp = NULL, prefix=NULL)
 
 
 
@@ -112,22 +152,41 @@ plt <- plt |>
 
 
 ggplot(plt, aes(x=reorder(chr, order),y=log2FoldChange.gsam.res, label=padj.fdr)) +
-  ggbeeswarm::geom_quasirandom(cex=0.5,width=0.31, alpha=0.5) +
-  geom_boxplot(outlier.shape = NA, col=alpha("white",1),fill=NA,lwd=1.1, width=0.80,coef=0) +
-  geom_boxplot(outlier.shape = NA, col=alpha("red",1),fill=NA,alpha=0.75, width=0.80,coef=0) +
-  geom_label(y = -0.72,col="blue",alpha=0.75, label.size = NA, cex=3.2) +
+  ggbeeswarm::geom_quasirandom(cex=0.5,width=0.29, alpha=0.5) +
+  geom_boxplot(outlier.shape = NA, col=alpha("white",1),fill=NA,lwd=1.1, width=0.70,coef=0) +
+  geom_boxplot(outlier.shape = NA, col=alpha("red",1),fill=NA,alpha=0.75, width=0.70,coef=0) +
+  geom_label(y = -0.72,col="blue",alpha=NA, fill=NA, label.size = NA, cex=3.2) +
   theme_bw() +
-  ylim(-0.7,0.7) +
-  labs(x = NULL, y = "log2FoldChange")
+  labs(caption = "G-SAM: n=287 samples",
+       x = NULL,
+       y = "log2FC DESeq2 primary vs.\nrecurrent (G-SAM; naive)") +
+  scale_x_discrete(expand=expansion(add = 0.85)) +
+  scale_y_continuous(breaks = c(-0.25, 0, 0.25), limits=c(-0.82,0.72)) + # leave space for labels
+  theme(
+    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
+    #strip.background = element_rect(colour="white",fill="white"),
+    axis.title = element_text(face = "bold",size = rel(0.8)),
+    #axis.text.x = element_blank(),
+    legend.position = 'bottom',
+    
+    #panel.grid.major.x = element_line(colour = 'grey20', size=0.5),
+    panel.grid.major.y = element_line(colour = 'blue', size=0.5),
+    
+    panel.grid.minor.x = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    
+    panel.border = element_rect(colour = "black", fill=NA, size=1.25)
+  ) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+
+
+ggsave("output/figures/2022_figure_S4c_LFC_per_chr.pdf", width=8.3 / 2,height=8.3/6, scale=2)
+ggsave("output/figures/2022_figure_S4c_LFC_per_chr.svg", width=8.3 / 2,height=8.3/6, scale=2)
 
 
 
-ggsave("output/figures/figure_S4C_LFC_per_chr.png",width=10,height=3)
-ggsave("output/figures/figure_S4C_LFC_per_chr.pdf",width=10,height=3)
 
-
-
-# Figure S4 DEF-GHI ----
+# Figure S4def-ghi ----
 
 
 plt <- results.out |> 
@@ -236,20 +295,39 @@ ggplot(plt.expanded, aes(x = log2FoldChange, y = cor.tpc, shape=limited,
   geom_point(data = subset(plt.expanded, status == "significant"), size=2, col="black") +
   geom_vline(xintercept = c(-0.5,0.5), lty=1, lwd=2, col="#FFFFFF88") +
   geom_vline(xintercept = c(-0.5,0.5), lty=2, col="red") +
-  ggrepel::geom_text_repel(data=subset(plt.expanded, grepl("label",status) & log2FoldChange > 0), col="blue", size=2.5 ,nudge_x = 3.1, direction = "y", hjust = "left", segment.size=0.35) + 
-  ggrepel::geom_text_repel(data=subset(plt.expanded, grepl("label",status) & log2FoldChange < 0), col="blue", size=2.5 , nudge_x = -3.1, direction = "y", hjust = "right", segment.size=0.35) + 
+  ggrepel::geom_text_repel(data=subset(plt.expanded, grepl("label",status) & log2FoldChange > 0), col="blue", size=2.5 ,nudge_x = 3.1, direction = "y", hjust = "left", segment.size=0.35, show.legend  = FALSE) + 
+  ggrepel::geom_text_repel(data=subset(plt.expanded, grepl("label",status) & log2FoldChange < 0), col="blue", size=2.5 , nudge_x = -3.1, direction = "y", hjust = "right", segment.size=0.35, show.legend  = FALSE) + 
   geom_point(data = subset(plt.expanded, status == "show label"), size=2.75, col="black") +
   geom_point(data = subset(plt.expanded, status == "label & show significant"), size=2.75, col="black") +
   scale_shape_manual(values = c('TRUE' = 23, 'FALSE' = 21)) +
   scale_fill_manual(values = c("other" = "white", "significant" = "#eab509DD", "show label" = "#6ba6e5DD", "label & show significant" = "red")) + 
-  scale_color_manual(values = c("other" = "white", "significant" = "#eab509DD", "show label" = "#6ba6e5DD", "label & show significant" = "red")) + 
-  youri_gg_theme +
+  scale_color_manual(values = c("other" = "white", "significant" = "#eab509DD", "show label" = "#6ba6e5DD", "label & show significant" = "red"),guide="none") + 
+  theme_bw() +
   xlim(-3, 3) +
-  labs(x="log2FC R1. vs R2 (unpaired; tumour-% corrected)", y="Correlation t-statistic with tumour-%")
+  #scale_x_continuous(breaks = c(-3,-2,-1,0,1,2,3), limits=c(-3,3)) +
+  #scale_y_continuous(breaks = c(10,7.5,5,2.5,0,-2.5,-5,-7.5,-10)) +
+  theme(
+    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
+    #strip.background = element_rect(colour="white",fill="white"),
+    axis.title = element_text(face = "bold",size = rel(1)),
+    #axis.text.x = element_blank(),
+    legend.position = 'bottom',
+    
+    #panel.grid.major.x = element_line(colour = 'grey20', size=0.5),
+    #panel.grid.major.y = element_line(colour = 'grey20', size=0.5),
+    
+    #panel.grid.minor.x = element_blank(),
+    #panel.grid.minor.y = element_blank(),
+    
+    panel.border = element_rect(colour = "black", fill=NA, size=1.25)
+    ) +
+  labs(x="log2FC primary vs. recurrent (purity corrected)",
+       y="t-stat correlation tumor purity",
+       caption = "G-SAM: n=287  -  GLASS: n=216  samples")
 
 
-ggsave("output/figures/figure_S4_CDE-FGH_geiser_gains_losses_other.pdf", width=10,height=7.5)
-ggsave("output/figures/figure_S4_CDE-FGH_geiser_gains_losses_other.png", width=10,height=7.5)
+ggsave("output/figures/2022_figure_S4def-ghi_geiser_gains_losses_other.pdf",  width=8.3 / 2,height=8.3/3, scale=2)
+ggsave("output/figures/2022_figure_S4def-ghi_geiser_gains_losses_other.svg",  width=8.3 / 2,height=8.3/3, scale=2)
 
 
 

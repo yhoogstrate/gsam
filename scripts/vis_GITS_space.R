@@ -1459,7 +1459,8 @@ plt <- rbind(
     dplyr::mutate(dataset = "G-SAM")
   ,
   glass.gbm.rnaseq.metadata.all.samples |>
-    dplyr::mutate(is.primary = ifelse(resection == "TP","primary","recurrent")) |> 
+    dplyr::mutate(is.primary = ifelse(resection == "TP","primary","recurrent")) |>
+    dplyr::filter(tumour.percentage.2022 >= 15) |> 
     dplyr::select(
       `aliquot_barcode`,
       `case_barcode`,
@@ -1489,6 +1490,10 @@ plt <- rbind(
 stopifnot(plt$`NMF:150:PCA:eucledian.dist_primary` == plt$`NMF:150:PCA:eucledian.dist_recurrent`)
 
 
+n.glass <- table(plt$dataset_primary)['GLASS']
+n.gsam <- table(plt$dataset_primary)['G-SAM']
+
+
 plt <- plt |>
   dplyr::rename(`NMF:150:PCA:eucledian.dist` = `NMF:150:PCA:eucledian.dist_primary`) |> 
   dplyr::mutate(`NMF:150:PCA:eucledian.dist_recurrent` = NULL) |> 
@@ -1505,7 +1510,10 @@ ggplot(plt, aes(x=GITS.150.svm.2022.subtype_recurrent, y=`NMF:150:PCA:eucledian.
   geom_violin(width=1.05,aes(fill=stable)) +
   geom_boxplot(width=0.1,outlier.shape = NA,alpha=0.5)  +
   ggbeeswarm::geom_quasirandom(aes(fill=dataset), pch=21,size=3, cex=4) +
-  labs(x = NULL, y = "Euclidean distance GITS space", fill = "") +
+  labs(x = NULL, 
+       y = "Euclidean distance GITS space", 
+       fill = "",
+       caption = paste0("G-SAM: n=",n.gsam, "  -  GLASS: n=",n.glass," pairs" )) +
   scale_fill_manual(values = c('stable'='gray90', 'transition'='white',dataset_colors['G-SAM'], dataset_colors['GLASS'] )) +
   theme_bw()  +
   theme(
@@ -1520,13 +1528,16 @@ ggplot(plt, aes(x=GITS.150.svm.2022.subtype_recurrent, y=`NMF:150:PCA:eucledian.
     panel.grid.minor.y = element_blank(),
     axis.ticks.x = element_blank(),
     #strip.text = element_text(size = 7),
-    panel.border = element_rect(colour = "black", fill=NA, size=1.25)
+    panel.border = element_rect(colour = "black", fill=NA, size=1.1)
   ) +
-  guides(fill=guide_legend(ncol=2))
+  guides(fill=guide_legend(ncol=4))
 
 
+rm(n.glass, n.gsam)
 
-ggsave("output/figures/2022_figure_S2.pdf", width=8.3 / 4,height=8.3/4, scale=2)
+
+ggsave("output/figures/2022_figure_S2.pdf", width=8.3 / 4,height=8.3/4.5, scale=2)
+ggsave("output/figures/2022_figure_S2.svg", width=8.3 / 4,height=8.3/4.5, scale=2)
 
 
 rm(plt)
@@ -1668,14 +1679,178 @@ rm(plt)
 
 
 
-## fig s3b ----
+## fig s3b [all - merged] ----
 
 
 plt <- rbind(
   gsam.rna.metadata |>
     
-    dplyr::filter(blacklist.pca == F) %>%
-    dplyr::filter(pat.with.IDH == F) %>%
+    dplyr::filter(blacklist.pca == F) |> 
+    dplyr::filter(pat.with.IDH == F) |> 
+    dplyr::filter(
+      sid %in% c('BAI2', 'CAO1-replicate', 'FAB2', 'GAS2-replicate') == F
+    ) %>%
+    dplyr::filter(tumour.percentage.dna >= 15) |>
+    dplyr::select(
+      `pid`,
+      `NMF:150:PCA:eucledian.dist`,
+    ) |> 
+    dplyr::left_join(gsam.patient.metadata |> 
+                       dplyr::select(`studyID`, `HM`),
+                     by=c('pid'='studyID'),suffix=c('','')) |> 
+    dplyr::mutate(HM = case_when(
+      HM == "No" ~ F,
+      HM == "Yes" ~ T, 
+      T ~ as.logical(NA)
+    )) |> 
+    dplyr::mutate(dataset = "G-SAM")
+  ,
+  glass.gbm.rnaseq.metadata.all.samples |>
+    dplyr::filter(tumour.percentage.2022 >= 15) |>
+    dplyr::select(
+      `case_barcode`,
+      `NMF:150:PCA:eucledian.dist`,
+      `HM`
+    ) |>
+    dplyr::rename(pid = case_barcode) |> 
+    dplyr::mutate(dataset = "GLASS")
+) |> 
+  dplyr::filter(!is.na(`NMF:150:PCA:eucledian.dist`)) |> 
+  dplyr::group_by(pid) |> # filter for matching pairs
+  dplyr::filter(n() == 2) |> 
+  dplyr::ungroup() |>
+  dplyr::distinct() |> 
+  dplyr::mutate(pid = as.character(pid)) |> 
+  dplyr::mutate(facet.HM.determinated = is.na(HM))
+
+
+n.glass <- table(plt$dataset)['GLASS']
+n.gsam <- table(plt$dataset)['G-SAM']
+
+
+
+# load transition segments 
+plt.expanded <- readRDS('tmp/analysis_GITS_space.transition.segments.Rds') |> 
+  dplyr::inner_join(plt, by=c('pid'='pid')) |> 
+  dplyr::mutate(x = pct_transition * `NMF:150:PCA:eucledian.dist` ) |> 
+  dplyr::group_by(pid) |> 
+  dplyr::mutate(d = max(x)) |> 
+  dplyr::mutate(init = x == min(x)) |> 
+  dplyr::mutate(second = order(x) == 2) |> 
+  dplyr::mutate(end = x == max(x)) |> 
+  dplyr::mutate(n = n()) |> 
+  dplyr::ungroup() |> 
+  dplyr::rename(subtype = pred)
+
+
+# add initial subtype to each segment, for facetting
+plt.expanded <- plt.expanded |> 
+  dplyr::left_join(
+    plt.expanded |> 
+      dplyr::filter(init) |> 
+      dplyr::select(pid, subtype) |> 
+      dplyr::rename(subtype.init = subtype),
+    by=c('pid'='pid'), suffix=c('',''))
+
+
+# add position of second segment, to normalize for right facet
+plt.expanded <- plt.expanded |> 
+  dplyr::left_join(
+    plt.expanded |> 
+      dplyr::filter(second) |> 
+      dplyr::select(pid, x) |> 
+      dplyr::rename(x.init = x),
+    by=c('pid'='pid'), suffix=c('','')
+  )
+
+
+
+
+# make facettes
+plt.expanded <- rbind(
+  plt.expanded |>
+    dplyr::mutate(type ="a")
+  ,
+  plt.expanded |>
+    dplyr::mutate(type ="b") |>
+    dplyr::mutate(x = x - x.init) |>
+    dplyr::mutate(d = ifelse(n == 2, -x.init,d - x.init))
+) |>
+  dplyr::mutate(dataset = grepl("TCGA|GLSS",pid))
+
+
+
+
+p1 <- ggplot(plt.expanded |> dplyr::filter(type=="a"), aes(x = x , y = reorder(pid, d), col = subtype, group=segment)) +
+  geom_line(lwd = 0.8) + 
+  facet_grid(rows = vars(subtype.init), scales = "free", space="free_y") + 
+  labs(x = "Distance GITS space",
+       y=NULL,
+       col = "Distance within Subtype space") +
+  theme_bw()  +
+  theme(strip.background = element_blank(), strip.text = element_blank()) +
+  theme(
+    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
+    #strip.background = element_rect(colour="white",fill="white"),
+    axis.title = element_text(face = "bold",size = rel(1)),
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank(),
+    legend.position = 'bottom',
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    panel.border = element_rect(colour = "black", fill=NA, size=1.1)
+  ) +
+  scale_color_manual(values = c(subtype_colors, 'Hyper-mutant' = 'gray40'), guide = guide_legend(title = NULL, title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75)) +
+  scale_y_discrete(expand=expansion(add = 1.5))
+
+
+p2 <- ggplot(plt.expanded |> dplyr::filter(type=="b"), aes(x = x , y = reorder(pid, d), col = subtype, group=segment)) +
+  #geom_point(cex=1) +
+  geom_line(lwd = 0.8) + 
+  facet_grid(rows = vars(subtype.init), scales = "free", space="free_y") + 
+  labs(x = "Distance GITS space",
+       y=NULL,
+       col = "Distance within Subtype space") +
+  theme_bw()  +
+  theme(strip.background = element_blank(), strip.text = element_blank()) +
+  theme(
+    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
+    #strip.background = element_rect(colour="white",fill="white"),
+    axis.title = element_text(face = "bold",size = rel(1)),
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank(),
+    legend.position = 'bottom',
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    panel.border = element_rect(colour = "black", fill=NA, size=1.1)
+  ) +
+  scale_color_manual(values = c(subtype_colors, 'Hyper-mutant' = 'gray40'), guide = guide_legend(title = NULL, title.position = 'top', title.hjust = 0.5, ncol = 4, keywidth = 0.75, keyheight = 0.75)) +
+  scale_y_discrete(expand=expansion(add = 1.5))
+
+
+p1 + p2
+
+
+
+
+ggsave("output/figures/2022_figure_S3b.pdf", width=8.3 / 2,height=8.3/2, scale=2)
+ggsave("output/figures/2022_figure_S3b.svg", width=8.3 / 2,height=8.3/2, scale=2)
+
+
+
+
+## fig s3b [HM status only] ----
+
+
+plt <- rbind(
+  gsam.rna.metadata |>
+    
+    dplyr::filter(blacklist.pca == F) |> 
+    dplyr::filter(pat.with.IDH == F) |> 
     dplyr::filter(
       sid %in% c('BAI2', 'CAO1-replicate', 'FAB2', 'GAS2-replicate') == F
     ) %>%
@@ -1699,6 +1874,7 @@ plt <- rbind(
       `NMF:150:PCA:eucledian.dist`,
       `HM`
     ) |>
+    dplyr::filter(tumour.percentage.dna >= 15) |>
     dplyr::rename(pid = case_barcode) 
 ) |> 
   dplyr::filter(!is.na(`NMF:150:PCA:eucledian.dist`)) |> 
