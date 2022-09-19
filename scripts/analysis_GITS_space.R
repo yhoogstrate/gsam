@@ -63,6 +63,7 @@ tmp.combined.metadata <- rbind(
     dplyr::select(sid) |>
     dplyr::mutate(dataset = "G-SAM"),
   glass.gbm.rnaseq.metadata.all.samples |>
+    dplyr::filter(tumour.percentage.2022 >= 15) |>
     dplyr::rename(sid = aliquot_barcode) |>
     dplyr::select(sid) |>
     dplyr::mutate(dataset = "GLASS")
@@ -418,7 +419,7 @@ gits.contours <- data.frame(class = predict(tmp.model , newdata = range_df)) |>
 rm(resolution, off_x, off_y, range_pc1, range_pc2, range_df)
 
 
-#saveRDS(gits.contours, file="cache/analysis_GITS_space_GITS_contours.Rds")
+# saveRDS(gits.contours, file="cache/analysis_GITS_space_GITS_contours.Rds")
 
 ## eucl dist for pairs ----
 
@@ -683,7 +684,7 @@ saveRDS(
 
 
 tmp.out = readRDS(file = "cache/analysis_GITS_space.Rds") |> 
-  tibble::column_to_rownames(sid)
+  tibble::column_to_rownames('sid')
 
 
 library(M3C)
