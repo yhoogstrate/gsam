@@ -721,10 +721,9 @@ rm(n.glass, n.gsam, mult, tmp.pca, data, x, y, datapc, sel)
 
 
 
-
 plt <- rbind(
   gsam.rna.metadata |>
-    
+
     dplyr::filter(blacklist.pca == F) %>%
     dplyr::filter(pat.with.IDH == F) %>%
     dplyr::filter(
@@ -764,7 +763,6 @@ plt <- rbind(
 
 n.glass <- plt |> dplyr::pull(.data$dataset) |> table() |> purrr::pluck('GLASS')
 n.gsam <- plt |> dplyr::pull(.data$dataset) |> table() |> purrr::pluck('G-SAM')
-
 
 
 ggplot(plt, aes(x=-`NMF:150:PC1`, y=-`NMF:150:PC2`, fill=ssGSEA.2022.subtype)) +
@@ -828,6 +826,7 @@ plt <- rbind(
     dplyr::mutate(dataset = "G-SAM")
   ,
   glass.gbm.rnaseq.metadata.all.samples |>
+    dplyr::filter(tumour.percentage.2022 >= 15) |> # avoid NA values
     dplyr::mutate(is.primary = resection == "TP") |> 
     dplyr::select(
       aliquot_barcode,
@@ -842,6 +841,10 @@ plt <- rbind(
     dplyr::rename(pid = case_barcode) |> 
     dplyr::mutate(dataset = "GLASS")
 )
+
+
+n.glass <- plt |> dplyr::pull(.data$dataset) |> table() |> purrr::pluck('GLASS')
+n.gsam <- plt |> dplyr::pull(.data$dataset) |> table() |> purrr::pluck('G-SAM')
 
 
 plt.contours <- readRDS("cache/analysis_GITS_space_GITS_contours.Rds") |> 
@@ -859,7 +862,11 @@ ggplot(plt, aes(x=-`NMF:150:PC1`, y=-`NMF:150:PC2`, fill=ssGSEA.2022.subtype, gr
                breaks=c(1.5,2.5)) +
   geom_point(size=3,  col='black', pch=21, alpha=0.7) +
   coord_equal() +
-  labs(x="PC1 on NMF meta-features", y="PC2 on NMF meta-features", fill = "Subtype (ssGSEA)") +
+  labs(x="PC1 on NMF meta-features", 
+       y="PC2 on NMF meta-features",
+       fill = "Subtype (ssGSEA)",
+       caption = paste0("G-SAM: n=",n.gsam, "  -  GLASS: n=",n.glass," samples")
+       ) +
   scale_fill_manual(values = mixcol(subtype_colors_ext,rep("black",length(subtype_colors_ext)),0.1),
                     label=c('Mesenchymal'='MES','Proneural'='PN','Classical'='CL','Proneural|Classical'='PN|CL')) +
   theme_bw()  +
@@ -876,11 +883,13 @@ ggplot(plt, aes(x=-`NMF:150:PC1`, y=-`NMF:150:PC2`, fill=ssGSEA.2022.subtype, gr
     #axis.ticks.x = element_blank(),
     panel.border = element_rect(colour = "black", fill=NA, size=1.25)
   ) +
-  guides(fill=guide_legend(ncol=2))
+  guides(fill=guide_legend(ncol=4))
+
+
 
 ggsave("output/figures/2022_figure_S1E.pdf", width=8.3 / 4,height=8.3/4, scale=2)
 
-
+rm(plt, n.glass, n.gsam, plt.contours)
 
 
 
