@@ -147,6 +147,7 @@ openxlsx::addWorksheet(wb, "Sheet1 - Sample information")
 openxlsx::writeDataTable(wb,sheet = "Sheet1 - Sample information", x=tmp)
 openxlsx::saveWorkbook(wb,file= "output/tables/tab_S1_clinical_information.xlsx",overwrite=T)
 
+rm(wb, tmp)
 
 
 
