@@ -789,7 +789,7 @@ ggplot(plt, aes(x=-`NMF:150:PC1`, y=-`NMF:150:PC2`, fill=ssGSEA.2022.subtype)) +
     #axis.ticks.x = element_blank(),
     panel.border = element_rect(colour = "black", fill=NA, size=1.25)
   ) +
-  guides(fill=guide_legend(ncol=4))
+  guides(fill=guide_legend(ncol=2))
 
 ggsave("output/figures/2022_figure_S1D.pdf", width=8.3 / 4,height=8.3/4, scale=2)
 
@@ -883,7 +883,7 @@ ggplot(plt, aes(x=-`NMF:150:PC1`, y=-`NMF:150:PC2`, fill=ssGSEA.2022.subtype, gr
     #axis.ticks.x = element_blank(),
     panel.border = element_rect(colour = "black", fill=NA, size=1.25)
   ) +
-  guides(fill=guide_legend(ncol=4))
+  guides(fill=guide_legend(ncol=2))
 
 
 
@@ -895,8 +895,6 @@ rm(plt, n.glass, n.gsam, plt.contours)
 
 
 ## fig s1f ----
-
-
 
 
 plt <- rbind(
@@ -922,6 +920,7 @@ plt <- rbind(
     dplyr::mutate(dataset = "G-SAM")
   ,
   glass.gbm.rnaseq.metadata.all.samples |>
+    dplyr::filter(tumour.percentage.2022 >= 15) |> # avoid NA values
     dplyr::mutate(is.primary = resection == "TP") |> 
     dplyr::select(
       aliquot_barcode,
@@ -943,7 +942,10 @@ plt <- rbind(
       T ~ " "
     )
   )
-  #dplyr::filter(misclass != " ")
+
+
+n.glass <- plt |> dplyr::pull(.data$dataset) |> table() |> purrr::pluck('GLASS')
+n.gsam <- plt |> dplyr::pull(.data$dataset) |> table() |> purrr::pluck('G-SAM')
 
 
 plt.contours <- readRDS("cache/analysis_GITS_space_GITS_contours.Rds") |> 
@@ -969,7 +971,9 @@ ggplot(plt, aes(x=-`NMF:150:PC1`, y=-`NMF:150:PC2`, fill=ssGSEA.2022.subtype, gr
   labs(x="PC1 on NMF meta-features",
        y="PC2 on NMF meta-features", 
        fill = "Subtype (ssGSEA)", 
-       shape="") +
+       shape="",
+       caption = paste0("G-SAM: n=",n.gsam, "  -  GLASS: n=",n.glass," samples")
+       ) +
   scale_fill_manual(values = mixcol(subtype_colors_ext,rep("black",length(subtype_colors_ext)),0.1),
                     label=c('Mesenchymal'='MES','Proneural'='PN','Classical'='CL','Proneural|Classical'='PN|CL')) +
   scale_shape_manual(values=c("?"=4,"."=19),
@@ -990,7 +994,11 @@ ggplot(plt, aes(x=-`NMF:150:PC1`, y=-`NMF:150:PC2`, fill=ssGSEA.2022.subtype, gr
   ) +
   guides(fill="none") #guide_legend(ncol=2)
 
+
 ggsave("output/figures/2022_figure_S1F.pdf", width=8.3 / 4,height=8.3/4, scale=2)
+
+
+rm(plt, plt.contours, n.glass, n.gsam)
 
 
 
@@ -1026,6 +1034,7 @@ plt <- rbind(
     dplyr::mutate(dataset = "G-SAM")
   ,
   glass.gbm.rnaseq.metadata.all.samples |>
+    dplyr::filter(tumour.percentage.2022 >= 15) |> # avoid NA values
     dplyr::mutate(is.primary = resection == "TP") |> 
     dplyr::select(
       aliquot_barcode,
@@ -1072,10 +1081,26 @@ plt <- rbind(
   ) 
 
 
+n.glass <- plt |> 
+  dplyr::filter(!is.na(`ssGSEA enrichment score`)) |> 
+  dplyr::filter(!is.na(`NMF contribution`)) |> 
+  dplyr::filter(!duplicated(sid)) |> 
+  dplyr::pull(dataset) |> 
+  table() |> 
+  purrr::pluck('GLASS')
+n.gsam <- plt |> 
+  dplyr::filter(!is.na(`ssGSEA enrichment score`)) |> 
+  dplyr::filter(!is.na(`NMF contribution`)) |> 
+  dplyr::filter(!duplicated(sid)) |> 
+  dplyr::pull(dataset) |> 
+  table() |> 
+  purrr::pluck('G-SAM')
+
 
 
 ggplot(plt, aes(x=`ssGSEA enrichment score`, y=`NMF contribution`, fill=`ssGSEA.2022.subtype`, shape=misclass)) +
-  facet_grid(cols = vars(`facet`), scales = "free") +
+  #facet_grid(cols = vars(`facet`), scales = "free") +
+  facet_wrap(~facet, scales = "free") +
   ggpubr::stat_cor(aes(shape=NULL, col=NULL, fill=NULL), method = "pearson") +
   geom_point(size=3, data=plt |>  dplyr::filter(misclass != "."), col='black', pch=21, alpha=0.7) +
   geom_point(size=3, data=plt |>   dplyr::filter(misclass == ".") ,col='black', pch=21, alpha=0.7) +
@@ -1083,7 +1108,9 @@ ggplot(plt, aes(x=`ssGSEA enrichment score`, y=`NMF contribution`, fill=`ssGSEA.
   geom_point(data = plt |>  dplyr::filter(misclass == "."), col = 'black',fill="white",pch=21, size=0.9,stroke=0.65) +
   labs(y="NMF meta-feature score", 
        fill = "Subtype (ssGSEA)",
-       shape="") +
+       shape="",
+       caption = paste0("G-SAM: n=",n.gsam, "  -  GLASS: n=",n.glass," samples")
+       ) +
   scale_fill_manual(values = mixcol(subtype_colors_ext,rep("black",length(subtype_colors_ext)),0.1),
                     label=c('Mesenchymal'='MES','Proneural'='PN','Classical'='CL','Proneural|Classical'='PN|CL')) +
   scale_shape_manual(values=c("?"=4,"."=19),
@@ -1104,7 +1131,10 @@ ggplot(plt, aes(x=`ssGSEA enrichment score`, y=`NMF contribution`, fill=`ssGSEA.
   ) +
   guides() #guide_legend(ncol=2)
 
+
 ggsave("output/figures/2022_figure_S1G.pdf", width=8.3 / 2,height=8.3/5, scale=2)
+
+rm(plt, n.glass, n.gsam)
 
 
 
@@ -1139,7 +1169,7 @@ plt <- rbind(
     dplyr::mutate(dataset = "G-SAM")
   ,
   glass.gbm.rnaseq.metadata.all.samples |>
-    dplyr::filter(tumour.percentage.2022 > 15) |> 
+    #dplyr::filter(tumour.percentage.2022 > 15) |> 
     dplyr::select(
       aliquot_barcode,
       
@@ -1184,15 +1214,30 @@ plt <- rbind(
   dplyr::mutate(`needle` = NULL)
 
 
+n.glass <- plt |> 
+  dplyr::filter(`NMF meta-feature` == "NMF:7k:1") |> 
+  dplyr::filter(!is.na(`NMF contribution`)) |> 
+  dplyr::pull(.data$dataset) |> 
+  table() |> 
+  purrr::pluck('GLASS')
+n.gsam <- plt |> 
+  dplyr::filter(`NMF meta-feature` == "NMF:7k:1") |> 
+  dplyr::filter(!is.na(`NMF contribution`)) |> 
+  dplyr::pull(.data$dataset) |> 
+  table() |> 
+  purrr::pluck('G-SAM')
 
 
 ggplot(plt, aes(x=`ssGSEA enrichment score`, y=`NMF contribution`, fill=`ssGSEA.2022.subtype`)) +
-  facet_grid(cols = vars(`facet`), scales = "free") +
+  facet_wrap(~facet, ncol=4, scales = "free") +
   ggpubr::stat_cor(aes(shape=NULL, col=NULL, fill=NULL), method = "pearson") +
   geom_point(size=3, col='black', pch=21, alpha=0.7) +
-  labs(y="NMF meta-feature score", 
+  labs(x = "ssGSEA enrichment score or tumor purity",
+        y="NMF meta-feature score", 
        fill = "Subtype (ssGSEA)",
-       shape="") +
+       shape="",
+       caption = paste0("G-SAM: n=",n.gsam, "  -  GLASS: n=",n.glass," samples")
+       ) +
   scale_fill_manual(values = c(mixcol(subtype_colors_ext,rep("black",length(subtype_colors_ext)),0.1),"-"="gray60"),
                     label=c('Mesenchymal'='MES','Proneural'='PN','Classical'='CL','Proneural|Classical'='PN|CL',"-"="")) +
   theme_bw()  +
