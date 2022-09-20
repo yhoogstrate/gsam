@@ -135,6 +135,15 @@ tmp <- gsam.rna.metadata |>
 head(tmp)
 
 
+# paper stats
+tmp |>
+  dplyr::filter(!duplicated(pid)) |> 
+  nrow()
+
+tmp |>
+  dplyr::filter(!duplicated(pid)) |> 
+  dplyr::pull(TMZ) 
+
 #'@todo exp therapies
 
 
