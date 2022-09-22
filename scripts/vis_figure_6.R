@@ -140,28 +140,7 @@ tmp.metadata <- tmp.metadata |>
 
 
 ## determine cut-off C0 / fuz ----
-# ### from all R2
-# 
-# d <- tmp.metadata |> 
-#   dplyr::filter(resection == "recurrence") |> 
-#   dplyr::arrange(rna.signature.C0.fuzzy.2022) |> 
-#   dplyr::pull(rna.signature.C0.fuzzy.2022)
-# 
-# 
-# plot(delta(d))
-# 
-# 
-# k <- 128
-# c0.fuz.cutoff.s <- d[(k-1):k] |> 
-#   sum()  |> 
-#   (function(x){return(x/2)})()
-# 
-# 
-# plot(d)
-# abline(h=c0.fuz.cutoff.s)
 
-
-### from paired ----
 
 d <- tmp.metadata.paired |>
   dplyr::arrange(rna.signature.C0.fuzzy.2022_recurrence) |>
@@ -176,16 +155,17 @@ c0.fuz.cutoff.p <- d |> median()
 
 
 plt.1 <- data.frame(y = d) |> 
-  dplyr::rename(`C0/fuzzy signature at Rec.` =y) |> 
+  dplyr::rename(`C0/fuzzy at Rec.` =y) |> 
   dplyr::mutate(x = order(order(1:n())))
 
 plt.2 <- data.frame(y = delta(d)) |> 
-  dplyr::rename(`delta C0/fuzzy signature at Rec.` = y ) |> 
+  dplyr::rename(`delta C0/fuzzy at Rec.` = y ) |> 
   dplyr::mutate(x = order(order(1:n())) + 0.5)
 
 
-p1 <- ggplot(plt.1, aes(y=`C0/fuzzy signature at Rec.`, x=x)) +
+p1 <- ggplot(plt.1, aes(y=`C0/fuzzy at Rec.`, x=x)) +
   geom_hline(yintercept=c0.fuz.cutoff.p, lwd=1.5, color = "red") +
+  annotate(geom="text", x=25, y=9, label="Cutoff: median") +
   geom_line() +
   geom_point() +
   xlim(1,nrow(plt.1)) +
@@ -203,7 +183,7 @@ p1 <- ggplot(plt.1, aes(y=`C0/fuzzy signature at Rec.`, x=x)) +
   ) +
   labs(x=NULL)
 
-p2 <- ggplot(plt.2, aes(y=`delta C0/fuzzy signature at Rec.`, x=x)) +
+p2 <- ggplot(plt.2, aes(y=`delta C0/fuzzy at Rec.`, x=x)) +
   geom_hline(yintercept= 0, lwd=1.5, color = "gray50") +
   geom_line() +
   geom_point() +
@@ -227,36 +207,17 @@ p1 / p2
 
 
 
+ggsave("output/figures/2022_figure_6_C0.pdf", width=8.3 / 5,height=8.3/5, scale=2)
+
+
 
 ## determine cut-off C1 / col ----
-### from all R2
-# 
-# d <- tmp.metadata |> 
-#   dplyr::filter(resection == "recurrence") |> 
-#   dplyr::arrange(rna.signature.C1.collagen.2022) |> 
-#   dplyr::pull(rna.signature.C1.collagen.2022)
-# 
-# 
-# plot(delta(d))
-# 
-# 
-# k <- 91
-# c1.em.cutoff.s <- d[(k-1):k] |> 
-#   sum()  |> 
-#   (function(x){return(x/2)})()
-# 
-# 
-# plot(d)
-# abline(h=c1.em.cutoff.s, col="red")
 
 
-
-### from paired ----
 
 d <- tmp.metadata.paired |>
   dplyr::arrange(rna.signature.C1.collagen.2022_recurrence) |>
   dplyr::pull(rna.signature.C1.collagen.2022_recurrence)
-
 
 
 k <- 82+1
@@ -264,16 +225,17 @@ c1.em.cutoff.p <- d[(k-1):k] |> sum() |> (function(x){return(x/2)})()
 
 
 plt.1 <- data.frame(y = d) |> 
-  dplyr::rename(`C1/col signature at Rec.` =y) |> 
+  dplyr::rename(`C1/col at Rec.` =y) |> 
   dplyr::mutate(x = order(order(1:n())))
 
 plt.2 <- data.frame(y = delta(d)) |> 
-  dplyr::rename(`delta C1/col signature at Rec.` = y ) |> 
+  dplyr::rename(`delta C1/col at Rec.` = y ) |> 
   dplyr::mutate(x = order(order(1:n())) + 0.5)
 
 
-p1 <- ggplot(plt.1, aes(y=`C1/col signature at Rec.`, x=x)) +
+p1 <- ggplot(plt.1, aes(y=`C1/col at Rec.`, x=x)) +
   geom_hline(yintercept=c1.em.cutoff.p, lwd=1.5, color = "red") +
+  annotate(geom="text", x=40, y=14, label="Cutoff: change in rate") +
   geom_line() +
   geom_point() +
   xlim(1,nrow(plt.1)) +
@@ -291,7 +253,7 @@ p1 <- ggplot(plt.1, aes(y=`C1/col signature at Rec.`, x=x)) +
   ) +
   labs(x=NULL)
 
-p2 <- ggplot(plt.2, aes(y=`delta C1/col signature at Rec.`, x=x)) +
+p2 <- ggplot(plt.2, aes(y=`delta C1/col at Rec.`, x=x)) +
   geom_hline(yintercept= 0, lwd=1.5, color = "gray50") +
   geom_vline(xintercept=k - 0.5, lwd=1.5, color = "red") +
   geom_line() +
@@ -316,32 +278,11 @@ p1 / p2
 
 
 
+ggsave("output/figures/2022_figure_6_C1.pdf", width=8.3 / 5,height=8.3/5, scale=2)
+
+
 
 ## determine cut-off C2 / endo ----
-# ### from all R2 
-# 
-# d <- tmp.metadata |> 
-#   dplyr::filter(resection == "recurrence") |> 
-#   dplyr::arrange(rna.signature.C2.endothelial.2022) |> 
-#   dplyr::pull(rna.signature.C2.endothelial.2022)
-# 
-# 
-# plot(delta(d))
-# 
-# 
-# # k <- 82
-# # c2.endo.cutoff.s <- d[(k-1):k] |> 
-# #   sum()  |> 
-# #   (function(x){return(x/2)})()
-# c2.endo.cutoff.s <- d[(k-1):k] |> 
-#   median()
-# 
-# 
-# plot(d)
-# abline(h=c2.endo.cutoff.s)
-
-
-### from paired ----
 
 
 d <- tmp.metadata.paired |>
@@ -349,21 +290,23 @@ d <- tmp.metadata.paired |>
   dplyr::pull(rna.signature.C2.endothelial.2022_recurrence)
 
 
-k <- 52
-c2.endo.cutoff.p <- d[(k-1):k] |> sum() |> (function(x){return(x/2)})()
+#k <- 52
+#c2.endo.cutoff.p <- d[(k-1):k] |> sum() |> (function(x){return(x/2)})()
+c2.endo.cutoff.p <- d |> median()
 
 
 plt.1 <- data.frame(y = d) |> 
-  dplyr::rename(`C2/endo signature at Rec.` =y) |> 
+  dplyr::rename(`C2/endo at Rec.` =y) |> 
   dplyr::mutate(x = order(order(1:n())))
 
 plt.2 <- data.frame(y = delta(d)) |> 
-  dplyr::rename(`delta C2/endo signature at Rec.` = y ) |> 
+  dplyr::rename(`delta C2/endo at Rec.` = y ) |> 
   dplyr::mutate(x = order(order(1:n())) + 0.5)
 
 
-p1 <- ggplot(plt.1, aes(y=`C2/endo signature at Rec.`, x=x)) +
+p1 <- ggplot(plt.1, aes(y=`C2/endo at Rec.`, x=x)) +
   geom_hline(yintercept=c2.endo.cutoff.p, lwd=1.5, color = "red") +
+  annotate(geom="text", x=25, y=6, label="Cutoff: median") +
   geom_line() +
   geom_point() +
   xlim(1,nrow(plt.1)) +
@@ -381,97 +324,7 @@ p1 <- ggplot(plt.1, aes(y=`C2/endo signature at Rec.`, x=x)) +
   ) +
   labs(x=NULL)
 
-p2 <- ggplot(plt.2, aes(y=`delta C2/endo signature at Rec.`, x=x)) +
-  geom_hline(yintercept= 0, lwd=1.5, color = "gray50") +
-  geom_vline(xintercept=k - 0.5, lwd=1.5, color = "red") +
-  geom_line() +
-  geom_point() +
-  xlim(1,nrow(plt.1)) +
-  theme_bw()  +
-  theme(
-    axis.title = element_text(face = "bold",size = rel(1)),
-    axis.text.x = element_blank(),
-    legend.position = 'bottom',
-    panel.grid.major.x = element_blank(),
-    panel.grid.minor.x = element_blank(),
-    panel.grid.major.y = element_blank(),
-    panel.grid.minor.y = element_blank(),
-    axis.ticks.x = element_blank(),
-    panel.border = element_rect(colour = "black", fill=NA, size=1.25)
-  ) +
-  labs(x=NULL)
-
-
-p1 / p2
-
-
-
-## determine cut-off C3 / olig ----
-# ### from all R2
-# 
-# d <- tmp.metadata |> 
-#   dplyr::filter(resection == "recurrence") |> 
-#   dplyr::arrange(rna.signature.C3.oligodendrocyte.2022) |> 
-#   dplyr::pull(rna.signature.C3.oligodendrocyte.2022)
-# 
-# 
-# plot(delta(d))
-# 
-# 
-# k <- 82
-# c3.olig.em.cutoff.s <- d[(k-1):k] |> 
-#   sum()  |> 
-#   (function(x){return(x/2)})()
-# 
-# 
-# plot(d)
-# abline(h=c3.olig.cutoff.s)
-# abline(v=k-1,col="red")
-# abline(v=k,col="red")
-
-
-### from paired ----
-
-d <- tmp.metadata.paired |>
-  dplyr::arrange(rna.signature.C3.oligodendrocyte.2022_recurrence) |>
-  dplyr::pull(rna.signature.C3.oligodendrocyte.2022_recurrence)
-
-
-#k <- 76
-#c3.olig.cutoff.p <- d[(k-1):k] |> sum() |> (function(x){return(x/2)})()
-rm(k)
-c3.olig.cutoff.p <- d |>  median()
-
-
-plt.1 <- data.frame(y = d) |> 
-  dplyr::rename(`C3/olig signature at Rec.` =y) |> 
-  dplyr::mutate(x = order(order(1:n())))
-
-plt.2 <- data.frame(y = delta(d)) |> 
-  dplyr::rename(`delta C3/olig signature at Rec.` = y ) |> 
-  dplyr::mutate(x = order(order(1:n())) + 0.5)
-
-
-p1 <- ggplot(plt.1, aes(y=`C3/olig signature at Rec.`, x=x)) +
-  geom_hline(yintercept=c3.olig.cutoff.p, lwd=1.5, color = "red") +
-  geom_line() +
-  geom_point() +
-  xlim(1,nrow(plt.1)) +
-  theme_bw()  +
-  theme(
-    axis.title = element_text(face = "bold",size = rel(1)),
-    axis.text.x = element_blank(),
-    legend.position = 'bottom',
-    panel.grid.major.x = element_blank(),
-    panel.grid.minor.x = element_blank(),
-    panel.grid.major.y = element_blank(),
-    panel.grid.minor.y = element_blank(),
-    axis.ticks.x = element_blank(),
-    panel.border = element_rect(colour = "black", fill=NA, size=1.25)
-  ) +
-  labs(x=NULL)
-
-p2 <- ggplot(plt.2, aes(y=`delta C3/olig signature at Rec.`, x=x)) +
+p2 <- ggplot(plt.2, aes(y=`delta C2/endo at Rec.`, x=x)) +
   geom_hline(yintercept= 0, lwd=1.5, color = "gray50") +
   #geom_vline(xintercept=k - 0.5, lwd=1.5, color = "red") +
   geom_line() +
@@ -496,30 +349,83 @@ p1 / p2
 
 
 
+ggsave("output/figures/2022_figure_6_C2.pdf", width=8.3 / 5,height=8.3/5, scale=2)
+
+
+
+
+## determine cut-off C3 / olig ----
+
+
+d <- tmp.metadata.paired |>
+  dplyr::arrange(rna.signature.C3.oligodendrocyte.2022_recurrence) |>
+  dplyr::pull(rna.signature.C3.oligodendrocyte.2022_recurrence)
+
+
+#k <- 76
+#c3.olig.cutoff.p <- d[(k-1):k] |> sum() |> (function(x){return(x/2)})()
+rm(k)
+c3.olig.cutoff.p <- d |>  median()
+
+
+plt.1 <- data.frame(y = d) |> 
+  dplyr::rename(`C3/olig at Rec.` =y) |> 
+  dplyr::mutate(x = order(order(1:n())))
+
+plt.2 <- data.frame(y = delta(d)) |> 
+  dplyr::rename(`delta C3/olig at Rec.` = y ) |> 
+  dplyr::mutate(x = order(order(1:n())) + 0.5)
+
+
+p1 <- ggplot(plt.1, aes(y=`C3/olig at Rec.`, x=x)) +
+  geom_hline(yintercept=c3.olig.cutoff.p, lwd=1.5, color = "red") +
+  annotate(geom="text", x=25, y=25, label="Cutoff: median") +
+  geom_line() +
+  geom_point() +
+  xlim(1,nrow(plt.1)) +
+  theme_bw()  +
+  theme(
+    axis.title = element_text(face = "bold",size = rel(1)),
+    axis.text.x = element_blank(),
+    legend.position = 'bottom',
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    axis.ticks.x = element_blank(),
+    panel.border = element_rect(colour = "black", fill=NA, size=1.25)
+  ) +
+  labs(x=NULL)
+
+p2 <- ggplot(plt.2, aes(y=`delta C3/olig at Rec.`, x=x)) +
+  geom_hline(yintercept= 0, lwd=1.5, color = "gray50") +
+  #geom_vline(xintercept=k - 0.5, lwd=1.5, color = "red") +
+  geom_line() +
+  geom_point() +
+  xlim(1,nrow(plt.1)) +
+  theme_bw()  +
+  theme(
+    axis.title = element_text(face = "bold",size = rel(1)),
+    axis.text.x = element_blank(),
+    legend.position = 'bottom',
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    axis.ticks.x = element_blank(),
+    panel.border = element_rect(colour = "black", fill=NA, size=1.25)
+  ) +
+  labs(x=NULL)
+
+
+p1 / p2
+
+
+ggsave("output/figures/2022_figure_6_C3.pdf", width=8.3 / 5,height=8.3/5, scale=2)
+
+
 
 ## determine cut-off C4 / neur ----
-# ### from all R2
-# 
-# d <- tmp.metadata |> 
-#   dplyr::filter(resection == "recurrence") |> 
-#   dplyr::arrange(rna.signature.C4.neuron.2022) |> 
-#   dplyr::pull(rna.signature.C4.neuron.2022)
-# 
-# 
-# plot(delta(d))
-# 
-# 
-# k <- 90
-# c4.neur.cutoff.s <- d[(k-1):k] |> 
-#   sum()  |> 
-#   (function(x){return(x/2)})()
-# 
-# 
-# plot(d)
-# abline(h=c4.neur.cutoff.s)
-
-
-### from paired ----
 
 
 d <- tmp.metadata.paired |>
@@ -535,16 +441,17 @@ c4.neur.cutoff.p <- d[(k-1):k] |> sum() |> (function(x){return(x/2)})()
 
 
 plt.1 <- data.frame(y = d) |> 
-  dplyr::rename(`C4/neu signature at Rec.` =y) |> 
+  dplyr::rename(`C4/neu at Rec.` =y) |> 
   dplyr::mutate(x = order(order(1:n())))
 
 plt.2 <- data.frame(y = delta(d)) |> 
-  dplyr::rename(`delta C4/neu signature at Rec.` = y ) |> 
+  dplyr::rename(`delta C4/neu at Rec.` = y ) |> 
   dplyr::mutate(x = order(order(1:n())) + 0.5)
 
 
-p1 <- ggplot(plt.1, aes(y=`C4/neu signature at Rec.`, x=x)) +
+p1 <- ggplot(plt.1, aes(y=`C4/neu at Rec.`, x=x)) +
   geom_hline(yintercept=c4.neur.cutoff.p, lwd=1.5, color = "red") +
+  annotate(geom="text", x=40, y=38, label="Cutoff: change in rate") +
   geom_line() +
   geom_point() +
   xlim(1,nrow(plt.1)) +
@@ -562,7 +469,7 @@ p1 <- ggplot(plt.1, aes(y=`C4/neu signature at Rec.`, x=x)) +
   ) +
   labs(x=NULL)
 
-p2 <- ggplot(plt.2, aes(y=`delta C4/neu signature at Rec.`, x=x)) +
+p2 <- ggplot(plt.2, aes(y=`delta C4/neu at Rec.`, x=x)) +
   geom_hline(yintercept= 0, lwd=1.5, color = "gray50") +
   #geom_vline(xintercept=k - 0.5, lwd=1.5, color = "red") +
   geom_line() +
@@ -584,6 +491,10 @@ p2 <- ggplot(plt.2, aes(y=`delta C4/neu signature at Rec.`, x=x)) +
 
 
 p1 / p2
+
+
+
+ggsave("output/figures/2022_figure_6_C4.pdf", width=8.3 / 5,height=8.3/5, scale=2)
 
 
 
@@ -793,23 +704,36 @@ survminer::ggsurvplot(fit1, data = tmp.metadata.paired, pval = TRUE, risk.table=
 fit.cox <- survival::coxph(surv_object ~
                              `Age above 50` +
                              Sex +
-                           `KPS 70 or above` +
+                             `KPS 70 or above` +
                              `treatment: Beva` +
                              `treatment: TMZ` +
-#                             mgmt.status.rec +
+                             #`C0/fuzzy signature at Rec.` +
+                             `C1/col signature at Rec.` +
+                             `C2/endo signature at Rec.` +
+                             `C3/olig signature at Rec.`
+                           #`C4/neu signature at Rec.`
+                           ,
+                           data = tmp.metadata.paired)
+survminer::ggforest(fit.cox)
 
-#`C0/fuzzy signature at Rec.` +
-`C1/col signature at Rec.` +
-`C2/endo signature at Rec.` +
-`C3/olig signature at Rec.` +
-`C4/neu signature at Rec.`
-,
-                 data = tmp.metadata.paired)
-survminer::ggforest(fit.cox
-                    
-                    #legend.labs=c('Sex'='sex',
-#                                  'Age > 50'='age.above.50'),
-                    )
+
+
+fit.cox <- survival::coxph(surv_object ~
+                             `MGMT at Rec.` +
+                             `C1/col signature at Rec.` ,
+                             
+                           data = tmp.metadata.paired)
+survminer::ggforest(fit.cox)
+
+
+
+
+plot(tmp.metadata.paired |>  dplyr::select(C0.fuzzy.signature, `C1.col.signature`) |> table())
+plot(tmp.metadata.paired |>  dplyr::select(C3.olig.signature, `C4.neu.signature`) |> table())
+plot(tmp.metadata.paired |>  dplyr::select(`C1.col.signature`,`MGMT at Rec.`) |> table())
+
+
+
 
 
 #tmp.metadata.paired |>  dplyr::select(C0.fuzzy.signature, `C1.col.signature`) |> table() |> fisher.test()
@@ -819,21 +743,6 @@ survminer::ggforest(fit.cox
 #tmp.metadata.paired |>  dplyr::select(C4.neu.signature, C3.olig.signature) |> table() |> fisher.test()
 #tmp.metadata.paired |>  dplyr::select(C4.neu.signature, C3.olig.signature) |> table() |> fisher.test()
 
-
-
-fit.cox <- survival::coxph(surv_object ~
-                             #age.above.50 +
-                             #sex +
-                             #kps.70.or.above +
-                             `MGMT at Rec.` +
-                             `C1/col signature at Rec.`
-                             #`C2.endo.signature` +
-                             #`C3.olig.signature` +
-                             #`C4.neu.signature` +
-                             #`C0.fuzzy.signature`
-                           ,
-                           data = tmp.metadata.paired)
-survminer::ggforest(fit.cox)
 
 
 tmp.metadata.paired |>
