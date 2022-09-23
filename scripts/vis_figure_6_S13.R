@@ -163,8 +163,8 @@ plt.2 <- data.frame(y = delta(d.rec)) |>
   dplyr::mutate(x = order(order(1:n())) + 0.5)
 
 
-p1 <- ggplot(plt.1, aes(y=y, col=type, x=x, alpha=type)) +
-  geom_hline(yintercept=c0.fuz.cutoff.p, lwd=1.5, color = "gray50") +
+p1 <- ggplot(plt.1, aes(y=y, col=type, x=x)) +
+  geom_hline(yintercept=c0.fuz.cutoff.p, lwd=1.5, color = "red") +
   annotate(geom="text", x=25, y=9, label="\nCutoff: median\nat recurrence",size=3) +
   geom_line(data = plt.1 |> dplyr::filter(type == "primary")) +
   geom_point(data = plt.1 |> dplyr::filter(type == "primary")) +
@@ -172,8 +172,9 @@ p1 <- ggplot(plt.1, aes(y=y, col=type, x=x, alpha=type)) +
   geom_point(data = plt.1 |> dplyr::filter(type == "recurrence")) +
   xlim(1,max(plt.1$x)) +
   labs(y='C0/fuzzy') + 
-  scale_color_manual(name = "signature ordered at", values = resection_colors[c('primary','recurrence')]) +
-  scale_alpha_manual(name=NULL, values=c('primary'=0.4,'recurrence'=1),guide="none") +
+  scale_color_manual(name = "ordered at", values = c('primary'='gray60','recurrence'='black')) +
+  #scale_color_manual(name = "ordered at", values = resection_colors[c('primary','recurrence')]) +
+  #scale_alpha_manual(name=NULL, values=c('primary'=0.4,'recurrence'=1),guide="none") +
   theme_bw()  +
   theme(
     axis.title = element_text(face = "bold",size = rel(1)),
@@ -212,8 +213,8 @@ p1 / p2
 
 
 
-ggsave("output/figures/2022_figure_S13a.pdf", width=8.3 / 5,height=8.3/5, scale=2)
-ggsave("output/figures/2022_figure_S13a.svg", width=8.3 / 5,height=8.3/5, scale=2)
+ggsave("output/figures/2022_figure_S13a.pdf", width=8.3 / 5,height=8.3/5*1.17, scale=2)
+ggsave("output/figures/2022_figure_S13a.svg", width=8.3 / 5,height=8.3/5*1.17, scale=2)
 
 
 rm(p1, p2, plt.1, plt.2, d.prim, d.rec)
@@ -251,8 +252,8 @@ plt.2 <- data.frame(y = delta(d.rec)) |>
   dplyr::mutate(x = order(order(1:n())) + 0.5)
 
 
-p1 <- ggplot(plt.1, aes(y=y, col=type, x=x, alpha=type)) +
-  geom_hline(yintercept=c1.em.cutoff.p, lwd=1.5, color = "gray50") +
+p1 <- ggplot(plt.1, aes(y=y, col=type, x=x)) +
+  geom_hline(yintercept=c1.em.cutoff.p, lwd=1.5, color = "red") +
   annotate(geom="text", x=40, y=14, label="\nCutoff: change in rate\nat recurrence", size=3) +
   geom_line(data = plt.1 |> dplyr::filter(type == "primary")) +
   geom_point(data = plt.1 |> dplyr::filter(type == "primary")) +
@@ -260,8 +261,9 @@ p1 <- ggplot(plt.1, aes(y=y, col=type, x=x, alpha=type)) +
   geom_point(data = plt.1 |> dplyr::filter(type == "recurrence")) +
   xlim(1,max(plt.1$x)) +
   labs(y='C1/collagen') + 
-  scale_color_manual(name = "signature ordered at", values = resection_colors[c('primary','recurrence')]) +
-  scale_alpha_manual(name=NULL, values=c('primary'=0.5,'recurrence'=1),guide="none") +
+  scale_color_manual(name = "ordered at", values = c('primary'='gray60','recurrence'='black')) +
+  #scale_color_manual(name = "ordered at", values = resection_colors[c('primary','recurrence')]) +
+  #scale_alpha_manual(name=NULL, values=c('primary'=0.5,'recurrence'=1),guide="none") +
   theme_bw() +
   theme(
     axis.title = element_text(face = "bold",size = rel(1)),
@@ -301,8 +303,8 @@ p1 / p2
 
 
 
-ggsave("output/figures/2022_figure_S13b.pdf", width=8.3 / 5,height=8.3/5, scale=2)
-ggsave("output/figures/2022_figure_S13b.svg", width=8.3 / 5,height=8.3/5, scale=2)
+ggsave("output/figures/2022_figure_S13b.pdf", width=8.3 / 5,height=8.3/5*1.17, scale=2)
+ggsave("output/figures/2022_figure_S13b.svg", width=8.3 / 5,height=8.3/5*1.17, scale=2)
 
 
 rm(p1, p2, plt.1, plt.2, k, d.prim, d.rec)
@@ -341,8 +343,8 @@ plt.2 <- data.frame(y = delta(d.rec)) |>
   dplyr::mutate(x = order(order(1:n())) + 0.5)
 
 
-p1 <- ggplot(plt.1, aes(y=y, col=type,x=x, alpha=type)) +
-  geom_hline(yintercept=c2.endo.cutoff.p, lwd=1.5, color = "gray50") +
+p1 <- ggplot(plt.1, aes(y=y, col=type,x=x)) +
+  geom_hline(yintercept=c2.endo.cutoff.p, lwd=1.5, color = "red") +
   annotate(geom="text", x=25, y=6, label="\nCutoff: median\nat recurrence", size=3) +
   geom_line(data = plt.1 |> dplyr::filter(type == "primary")) +
   geom_point(data = plt.1 |> dplyr::filter(type == "primary")) +
@@ -350,8 +352,9 @@ p1 <- ggplot(plt.1, aes(y=y, col=type,x=x, alpha=type)) +
   geom_point(data = plt.1 |> dplyr::filter(type == "recurrence")) +
   xlim(1,max(plt.1$x)) +
   labs(y='C2/endo') + 
-  scale_color_manual(name = "signature ordered at", values = resection_colors[c('primary','recurrence')]) +
-  scale_alpha_manual(name=NULL, values=c('primary'=0.5,'recurrence'=1),guide="none") +
+  scale_color_manual(name = "ordered at", values = c('primary'='gray60','recurrence'='black')) +
+  #scale_color_manual(name = "ordered at", values = resection_colors[c('primary','recurrence')]) +
+  #scale_alpha_manual(name=NULL, values=c('primary'=0.5,'recurrence'=1),guide="none") +
   theme_bw()  +
   theme(
     axis.title = element_text(face = "bold",size = rel(1)),
@@ -391,8 +394,8 @@ p1 / p2
 
 
 
-ggsave("output/figures/2022_figure_S13c.pdf", width=8.3 / 5,height=8.3/5, scale=2)
-ggsave("output/figures/2022_figure_S13c.svg", width=8.3 / 5,height=8.3/5, scale=2)
+ggsave("output/figures/2022_figure_S13c.pdf", width=8.3 / 5,height=8.3/5*1.17, scale=2)
+ggsave("output/figures/2022_figure_S13c.svg", width=8.3 / 5,height=8.3/5*1.17, scale=2)
 
 
 rm(p1, p2, plt.1, plt.2, d.prim, d.rec)
@@ -434,8 +437,8 @@ plt.2 <- data.frame(y = delta(d.rec)) |>
 
 
 
-p1 <- ggplot(plt.1, aes(y=y, col=type,x=x,alpha=type)) +
-  geom_hline(yintercept=c3.olig.cutoff.p, lwd=1.5, color = "gray50") +
+p1 <- ggplot(plt.1, aes(y=y, col=type, x=x)) +
+  geom_hline(yintercept=c3.olig.cutoff.p, lwd=1.5, color = "red") +
   annotate(geom="text", x=25, y=25, label="\nCutoff: median\nat recurrence", size=3) +
   geom_line(data = plt.1 |> dplyr::filter(type == "primary")) +
   geom_point(data = plt.1 |> dplyr::filter(type == "primary")) +
@@ -443,8 +446,9 @@ p1 <- ggplot(plt.1, aes(y=y, col=type,x=x,alpha=type)) +
   geom_point(data = plt.1 |> dplyr::filter(type == "recurrence")) +
   xlim(1,max(plt.1$x)) +
   labs(y='C3/olig') + 
-  scale_color_manual(name = "signature ordered at", values = resection_colors[c('primary','recurrence')]) +
-  scale_alpha_manual(name=NULL, values=c('primary'=0.5,'recurrence'=1),guide="none") +
+  scale_color_manual(name = "ordered at", values = c('primary'='gray60','recurrence'='black')) +
+  #scale_color_manual(name = "ordered at", values = resection_colors[c('primary','recurrence')]) +
+  #scale_alpha_manual(name=NULL, values=c('primary'=0.5,'recurrence'=1),guide="none") +
   theme_bw()  +
   theme(
     axis.title = element_text(face = "bold",size = rel(1)),
@@ -485,8 +489,8 @@ p1 / p2
 
 
 
-ggsave("output/figures/2022_figure_S13d.pdf", width=8.3 / 5,height=8.3/5, scale=2)
-ggsave("output/figures/2022_figure_S13d.svg", width=8.3 / 5,height=8.3/5, scale=2)
+ggsave("output/figures/2022_figure_S13d.pdf", width=8.3 / 5,height=8.3/5*1.17, scale=2)
+ggsave("output/figures/2022_figure_S13d.svg", width=8.3 / 5,height=8.3/5*1.17, scale=2)
 
 
 rm(p1, p2, plt.1, plt.2, d.prim, d.rec)
@@ -526,8 +530,8 @@ plt.2 <- data.frame(y = delta(d.rec)) |>
 
 
 
-p1 <- ggplot(plt.1, aes(y=y, col=type,x=x, alpha=type)) +
-  geom_hline(yintercept=c4.neur.cutoff.p, lwd=1.5, color = "gray50") +
+p1 <- ggplot(plt.1, aes(y=y, col=type,x=x)) +
+  geom_hline(yintercept=c4.neur.cutoff.p, lwd=1.5, color = "red") +
   annotate(geom="text", x=40, y=38, label="\nCutoff: change in rate\nat recurrence", size=3) +
   geom_line(data = plt.1 |> dplyr::filter(type == "primary")) +
   geom_point(data = plt.1 |> dplyr::filter(type == "primary")) +
@@ -535,8 +539,9 @@ p1 <- ggplot(plt.1, aes(y=y, col=type,x=x, alpha=type)) +
   geom_point(data = plt.1 |> dplyr::filter(type == "recurrence")) +
   xlim(1,max(plt.1$x)) +
   labs(y='C4/Neuron') + 
-  scale_color_manual(name = "signature ordered at", values = resection_colors[c('primary','recurrence')]) +
-  scale_alpha_manual(name=NULL, values=c('primary'=0.5,'recurrence'=1),guide="none") +
+  scale_color_manual(name = "ordered at", values = c('primary'='gray60','recurrence'='black')) +
+  #scale_color_manual(name = "ordered at", values = resection_colors[c('primary','recurrence')]) +
+  #scale_alpha_manual(name=NULL, values=c('primary'=0.5,'recurrence'=1),guide="none") +
   theme_bw()  +
   theme(
     axis.title = element_text(face = "bold",size = rel(1)),
@@ -577,8 +582,8 @@ p1 / p2
 
 
 
-ggsave("output/figures/2022_figure_S13e.pdf", width=8.3 / 5,height=8.3/5, scale=2)
-ggsave("output/figures/2022_figure_S13e.svg", width=8.3 / 5,height=8.3/5, scale=2)
+ggsave("output/figures/2022_figure_S13e.pdf", width=8.3 / 5,height=8.3/5*1.17, scale=2)
+ggsave("output/figures/2022_figure_S13e.svg", width=8.3 / 5,height=8.3/5*1.17, scale=2)
 
 
 rm(p1, p2, plt.1, plt.2, k, d.prim, d.rec)
@@ -597,9 +602,9 @@ plt <- tmp.metadata.paired |>
   tidyr::pivot_longer(cols=c(daysToProgression,survivalFromSecondSurgeryDays))
 
 
-ggplot(plt, aes(x=reorder(pid, rank),y=value, group=pid)) +
-  geom_line(lwd=2, fill="gray60") +
-  geom_hline(yintercept=0) +
+p1 <- ggplot(plt, aes(x=reorder(pid, rank),y=value, group=pid)) +
+  geom_line(lwd=2) +
+  geom_hline(yintercept=0,col="white") +
   theme_bw()  +
   theme(
     # text = element_text(family = 'Arial'), seems to require a postscript equivalent
@@ -611,11 +616,16 @@ ggplot(plt, aes(x=reorder(pid, rank),y=value, group=pid)) +
     #panel.grid.minor.x = element_blank(),
     panel.grid.major.y = element_blank(),
     panel.grid.minor.y = element_blank(),
-    #axis.ticks.x = element_blank(),
+    axis.ticks.x = element_blank(),
     panel.border = element_rect(colour = "black", fill=NA, size=1.25)
   ) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.45, size=5.5)  ) +
   labs(x = NULL, y="Survival")
+
+
+#ggsave("output/figures/2022_figure_6a.pdf", width=8.3 / 2,height=8.3/4 * 0.5, scale=2)
+
+
 
 
 
@@ -628,12 +638,12 @@ plt <- tmp.metadata |>  # only resections from complete pairs
   dplyr::ungroup()
 
 
-ggplot(plt, aes(x = reorder(pid, rank), y=`rna.signature.C1.collagen.2022`, col=em.pc.status, group=pid))  +
+p2 <- ggplot(plt, aes(x = reorder(pid, rank), y=`rna.signature.C1.collagen.2022`, col=em.pc.status, group=pid))  +
   geom_hline(yintercept=2.5, lty=1, color = "#FFFFFF44",lwd=3) +
-  geom_point(data = subset(plt, resection == "primary"), pch=19, cex=1.2, alpha=0.25) +
-  geom_path(arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.125, "inches")) , alpha = 0.75 )  + 
-  labs(x=NULL, col=NULL, y="ECM signature",
-       caption="G-SAM: n=122 pairs"
+  geom_point(data = subset(plt, resection == "primary"), pch=19, cex=1.1, alpha=0.65) +
+  geom_path(arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.125*0.65, "inches")) , alpha = 0.75 )  + 
+  labs(x=NULL, col=NULL, y="C0 signature"
+       #caption="G-SAM: n=122 pairs"
        ) +
   theme_bw()  +
   theme(
@@ -646,15 +656,18 @@ ggplot(plt, aes(x = reorder(pid, rank), y=`rna.signature.C1.collagen.2022`, col=
     #panel.grid.minor.x = element_blank(),
     panel.grid.major.y = element_blank(),
     panel.grid.minor.y = element_blank(),
-    #axis.ticks.x = element_blank(),
+    axis.ticks.x = element_blank(),
     panel.border = element_rect(colour = "black", fill=NA, size=1.25)
   ) +
   theme(axis.text.x = element_text(angle = 90,vjust = 0.5, hjust=1)) +
   scale_color_manual(values=c(
     "increase"="#bb5f6c", # rood #bb5f6c
     "decrease"="#79b1b1" # lichtlauw #79b1b
-  )) +
-  geom_hline(yintercept=c1.em.cutoff.p, lty=3, color = "red",lwd=0.5)
+  )
+    , guide="none" # zit in c
+  ) +
+  geom_hline(yintercept=c1.em.cutoff.p, lty=3, color = "red",lwd=0.5) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.45, size=5.5)  )
 
 
 rm(plt)
@@ -687,7 +700,7 @@ plt <- tmp.metadata.paired |>
   ))
 
 
-ggplot(plt, aes(x = reorder(pid, rank), y = variable, fill = value)) +
+p3 <- ggplot(plt, aes(x = reorder(pid, rank), y = variable, fill = value)) +
   facet_grid(rows=vars(panel), scales="free", space="free") + 
   geom_tile(colour = "black", size = 0.3) +
   theme(axis.title.x=element_blank(),
@@ -709,7 +722,18 @@ ggplot(plt, aes(x = reorder(pid, rank), y = variable, fill = value)) +
                                 
                                 "NA"="grey")) + 
   #coord_equal() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 0.5), legend.position = 'bottom')
+  theme(axis.text.x = element_text(angle = 90, hjust = 0.5), legend.position = 'bottom') +
+  labs(caption="G-SAM: n=122 pairs")
+
+
+
+#### export ----
+
+p1 / p2 / p3 + plot_layout(heights = c(0.8,0.8,2))
+
+
+ggsave("output/figures/2022_figure_6abc.pdf", width=8.3 / 2,height=8.3/2 * 0.8, scale=2.2)
+
 
 
 ### figure 6d: signature x svvl ----
