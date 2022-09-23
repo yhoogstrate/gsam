@@ -212,7 +212,7 @@ p2 <- ggplot(plt.2, aes(y=`delta C0/fuzzy at Rec.`, x=x)) +
     panel.grid.minor.y = element_blank(),
     axis.ticks.x = element_blank(),
     panel.border = element_rect(colour = "black", fill=NA, size=1.25)
-  ) +
+  ) +ls 
   labs(x=NULL, y="1st derivative")
 
 
@@ -220,7 +220,7 @@ p1 / p2
 
 
 
-ggsave("output/figures/2022_figure_6_C0.pdf", width=8.3 / 5,height=8.3/5, scale=2)
+ggsave("output/figures/2022_figure_S13_A.pdf", width=8.3 / 5,height=8.3/5, scale=2)
 
 
 
