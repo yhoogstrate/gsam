@@ -106,7 +106,7 @@ tmp.metadata.paired <- tmp.metadata |>
   dplyr::mutate(`Age above 50` = ifelse(age > 50,"Yes","No")) |> 
   dplyr::mutate(gender = as.character(gender)) |> 
   dplyr::rename(Sex = gender) |> 
-  dplyr::mutate(`KPS 70 or above` = ifelse(is.na(performanceAtSecondSurgery) | performanceAtSecondSurgery >= 70, "Yes","No")) |> 
+  dplyr::mutate(`KPS 70 or above` = factor(ifelse(is.na(performanceAtSecondSurgery) | performanceAtSecondSurgery >= 70, "Yes","No"), levels=c('Yes','No'))) |> 
   dplyr::mutate(performanceAtSecondSurgery = as.factor(as.character(performanceAtSecondSurgery))) |> 
   dplyr::mutate(daysToProgression = (survivalDays - survivalFromSecondSurgeryDays)) |> 
   dplyr::mutate(progression.event = 1)
@@ -695,7 +695,37 @@ ggplot(plt, aes(x = reorder(pid, rank), y = variable, fill = value)) +
   theme(axis.text.x = element_text(angle = 90, hjust = 0.5), legend.position = 'bottom')
 
 
+### panel D: signature x svvl ----
 
+
+
+plt <- tmp.metadata.paired |> 
+  dplyr::select(pid,
+                rna.signature.C1.collagen.2022_primary, rna.signature.C1.collagen.2022_recurrence,
+                survivalDays, survivalFromSecondSurgeryDays) |> 
+  dplyr::rename(survivalDays_primary = survivalDays) |> 
+  dplyr::rename(survivalDays_recurrence = survivalFromSecondSurgeryDays) |> 
+  tidyr::pivot_longer(cols=-pid,  names_to = c(".value", "resection"), names_pattern = "(.+)_(.+)")
+
+
+
+
+ggplot(plt, aes(y = extracellular.matrix.component , x=tts, group=pid, col=survival.from.second.surgery ))  +
+  #ggplot(plt, aes(y = extracellular.matrix.component , x=tts, group=pid, col=treatedWithTMZ ))  +
+  #ggplot(plt, aes(y = extracellular.matrix.component , x=tts, group=pid, col=extracellular.matrix.component.R2 ))  +
+  geom_point(data = subset(plt, resection == "R1"), pch=19, cex=0.8, alpha=0.5) +
+  geom_path(data = subset(plt,survival.from.second.surgery == "<= 1yr"),arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.125, "inches")) , alpha = 0.6 )  + 
+  geom_path(data = subset(plt,survival.from.second.surgery != "<= 1yr"),arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.125, "inches")) , alpha = 0.25, lwd=3, col="white" )  + 
+  geom_path(data = subset(plt,survival.from.second.surgery != "<= 1yr"),arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.125, "inches")) , alpha = 1 )  + 
+  labs(y = "Extracellular matrix signature", x = "Time until death") +
+  geom_hline(yintercept = 1.5, lty=1, lwd=3.5, col="#FFFFFFBB") +
+  geom_hline(yintercept = 1.5, lty=2, col="red", lwd=0.25) +
+  geom_vline(xintercept = 0, lty=1, col="black", lwd=0.35) +
+  geom_vline(xintercept = -6, lty=1, col="black", lwd=0.35) +
+  scale_x_reverse() +
+  scale_color_manual(values = c('#009E74', '#CB75A4') ) +
+  youri_gg_theme +
+  labs(col = 'Survival from 2nd surgery')
 
 
 
@@ -717,11 +747,11 @@ tmp.metadata.paired <- tmp.metadata.paired |>
   dplyr::mutate(`C3/olig signature at Prim.`  = factor(ifelse(rna.signature.C3.oligodendrocyte.2022_primary > c3.olig.cutoff.p ,"high", "low"), levels=c('low','high'))) |> 
   dplyr::mutate(`C4/neu signature at Prim.`   = factor(ifelse(rna.signature.C4.neuron.2022_primary >          c4.neur.cutoff.p ,"high", "low"), levels=c('low','high'))) |> 
   
-  dplyr::mutate(`C0.fuzzy.signature.prim` = `C0 fuzzy signature at Prim.`) |> 
-  dplyr::mutate(`C1.col.signature.prim`   = `C1 col signature at Prim.`  ) |> 
-  dplyr::mutate(`C2.endo.signature.prim`  = `C2 endo signature at Prim.` ) |> 
-  dplyr::mutate(`C3.olig.signature.prim`  = `C3 olig signature at Prim.` ) |> 
-  dplyr::mutate(`C4.neu.signature.prim`   = `C4 neu signature at Prim.`  ) |> 
+  dplyr::mutate(`C0.fuzzy.signature.prim` = `C0/fuzzy signature at Prim.`) |> 
+  dplyr::mutate(`C1.col.signature.prim`   = `C1/col signature at Prim.`  ) |> 
+  dplyr::mutate(`C2.endo.signature.prim`  = `C2/endo signature at Prim.` ) |> 
+  dplyr::mutate(`C3.olig.signature.prim`  = `C3/olig signature at Prim.` ) |> 
+  dplyr::mutate(`C4.neu.signature.prim`   = `C4/neu signature at Prim.`  ) |> 
   
   
   dplyr::mutate(`C0/fuzzy signature at Rec.` = factor(ifelse(rna.signature.C0.fuzzy.2022_recurrence >           c0.fuz.cutoff.p,  "high", "low"), levels=c('low','high'))) |> 
@@ -730,11 +760,11 @@ tmp.metadata.paired <- tmp.metadata.paired |>
   dplyr::mutate(`C3/olig signature at Rec.`  = factor(ifelse(rna.signature.C3.oligodendrocyte.2022_recurrence > c3.olig.cutoff.p ,"high", "low"), levels=c('low','high'))) |> 
   dplyr::mutate(`C4/neu signature at Rec.`   = factor(ifelse(rna.signature.C4.neuron.2022_recurrence >          c4.neur.cutoff.p ,"high", "low"), levels=c('low','high'))) |> 
   
-  dplyr::mutate(`C0.fuzzy.signature.rec` = `C0 fuzzy signature at Rec.`) |> 
-  dplyr::mutate(`C1.col.signature.rec`   = `C1 col signature at Rec.`  ) |> 
-  dplyr::mutate(`C2.endo.signature.rec`  = `C2 endo signature at Rec.` ) |> 
-  dplyr::mutate(`C3.olig.signature.rec`  = `C3 olig signature at Rec.` ) |> 
-  dplyr::mutate(`C4.neu.signature.rec`   = `C4 neu signature at Rec.`  ) |> 
+  dplyr::mutate(`C0.fuzzy.signature.rec` = `C0/fuzzy signature at Rec.`) |> 
+  dplyr::mutate(`C1.col.signature.rec`   = `C1/col signature at Rec.`  ) |> 
+  dplyr::mutate(`C2.endo.signature.rec`  = `C2/endo signature at Rec.` ) |> 
+  dplyr::mutate(`C3.olig.signature.rec`  = `C3/olig signature at Rec.` ) |> 
+  dplyr::mutate(`C4.neu.signature.rec`   = `C4/neu signature at Rec.`  ) |> 
   
   
   dplyr::mutate(`MGMT at Rec.` = factor(case_when(
@@ -893,6 +923,8 @@ fit.cox <- survival::coxph(surv_object ~
                            
                            data = tmp.metadata.paired)
 survminer::ggforest(fit.cox, data = tmp.metadata.paired)
+
+
 
 
 
