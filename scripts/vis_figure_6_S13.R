@@ -3,14 +3,7 @@
 # load libs ----
 
 
-# library(tidyverse)
-# library(reshape2)
-# library(RColorBrewer)
-# library(cowplot)
-# library(patchwork)
-# library(survival)
-# library(survminer)
-# 
+library(patchwork) # avoid calling infix functions pls
 
 
 #  load data ----
@@ -18,8 +11,8 @@
 
 source('scripts/R/palette.R')
 
-source('scripts/R/gsam_rna-seq_expression.R') # recursively calls metadata
-source('scripts/R/gsam_metadata.R') # recursively calls metadata
+source('scripts/load_G-SAM_metadata.R')
+source('scripts/load_G-SAM_expression_data.R')
 
 
 
@@ -141,7 +134,7 @@ tmp.metadata <- tmp.metadata |>
 
 
 
-## determine cut-off C0 / fuz ----
+## figure S13a: determine cut-off C0 / fuz ----
 
 
 d.prim <- tmp.metadata.paired |>
@@ -152,7 +145,6 @@ d.rec <- tmp.metadata.paired |>
   dplyr::pull(rna.signature.C0.fuzzy.2022_recurrence)
 
 
-rm(k)
 #c0.fuz.cutoff.p <- d[(k-1):k] |> sum() |> (function(x){return(x/2)})()
 c0.fuz.cutoff.p <- d.rec |> median()
 
@@ -212,7 +204,7 @@ p2 <- ggplot(plt.2, aes(y=`delta C0/fuzzy at Rec.`, x=x)) +
     panel.grid.minor.y = element_blank(),
     axis.ticks.x = element_blank(),
     panel.border = element_rect(colour = "black", fill=NA, size=1.25)
-  ) +ls 
+  ) +
   labs(x=NULL, y="1st derivative")
 
 
@@ -220,11 +212,15 @@ p1 / p2
 
 
 
-ggsave("output/figures/2022_figure_S13_A.pdf", width=8.3 / 5,height=8.3/5, scale=2)
+ggsave("output/figures/2022_figure_S13a.pdf", width=8.3 / 5,height=8.3/5, scale=2)
+ggsave("output/figures/2022_figure_S13a.svg", width=8.3 / 5,height=8.3/5, scale=2)
+
+
+rm(p1, p2, plt.1, plt.2, d.prim, d.rec)
 
 
 
-## determine cut-off C1 / col ----
+## figure S13b: determine cut-off C1 / col ----
 
 
 d.prim <- tmp.metadata.paired |>
@@ -305,11 +301,16 @@ p1 / p2
 
 
 
-ggsave("output/figures/2022_figure_6_C1.pdf", width=8.3 / 5,height=8.3/5, scale=2)
+ggsave("output/figures/2022_figure_S13b.pdf", width=8.3 / 5,height=8.3/5, scale=2)
+ggsave("output/figures/2022_figure_S13b.svg", width=8.3 / 5,height=8.3/5, scale=2)
+
+
+rm(p1, p2, plt.1, plt.2, k, d.prim, d.rec)
 
 
 
-## determine cut-off C2 / endo ----
+
+## figure S13c: determine cut-off C2 / endo ----
 
 
 d.prim <- tmp.metadata.paired |>
@@ -390,12 +391,16 @@ p1 / p2
 
 
 
-ggsave("output/figures/2022_figure_6_C2.pdf", width=8.3 / 5,height=8.3/5, scale=2)
+ggsave("output/figures/2022_figure_S13c.pdf", width=8.3 / 5,height=8.3/5, scale=2)
+ggsave("output/figures/2022_figure_S13c.svg", width=8.3 / 5,height=8.3/5, scale=2)
+
+
+rm(p1, p2, plt.1, plt.2, d.prim, d.rec)
 
 
 
 
-## determine cut-off C3 / olig ----
+## figure S13d: determine cut-off C3 / olig ----
 
 
 d.prim <- tmp.metadata.paired |>
@@ -478,11 +483,19 @@ p2 <- ggplot(plt.2, aes(y=`delta C3/olig at Rec.`, x=x)) +
 p1 / p2
 
 
-ggsave("output/figures/2022_figure_6_C3.pdf", width=8.3 / 5,height=8.3/5, scale=2)
+
+
+ggsave("output/figures/2022_figure_S13d.pdf", width=8.3 / 5,height=8.3/5, scale=2)
+ggsave("output/figures/2022_figure_S13d.svg", width=8.3 / 5,height=8.3/5, scale=2)
+
+
+rm(p1, p2, plt.1, plt.2, d.prim, d.rec)
 
 
 
-## determine cut-off C4 / neur ----
+
+
+## figure S13e: determine cut-off C4 / neur ----
 
 
 d.prim <- tmp.metadata.paired |>
@@ -562,16 +575,20 @@ p2 <- ggplot(plt.2, aes(y=`delta C4/neu at Rec.`, x=x)) +
 p1 / p2
 
 
-ggsave("output/figures/2022_figure_6_C4.pdf", width=8.3 / 5,height=8.3/5, scale=2)
 
 
+ggsave("output/figures/2022_figure_S13e.pdf", width=8.3 / 5,height=8.3/5, scale=2)
+ggsave("output/figures/2022_figure_S13e.svg", width=8.3 / 5,height=8.3/5, scale=2)
+
+
+rm(p1, p2, plt.1, plt.2, k, d.prim, d.rec)
 
 
 
 
 ## plot(s) ----
 
-### panel A: svvl ----
+### figure 6a: svvl ----
 
 
 plt <- tmp.metadata.paired |> 
@@ -602,7 +619,7 @@ ggplot(plt, aes(x=reorder(pid, rank),y=value, group=pid)) +
 
 
 
-### panel B: signature arrows ----
+### figure 6b: signature arrows ----
 
 
 plt <- tmp.metadata |>  # only resections from complete pairs
@@ -644,7 +661,7 @@ rm(plt)
 
 
 
-### panel C: squares ----
+### figure 6c: squares ----
 
 #'@todo x-check @ fig2 fgh -- mgmt
 
@@ -695,7 +712,7 @@ ggplot(plt, aes(x = reorder(pid, rank), y = variable, fill = value)) +
   theme(axis.text.x = element_text(angle = 90, hjust = 0.5), legend.position = 'bottom')
 
 
-### panel D: signature x svvl ----
+### figure 6d: signature x svvl ----
 
 
 
@@ -792,7 +809,7 @@ tmp.metadata.paired <- tmp.metadata.paired |>
 ## R2 ----
 
 
-### panel E: KM collagen ----
+### figure 6e: KM collagen ----
 
 surv_object <- survival::Surv(time = tmp.metadata.paired$survivalFromSecondSurgeryDays, event=tmp.metadata.paired$event)
 fit1 <- survival::survfit(surv_object ~  `C1.col.signature.rec` , data = tmp.metadata.paired)
@@ -830,7 +847,10 @@ survminer::ggsurvplot(fit1, data = tmp.metadata.paired, pval = TRUE, risk.table=
 
 
 
+### figure 6e: KM collagen ----
 
+
+surv_object <- survival::Surv(time = tmp.metadata.paired$survivalFromSecondSurgeryDays, event=tmp.metadata.paired$event)
 fit.cox <- survival::coxph(surv_object ~
                              `Age above 50` +
                              Sex +
@@ -909,6 +929,8 @@ survminer::ggsurvplot(fit1, data = tmp.metadata.paired, pval = TRUE, risk.table=
                       legend.labs=c('C1.col.signature=high'='C1/col signature [Prim.]: high',
                                     'C1.col.signature=low'='C1/col signature [Prim.]: low'),
                       xlab="Survival time from primary")
+
+
 
 
 ## Time to progress ----
