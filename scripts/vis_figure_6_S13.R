@@ -23,6 +23,12 @@ delta <- function(x) {
 }
 
 
+## ggsurvplot export bugfix - https://github.com/kassambara/survminer/issues/152#issuecomment-938941051
+grid.draw.ggsurvplot <- function(x){
+  survminer:::print.ggsurvplot(x, newpage = FALSE)
+}
+
+
 ## prep data table ----
 
 
@@ -736,6 +742,51 @@ ggsave("output/figures/2022_figure_6abc.pdf", width=8.3 / 2,height=8.3/2 * 0.8, 
 
 
 
+
+### stats ? ----
+
+
+
+
+
+# svvl analysis ----
+
+
+tmp.metadata.paired <- tmp.metadata.paired |>
+  
+  dplyr::mutate(`C0/fuzzy signature at Prim.` = factor(ifelse(rna.signature.C0.fuzzy.2022_primary >           c0.fuz.cutoff.p,  "high", "low"), levels=c('low','high'))) |> 
+  dplyr::mutate(`C1/col signature at Prim.`   = factor(ifelse(rna.signature.C1.collagen.2022_primary >        c1.em.cutoff.p,   "high", "low"), levels=c('low','high'))) |> 
+  dplyr::mutate(`C2/endo signature at Prim.`  = factor(ifelse(rna.signature.C2.endothelial.2022_primary >     c2.endo.cutoff.p ,"high", "low"), levels=c('low','high'))) |> 
+  dplyr::mutate(`C3/olig signature at Prim.`  = factor(ifelse(rna.signature.C3.oligodendrocyte.2022_primary > c3.olig.cutoff.p ,"high", "low"), levels=c('low','high'))) |> 
+  dplyr::mutate(`C4/neu signature at Prim.`   = factor(ifelse(rna.signature.C4.neuron.2022_primary >          c4.neur.cutoff.p ,"high", "low"), levels=c('low','high'))) |> 
+  
+  dplyr::mutate(`C0.fuzzy.signature.prim` = `C0/fuzzy signature at Prim.`) |> 
+  dplyr::mutate(`C1.col.signature.prim`   = `C1/col signature at Prim.`  ) |> 
+  dplyr::mutate(`C2.endo.signature.prim`  = `C2/endo signature at Prim.` ) |> 
+  dplyr::mutate(`C3.olig.signature.prim`  = `C3/olig signature at Prim.` ) |> 
+  dplyr::mutate(`C4.neu.signature.prim`   = `C4/neu signature at Prim.`  ) |> 
+  
+  
+  dplyr::mutate(`C0/fuzzy signature at Rec.` = factor(ifelse(rna.signature.C0.fuzzy.2022_recurrence >           c0.fuz.cutoff.p,  "high", "low"), levels=c('low','high'))) |> 
+  dplyr::mutate(`C1/col signature at Rec.`   = factor(ifelse(rna.signature.C1.collagen.2022_recurrence >        c1.em.cutoff.p,   "high", "low"), levels=c('low','high'))) |> 
+  dplyr::mutate(`C2/endo signature at Rec.`  = factor(ifelse(rna.signature.C2.endothelial.2022_recurrence >     c2.endo.cutoff.p ,"high", "low"), levels=c('low','high'))) |> 
+  dplyr::mutate(`C3/olig signature at Rec.`  = factor(ifelse(rna.signature.C3.oligodendrocyte.2022_recurrence > c3.olig.cutoff.p ,"high", "low"), levels=c('low','high'))) |> 
+  dplyr::mutate(`C4/neu signature at Rec.`   = factor(ifelse(rna.signature.C4.neuron.2022_recurrence >          c4.neur.cutoff.p ,"high", "low"), levels=c('low','high'))) |> 
+  
+  dplyr::mutate(`C0.fuzzy.signature.rec` = `C0/fuzzy signature at Rec.`) |> 
+  dplyr::mutate(`C1.col.signature.rec`   = `C1/col signature at Rec.`  ) |> 
+  dplyr::mutate(`C2.endo.signature.rec`  = `C2/endo signature at Rec.` ) |> 
+  dplyr::mutate(`C3.olig.signature.rec`  = `C3/olig signature at Rec.` ) |> 
+  dplyr::mutate(`C4.neu.signature.rec`   = `C4/neu signature at Rec.`  ) |> 
+  
+  
+  dplyr::mutate(`MGMT at Rec.` = factor(case_when(
+    is.na(`MGMT meth`) ~ as.character(NA),
+    `MGMT meth` %in% c("Gained", "Stable") ~ "Methylated",
+    T ~ "Unmethylated"
+  ),levels=c('Unmethylated','Methylated')))
+
+
 ### figure 6d: signature x svvl ----
 
 
@@ -782,50 +833,8 @@ ggplot(plt, aes(y = rna.signature.C1.collagen.2022 , x=survivalDays, group=pid, 
   )
 
 
+ggsave("output/figures/2022_figure_6d.pdf", width=8.3 / 2 * 2/3,height=8.3/5, scale=2.2)
 
-
-### stats ? ----
-
-
-
-
-
-# svvl analysis ----
-
-
-tmp.metadata.paired <- tmp.metadata.paired |>
-  
-  dplyr::mutate(`C0/fuzzy signature at Prim.` = factor(ifelse(rna.signature.C0.fuzzy.2022_primary >           c0.fuz.cutoff.p,  "high", "low"), levels=c('low','high'))) |> 
-  dplyr::mutate(`C1/col signature at Prim.`   = factor(ifelse(rna.signature.C1.collagen.2022_primary >        c1.em.cutoff.p,   "high", "low"), levels=c('low','high'))) |> 
-  dplyr::mutate(`C2/endo signature at Prim.`  = factor(ifelse(rna.signature.C2.endothelial.2022_primary >     c2.endo.cutoff.p ,"high", "low"), levels=c('low','high'))) |> 
-  dplyr::mutate(`C3/olig signature at Prim.`  = factor(ifelse(rna.signature.C3.oligodendrocyte.2022_primary > c3.olig.cutoff.p ,"high", "low"), levels=c('low','high'))) |> 
-  dplyr::mutate(`C4/neu signature at Prim.`   = factor(ifelse(rna.signature.C4.neuron.2022_primary >          c4.neur.cutoff.p ,"high", "low"), levels=c('low','high'))) |> 
-  
-  dplyr::mutate(`C0.fuzzy.signature.prim` = `C0/fuzzy signature at Prim.`) |> 
-  dplyr::mutate(`C1.col.signature.prim`   = `C1/col signature at Prim.`  ) |> 
-  dplyr::mutate(`C2.endo.signature.prim`  = `C2/endo signature at Prim.` ) |> 
-  dplyr::mutate(`C3.olig.signature.prim`  = `C3/olig signature at Prim.` ) |> 
-  dplyr::mutate(`C4.neu.signature.prim`   = `C4/neu signature at Prim.`  ) |> 
-  
-  
-  dplyr::mutate(`C0/fuzzy signature at Rec.` = factor(ifelse(rna.signature.C0.fuzzy.2022_recurrence >           c0.fuz.cutoff.p,  "high", "low"), levels=c('low','high'))) |> 
-  dplyr::mutate(`C1/col signature at Rec.`   = factor(ifelse(rna.signature.C1.collagen.2022_recurrence >        c1.em.cutoff.p,   "high", "low"), levels=c('low','high'))) |> 
-  dplyr::mutate(`C2/endo signature at Rec.`  = factor(ifelse(rna.signature.C2.endothelial.2022_recurrence >     c2.endo.cutoff.p ,"high", "low"), levels=c('low','high'))) |> 
-  dplyr::mutate(`C3/olig signature at Rec.`  = factor(ifelse(rna.signature.C3.oligodendrocyte.2022_recurrence > c3.olig.cutoff.p ,"high", "low"), levels=c('low','high'))) |> 
-  dplyr::mutate(`C4/neu signature at Rec.`   = factor(ifelse(rna.signature.C4.neuron.2022_recurrence >          c4.neur.cutoff.p ,"high", "low"), levels=c('low','high'))) |> 
-  
-  dplyr::mutate(`C0.fuzzy.signature.rec` = `C0/fuzzy signature at Rec.`) |> 
-  dplyr::mutate(`C1.col.signature.rec`   = `C1/col signature at Rec.`  ) |> 
-  dplyr::mutate(`C2.endo.signature.rec`  = `C2/endo signature at Rec.` ) |> 
-  dplyr::mutate(`C3.olig.signature.rec`  = `C3/olig signature at Rec.` ) |> 
-  dplyr::mutate(`C4.neu.signature.rec`   = `C4/neu signature at Rec.`  ) |> 
-  
-  
-  dplyr::mutate(`MGMT at Rec.` = factor(case_when(
-    is.na(`MGMT meth`) ~ as.character(NA),
-    `MGMT meth` %in% c("Gained", "Stable") ~ "Methylated",
-    T ~ "Unmethylated"
-  ),levels=c('Unmethylated','Methylated')))
 
 
 
@@ -837,7 +846,7 @@ tmp.metadata.paired <- tmp.metadata.paired |>
 
 surv_object <- survival::Surv(time = tmp.metadata.paired$survivalFromSecondSurgeryDays, event=tmp.metadata.paired$event)
 fit1 <- survival::survfit(surv_object ~  `C1.col.signature.rec` , data = tmp.metadata.paired)
-survminer::ggsurvplot(fit1, data = tmp.metadata.paired, pval = TRUE, risk.table=T, tables.y.text = FALSE,
+p1 <- survminer::ggsurvplot(fit1, data = tmp.metadata.paired, pval = TRUE, risk.table=T, tables.y.text = FALSE,
                       palette = c(
                         'C1/col signature: high'=alpha('#CB75A4',0.7),
                         'C1/col signature: low'=alpha('#009E74',0.7)
@@ -846,7 +855,10 @@ survminer::ggsurvplot(fit1, data = tmp.metadata.paired, pval = TRUE, risk.table=
                                     'C1.col.signature=low'='C1/col signature: low'),
                       xlab="Survival time from recurrence")
 
+ggsave("output/figures/2022_figure_6e.pdf", width=8.3 / 2 * 2/3,height=8.3/5, scale=2.2,  plot = p1)
 
+
+#### figure s... ----
 
 #plot(tmp.metadata.paired$performanceAtSecondSurgery, tmp.metadata.paired$delta.rna.signature.C1.collagen.2022)
 
