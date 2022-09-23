@@ -700,32 +700,45 @@ ggplot(plt, aes(x = reorder(pid, rank), y = variable, fill = value)) +
 
 
 plt <- tmp.metadata.paired |> 
-  dplyr::select(pid,
+  dplyr::filter(event == 1) |> 
+  dplyr::select(pid, `C1/col signature at Rec.`,
                 rna.signature.C1.collagen.2022_primary, rna.signature.C1.collagen.2022_recurrence,
                 survivalDays, survivalFromSecondSurgeryDays) |> 
   dplyr::rename(survivalDays_primary = survivalDays) |> 
   dplyr::rename(survivalDays_recurrence = survivalFromSecondSurgeryDays) |> 
-  tidyr::pivot_longer(cols=-pid,  names_to = c(".value", "resection"), names_pattern = "(.+)_(.+)")
+  #dplyr::mutate(survival.from.first.surgery = ifelse(survivalDays > 365* 2.5, "> 2.5yr", "<= 2.5yr") ) %>%
+  #dplyr::mutate(survival.from.second.surgery = factor(survival.from.second.surgery, levels=c("> 1yr", "<= 1yr")))
+  tidyr::pivot_longer(cols=-c(pid, `C1/col signature at Rec.`),  names_to = c(".value", "resection"), names_pattern = "(.+)_(.+)")
 
 
+#ggplot(plt, aes(y = extracellular.matrix.component , x=tts, group=pid, fill=em.status.res2 )) 
 
-
-ggplot(plt, aes(y = extracellular.matrix.component , x=tts, group=pid, col=survival.from.second.surgery ))  +
-  #ggplot(plt, aes(y = extracellular.matrix.component , x=tts, group=pid, col=treatedWithTMZ ))  +
-  #ggplot(plt, aes(y = extracellular.matrix.component , x=tts, group=pid, col=extracellular.matrix.component.R2 ))  +
-  geom_point(data = subset(plt, resection == "R1"), pch=19, cex=0.8, alpha=0.5) +
-  geom_path(data = subset(plt,survival.from.second.surgery == "<= 1yr"),arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.125, "inches")) , alpha = 0.6 )  + 
-  geom_path(data = subset(plt,survival.from.second.surgery != "<= 1yr"),arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.125, "inches")) , alpha = 0.25, lwd=3, col="white" )  + 
-  geom_path(data = subset(plt,survival.from.second.surgery != "<= 1yr"),arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.125, "inches")) , alpha = 1 )  + 
-  labs(y = "Extracellular matrix signature", x = "Time until death") +
-  geom_hline(yintercept = 1.5, lty=1, lwd=3.5, col="#FFFFFFBB") +
-  geom_hline(yintercept = 1.5, lty=2, col="red", lwd=0.25) +
+ggplot(plt, aes(y = rna.signature.C1.collagen.2022 , x=survivalDays, group=pid, fill=`C1/col signature at Rec.`)) +
+  geom_path(arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.125, "inches")) , alpha = 0.3, col="gray50" )  + 
+  geom_point(data = subset(plt, resection == "primary"), pch=21, cex=1.2, alpha=0.7, fill="gray50", col="gray50") +
+  geom_point(data = subset(plt, resection == "recurrence"), pch=19, cex=4.5, alpha=0.25, col="white") +
+  geom_point(data = subset(plt, resection == "recurrence"), pch=21, cex=2.0, alpha=0.7) +
+  labs(y = "C0 / col signature", x = "Survival") +
+  geom_hline(yintercept = c1.em.cutoff.p, lty=1, lwd=3.5, col="#FFFFFFBB") +
+  geom_hline(yintercept = c1.em.cutoff.p, lty=2, col="red", lwd=0.25) +
   geom_vline(xintercept = 0, lty=1, col="black", lwd=0.35) +
   geom_vline(xintercept = -6, lty=1, col="black", lwd=0.35) +
-  scale_x_reverse() +
-  scale_color_manual(values = c('#009E74', '#CB75A4') ) +
-  youri_gg_theme +
-  labs(col = 'Survival from 2nd surgery')
+  scale_x_reverse(breaks = (0:15) * 365) +
+  scale_fill_manual(values = c('high'='#009E74', 'low'='#CB75A4') ) +
+  theme_bw()  +
+  theme(
+    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
+    #strip.background = element_rect(colour="white",fill="white"),
+    axis.title = element_text(face = "bold",size = rel(1)),
+    #axis.text.x = element_blank(),
+    legend.position = 'bottom',
+    #panel.grid.major.x = element_blank(),
+    #panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    #axis.ticks.x = element_blank(),
+    panel.border = element_rect(colour = "black", fill=NA, size=1.25)
+  )
 
 
 
