@@ -51,9 +51,11 @@ subtype_colors_nmfm <- c('NMF meta-feature 2'='#6ba6e5',# blue
 dataset_colors <- c('G-SAM' = '#e69356', 'GSAM' = '#e69356', 'GLASS' = '#69a4d5')
 
 resection_colors <- c(
+  "primary" = "#55864e",
   "Primary Res." = "#55864e",
   "R1" = "#55864e" ,
   
+  "recurrence" = "#a15e5e",
   "Recurrent Res." = "#a15e5e",
   "R2" = "#a15e5e"  # #a1805e
 )
