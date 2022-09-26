@@ -174,14 +174,15 @@ tmp.labels <- tmp.labels |>
                 `PE`,
                 `TIL/TC`,
                 `TAM/MG`
-                ) # order
+                ) |>  # order
+  dplyr::mutate_all(function(arg) { return (ifelse(arg, as.logical(NA), arg)) }) # gray labels
 
 
+# plot & export ----
 
 
-recursiveCorPlot::recursiveCorPlot(plt, tmp.labels, 6, 1 , caption=paste0("G-SAM: n=",ncol(plt)," pairs"))
-#ggsave("output/figures/paper_dge_corrplot_logFc_gene_per_pair.pdf",width = 1200 * 2.4, height = 1200 * 2.4 ,units="px" )
-
+recursiveCorPlot::recursiveCorPlot(plt, tmp.labels, 6 * 0.8, 1 , caption=paste0("G-SAM: n=",ncol(plt)," pairs"))
+ggsave("output/figures/2022_figure_4c___logFc_gene_per_pair.pdf",width=8.3 / 2,height=8.3/2, scale=2.1)
 
 
 

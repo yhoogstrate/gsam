@@ -44,29 +44,6 @@ print(paste0("Genes part of recursive clustering: ", k.genes))
 
 
 
-## expression data ----
-
-
-sel <- gsam.rna.metadata |> 
-  dplyr::filter(blacklist.pca == F) |> 
-  dplyr::filter(pat.with.IDH == F) |> 
-  dplyr::filter(sid %in% c('BAI2', 'CAO1-replicate', 'FAB2', 'GAS2-replicate') == F ) |>  # replicates
-  dplyr::filter(tumour.percentage.dna >= 15) |> 
-  dplyr::pull(sid)
-n.gsam.samples <- length(sel)
-
-
-gsam.gene.expression.all <- gsam.rnaseq.expression |> 
-  dplyr::select(sel)
-stopifnot(colnames(gsam.gene.expression.all) == sel)
-
-
-gsam.gene.expression.all.vst <- gsam.gene.expression.all %>%
-  DESeq2::DESeqDataSetFromMatrix(data.frame(cond = as.factor(paste0("r",round(runif( ncol(.) , 1, 2))))) , ~cond) %>%
-  DESeq2::vst(blind=T) %>%
-  SummarizedExperiment::assay()
-
-
 
 
 # plot ----
@@ -122,8 +99,8 @@ recursiveCorPlot::recursiveCorPlot(plt.data, plt.labels |>
                  legend_scale = 3,
                  method = "ward.D2",
                  caption = paste0("Genes: n=",       k.genes, ", ",
-                                  "G-SAM samples: n=",n.gsam.samples ," ",
-                                  "(", n.gsam.samples," >= 15%, 0 < 15%)"),
+                                  "G-SAM samples: n=",ncol(gsam.gene.expression.all.vst) ," ",
+                                  "(", ncol(gsam.gene.expression.all.vst)," >= 15%, 0 < 15%)"),
                  return_h_object = FALSE
                  )
 
