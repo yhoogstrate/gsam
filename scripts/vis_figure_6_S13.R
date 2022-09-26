@@ -833,7 +833,7 @@ ggplot(plt, aes(y = rna.signature.C1.collagen.2022 , x=survivalDays, group=pid, 
   )
 
 
-ggsave("output/figures/2022_figure_6d.pdf", width=8.3 / 2 * 2/3,height=8.3/5, scale=2.2)
+ggsave("output/figures/2022_figure_6d.pdf", width=8.3 / 2 * 0.65,height=8.3/5 *0.85, scale=2.2)
 
 
 
@@ -855,7 +855,7 @@ p1 <- survminer::ggsurvplot(fit1, data = tmp.metadata.paired, pval = TRUE, risk.
                                     'C1.col.signature=low'='C1/col signature: low'),
                       xlab="Survival time from recurrence")
 
-ggsave("output/figures/2022_figure_6e.pdf", width=8.3 / 2 * 2/3,height=8.3/5, scale=2.2,  plot = p1)
+ggsave("output/figures/2022_figure_6e.pdf", width=8.3 / 2 * 0.45,height=8.3/5 * 0.7, scale=3,  plot = p1)
 
 
 #### figure s... ----
