@@ -74,32 +74,32 @@ tmp.metadata.paired <- tmp.metadata |>
         
         mgmtStability,HM,
         
-        cnStatusCDKN2ABs,
         AXIN2,APC,JAK2,
         RB1,MSH2,BRCA1,
         BRCA2,ATM,SETD2,ARID2,KMT2C,KMT2D,
         NF1,ERBB3,
         EGFR,TP53BP1,TP53,PIK3R1,PIK3CA,TSC2,
+        SETD2,PDGFRA,
         
+        cnStatusCDKN2ABs,
+        cnStatusEGFRs,
         cnStatusRB1s,
         cnStatusNF1s,
         cnStatusCDK4s,
-        cnStatusMDM2s,
-        
-        SETD2,PDGFRA
+        cnStatusMDM2s
         
         ) |> 
       dplyr::rename(event = status)
       , by=c('pid'='studyID'), suffix=c('','')
   ) |> 
   dplyr::mutate(event = ifelse(.data$event == "Deceased",1,0)) |> 
-  dplyr::mutate(deceased = dplyr::recode(event, "1" = "Yes", "0" = "No" )) |> 
+  dplyr::mutate(Deceased = dplyr::recode(event, "1" = "Yes", "0" = "No" )) |> 
   dplyr::mutate(rank = order(order(delta.rna.signature.C1.collagen.2022, delta.rna.signature.C1.collagen.2022, pid))) |> 
   dplyr::mutate(em.pc.status = ifelse(.data$`rna.signature.C1.collagen.2022_recurrence` > .data$`rna.signature.C1.collagen.2022_primary`, "increase", "decrease")) |> 
   dplyr::mutate(`MGMT meth` = dplyr::recode( mgmtStability, "Stable methylated" = "Stable", "Stable unmethylated" = "Wildtype" ), mgmtStability = NULL ) |> 
-  dplyr::mutate(`treatment: Beva` = ifelse(bevacizumab.before.recurrence, "Yes","No"), bevacizumab.before.recurrence=NULL) |> 
-  dplyr::rename(`treatment: TMZ` = treatedWithTMZ) |> 
-  dplyr::rename(`treatment: RT` = treatedWithRT) |> 
+  dplyr::mutate(`Treatment: Beva` = ifelse(bevacizumab.before.recurrence, "Yes","No"), bevacizumab.before.recurrence=NULL) |> 
+  dplyr::rename(`Treatment: TMZ` = treatedWithTMZ) |> 
+  dplyr::rename(`Treatment: RT` = treatedWithRT) |> 
   dplyr::rename(`GITS subtype R1` = .data$GITS.150.svm.2022.subtype_primary) |> 
   dplyr::rename(`GITS subtype R2` = .data$GITS.150.svm.2022.subtype_recurrence) |> 
   dplyr::mutate(`Age above 50` = ifelse(age > 50,"Yes","No")) |> 
@@ -698,11 +698,12 @@ plt <- tmp.metadata.paired |>
   dplyr::mutate(value = gsub('^Yes|Stable$','Yes / stable',value)) %>% 
   dplyr::mutate(value = gsub('^No|Wildtype$','No / wildtype',value)) %>% 
   dplyr::mutate(panel = case_when(
-    grepl("deceased|Age|Sex|KPS", variable) ~ "A",
-    grepl("treatment", variable) ~ "B",
+    grepl("Deceased|Age|Sex|KPS", variable) ~ "A",
+    grepl("Treatment", variable) ~ "B",
     grepl("subtype", variable) ~ "C",
-    variable %in% c("HM",  "MGMT meth") ~ "E",
-    T ~ "D"
+    grepl("cnStatus", variable) ~ "D",
+    variable %in% c("HM",  "MGMT meth") ~ "F",
+    T ~ "E"
   ))
 
 
@@ -735,10 +736,10 @@ p3 <- ggplot(plt, aes(x = reorder(pid, rank), y = variable, fill = value)) +
 
 #### export ----
 
-p1 / p2 / p3 + plot_layout(heights = c(0.8,0.8,2))
+p1 / p2 / p3 + patchwork::plot_layout(heights = c(0.8,0.8,1.95))
 
 
-ggsave("output/figures/2022_figure_6abc.pdf", width=8.3 / 2,height=8.3/2 * 0.8, scale=2.2)
+ggsave("output/figures/2022_figure_6abc.pdf", width=8.3 / 2,height=8.3/2 * 0.75, scale=2.2)
 
 
 
@@ -891,8 +892,8 @@ fit.cox <- survival::coxph(surv_object ~
                              `Age above 50` +
                              Sex +
                              `KPS 70 or above` +
-                             `treatment: Beva` +
-                             `treatment: TMZ` +
+                             `Treatment: Beva` +
+                             `Treatment: TMZ` +
                              #`C0/fuzzy signature at Rec.` +
                              `C1/col signature at Rec.` +
                              `C2/endo signature at Rec.` +
