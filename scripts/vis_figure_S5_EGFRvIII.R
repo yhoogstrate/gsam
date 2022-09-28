@@ -2,25 +2,29 @@
 
 # load data ----
 
-source("scripts/R/gsam_metadata.R")
-source("scripts/R/gsam_rna-seq_expression.R")
 
-source('scripts/R/youri_gg_theme.R')
+source("scripts/load_G-SAM_metadata.R")
+
+#source("scripts/") # expression data?
+#source('scripts/R/youri_gg_theme.R')
+
 
 # create pairs ----
 
-data <- gsam.rna.metadata %>%
-  dplyr::filter(blacklist.pca == F)
+#data <- gsam.rna.metadata %>%
+#  dplyr::filter(blacklist.pca == F)
 
 # overview ----
 
 
 plt.ids <- gsam.rna.metadata %>%
-  #dplyr::filter(blacklist.pca == F) %>% # er zijn patienten met 1 goede en 1 slechte resectie
-  #dplyr::filter(pat.with.IDH == F) %>%
-  dplyr::filter(sid %in% c('BAI2', 'CAO1-replicate', 'FAB2', 'GAS2-replicate') == F ) %>%
-  dplyr::filter(batch != 'old') %>% 
-  dplyr::filter(tumour.percentage.dna >= 15) %>% 
+  dplyr::filter(.data$blacklist.pca == F)  |> 
+  dplyr::filter(.data$pat.with.IDH == F) |> 
+  dplyr::filter(.data$sid %in% c('BAI2', 'CAO1-replicate', 'FAB2', 'GAS2-replicate') == F ) |> 
+  dplyr::filter(.data$batch != 'old') |> 
+  dplyr::filter(.data$tumour.percentage.dna >= 15) |> 
+  
+  
   dplyr::select(c('pid', 'sid', 'blacklist.pca')) %>%
   dplyr::mutate(resection = gsub("^...(.).*$","R\\1",sid)) %>%
   dplyr::mutate(pid = as.factor(as.character(pid))) # refactor
@@ -68,9 +72,10 @@ filter2 <-  plt.single %>%
 filter <- intersect(filter1, filter2)
 
 
+n.paired.v3 <- length(filter)
 
 
-# arrow plot ----
+## arrow plot ----
 
 plt <- plt.single %>% 
   dplyr::filter(pid %in% filter) %>% 
@@ -89,23 +94,39 @@ plt <- plt %>%
 
 
 ggplot(plt, aes(x= vIII.percentage,y=tumour.percentage.dna, group=pid)) +
-  geom_path(  arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.2, "inches")) , alpha=0.7 ) +
-  geom_point(data = subset(plt, resection == "R1"), pch=22, cex=3,  aes(fill=col)) +
-  geom_point(data = subset(plt, resection == "R2"), pch=21, cex=3,  aes(fill=col)) +
-  geom_point( pch=19, cex=0.5, col="black") +
-  youri_gg_theme +
+  geom_path(     lineend = 'butt',
+                 linejoin = "mitre",
+    
+    arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.2, "inches"))  ) +
+  geom_point(data = subset(plt, resection == "R1"), pch=21, cex=3,  aes(fill=col)) +
+  #geom_point(data = subset(plt, resection == "R2"), pch=21, cex=3,  aes(fill=col)) +
+  geom_point( data = subset(plt, resection == "R1"), pch=19, cex=0.5, col="black") +
+  theme_bw() +
   coord_cartesian(xlim = c(0, 100))  +
   coord_cartesian(ylim = c(0, 100)) +
   facet_grid(cols = vars(status.v3), scales = "free") +
-  labs(x="EGFRvIII percentage [ EGFRvIII / (EGFRwt+EGFRvIII) ]", y = "Tumour cell percentage") +
-  scale_fill_manual(values=c('EGFRvIII percentage < 1.0'='red','EGFRvIII percentage >= 1.0'='white'))
+  labs(x="EGFRvIII percentage [ EGFRvIII / (EGFRwt+EGFRvIII) ]",
+       y = "Tumor cell percentage",
+       caption=paste0("G-SAM: n=",n.paired.v3," pairs (EGFRvIII positive)")) +
+  scale_fill_manual(values=c('EGFRvIII percentage < 1.0'='red','EGFRvIII percentage >= 1.0'='white'),name=NULL) +
+  theme(
+    axis.title = element_text(face = "bold",size = rel(1)),
+    #axis.text.x = element_blank(),
+    legend.position = 'bottom',
+    #panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    #panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    #axis.ticks.x = element_blank(),
+    panel.border = element_rect(colour = "black", fill=NA, size=1.25)
+  )
 
 
-ggsave("output/figures/paper_egfrv3_arrowplot.pdf", width=12,height=7)
+ggsave("output/figures/2022_figure_S5cd.pdf",  width=8.3 / 2,height=8.3/3.3, scale=2)
 
 
 
-# vertical plot
+## vertical plot ----
 
 
 delta.v3.percentage <- 
@@ -134,29 +155,50 @@ plt <- rbind(
   ,
   plt %>% dplyr::select(pid, resection, order, tumour.percentage.dna) %>% 
     dplyr::rename(percentage = tumour.percentage.dna) %>% 
-    dplyr::mutate(status = "Tumour cell")
+    dplyr::mutate(status = "Tumor cell")
 ) %>%
-  dplyr::mutate(status = factor(status, levels = c('Tumour cell','EGFRvIII'))) %>% 
+  dplyr::mutate(status = factor(status, levels = c('Tumor cell','EGFRvIII'))) %>% 
   dplyr::mutate(col = ifelse(percentage < 1,"-", "+"))
 
 
 ggplot(plt, aes(x = reorder(pid, order), y=percentage)) +
-  #geom_point(data = subset(plt, resection == "R2"), pch=22, cex=2.5, aes(fill=col)) +
-  geom_line( lwd=1.2) +
-  geom_path( arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.2, "inches"))  ) +
-  geom_point(data = subset(plt, resection == "R1"), pch=15, cex=3.5, col="black") +
-  geom_point(data = subset(plt, resection == "R1"), pch=22, cex=3, fill="white",col="black") +
-  geom_point(data = subset(plt, resection == "R1"),  pch=19, cex=0.75, col="red") +
-  geom_point(data = subset(plt, resection == "R2"),  pch=19, cex=2.5, col="black") +
-  geom_point(data = subset(plt, resection == "R2"),  pch=19, cex=1.25, col="red") +
-  youri_gg_theme +
   facet_grid(rows = vars(status), scales = "free") +
+  #geom_point(data = subset(plt, resection == "R2"), pch=22, cex=2.5, aes(fill=col)) +
+  #geom_line(lwd=1.2) +
+  geom_path(
+    lineend = 'butt',
+    linejoin = "mitre",
+            arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.1, "inches")),lwd=1.2 ) +
+
+  
+  geom_point(data = subset(plt, resection == "R1"),  pch=19, cex=2.5, col="black") +
+  geom_point(data = subset(plt, resection == "R1"),  pch=19, cex=1.25, col="white") +
+
+
+# geom_point(data = subset(plt, resection == "R2"),  pch=19, cex=2.5, col="red") +
+  
+  theme_bw() +
+  theme(
+    axis.title = element_text(face = "bold",size = rel(1)),
+    #axis.text.x = element_blank(),
+    axis.text.x = element_text(angle = 90,vjust = 0.5, hjust=1),
+    legend.position = 'bottom',
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    #axis.ticks.x = element_blank(),
+    panel.border = element_rect(colour = "black", fill=NA, size=1.25)
+  ) +
+  
   coord_cartesian(xlim = c(0, 100)) +
   coord_cartesian(ylim = c(0, 100)) +
   scale_fill_manual(values=c('-'='red','+'='white')) +
   labs(y = "Percentage", x="G-SAM patient")
 
 
-ggsave("output/figures/paper_egfrv3_vertical.pdf", width=12,height=7)
+
+
+ggsave("output/figures/2022_figure_S5ab.pdf",  width=8.3 / 2,height=8.3/3.3, scale=2)
 
 
