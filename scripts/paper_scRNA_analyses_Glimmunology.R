@@ -420,8 +420,36 @@ FeaturePlot(object = object_1, features = c("LAMP3","IRF4","NCCRP1","CRIP1","SYN
 
 
 
-#### 4. NE (+) 2022: C4 (NEU) x NPC ----
-# figure S6a
+#### 4. Neurons (+) ----
+
+
+DotPlot(object = object_1, features = c("EGFR", "GFAP","MOG", "PLP1", "TMEM144", 
+                                        "RBFOX1", "RBFOX2", "RBFOX3", "CD2",
+                                        "CD3D", "P2RY12", "CD163", "ABCB1", "RGS5"
+                                        ))+ 
+  theme(axis.text.x = element_text(angle = 45, hjust=1))
+
+
+FeaturePlot(object = object_1, features = c("SOX4", "RBFOX3"))
+
+
+FeaturePlot(object = object_1, features = "RBFOX3")
+FeaturePlot(object = object_1, features = "RBFOX1")
+FeaturePlot(object = object_1, features = "RBFOX2") # NPC2 ~ Neftel
+FeaturePlot(object = object_1, features = "DDN")
+FeaturePlot(object = object_1, features = "TNNT2")
+FeaturePlot(object = object_1, features = "TMEM130")
+FeaturePlot(object = object_1, features = "GABRG2")
+#FeaturePlot(object = object_1, features = "GABRA1")
+FeaturePlot(object = object_1, features = "GABRB2")
+
+
+#FeaturePlot(object = object_1, features = "DCN") # DCN
+#FeaturePlot(object = object_1, features = "COL1A2") # DCN
+FeaturePlot(object = object_1, features = "ANPEP") # DCN
+
+
+##### figure S6a ----
 
 
 tmp.c4 <- results.out |>
@@ -452,10 +480,10 @@ tmp.npc2 <- setdiff(tmp.npc2, tmp.c4.npc2)
 
 
 tmp <- list('C4'=tmp.c4,
-           'NPC1'=tmp.npc1,
-           'NPC1+2'=tmp.npc1.2,
-           'NPC2'=tmp.npc2,
-           'NPC2 + C4' = tmp.c4.npc2)
+            'NPC1'=tmp.npc1,
+            'NPC1+2'=tmp.npc1.2,
+            'NPC2'=tmp.npc2,
+            'NPC2 + C4' = tmp.c4.npc2)
 
 DotPlot(object = object_1, features = tmp, group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
@@ -467,60 +495,8 @@ rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2)
 
 
 
-DotPlot(object = object_1, features = c("EGFR", "GFAP","MOG", "PLP1", "TMEM144", 
-                                        "RBFOX1", "RBFOX2", "RBFOX3", "CD2",
-                                        "CD3D", "P2RY12", "CD163", "ABCB1", "RGS5"
-                                        ))+ 
-  theme(axis.text.x = element_text(angle = 45, hjust=1))
 
-
-FeaturePlot(object = object_1, features = c("SOX4", "RBFOX3"))
-
-
-FeaturePlot(object = object_1, features = "RBFOX3")
-FeaturePlot(object = object_1, features = "RBFOX1")
-FeaturePlot(object = object_1, features = "RBFOX2") # NPC2 ~ Neftel
-FeaturePlot(object = object_1, features = "DDN")
-FeaturePlot(object = object_1, features = "TNNT2")
-FeaturePlot(object = object_1, features = "TMEM130")
-FeaturePlot(object = object_1, features = "GABRG2")
-#FeaturePlot(object = object_1, features = "GABRA1")
-FeaturePlot(object = object_1, features = "GABRB2")
-
-
-#FeaturePlot(object = object_1, features = "DCN") # DCN
-#FeaturePlot(object = object_1, features = "COL1A2") # DCN
-FeaturePlot(object = object_1, features = "ANPEP") # DCN
-
-
-#### 5. OD - 2022: C3 (OD) x OPC ----
-# figure S6b
-
-
-tmp.c3 <- results.out |>
-  dplyr::filter(!is.na(.data$C3.2022)) |> 
-  dplyr::filter(.data$C3.2022 == T) |> 
-  dplyr::filter(!is.na(hugo_symbol)) |> 
-  dplyr::pull(hugo_symbol) |> 
-  unique()
-tmp.opc <- results.out |> 
-  dplyr::filter(!is.na(.data$neftel.meta.modules.OPC)) |> 
-  dplyr::filter(.data$neftel.meta.modules.OPC == T) |> 
-  dplyr::filter(!is.na(hugo_symbol)) |> 
-  dplyr::pull(hugo_symbol) |> 
-  unique()
-tmp.c3.opc <- intersect(tmp.c3, tmp.opc)
-tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
-tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
-
-DotPlot(object = object_1, features =list('C3'=tmp.c2, 'OPC'=tmp.opc, 'C3+OPC'=tmp.c2.opc), group.by = "seurat_clusters") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
-  labs(x = paste0("Features [C3/OPC] in: ",sid))
-
-
-
-ggsave(paste0("output/figures/2022_figure_S6b.pdf"),width=7.5*2, height=4,scale=1.2)
-rm(tmp.c3, tmp.opc, tmp.c3.opc)
+#### 5. Oligodendrocytes ----
 
 
 FeaturePlot(object = object_1, features = "MOG")
@@ -551,6 +527,38 @@ FeaturePlot(object = object_1, features = "PCSK6") # OD?
 FeaturePlot(object = object_1, features = "TTLL7") # OD?
 
 FeaturePlot(object = object_1, features = "OLIG2") # OD?
+
+
+
+##### figure S6b ----
+
+
+tmp.c3 <- results.out |>
+  dplyr::filter(!is.na(.data$C3.2022)) |> 
+  dplyr::filter(.data$C3.2022 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+tmp.opc <- results.out |> 
+  dplyr::filter(!is.na(.data$neftel.meta.modules.OPC)) |> 
+  dplyr::filter(.data$neftel.meta.modules.OPC == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+tmp.c3.opc <- intersect(tmp.c3, tmp.opc)
+tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
+tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
+
+DotPlot(object = object_1, features =list('C3'=tmp.c2, 'OPC'=tmp.opc, 'C3+OPC'=tmp.c2.opc), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
+  labs(x = paste0("Features [C3/OPC] in: ",sid))
+
+
+
+ggsave(paste0("output/figures/2022_figure_S6b.pdf"),width=7.5*2, height=4,scale=1.2)
+rm(tmp.c3, tmp.opc, tmp.c3.opc)
+
+
 
 
 ss#### 6A. Endothelial (+) ----

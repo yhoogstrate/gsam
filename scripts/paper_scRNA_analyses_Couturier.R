@@ -1165,6 +1165,7 @@ DotPlot(object = object_1, features = c("MOG","PLP1","TMEM144"),group.by = "seur
 
 
 
+##### Figure S7b ----
 
 DotPlot(object = object_1, features =list('C2'=oligodendrocyte.genes , 'OPC'=OPC ), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +

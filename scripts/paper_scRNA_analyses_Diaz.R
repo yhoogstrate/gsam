@@ -1544,6 +1544,7 @@ FeaturePlot(object = object_1, features = "IL7R")
 #### 4. Neurons (-) ----
 
 
+
 FeaturePlot(object = object_1, features = "RBFOX3",order=T)
 FeaturePlot(object = object_1, features = "RBFOX1")
 FeaturePlot(object = object_1, features = "RBFOX2") # NPC2 ~ Neftel
@@ -1584,6 +1585,54 @@ DotPlot(object = object_1, features = tmp, group.by = "seurat_clusters") +
 DotPlot(object = object_1, features =list('C2'=oligodendrocyte.genes , 'OPC'=OPC ), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
   labs(x = paste0("Features [C2/OPC] in: ",sid))
+
+
+##### figure S7a ----
+
+
+tmp.c4 <- results.out |>
+  dplyr::filter(!is.na(.data$C4.2022)) |> 
+  dplyr::filter(.data$C4.2022 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+tmp.npc1 <- results.out |> 
+  dplyr::filter(!is.na(.data$neftel.meta.modules.NPC1)) |> 
+  dplyr::filter(.data$neftel.meta.modules.NPC1 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+tmp.npc2 <- results.out |> 
+  dplyr::filter(!is.na(.data$neftel.meta.modules.NPC2)) |> 
+  dplyr::filter(.data$neftel.meta.modules.NPC2 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+tmp.npc1.2 <- intersect(tmp.npc1, tmp.npc2)
+tmp.npc1 <- setdiff(tmp.npc1, tmp.npc1.2)
+tmp.npc2 <- setdiff(tmp.npc2, tmp.npc1.2)
+
+tmp.c4.npc2 <- intersect(tmp.c4, tmp.npc2)
+tmp.c4  <- setdiff(tmp.c4, tmp.c4.npc2)
+tmp.npc2 <- setdiff(tmp.npc2, tmp.c4.npc2)
+
+
+tmp <- list('C4'=tmp.c4,
+            'NPC1'=tmp.npc1,
+            'NPC1+2'=tmp.npc1.2,
+            'NPC2'=tmp.npc2,
+            'NPC2 + C4' = tmp.c4.npc2)
+
+DotPlot(object = object_1, features = tmp, group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
+  labs(x = paste0("Features [C4/NPC] in: ",sid,  " (Diaz dataset)"))
+
+
+
+ggsave(paste0("output/figures/2022_figure_S7a.pdf"),width=7.5*3, height=4,scale=1.2)
+rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2)
+
+
 
 
 #### 5. Oligodendrocytes + OPC (+) ----
