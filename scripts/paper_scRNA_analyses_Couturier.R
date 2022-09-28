@@ -6179,7 +6179,7 @@ p1 <- DimPlot(object_c, reduction = "umap", label = F, pt.size = .6, group.by = 
                 rep("orange",2),rep("seagreen",1),rep("mediumvioletred",1),rep("tan3",8),rep("magenta",1))
               ) +
   guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
-  labs(subtitle="Yuan dataset")
+  labs(subtitle="Couturier dataset")
 
 p2 <- DimPlot(object_c, reduction = "umap", label = TRUE, pt.size = .8, group.by = "dataset.short")
 
