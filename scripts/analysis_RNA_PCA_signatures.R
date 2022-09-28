@@ -9,14 +9,8 @@ options(warnPartialMatchDollar = TRUE) # https://stackoverflow.com/questions/328
 # load libs ----
 
 
-# library(DESeq2)
-
-
 # load data ----
 
-
-source("scripts/R/job_gg_theme.R")
-source("scripts/R/youri_gg_theme.R")
 
 source("scripts/load_G-SAM_metadata.R")
 source("scripts/load_G-SAM_expression_data.R")
@@ -29,60 +23,40 @@ source('scripts/load_results.out.R')
 
 # prepare data ----
 
-## GSAM ----
+## take relevant subsets ----
 
 
 
 
-tmp.gsam.metadata.all <- gsam.rna.metadata %>%
-  dplyr::filter(blacklist.pca == F) %>%
-  dplyr::filter(pat.with.IDH == F) %>%
+tmp.sel.gsam <- gsam.rna.metadata |> 
+  dplyr::filter(blacklist.pca == F) |> 
+  dplyr::filter(pat.with.IDH == F) |> 
+  dplyr::filter(old.batch == F) |> 
   dplyr::filter(sid %in% c('BAI2', 'CAO1-replicate', 'FAB2', 'GAS2-replicate') == F ) %>%
-  dplyr::filter(tumour.percentage.dna >= 15) %>%
-  dplyr::mutate(tpc = 1 - (tumour.percentage.dna / 100))
+  dplyr::filter(tumour.percentage.dna >= 15) |> 
+  dplyr::select(sid) |> 
+  dplyr::mutate(dataset = "G-SAM")
+stopifnot(nrow(tmp.sel.gsam) == 287)
 
 
-# tmp.gsam.metadata.all.paired <- tmp.gsam.metadata.all %>%
-#   dplyr::filter(pid %in% 
-#                   (tmp.gsam.metadata.all %>%
-#                      dplyr::group_by(pid) %>%
-#                      dplyr::tally() %>%
-#                      dplyr::filter(n == 2) %>% 
-#                      dplyr::ungroup() %>%
-#                      dplyr::filter(!duplicated(pid)) %>%
-#                      dplyr::pull(pid))
-#   ) %>%
-#   dplyr::mutate(pid = as.factor(as.character(pid))) # re-factor?
+tmp.sel.glass <- glass.gbm.rnaseq.metadata.all.samples |>
+  dplyr::filter(`tumour.percentage.2022` >= 15) |>
+  dplyr::rename(sid = aliquot_barcode) |>
+  dplyr::select(sid) |>
+  dplyr::mutate(dataset = "GLASS")
+stopifnot(nrow(tmp.sel.glass) == 216)
 
 
+#tmp.gsam.gene.expression.all <- gsam.rnaseq.expression %>%
+#  dplyr::select(tmp.gsam.metadata.all$sid)
+#stopifnot(colnames(tmp.gsam.gene.expression.all) == tmp.gsam.metadata.all$sid)
 
-
-tmp.gsam.gene.expression.all <- gsam.rnaseq.expression %>%
-  dplyr::select(tmp.gsam.metadata.all$sid)
-stopifnot(colnames(tmp.gsam.gene.expression.all) == tmp.gsam.metadata.all$sid)
-
-
-
-
-
-## GLASS ----
-
-
-# // 
 
 
 ## Combined ----
 
 
-tmp.combined.metadata <- rbind(
-    tmp.gsam.metadata.all |>
-      dplyr::select(sid) |>
-      dplyr::mutate(dataset = "G-SAM"),
-    glass.gbm.rnaseq.metadata.all.samples |>
-      dplyr::rename(sid = aliquot_barcode) |>
-      dplyr::select(sid) |>
-      dplyr::mutate(dataset = "GLASS")
-  ) |> 
+tmp.combined.metadata <- rbind(tmp.sel.gsam, tmp.sel.glass) |> 
   dplyr::left_join(
     glass.gbm.rnaseq.metadata.all.samples |>
       dplyr::select(aliquot_barcode, aliquot_batch_synapse),
@@ -97,9 +71,13 @@ tmp.combined.metadata <- rbind(
   dplyr::mutate(batch = as.factor(batch))
 
 
+stopifnot(nrow(tmp.combined.metadata) == 287+216)
+
+
+
 
 tmp.combined.gene.expression <- dplyr::inner_join(
-  tmp.gsam.gene.expression.all %>%
+  gsam.rnaseq.expression %>%
     dplyr::select(
       tmp.combined.metadata |>
         dplyr::filter(dataset == "G-SAM") |>
@@ -125,7 +103,7 @@ tmp.combined.gene.expression <- dplyr::inner_join(
 stopifnot(tmp.combined.metadata$sid == colnames(tmp.combined.gene.expression))
 
 
-rm(tmp.gsam.gene.expression.all, tmp.gsam.metadata.all)
+rm(tmp.sel.glass, tmp.sel.gsam)
 
 
 
@@ -162,23 +140,34 @@ rm(tmp.c0.fuzzy)
 
 
 plt <- gsam.rna.metadata |> 
+  dplyr::mutate(rna.signature.C0.fuzzy.2022 = NULL) |> 
   dplyr::left_join(signature.c0.fuzzy, by=c('sid'='sid'), suffix=c('','')) |> 
-  dplyr::select(rna.signature.C0.fuzzy.2022, C4.signature.2021, C5.signature.2021) |> 
+  dplyr::select(sid, rna.signature.C0.fuzzy.2022, C4.signature.2021, C5.signature.2021) |> 
   tidyr::pivot_longer(cols=c(C4.signature.2021, C5.signature.2021)) |>
   dplyr::mutate(name = gsub(".signature.2021","",name)) |> 
   dplyr::rename(signature.2021 = value)
 
+n.gsam <- plt |>
+  dplyr::filter(!is.na(`rna.signature.C0.fuzzy.2022`) & !is.na(`signature.2021`)) |> 
+  dplyr::pull(sid) |>
+  unique() |> 
+  length()
 
-ggplot(plt, aes(x =  rna.signature.C0.fuzzy.2022, y = signature.2021)) + 
+
+ggplot(plt, aes(x = rna.signature.C0.fuzzy.2022, y = signature.2021)) +
   facet_grid(cols = vars(name), scales = "free") +
   geom_point() +
-  ggpubr::stat_cor(method = "pearson") +
+  ggpubr::stat_cor(method = "pearson", aes(label = ..r.label..)) +
   theme_bw() +
-  labs(x = "C0 signature (current revision)", y = "<cluster> signature (initial revision)")
-ggsave("output/figures/comparison_rna_signature_C0.pdf", width=10,height=5)
+  labs(
+    x = "C0 signature (current revision)",
+    y = "<cluster> signature (initial revision)",
+    caption = paste0("G-SAM: n=", n.gsam, " samples")
+  )
+ggsave("output/figures/2022_reviewers_comment__comparison_rna_signature_C0.pdf", width = 10, height = 5)
 
 
-rm(plt)
+rm(plt, n.gsam)
 
 
 
@@ -212,19 +201,30 @@ rm(tmp.c1.collagen)
 
 ## plt ----
 
+
 plt <- gsam.rna.metadata |> 
+  dplyr::mutate(rna.signature.C1.collagen.2022 = NULL) |> 
   dplyr::left_join(signature.c1.collagen, by=c('sid'='sid'), suffix=c('',''))
 
+n.gsam <- plt |>
+  dplyr::filter(!is.na(`rna.signature.C1.collagen.2022`) & !is.na(`extracellular.matrix.component.2021`)) |> 
+  dplyr::pull(sid) |>
+  unique() |> 
+  length()
 
-ggplot(plt, aes(x =  rna.signature.C1.collagen.2022, y = extracellular.matrix.component.2021)) + 
+
+
+ggplot(plt, aes(x = rna.signature.C1.collagen.2022, y = extracellular.matrix.component.2021)) + 
   geom_point() +
-  ggpubr::stat_cor(method = "pearson") +
+  ggpubr::stat_cor(method = "pearson",  aes(label = ..r.label..)) +
   theme_bw() +
-  labs(x = "C1 signature (current revision)", y = "C6 [Collagen] signature (initial revision)")
-ggsave("output/figures/comparison_rna_signature_C1.pdf", width=5,height=5)
+  labs(x = "C1 signature (current revision)", 
+       y = "C6 [Collagen] signature (initial revision)",
+       caption = paste0("G-SAM: n=",n.gsam, " samples"))
+ggsave("output/figures/2022_reviewers_comment__comparison_rna_signature_C1.pdf", width=5,height=5)
 
 
-rm(plt)
+rm(plt, n.gsam)
 
 
 
@@ -263,16 +263,25 @@ plt <- gsam.rna.metadata |>
   dplyr::left_join(signature.c2.endothelial, by=c('sid'='sid'), suffix=c('',''))
 
 
-#plot(plt$endothelial.component.2021, plt$rna.signature.C2.endothelial.2022)
+n.gsam <- plt |>
+  dplyr::filter(!is.na(`rna.signature.C2.endothelial.2022`) & !is.na(`endothelial.component.2021`)) |> 
+  dplyr::pull(sid) |>
+  unique() |> 
+  length()
+
+
+
 ggplot(plt, aes(x = rna.signature.C2.endothelial.2022, y = - endothelial.component.2021)) + 
   geom_point() +
-  ggpubr::stat_cor(method = "pearson") +
+  ggpubr::stat_cor(method = "pearson",  aes(label = ..r.label..)) +
   theme_bw() +
-  labs(x = "C2 signature (current revision)", y = "- C3 [Endothelial] signature (initial revision)")
-ggsave("output/figures/comparison_rna_signature_C2.pdf", width=5,height=5)
+  labs(x = "C2 signature (current revision)",
+       y = "- C3 [Endothelial] signature (initial revision)",
+       caption = paste0("G-SAM: n=", n.gsam, " samples"))
+ggsave("output/figures/2022_reviewers_comment__comparison_rna_signature_C2.pdf", width=5,height=5)
 
 
-rm(plt)
+rm(plt, n.gsam)
 
 
 
@@ -313,18 +322,27 @@ rm(tmp.c3.oligodendrocyte)
 plt <- gsam.rna.metadata |> 
   dplyr::left_join(signature.c3.oligodendrocyte, by=c('sid'='sid'), suffix=c('',''))
 
+n.gsam <- plt |>
+  dplyr::filter(!is.na(`rna.signature.C3.oligodendrocyte.2022`) & !is.na(`oligodendrocyte.component.2021`)) |> 
+  dplyr::pull(sid) |>
+  unique() |> 
+  length()
 
-#plot(plt$oligodendrocyte.component.2021, plt$rna.signature.C3.oligodendrocyte.2022)
+
+
+
 ggplot(plt, aes(x = rna.signature.C3.oligodendrocyte.2022, y = oligodendrocyte.component.2021)) + 
   geom_point() +
-  ggpubr::stat_cor(method = "pearson") +
+  ggpubr::stat_cor(method = "pearson",  aes(label = ..r.label..)) +
   theme_bw() +
-  labs(x = "C3 signature (current revision)", y = "C2 [Oligodendrocyte] signature (initial revision)")
-ggsave("output/figures/comparison_rna_signature_C3.pdf", width=5,height=5)
+  labs(x = "C3 signature (current revision)", 
+       y = "C2 [Oligodendrocyte] signature (initial revision)",
+       caption = paste0("G-SAM: n=", n.gsam, " samples"))
+ggsave("output/figures/2022_reviewers_comment__comparison_rna_signature_C3.pdf", width=5,height=5)
 
 
 
-rm(plt)
+rm(plt, n.gsam)
 
 
 
@@ -337,6 +355,8 @@ tmp.c4.neuron <- tmp.combined.gene.expression |>
   tibble::column_to_rownames('ens') |> 
   t() |> 
   prcomp()
+
+
 
 
 plot(tmp.c4.neuron)
@@ -359,22 +379,32 @@ rm(tmp.c4.neuron)
 
 ## plt ----
 
-plt <- gsam.rna.metadata |> 
-  dplyr::left_join(signature.c4.neuron, by=c('sid'='sid'), suffix=c('',''))
+
+plt <- gsam.rna.metadata |>
+  dplyr::left_join(signature.c4.neuron, by = c("sid" = "sid"), suffix = c("", ""))
+
+n.gsam <- plt |>
+  dplyr::filter(!is.na(`rna.signature.C4.neuron.2022`) & !is.na(`neuron.component.2021`)) |> 
+  dplyr::pull(sid) |>
+  unique() |> 
+  length()
 
 
-#plot(plt$neuron.component.2021, plt$rna.signature.C4.neuron.2022)
-ggplot(plt, aes(x = rna.signature.C4.neuron.2022, y = - neuron.component.2021)) + 
+
+ggplot(plt, aes(x = rna.signature.C4.neuron.2022, y = -neuron.component.2021)) +
   geom_point() +
-  ggpubr::stat_cor(method = "pearson") +
+  ggpubr::stat_cor(method = "pearson", aes(label = ..r.label..)) +
   theme_bw() +
-  labs(x = "C4 signature (current revision)", y = "- C1 [Neuron] signature (initial revision)")
-ggsave("output/figures/comparison_rna_signature_C4.pdf", width=5,height=5)
+  labs(
+    x = "C4 signature (current revision)",
+    y = "- C1 [Neuron] signature (initial revision)",
+    caption = paste0("G-SAM: n=", n.gsam, " samples")  )
+ggsave("output/figures/2022_reviewers_comment__comparison_rna_signature_C4.pdf", width = 5, height = 5)
 
 
 
 
-rm(plt)
+rm(plt, n.gsam)
 
 
 
@@ -391,7 +421,7 @@ tmp.export <- signature.c0.fuzzy |>
 write.table(tmp.export , "output/tables/principal_DE_cluster_components_2022.txt")
 
 
-rm(tmp.export)
+rm(tmp.export, n.gsam)
 
 
 
@@ -405,5 +435,23 @@ rm(signature.c0.fuzzy,
    signature.c4.neuron)
 
 rm(tmp.combined.gene.expression, tmp.combined.metadata)
+
+
+
+## indep val ----
+# 
+# tmp.1 <- read.table("output/tables/principal_DE_cluster_components_2022.txt") |> 
+#   dplyr::rename_with( ~ paste0(.x,".new"))
+# tmp.2 <- read.table("output/tables/principal_DE_cluster_components_2022.txt.bak") |> 
+#   dplyr::rename_with( ~ paste0(.x,".old"))
+# 
+# 
+# plt <- tmp.1 |> 
+#   dplyr::left_join(tmp.2, by=c('sid.new'='sid.old'),suffix=c('',''))
+# 
+# 
+# ggplot(plt, aes(x=`rna.signature.C1.collagen.2022.new`,`rna.signature.C1.collagen.2022.old`)) +
+#   geom_point()
+# 
 
 
