@@ -449,6 +449,7 @@ FeaturePlot(object = object_1, features = "GABRB2")
 FeaturePlot(object = object_1, features = "ANPEP") # DCN
 
 
+
 ##### figure S6a ----
 
 
@@ -479,18 +480,26 @@ tmp.c4  <- setdiff(tmp.c4, tmp.c4.npc2)
 tmp.npc2 <- setdiff(tmp.npc2, tmp.c4.npc2)
 
 
+sid_print <- 'Samply Y (van Hijfte dataset - single nucleus RNA-seq)'
+
+
+
 tmp <- list('C4'=tmp.c4,
             'NPC1'=tmp.npc1,
             'NPC1+2'=tmp.npc1.2,
             'NPC2'=tmp.npc2,
             'NPC2 + C4' = tmp.c4.npc2)
 
-DotPlot(object = object_1, features = tmp, group.by = "seurat_clusters") +
+
+DotPlot(object = object_1, features = tmp, group.by = "seurat_clusters",
+        cols = c("lightgrey", "purple")) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
-  labs(x = paste0("Features [C4/NPC] in: ",sid))
+  labs(x = paste0("Features [C4/NPC] in: ",sid_print))
+
+
 
 ggsave(paste0("output/figures/2022_figure_S6a.pdf"),width=7.5*3, height=4,scale=1.2)
-rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2)
+rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
 
 
 
@@ -549,14 +558,20 @@ tmp.c3.opc <- intersect(tmp.c3, tmp.opc)
 tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
 tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
 
+
+
+sid_print <- 'Samply Y (van Hijfte dataset - single nucleus RNA-seq)'
+
+
+
 DotPlot(object = object_1, features =list('C3'=tmp.c3, 'OPC'=tmp.opc, 'C3+OPC'=tmp.c3.opc), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
-  labs(x = paste0("Features [C3/OPC] in: ",sid))
+  labs(x = paste0("Features [C3/OPC] in: ", sid_print))
 
 
 
 ggsave(paste0("output/figures/2022_figure_S6b.pdf"),width=7.5*2, height=4,scale=1.2)
-rm(tmp.c3, tmp.opc, tmp.c3.opc)
+rm(tmp.c3, tmp.opc, tmp.c3.opc, sid_print)
 
 
 

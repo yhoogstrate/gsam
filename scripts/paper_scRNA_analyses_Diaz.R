@@ -1295,7 +1295,6 @@ DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = 1.6, group.by = "s
 # chr3p-, chr7+, chr11q+, chr12-, chr14p+
 
 
-
 rm(sid, object_1)
 gc()
 
@@ -1623,15 +1622,21 @@ tmp <- list('C4'=tmp.c4,
             'NPC2'=tmp.npc2,
             'NPC2 + C4' = tmp.c4.npc2)
 
+
+sid_print <- sid |> 
+  stringr::str_replace("snRNA_","(single nucleus RNA-seq) ") |> 
+  stringr::str_replace("_",": ")
+
+
 DotPlot(object = object_1, features = tmp, group.by = "seurat_clusters",
-        cols = c("lightgrey", "red")) + # to distinguish it from OD in fig S7
+        cols = c("lightgrey", "purple")) + # to distinguish it from OD in fig S7
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
-  labs(x = paste0("Features [C4/NPC] in: ",sid,  " (Diaz dataset)"))
+  labs(x = paste0("Features [C4/NPC] in: ",sid_print,  " (Diaz dataset)"))
 
 
 
 ggsave(paste0("output/figures/2022_figure_S7a.pdf"),width=7.5*3, height=4,scale=1.2)
-rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2)
+rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
 
 
 
