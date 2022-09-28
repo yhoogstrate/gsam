@@ -36,6 +36,7 @@ tmp.metadata <- gsam.rna.metadata |>
   dplyr::filter(.data$blacklist.pca == F)  |> 
   dplyr::filter(.data$pat.with.IDH == F) |> 
   dplyr::filter(.data$sid %in% c('BAI2', 'CAO1-replicate', 'FAB2', 'GAS2-replicate') == F ) |> 
+  dplyr::filter(.data$batch != 'old') |> 
   dplyr::filter(.data$tumour.percentage.dna >= 15) |> 
   dplyr::select(dplyr::contains("rna.signature") | `sid` | `pid` | `GITS.150.svm.2022.subtype` | `resection`) |> 
   dplyr::mutate(resection = ifelse(resection == "r1","primary","recurrence")) |> 
@@ -96,7 +97,9 @@ tmp.metadata.paired <- tmp.metadata |>
   dplyr::mutate(Deceased = dplyr::recode(event, "1" = "Yes", "0" = "No" )) |> 
   dplyr::mutate(rank = order(order(delta.rna.signature.C1.collagen.2022, delta.rna.signature.C1.collagen.2022, pid))) |> 
   dplyr::mutate(em.pc.status = ifelse(.data$`rna.signature.C1.collagen.2022_recurrence` > .data$`rna.signature.C1.collagen.2022_primary`, "increase", "decrease")) |> 
-  dplyr::mutate(`MGMT meth` = dplyr::recode( mgmtStability, "Stable methylated" = "Stable", "Stable unmethylated" = "Wildtype" ), mgmtStability = NULL ) |> 
+  dplyr::mutate(`MGMT meth` = dplyr::recode( mgmtStability,
+                                             "Stable methylated" = "Stable",
+                                             "Stable unmethylated" = "Wildtype" ), mgmtStability = NULL ) |> 
   dplyr::mutate(`Treatment: Beva` = ifelse(bevacizumab.before.recurrence, "Yes","No"), bevacizumab.before.recurrence=NULL) |> 
   dplyr::rename(`Treatment: TMZ` = treatedWithTMZ) |> 
   dplyr::rename(`Treatment: RT` = treatedWithRT) |> 
@@ -151,7 +154,7 @@ d.rec <- tmp.metadata.paired |>
   dplyr::pull(rna.signature.C0.fuzzy.2022_recurrence)
 
 
-#c0.fuz.cutoff.p <- d[(k-1):k] |> sum() |> (function(x){return(x/2)})()
+#c0.fuz.cutoff.p <- d[(k-1):k] |> sum() |> (\(x){x/2})()
 c0.fuz.cutoff.p <- d.rec |> median()
 
 
@@ -241,7 +244,7 @@ d.rec <- tmp.metadata.paired |>
 k <- 82+1
 c1.em.cutoff.p <- d.rec[(k-1):k] |>
   sum() |>
-  (function(x){return(x/2)})()
+  (\(x){x/2})() #equivalent to: (function(x){return(x/2)})()
 
 
 plt.1 <- rbind(
@@ -330,7 +333,7 @@ d.rec <- tmp.metadata.paired |>
 
 
 #k <- 52
-#c2.endo.cutoff.p <- d[(k-1):k] |> sum() |> (function(x){return(x/2)})()
+#c2.endo.cutoff.p <- d[(k-1):k] |> sum() |> (\(x){x/2})()
 c2.endo.cutoff.p <- d.rec |>
   median()
 
@@ -422,7 +425,7 @@ d.rec <- tmp.metadata.paired |>
 
 
 #k <- 76
-#c3.olig.cutoff.p <- d[(k-1):k] |> sum() |> (function(x){return(x/2)})()
+#c3.olig.cutoff.p <- d[(k-1):k] |> sum() |> (\(x){x/2})()
 rm(k)
 c3.olig.cutoff.p <- d.rec |>
   median()
@@ -517,7 +520,9 @@ d.rec <- tmp.metadata.paired |>
 
 
 k <- 83
-c4.neur.cutoff.p <- d.rec[(k-1):k] |> sum() |> (function(x){return(x/2)})()
+c4.neur.cutoff.p <- d.rec[(k-1):k] |>
+  sum() |>
+  (\(x){x/2})()
 
 
 plt.1 <- rbind(
@@ -781,11 +786,18 @@ tmp.metadata.paired <- tmp.metadata.paired |>
   dplyr::mutate(`C4.neu.signature.rec`   = `C4/neu signature at Rec.`  ) |> 
   
   
-  dplyr::mutate(`MGMT at Rec.` = factor(case_when(
-    is.na(`MGMT meth`) ~ as.character(NA),
-    `MGMT meth` %in% c("Gained", "Stable") ~ "Methylated",
-    T ~ "Unmethylated"
-  ),levels=c('Unmethylated','Methylated')))
+  dplyr::mutate(`MGMT at Rec.` = factor(
+    dplyr::recode(`MGMT meth`,
+                  'Gained'='Methylated',
+                  'Stable'='Methylated',
+                  'Wildtype'='Unmethylated',
+                  'Lost'='Unmethylated'
+                  )
+    #case_when
+    #is.na(`MGMT meth`) ~ as.character(NA),
+    #`MGMT meth` %in% c("Gained", "Stable") ~ "Methylated",
+    #T ~ "Unmethylated"
+  ,levels=c('Unmethylated','Methylated')))
 
 
 ### figure 6d: signature x svvl ----
@@ -859,7 +871,7 @@ p1 <- survminer::ggsurvplot(fit1, data = tmp.metadata.paired, pval = TRUE, risk.
 ggsave("output/figures/2022_figure_6e.pdf", width=8.3 / 2 * 0.45,height=8.3/5 * 0.7, scale=3,  plot = p1)
 
 
-#### figure s... ----
+### figure s6f COX ----
 
 #plot(tmp.metadata.paired$performanceAtSecondSurgery, tmp.metadata.paired$delta.rna.signature.C1.collagen.2022)
 
@@ -884,35 +896,76 @@ ggsave("output/figures/2022_figure_6e.pdf", width=8.3 / 2 * 0.45,height=8.3/5 * 
 
 
 
-### figure 6e: KM collagen ----
+### figure 13x: KM collagen full ----
 
 
 surv_object <- survival::Surv(time = tmp.metadata.paired$survivalFromSecondSurgeryDays, event=tmp.metadata.paired$event)
 fit.cox <- survival::coxph(surv_object ~
                              `Age above 50` +
-                             Sex +
+                             `Sex` +
                              `KPS 70 or above` +
                              `Treatment: Beva` +
                              `Treatment: TMZ` +
-                             #`C0/fuzzy signature at Rec.` +
+                             `C0/fuzzy signature at Rec.` +
                              `C1/col signature at Rec.` +
                              `C2/endo signature at Rec.` +
-                             `C3/olig signature at Rec.`
-                           #`C4/neu signature at Rec.`
+                             `C3/olig signature at Rec.` +
+                             `C4/neu signature at Rec.`
                            ,
                            data = tmp.metadata.paired)
 survminer::ggforest(fit.cox, data = tmp.metadata.paired)
+ggsave("output/figures/2022_figure_S13f.pdf", width=8.3 / 2,height=8.3/3.4, scale=2)
 
 
 
+
+#### MGMT at Rec. ----
+
+tmp.metadata.paired.mgmt <- tmp.metadata.paired |> 
+  dplyr::filter(!is.na(`MGMT at Rec.`))
+
+surv_object <- survival::Surv(time = tmp.metadata.paired.mgmt$survivalFromSecondSurgeryDays, event=tmp.metadata.paired.mgmt$event)
 fit.cox <- survival::coxph(surv_object ~
+                             `Age above 50` +
+                             `Sex` +
+                             `KPS 70 or above` +
+                             `Treatment: Beva` +
+                             `Treatment: TMZ` +
                              `MGMT at Rec.` +
-                             `C1/col signature at Rec.` ,
-                             
-                           data = tmp.metadata.paired)
-survminer::ggforest(fit.cox, data = tmp.metadata.paired)
+                             `C0/fuzzy signature at Rec.` +
+                             `C1/col signature at Rec.` +
+                             `C2/endo signature at Rec.` +
+                             `C3/olig signature at Rec.` +
+                             `C4/neu signature at Rec.`
+                           ,
+                           data = tmp.metadata.paired.mgmt)
+survminer::ggforest(fit.cox, data = tmp.metadata.paired.mgmt)
+ggsave("output/figures/2022_figure_S13g.pdf", width=8.3 / 2,height=8.3/3.4, scale=2)
 
 
+plt <- tmp.metadata.paired |> 
+  dplyr::select(`MGMT at Rec.`, `C1/col signature at Rec.`) |> 
+  table() |> 
+  as.data.frame() |> 
+  dplyr::rename(`MGMT at Rec.` = `MGMT.at.Rec.`) |> 
+  dplyr::rename(`C1/col signature at Rec.` = `C1.col.signature.at.Rec.`)
+ggplot(plt, aes(x=`C1/col signature at Rec.`,y=`Freq`,fill=`MGMT at Rec.`)) +
+  geom_bar(stat="identity") +
+  theme_bw()  +
+  theme(
+    axis.title = element_text(face = "bold",size = rel(1)),
+    axis.text.x = element_blank(),
+    legend.position = 'bottom',
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    axis.ticks.x = element_blank(),
+    panel.border = element_rect(colour = "black", fill=NA, size=1.25)
+  )
+
+
+ggsave("output/figures/2022_figure_S13h.pdf", width=8.3 / 4,height=8.3/4, scale=2)
 
 
 plot(tmp.metadata.paired |>  dplyr::select(C0.fuzzy.signature, `C1.col.signature`) |> table())
