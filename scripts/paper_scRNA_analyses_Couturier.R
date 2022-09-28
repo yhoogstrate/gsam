@@ -1167,12 +1167,47 @@ DotPlot(object = object_1, features = c("MOG","PLP1","TMEM144"),group.by = "seur
 
 ##### Figure S7b ----
 
-DotPlot(object = object_1, features =list('C2'=oligodendrocyte.genes , 'OPC'=OPC ), group.by = "seurat_clusters") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
-  labs(x = paste0("Features [C2/OPC] in: ",sid))
 
-ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C2_OPC.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
-ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C2_OPC.png"),width=7.5*1.8, height=3.75,scale=1.2)
+tmp.c3 <- results.out |>
+  dplyr::filter(!is.na(.data$C3.2022)) |> 
+  dplyr::filter(.data$C3.2022 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+tmp.opc <- results.out |> 
+  dplyr::filter(!is.na(.data$neftel.meta.modules.OPC)) |> 
+  dplyr::filter(.data$neftel.meta.modules.OPC == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+tmp.c3.opc <- intersect(tmp.c3, tmp.opc)
+tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
+tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
+
+
+sid_print <- sid |> 
+  stringr::str_replace(".filtered_gene_matrices","") |> 
+  stringr::str_replace("_2of2"," (1 & 2 of 2)")
+
+
+DotPlot(object = object_1, features =list('C3'=tmp.c3, 'OPC'=tmp.opc, 'C3+OPC'=tmp.c3.opc), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
+  labs(x = paste0("Features [C3/OPC] in: ",sid_print, " (Couturier dataset)"))
+
+
+
+ggsave(paste0("output/figures/2022_figure_S7b.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+rm(tmp.c3, tmp.opc, tmp.c3.opc, sid_print)
+
+
+
+
+#DotPlot(object = object_1, features =list('C2'=oligodendrocyte.genes , 'OPC'=OPC ), group.by = "seurat_clusters") +
+#  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
+#  labs(x = paste0("Features [C2/OPC] in: ",sid))
+
+#ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C2_OPC.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+#ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C2_OPC.png"),width=7.5*1.8, height=3.75,scale=1.2)
 
 
 
@@ -2196,12 +2231,40 @@ FeaturePlot(object = object_1, features = "TMEM144")
 
 
 
-DotPlot(object = object_1, features =list('C2'=oligodendrocyte.genes , 'OPC'=OPC ), group.by = "seurat_clusters") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
-  labs(x = paste0("Features [C2/OPC] in: ",sid))
 
-ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C2_OPC.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
-ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C2_OPC.png"),width=7.5*1.8, height=3.75,scale=1.2)
+##### Figure S7c ----
+
+
+tmp.c3 <- results.out |>
+  dplyr::filter(!is.na(.data$C3.2022)) |> 
+  dplyr::filter(.data$C3.2022 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+tmp.opc <- results.out |> 
+  dplyr::filter(!is.na(.data$neftel.meta.modules.OPC)) |> 
+  dplyr::filter(.data$neftel.meta.modules.OPC == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+tmp.c3.opc <- intersect(tmp.c3, tmp.opc)
+tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
+tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
+
+
+sid_print <- sid |> 
+  stringr::str_replace(".filtered_gene_matrices","") |> 
+  stringr::str_replace("_2of2"," (1 & 2 of 2)")
+
+
+DotPlot(object = object_1, features =list('C3'=tmp.c3, 'OPC'=tmp.opc, 'C3+OPC'=tmp.c3.opc), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
+  labs(x = paste0("Features [C3/OPC] in: ",sid_print, " (Couturier dataset)"))
+
+
+
+ggsave(paste0("output/figures/2022_figure_S7c.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+rm(tmp.c3, tmp.opc, tmp.c3.opc, sid_print)
 
 
 
@@ -2729,6 +2792,46 @@ DotPlot(object = object_1, features =list('C2'=oligodendrocyte.genes , 'OPC'=OPC
 
 ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C2_OPC.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
 ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C2_OPC.png"),width=7.5*1.8, height=3.75,scale=1.2)
+
+
+
+
+##### Figure S7d ----
+
+
+tmp.c3 <- results.out |>
+  dplyr::filter(!is.na(.data$C3.2022)) |> 
+  dplyr::filter(.data$C3.2022 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+tmp.opc <- results.out |> 
+  dplyr::filter(!is.na(.data$neftel.meta.modules.OPC)) |> 
+  dplyr::filter(.data$neftel.meta.modules.OPC == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+tmp.c3.opc <- intersect(tmp.c3, tmp.opc)
+tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
+tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
+
+
+sid_print <- sid |> 
+  stringr::str_replace(".filtered_gene_matrices","") |> 
+  stringr::str_replace("_2of2"," (1 & 2 of 2)")
+
+
+DotPlot(object = object_1, features =list('C3'=tmp.c3, 'OPC'=tmp.opc, 'C3+OPC'=tmp.c3.opc), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
+  labs(x = paste0("Features [C3/OPC] in: ",sid_print, " (Couturier dataset)"))
+
+
+
+ggsave(paste0("output/figures/2022_figure_S7d.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+rm(tmp.c3, tmp.opc, tmp.c3.opc, sid_print)
+
+
+
 
 
 #### 6A. Endothelial (?) ----
@@ -3406,7 +3509,10 @@ VlnPlot(object = object_1, features = c(C5), group.by = "seurat_clusters",stack=
 FeaturePlot(object = object_1, features = C5)
 
 
+
+
 ## BT390 :: T,MG++,TC,OD of 2e tum-clone? CNV nodig ----
+
 
 sid <- "BT390.filtered_gene_matrices"
 object_1 <- Read10X(data.dir = paste0("data/scRNA/EGAS00001004422_Couturier/filtered/",sid,"/"))
@@ -3483,7 +3589,8 @@ object_1 <- RunUMAP(object_1, dims = 1:30)
 object_1@meta.data$pt = sapply(strsplit(rownames(object_1@meta.data), "[.]"), "[", 1)
 
 levels(object_1$seurat_clusters) <- gsub("^(1|4|9|8|6)$",paste0("\\1. TAM"),levels(object_1$seurat_clusters))
-levels(object_1$seurat_clusters) <- gsub("^(0|11|2|10|12)$",paste0("\\1. T"),levels(object_1$seurat_clusters))
+levels(object_1$seurat_clusters) <- gsub("^(0|2|10|12)$",paste0("\\1. T"),levels(object_1$seurat_clusters))
+levels(object_1$seurat_clusters) <- gsub("^(11)$",paste0("\\1. T|OD?"),levels(object_1$seurat_clusters))
 levels(object_1$seurat_clusters) <- gsub("^(13)$",paste0("\\1. TC"),levels(object_1$seurat_clusters))
 
 levels(object_1$seurat_clusters) <- gsub("^(3|5|7)$",paste0("\\1. OD"),levels(object_1$seurat_clusters))
@@ -3495,7 +3602,7 @@ object_1$seurat_clusters <- factor(object_1$seurat_clusters, levels=c(
   "0. T",
   "2. T",
   "10. T",
-  "11. T",
+  "11. T|OD?",
   "12. T",
   "3. OD",
   "5. OD",
@@ -3507,6 +3614,12 @@ object_1$seurat_clusters <- factor(object_1$seurat_clusters, levels=c(
   "9. TAM",
   "13. TC"  
 ))
+
+
+
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .4, group.by = "seurat_clusters") +
+  labs(subtitle=sid)
+
 
 
 
@@ -3626,12 +3739,41 @@ FeaturePlot(object = object_1, features = "PLP1")
 
 
 
-DotPlot(object = object_1, features =list('C2'=oligodendrocyte.genes , 'OPC'=OPC ), group.by = "seurat_clusters") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
-  labs(x = paste0("Features [C2/OPC] in: ",sid))
 
-ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C2_OPC.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
-ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C2_OPC.png"),width=7.5*1.8, height=3.75,scale=1.2)
+##### Figure S7e ----
+
+
+tmp.c3 <- results.out |>
+  dplyr::filter(!is.na(.data$C3.2022)) |> 
+  dplyr::filter(.data$C3.2022 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+tmp.opc <- results.out |> 
+  dplyr::filter(!is.na(.data$neftel.meta.modules.OPC)) |> 
+  dplyr::filter(.data$neftel.meta.modules.OPC == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+tmp.c3.opc <- intersect(tmp.c3, tmp.opc)
+tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
+tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
+
+
+sid_print <- sid |> 
+  stringr::str_replace(".filtered_gene_matrices","")
+
+
+DotPlot(object = object_1, features =list('C3'=tmp.c3, 'OPC'=tmp.opc, 'C3+OPC'=tmp.c3.opc), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
+  labs(x = paste0("Features [C3/OPC] in: ",sid_print, " (Couturier dataset)"))
+
+
+
+ggsave(paste0("output/figures/2022_figure_S7e.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+rm(tmp.c3, tmp.opc, tmp.c3.opc, sid_print)
+
+
 
 
 
@@ -4045,12 +4187,39 @@ FeaturePlot(object = object_1, features = "PLP1")
 
 
 
-DotPlot(object = object_1, features =list('C2'=oligodendrocyte.genes , 'OPC'=OPC ), group.by = "seurat_clusters") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
-  labs(x = paste0("Features [C2/OPC] in: ",sid))
+##### Figure S7f ----
 
-ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C2_OPC.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
-ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C2_OPC.png"),width=7.5*1.8, height=3.75,scale=1.2)
+
+tmp.c3 <- results.out |>
+  dplyr::filter(!is.na(.data$C3.2022)) |> 
+  dplyr::filter(.data$C3.2022 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+tmp.opc <- results.out |> 
+  dplyr::filter(!is.na(.data$neftel.meta.modules.OPC)) |> 
+  dplyr::filter(.data$neftel.meta.modules.OPC == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+tmp.c3.opc <- intersect(tmp.c3, tmp.opc)
+tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
+tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
+
+
+sid_print <- sid |> 
+  stringr::str_replace(".filtered_gene_matrices","") |> 
+  stringr::str_replace("_2of2"," (1 & 2 of 2)")
+
+
+DotPlot(object = object_1, features =list('C3'=tmp.c3, 'OPC'=tmp.opc, 'C3+OPC'=tmp.c3.opc), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
+  labs(x = paste0("Features [C3/OPC] in: ",sid_print, " (Couturier dataset)"))
+
+
+
+ggsave(paste0("output/figures/2022_figure_S7f.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+rm(tmp.c3, tmp.opc, tmp.c3.opc, sid_print)
 
 
 

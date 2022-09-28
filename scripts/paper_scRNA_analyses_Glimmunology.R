@@ -549,7 +549,7 @@ tmp.c3.opc <- intersect(tmp.c3, tmp.opc)
 tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
 tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
 
-DotPlot(object = object_1, features =list('C3'=tmp.c2, 'OPC'=tmp.opc, 'C3+OPC'=tmp.c2.opc), group.by = "seurat_clusters") +
+DotPlot(object = object_1, features =list('C3'=tmp.c3, 'OPC'=tmp.opc, 'C3+OPC'=tmp.c3.opc), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
   labs(x = paste0("Features [C3/OPC] in: ",sid))
 
@@ -561,7 +561,7 @@ rm(tmp.c3, tmp.opc, tmp.c3.opc)
 
 
 
-ss#### 6A. Endothelial (+) ----
+#### 6A. Endothelial (+) ----
 
 FeaturePlot(object = object_1, features = "ABCB1")
 FeaturePlot(object = object_1, features = "CD34")

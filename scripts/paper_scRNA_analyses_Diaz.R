@@ -1623,7 +1623,8 @@ tmp <- list('C4'=tmp.c4,
             'NPC2'=tmp.npc2,
             'NPC2 + C4' = tmp.c4.npc2)
 
-DotPlot(object = object_1, features = tmp, group.by = "seurat_clusters") +
+DotPlot(object = object_1, features = tmp, group.by = "seurat_clusters",
+        cols = c("lightgrey", "red")) + # to distinguish it from OD in fig S7
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
   labs(x = paste0("Features [C4/NPC] in: ",sid,  " (Diaz dataset)"))
 
