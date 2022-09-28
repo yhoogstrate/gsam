@@ -93,18 +93,22 @@ plt <- plt %>%
 
 
 ggplot(plt, aes(x = vIII.percentage, y = tumour.percentage.dna, group = pid)) +
+  facet_grid(cols = vars(status.v3), scales = "free") +
+  geom_point(data = subset(plt, resection == "R2"), pch=22, cex=3,  aes(fill=col)) +
+  geom_point(data = subset(plt, resection == "R2"), pch = 19, cex = 0.5, col = "black") +
   geom_path(
     lineend = "butt",
     linejoin = "mitre",
-    arrow = arrow(ends = "last", type = "closed", angle = 15, length = unit(0.15, "inches")), alpha = 0.7
-  ) +
+    arrow = arrow(ends = "last", 
+                  type = "closed",
+                  angle = 15,
+                  length = unit(0.15, "inches")),
+                  alpha = 0.7) +
   geom_point(data = subset(plt, resection == "R1"), pch = 21, cex = 3, aes(fill = col)) +
-  # geom_point(data = subset(plt, resection == "R2"), pch=21, cex=3,  aes(fill=col)) +
   geom_point(data = subset(plt, resection == "R1"), pch = 19, cex = 0.5, col = "black") +
   theme_bw() +
   coord_cartesian(xlim = c(0, 100)) +
   coord_cartesian(ylim = c(0, 100)) +
-  facet_grid(cols = vars(status.v3), scales = "free") +
   labs(
     x = "EGFRvIII percentage [ EGFRvIII / (EGFRwt+EGFRvIII) ]",
     y = "Tumor cell percentage",
@@ -124,7 +128,9 @@ ggplot(plt, aes(x = vIII.percentage, y = tumour.percentage.dna, group = pid)) +
   )
 
 
-ggsave("output/figures/2022_figure_S5cd.pdf", width = 8.3 / 2, height = 8.3 / 3.3, scale = 2)
+
+
+ggsave("output/figures/2022_figure_S5cd.pdf", width = 8.3 / 2, height = 8.3 / 3.4, scale = 2)
 
 
 
