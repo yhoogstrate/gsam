@@ -314,6 +314,41 @@ results.out |>
 # 7321/7425 matching gene annotations
 
 
+# Add Neftel meta-modules ----
+
+
+source('scripts/R/neftel_meta_modules.R')
+
+results.out <- results.out |>
+  dplyr::mutate(`neftel.meta.modules.AC` = (.data$hugo_symbol %in% neftel.meta.modules.AC$symbol | .data$gid %in% neftel.meta.modules.AC$id | .data$ensembl_id %in% gsub("\\..+$", "", neftel.meta.modules.AC$ENSG))) |>
+  dplyr::mutate(`neftel.meta.modules.MES1` = (.data$hugo_symbol %in% neftel.meta.modules.MES1$symbol | .data$gid %in% neftel.meta.modules.MES1$id | .data$ensembl_id %in% gsub("\\..+$", "", neftel.meta.modules.MES1$ENSG))) |>
+  dplyr::mutate(`neftel.meta.modules.MES2` = (.data$hugo_symbol %in% neftel.meta.modules.MES2$symbol | .data$gid %in% neftel.meta.modules.MES2$id | .data$ensembl_id %in% gsub("\\..+$", "", neftel.meta.modules.MES2$ENSG))) |>
+  dplyr::mutate(`neftel.meta.modules.OPC` = (.data$hugo_symbol %in% neftel.meta.modules.OPC$symbol | .data$gid %in% neftel.meta.modules.OPC$id | .data$ensembl_id %in% gsub("\\..+$", "", neftel.meta.modules.OPC$ENSG))) |>
+  dplyr::mutate(`neftel.meta.modules.NPC1` = (.data$hugo_symbol %in% neftel.meta.modules.NPC1$symbol | .data$gid %in% neftel.meta.modules.NPC1$id | .data$ensembl_id %in% gsub("\\..+$", "", neftel.meta.modules.NPC1$ENSG))) |>
+  dplyr::mutate(`neftel.meta.modules.NPC2` = (.data$hugo_symbol %in% neftel.meta.modules.NPC2$symbol | .data$gid %in% neftel.meta.modules.NPC2$id | .data$ensembl_id %in% gsub("\\..+$", "", neftel.meta.modules.NPC2$ENSG))) |>
+  dplyr::mutate(`neftel.meta.modules.G1.S` = (.data$hugo_symbol %in% neftel.meta.modules.G1.S$symbol | .data$gid %in% neftel.meta.modules.G1.S$id | .data$ensembl_id %in% gsub("\\..+$", "", neftel.meta.modules.G1.S$ENSG))) |>
+  dplyr::mutate(`neftel.meta.modules.G2.M` = (.data$hugo_symbol %in% neftel.meta.modules.G2.M$symbol | .data$gid %in% neftel.meta.modules.G2.M$id | .data$ensembl_id %in% gsub("\\..+$", "", neftel.meta.modules.G2.M$ENSG)))
+
+
+stopifnot(results.out |> dplyr::filter(`neftel.meta.modules.AC`) |> dplyr::select(gid, ensembl_id, hugo_symbol) |> nrow() > 25)
+stopifnot(results.out |> dplyr::filter(`neftel.meta.modules.MES1`) |> dplyr::select(gid, ensembl_id, hugo_symbol) |> nrow() > 25)
+stopifnot(results.out |> dplyr::filter(`neftel.meta.modules.MES2`) |> dplyr::select(gid, ensembl_id, hugo_symbol) |> nrow() > 25)
+stopifnot(results.out |> dplyr::filter(`neftel.meta.modules.OPC`) |> dplyr::select(gid, ensembl_id, hugo_symbol) |> nrow() > 25)
+stopifnot(results.out |> dplyr::filter(`neftel.meta.modules.NPC1`) |> dplyr::select(gid, ensembl_id, hugo_symbol) |> nrow() > 25)
+stopifnot(results.out |> dplyr::filter(`neftel.meta.modules.NPC2`) |> dplyr::select(gid, ensembl_id, hugo_symbol) |> nrow() > 25)
+stopifnot(results.out |> dplyr::filter(`neftel.meta.modules.G1.S`) |> dplyr::select(gid, ensembl_id, hugo_symbol) |> nrow() > 25)
+stopifnot(results.out |> dplyr::filter(`neftel.meta.modules.G2.M`) |> dplyr::select(gid, ensembl_id, hugo_symbol) |> nrow() > 25)
+
+
+rm(neftel.meta.modules.AC, neftel.meta.modules.AC.tt2)
+rm(neftel.meta.modules.G1.S, neftel.meta.modules.G1.S.tt2)
+rm(neftel.meta.modules.G2.M, neftel.meta.modules.G2.M.tt2)
+rm(neftel.meta.modules.MES1, neftel.meta.modules.MES1.tt2)
+rm(neftel.meta.modules.MES2, neftel.meta.modules.MES2.tt2)
+rm(neftel.meta.modules.NPC1, neftel.meta.modules.NPC1.tt2)
+rm(neftel.meta.modules.NPC2, neftel.meta.modules.NPC2.tt2)
+rm(neftel.meta.modules.OPC, neftel.meta.modules.OPC.tt2)
+
 
 
 
