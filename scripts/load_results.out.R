@@ -139,17 +139,47 @@ rm(go.0031012)
 
 
 tmp.1 <- readRDS('cache/h.2022.Rds')
+tmp.tt <- results.out |> 
+  dplyr::select(-contains("glass.tpc")) |>  # remove 2021/small batch
+  
+  dplyr::filter(!is.na(log2FoldChange.gsam.tpc.res)) %>%
+  dplyr::filter(!is.na(`log2FoldChange.glass-2022.tpc.res`)) %>%
+  dplyr::filter(!is.na(padj.gsam.tpc.res)) %>%
+  dplyr::filter(!is.na(`padj.glass-2022.tpc.res`)) %>%
+  
+  dplyr::mutate(direction.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res > 0 , "up", "down")) %>%
+  dplyr::mutate(`direction.glass-2022.tpc.res` = ifelse(`log2FoldChange.glass-2022.tpc.res` > 0 , "up", "down")) %>%
+  
+  dplyr::mutate(significant.2022 = 
+                  padj.gsam.tpc.res < 0.01 &
+                  abs(log2FoldChange.gsam.tpc.res) > 0.5 &
+                  abs(`log2FoldChange.glass-2022.tpc.res`) > 0.5 & 
+                  direction.gsam.tpc.res == `direction.glass-2022.tpc.res`) |> 
+  
+  dplyr::filter(significant.2022 == T) |> 
+  dplyr::select(gid, hugo_symbol)
+
+stopifnot(sum(duplicated(tmp.1$labels)) == 0) # only works if no dups exist
+stopifnot(length(tmp.1$labels) == nrow(tmp.tt))
+
+tmp.tt.sorted <- data.frame(hugo_symbol = tmp.1$labels) |> 
+  dplyr::left_join(tmp.tt, by=c('hugo_symbol' = 'hugo_symbol'), suffix=c('',''))
+
+tmp.1$labels <- tmp.tt.sorted$gid
+rm(tmp.tt, tmp.tt.sorted)
+
+
 tmp.2 <- data.frame(gid = tmp.1$labels[rev(tmp.1$order)]) |> 
-  dplyr::mutate(C0.start = which(gid == "ENSG00000119714.11_5|GPR68|chr14:91698876-91720269(-)")) |> 
+  dplyr::mutate(C0.start = which(gid == "ENSG00000183287.14_7|CCBE1|chr18:57098171-57364894(-)")) |> 
   dplyr::mutate(C0.end = which(gid == "ENSG00000105697.9_4|HAMP|chr19:35771619-35776046(+)")) |> 
   
   dplyr::mutate(C1.start = which(gid == "ENSG00000130487.8_2|KLHDC7B|chr22:50984632-50989452(+)")) |> 
   dplyr::mutate(C1.end = which(gid == "ENSG00000122420.10_5|PTGFR|chr1:78769568-79006386(+)")) |>  
   
-  dplyr::mutate(C2.start = which(gid == "ENSG00000128917.8_4|DLL4|chr15:41221538-41231271(+)")) |> 
+  dplyr::mutate(C2.start = which(gid == "ENSG00000159640.16_6|ACE|chr17:61554422-61575741(+)")) |> 
   dplyr::mutate(C2.end = which(gid == "ENSG00000085563.14_5|ABCB1|chr7:87132949-87342639(-)")) |> 
   
-  dplyr::mutate(C3.start = which(gid == "ENSG00000132702.13_3|HAPLN2|chr1:156589123-156595517(+)")) |> 
+  dplyr::mutate(C3.start = which(gid == "ENSG00000107331.17_5|ABCA2|chr9:139901686-139923374(-)")) |> 
   dplyr::mutate(C3.end = which(gid == "ENSG00000099822.3_3|HCN2|chr19:589881-617159(+)")) |> 
 
   # SEPT12 does not fit with c3 or c4
@@ -195,6 +225,15 @@ tmp.2 <- data.frame(gid = tmp.1$labels[rev(tmp.1$order)]) |>
                 C4s2.start = NULL, C4s2.end = NULL)
 
 rm(tmp.1)
+
+
+stopifnot(tmp.2 |> dplyr::filter(cluster.2022 == "C0") |> nrow() == 33)
+stopifnot(tmp.2 |> dplyr::filter(cluster.2022 == "C1") |> nrow() == 23)
+stopifnot(tmp.2 |> dplyr::filter(cluster.2022 == "C2") |> nrow() == 45)
+stopifnot(tmp.2 |> dplyr::filter(cluster.2022 == "C3") |> nrow() == 126)
+stopifnot(tmp.2 |> dplyr::filter(cluster.2022 == "C4") |> nrow() == 256)
+stopifnot(tmp.2 |> dplyr::filter(cluster.2022 == "-") |> nrow() == 1) # Sept12
+
 
 
 results.out <- results.out |> 
