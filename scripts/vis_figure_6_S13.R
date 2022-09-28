@@ -741,10 +741,10 @@ p3 <- ggplot(plt, aes(x = reorder(pid, rank), y = variable, fill = value)) +
 
 #### export ----
 
-p1 / p2 / p3 + patchwork::plot_layout(heights = c(0.8,0.8,1.95))
+p1 / p2 / p3 + patchwork::plot_layout(heights = c(0.7,0.7,1.95))
 
 
-ggsave("output/figures/2022_figure_6abc.pdf", width=8.3 / 2,height=8.3/2 * 0.75, scale=2.2)
+ggsave("output/figures/2022_figure_6abc.pdf", width=8.3 / 2,height=8.3/2 * 0.75 * 0.93, scale=2.2)
 
 
 
@@ -867,6 +867,8 @@ p1 <- survminer::ggsurvplot(fit1, data = tmp.metadata.paired, pval = TRUE, risk.
                       legend.labs=c('C1.col.signature=high'='C1/col signature: high',
                                     'C1.col.signature=low'='C1/col signature: low'),
                       xlab="Survival time from recurrence")
+p1
+
 
 ggsave("output/figures/2022_figure_6e.pdf", width=8.3 / 2 * 0.45,height=8.3/5 * 0.7, scale=3,  plot = p1)
 
@@ -932,7 +934,7 @@ fit.cox <- survival::coxph(surv_object ~
                              `Treatment: Beva` +
                              `Treatment: TMZ` +
                              `MGMT at Rec.` +
-                             `C0/fuzzy signature at Rec.` +
+                             #`C0/fuzzy signature at Rec.` +
                              `C1/col signature at Rec.` +
                              `C2/endo signature at Rec.` +
                              `C3/olig signature at Rec.` +

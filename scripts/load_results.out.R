@@ -2,6 +2,8 @@
 
 # load generic file ----
 
+
+
 results.out <- readRDS(file = 'tmp/results.out.Rds') |> 
   
   dplyr::mutate(`p.value.glass.cor.tpc` = NULL) |>        # obsolete: 2021 rev
@@ -25,8 +27,6 @@ results.out <- readRDS(file = 'tmp/results.out.Rds') |>
   
   dplyr::mutate(`stat.glass.res` = NULL) |>               # obsolete: 2021 rev
   dplyr::mutate(`stat.glass.tpc.res` = NULL)              # obsolete: 2021 rev
-  
-
 
 
 
@@ -244,7 +244,7 @@ rm(tmp.2)
 
 
 
-# TCGA NMF full set ---
+# TCGA NMF full set annotations ----
 
 
 stopifnot(results.out |>
