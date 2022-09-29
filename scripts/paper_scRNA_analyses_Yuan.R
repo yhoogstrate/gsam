@@ -789,7 +789,7 @@ FeaturePlot(object = object_1, features = "TMEM144")
 
 
 
-##### Figure S7g ----
+##### figure S7g ----
 
 
 tmp.c3 <- results.out |>
@@ -971,6 +971,54 @@ FeaturePlot(object = object_1, features =  "PERP" )
 FeaturePlot(object = object_1, features =  "CCL8" )
 
 
+#### 2022 C2 (Endo) (down) ----
+##### figure S9f ----
+
+
+tmp.c2 <- results.out |>
+  dplyr::filter(.data$C2.2022 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+
+tmp.endo <- read_xlsx("data/McKenzie et al. Gene expression different cell types.xlsx", sheet='top_human_specificity') |>
+  dplyr::select(c('grand_mean', 'gene', 'Celltype')) |>
+  dplyr::filter(Celltype == 'end') |> 
+  dplyr::arrange(desc(grand_mean)) |>
+  dplyr::filter(gene %in% all.genes ) |>
+  dplyr::slice_head(n=25) |>
+  dplyr::mutate(grand_mean = NULL) |> 
+  dplyr::pull(gene)
+
+tmp.peri <- c('PDGFRB','CD248','RGS5')
+
+
+
+
+tmp.endo <- setdiff(tmp.endo, c(tmp.peri,tmp.c2))
+tmp.peri <- setdiff(tmp.peri, c(tmp.c2, tmp.endo))
+
+
+sid_print <- sid |> 
+  stringr::str_replace(".filtered_gene_matrices","") |> 
+  stringr::str_replace("_",": ")
+
+
+
+DotPlot(object = object_1, features = list('C2 (Endothelial)'=tmp.c2,
+                                           'Endothelial'=tmp.endo,
+                                           'Pericyte'=tmp.peri), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(x = paste0("Features [C2 & top25 McKenzy endothelial markers] in: ",sid_print, " (Yuan dataset)"))
+
+
+
+ggsave(paste0("output/figures/2022_figure_S9f.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+rm(tmp.c2, tmp.peri, tmp.endo, sid_print)
+
+
+
+
 #### CC-2022 (up) ----
 
 
@@ -1070,10 +1118,10 @@ object_1$seurat_clusters <- factor(object_1$seurat_clusters, levels=c(
 ))
 
 
-
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters") +
   guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
   labs(subtitle=sid)
+
 
 
 ggsave(paste0("output/figures/scRNA/Yuan/",sid,"_UMAP.pdf"),width=10,height=8)
@@ -1390,6 +1438,53 @@ FeaturePlot(object = object_1, features =  "ASS1" )
 FeaturePlot(object = object_1, features =  "PERP" )
 FeaturePlot(object = object_1, features =  "KLHDC7B" )
 # FeaturePlot(object = object_1, features =  "CCL8" )
+
+
+
+#### 2022 C2 (Endo) (down) ----
+##### figure S9e ----
+
+
+tmp.c2 <- results.out |>
+  dplyr::filter(.data$C2.2022 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+
+tmp.endo <- read_xlsx("data/McKenzie et al. Gene expression different cell types.xlsx", sheet='top_human_specificity') |>
+  dplyr::select(c('grand_mean', 'gene', 'Celltype')) |>
+  dplyr::filter(Celltype == 'end') |> 
+  dplyr::arrange(desc(grand_mean)) |>
+  dplyr::filter(gene %in% all.genes ) |>
+  dplyr::slice_head(n=25) |>
+  dplyr::mutate(grand_mean = NULL) |> 
+  dplyr::pull(gene)
+
+tmp.peri <- c('PDGFRB','CD248','RGS5')
+
+
+
+
+tmp.endo <- setdiff(tmp.endo, c(tmp.peri,tmp.c2))
+tmp.peri <- setdiff(tmp.peri, c(tmp.c2, tmp.endo))
+
+
+sid_print <- sid |> 
+  stringr::str_replace(".filtered_gene_matrices","") |> 
+  stringr::str_replace("_",": ")
+
+
+
+DotPlot(object = object_1, features = list('C2 (Endothelial)'=tmp.c2,
+                                           'Endothelial'=tmp.endo,
+                                           'Pericyte'=tmp.peri), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(x = paste0("Features [C2 & top25 McKenzy endothelial markers] in: ",sid_print, " (Yuan dataset)"))
+
+
+
+ggsave(paste0("output/figures/2022_figure_S9e.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+rm(tmp.c2, tmp.peri, tmp.endo, sid_print)
 
 
 
@@ -2074,6 +2169,52 @@ FeaturePlot(object = object_1, features =  "PERP" )
 FeaturePlot(object = object_1, features =  "CCL8" )
 
 
+#### 2022 C2 (Endo) (down) ----
+##### figure S9h ----
+
+
+tmp.c2 <- results.out |>
+  dplyr::filter(.data$C2.2022 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+
+tmp.endo <- read_xlsx("data/McKenzie et al. Gene expression different cell types.xlsx", sheet='top_human_specificity') |>
+  dplyr::select(c('grand_mean', 'gene', 'Celltype')) |>
+  dplyr::filter(Celltype == 'end') |> 
+  dplyr::arrange(desc(grand_mean)) |>
+  dplyr::filter(gene %in% all.genes ) |>
+  dplyr::slice_head(n=25) |>
+  dplyr::mutate(grand_mean = NULL) |> 
+  dplyr::pull(gene)
+
+tmp.peri <- c('PDGFRB','CD248','RGS5')
+
+
+
+
+tmp.endo <- setdiff(tmp.endo, c(tmp.peri,tmp.c2))
+tmp.peri <- setdiff(tmp.peri, c(tmp.c2, tmp.endo))
+
+
+sid_print <- sid |> 
+  stringr::str_replace(".filtered_gene_matrices","") |> 
+  stringr::str_replace("_",": ")
+
+
+
+DotPlot(object = object_1, features = list('C2 (Endothelial)'=tmp.c2,
+                                           'Endothelial'=tmp.endo,
+                                           'Pericyte'=tmp.peri), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(x = paste0("Features [C2 & top25 McKenzy endothelial markers] in: ",sid_print, " (Yuan dataset)"))
+
+
+
+ggsave(paste0("output/figures/2022_figure_S9h.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+rm(tmp.c2, tmp.peri, tmp.endo, sid_print)
+
+
 
 #### CC-2022 (up) ----
 
@@ -2402,7 +2543,7 @@ FeaturePlot(object = object_1, features = "TMEM125")
 
 
 
-##### Figure S7h ----
+##### figure S7h ----
 
 
 tmp.c3 <- results.out |>
@@ -2573,6 +2714,53 @@ FeaturePlot(object = object_1, features =  "ASS1" )
 FeaturePlot(object = object_1, features =  "PERP" )
 # FeaturePlot(object = object_1, features =  "KLHDC7B" )
 #FeaturePlot(object = object_1, features =  "CCL8" )
+
+
+#### 2022 C2 (Endo) (down) ----
+##### figure S9g ----
+
+
+tmp.c2 <- results.out |>
+  dplyr::filter(.data$C2.2022 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+
+tmp.endo <- read_xlsx("data/McKenzie et al. Gene expression different cell types.xlsx", sheet='top_human_specificity') |>
+  dplyr::select(c('grand_mean', 'gene', 'Celltype')) |>
+  dplyr::filter(Celltype == 'end') |> 
+  dplyr::arrange(desc(grand_mean)) |>
+  dplyr::filter(gene %in% all.genes ) |>
+  dplyr::slice_head(n=25) |>
+  dplyr::mutate(grand_mean = NULL) |> 
+  dplyr::pull(gene)
+
+tmp.peri <- c('PDGFRB','CD248','RGS5')
+
+
+
+
+tmp.endo <- setdiff(tmp.endo, c(tmp.peri,tmp.c2))
+tmp.peri <- setdiff(tmp.peri, c(tmp.c2, tmp.endo))
+
+
+sid_print <- sid |> 
+  stringr::str_replace(".filtered_gene_matrices","") |> 
+  stringr::str_replace("_",": ")
+
+
+
+DotPlot(object = object_1, features = list('C2 (Endothelial)'=tmp.c2,
+                                           'Endothelial'=tmp.endo,
+                                           'Pericyte'=tmp.peri), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(x = paste0("Features [C2 & top25 McKenzy endothelial markers] in: ",sid_print, " (Yuan dataset)"))
+
+
+
+ggsave(paste0("output/figures/2022_figure_S9g.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+rm(tmp.c2, tmp.peri, tmp.endo, sid_print)
+
 
 
 

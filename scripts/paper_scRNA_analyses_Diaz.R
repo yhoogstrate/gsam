@@ -3211,6 +3211,50 @@ VlnPlot(object = object_1, features = c(C6), group.by = "seurat_clusters",stack=
 FeaturePlot(object = object_1, features = C6)
 
 
+#### 2022 C2 (Endo) (down) ----
+##### figure S9d ----
+
+
+tmp.c2 <- results.out |>
+  dplyr::filter(.data$C2.2022 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+
+tmp.endo <- read_xlsx("data/McKenzie et al. Gene expression different cell types.xlsx", sheet='top_human_specificity') |>
+  dplyr::select(c('grand_mean', 'gene', 'Celltype')) |>
+  dplyr::filter(Celltype == 'end') |> 
+  dplyr::arrange(desc(grand_mean)) |>
+  dplyr::filter(gene %in% all.genes ) |>
+  dplyr::slice_head(n=25) |>
+  dplyr::mutate(grand_mean = NULL) |> 
+  dplyr::pull(gene)
+
+tmp.peri <- c('PDGFRB','CD248','RGS5')
+
+
+
+
+tmp.endo <- setdiff(tmp.endo, c(tmp.peri,tmp.c2))
+tmp.peri <- setdiff(tmp.peri, c(tmp.c2, tmp.endo))
+
+
+sid_print <- sid |> 
+  stringr::str_replace(".filtered_gene_matrices","") |> 
+  stringr::str_replace("_2of2"," (1 & 2 of 2)")
+
+
+DotPlot(object = object_1, features = list('C2 (Endothelial)'=tmp.c2,
+                                           'Endothelial'=tmp.endo,
+                                           'Pericyte'=tmp.peri), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(x = paste0("Features [C2 & top25 McKenzy endothelial markers] in: ",sid_print, " (Diaz dataset)"))
+
+
+
+ggsave(paste0("output/figures/2022_figure_S9d.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+rm(tmp.c2, tmp.peri, tmp.endo, sid_print)
+
 
 
 #### CC-2022 (up) ----

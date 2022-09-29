@@ -814,12 +814,12 @@ DotPlot(object = object_1, features = list('C2 (Endothelial)'=tmp.c2,
                                            'Endothelial'=tmp.endo,
                                            'Pericyte'=tmp.peri), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-  labs(x = paste0("Features [C2 & top25 McKenzy endothelial markers] in: ",sid_print, " (Couturier dataset)"))
-
+  labs(x = paste0("Features [C2 & top25 McKenzy endothelial markers] in: ",sid_print))
 
 
 ggsave(paste0("output/figures/2022_figure_S9c.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
 rm(tmp.c2, tmp.peri, tmp.endo, sid_print)
+
 
 
 
