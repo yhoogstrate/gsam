@@ -778,8 +778,36 @@ FeaturePlot(object = object_1, features =  c("TROAP","FOXM1","AURKB","TPX2","H3C
 
 
 
+#### C0-2022 ----
+##### figure S10j ----
 
-#### 2022 C2 (Endo) (down) ----
+
+tmp.c0 <- results.out |>
+  dplyr::filter(!is.na(.data$C0.2022)) |> 
+  dplyr::filter(.data$C0.2022 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+
+
+
+sid_print <- 'Samply Y (van Hijfte dataset - single nucleus RNA-seq)'
+
+
+
+DotPlot(object = object_1, features =list('C0'=tmp.c0), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
+  labs(x = paste0("Features [C0] in: ",sid_print))
+
+
+
+ggsave(paste0("output/figures/2022_figure_S10j.pdf"),width=6.5, height=4,scale=1.2)
+rm(tmp.c0, sid_print)
+
+
+
+
+#### C2-2022 (Endo) (down) ----
 ##### figure S9c ----
 
 
@@ -802,7 +830,7 @@ tmp.peri <- c('PDGFRB','CD248','RGS5')
 
 
 
-
+tmp.c2 <- setdiff(tmp.c2, c(tmp.peri))
 tmp.endo <- setdiff(tmp.endo, c(tmp.peri,tmp.c2))
 tmp.peri <- setdiff(tmp.peri, c(tmp.c2, tmp.endo))
 

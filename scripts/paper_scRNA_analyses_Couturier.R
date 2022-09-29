@@ -1363,6 +1363,34 @@ plot(object_1@reductions$pca@feature.loadings[,3],
 FeaturePlot(object = object_1, features = C6)
 
 
+#### C0-2022 ----
+##### figure S10a ----
+
+
+tmp.c0 <- results.out |>
+  dplyr::filter(!is.na(.data$C0.2022)) |> 
+  dplyr::filter(.data$C0.2022 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+
+
+sid_print <- sid |> 
+  stringr::str_replace(".filtered_gene_matrices","") |> 
+  stringr::str_replace("_2of2"," (1 & 2 of 2)")
+
+
+DotPlot(object = object_1, features =list('C0'=tmp.c0), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
+  labs(x = paste0("Features [C0] in: ",sid_print, " (Couturier dataset)"))
+
+
+
+ggsave(paste0("output/figures/2022_figure_S10a.pdf"),width=6.5, height=4,scale=1.2)
+rm(tmp.c0, sid_print)
+
+
+
 
 #### CC-2022 (up) ----
 
@@ -2419,7 +2447,36 @@ FeaturePlot(object = object_1, features =  "PERP" )
 
 
 
-#### 2022 C2 (Endo) (down) ----
+#### C0-2022 ----
+##### figure S10b ----
+
+
+tmp.c0 <- results.out |>
+  dplyr::filter(!is.na(.data$C0.2022)) |> 
+  dplyr::filter(.data$C0.2022 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+
+
+sid_print <- sid |> 
+  stringr::str_replace(".filtered_gene_matrices","") |> 
+  stringr::str_replace("_2of2"," (1 & 2 of 2)")
+
+
+DotPlot(object = object_1, features =list('C0'=tmp.c0), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
+  labs(x = paste0("Features [C0] in: ",sid_print, " (Couturier dataset)"))
+
+
+
+ggsave(paste0("output/figures/2022_figure_S10b.pdf"),width=6.5, height=4,scale=1.2)
+rm(tmp.c0, sid_print)
+
+
+
+
+#### C2-2022 (Endo) (down) ----
 ##### figure S9b ----
 
 
@@ -2442,7 +2499,7 @@ tmp.peri <- c('PDGFRB','CD248','RGS5')
 
 
 
-
+tmp.c2 <- setdiff(tmp.c2, c(tmp.peri))
 tmp.endo <- setdiff(tmp.endo, c(tmp.peri,tmp.c2))
 tmp.peri <- setdiff(tmp.peri, c(tmp.c2, tmp.endo))
 
@@ -2993,6 +3050,35 @@ FeaturePlot(object = object_1, features = C6[1:8])
 FeaturePlot(object = object_1, features = C6[9:16])
 FeaturePlot(object = object_1, features = C6[17:24])
 FeaturePlot(object = object_1, features = C6[25:33])
+
+
+#### C0-2022 ----
+##### figure S10c ----
+
+
+tmp.c0 <- results.out |>
+  dplyr::filter(!is.na(.data$C0.2022)) |> 
+  dplyr::filter(.data$C0.2022 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+
+
+sid_print <- sid |> 
+  stringr::str_replace(".filtered_gene_matrices","") |> 
+  stringr::str_replace("_2of2"," (1 & 2 of 2)")
+
+
+DotPlot(object = object_1, features =list('C0'=tmp.c0), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
+  labs(x = paste0("Features [C0] in: ",sid_print, " (Couturier dataset)"))
+
+
+
+ggsave(paste0("output/figures/2022_figure_S10c.pdf"),width=6.5, height=4,scale=1.2)
+rm(tmp.c0, sid_print)
+
+
 
 
 #### CC-2022 (up) ----
@@ -4392,7 +4478,35 @@ FeaturePlot(object = object_1, features = C6[25:33])
 FeaturePlot(object = object_1, features = c("FBN1","COL1A1","RGS5", "CD248"),pt.size = 0.01 * 20)
 
 
-#### 2022 C2 (Endo) (down) ----
+#### C0-2022 ----
+##### figure S10d ----
+
+
+tmp.c0 <- results.out |>
+  dplyr::filter(!is.na(.data$C0.2022)) |> 
+  dplyr::filter(.data$C0.2022 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+
+
+sid_print <- sid |> 
+  stringr::str_replace(".filtered_gene_matrices","") |> 
+  stringr::str_replace("_2of2"," (1 & 2 of 2)")
+
+
+DotPlot(object = object_1, features =list('C0'=tmp.c0), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
+  labs(x = paste0("Features [C0] in: ",sid_print, " (Couturier dataset)"))
+
+
+
+ggsave(paste0("output/figures/2022_figure_S10d.pdf"),width=6.5, height=4,scale=1.2)
+rm(tmp.c0, sid_print)
+
+
+
+#### C2-2022 (Endo) (down) ----
 ##### figure S9a ----
 
 
@@ -4415,7 +4529,7 @@ tmp.peri <- c('PDGFRB','CD248','RGS5')
 
 
 
-
+tmp.c2 <- setdiff(tmp.c2, c(tmp.peri))
 tmp.endo <- setdiff(tmp.endo, c(tmp.peri,tmp.c2))
 tmp.peri <- setdiff(tmp.peri, c(tmp.c2, tmp.endo))
 
