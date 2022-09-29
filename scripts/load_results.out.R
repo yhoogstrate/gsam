@@ -216,13 +216,13 @@ tmp.2 <- data.frame(gid = tmp.1$labels[rev(tmp.1$order)]) |>
   dplyr::mutate(C1.2022 = cluster.2022 == "C1") |> 
   dplyr::mutate(C2.2022 = cluster.2022 == "C2") |> 
   dplyr::mutate(C3.2022 = cluster.2022 == "C3") |> 
-  dplyr::mutate(C4.2022 = cluster.2022 == "C4") |> 
+  dplyr::mutate(C4.2022 = cluster.2022 == "C4")
   
-  dplyr::mutate(C4s1.2022 = dplyr::row_number() >= C4s1.start & dplyr::row_number() <= C4s1.end ) |> 
-  dplyr::mutate(C4s2.2022 = dplyr::row_number() >= C4s2.start & dplyr::row_number() <= C4s2.end ) |> 
-  
-  dplyr::mutate(C4s1.start = NULL, C4s1.end = NULL, 
-                C4s2.start = NULL, C4s2.end = NULL)
+  #dplyr::mutate(C4s1.2022 = dplyr::row_number() >= C4s1.start & dplyr::row_number() <= C4s1.end ) |> 
+  #dplyr::mutate(C4s2.2022 = dplyr::row_number() >= C4s2.start & dplyr::row_number() <= C4s2.end ) |> 
+  #
+  #dplyr::mutate(C4s1.start = NULL, C4s1.end = NULL, 
+  #              C4s2.start = NULL, C4s2.end = NULL)
 
 rm(tmp.1)
 
@@ -236,8 +236,13 @@ stopifnot(tmp.2 |> dplyr::filter(cluster.2022 == "-") |> nrow() == 1) # Sept12
 
 
 
-results.out <- results.out |> 
-  dplyr::left_join(tmp.2, by=c('gid'='gid'), suffix=c('','') )
+results.out <- results.out |>
+  dplyr::left_join(tmp.2, by = c("gid" = "gid"), suffix = c("", "")) |>
+  dplyr::mutate(C0.2022 = ifelse(is.na(C0.2022), FALSE, C0.2022)) |>
+  dplyr::mutate(C1.2022 = ifelse(is.na(C1.2022), FALSE, C1.2022)) |>
+  dplyr::mutate(C2.2022 = ifelse(is.na(C2.2022), FALSE, C2.2022)) |>
+  dplyr::mutate(C3.2022 = ifelse(is.na(C3.2022), FALSE, C3.2022)) |>
+  dplyr::mutate(C4.2022 = ifelse(is.na(C4.2022), FALSE, C4.2022))
 
 
 rm(tmp.2)
