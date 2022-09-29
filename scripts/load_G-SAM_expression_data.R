@@ -121,7 +121,7 @@ gsam.gene.expression.all.vst <- gsam.gene.expression.all %>%
   SummarizedExperiment::assay()
 
 
-#rm(gsam.gene.expression.all)
+rm(sel)
 
 
 # if(!exists('gsam.rnaseq.expression.vst')) {
