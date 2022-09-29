@@ -2835,7 +2835,7 @@ FeaturePlot(object = object_1, features =  "PERP" )
 
 
 #### C0-2022 ----
-##### figure S10l ----
+##### figure S10o ----
 
 
 tmp.c0 <- results.out |>
@@ -2858,7 +2858,7 @@ DotPlot(object = object_1, features =list('C0'=tmp.c0), group.by = "seurat_clust
 
 
 
-ggsave(paste0("output/figures/2022_figure_S10l.pdf"),width=6.5, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_figure_S10o.pdf"),width=6.5, height=4,scale=1.2)
 rm(tmp.c0, sid_print)
 
 
