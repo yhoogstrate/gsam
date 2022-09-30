@@ -819,9 +819,7 @@ tmp.c1 <- results.out |>
   sort()
 
 
-sid_print <- sid |> 
-  stringr::str_replace(".filtered_gene_matrices","") |> 
-  stringr::str_replace("_2of2"," (1 & 2 of 2)")
+sid_print <- 'Samply Y (van Hijfte dataset - single nucleus RNA-seq)'
 
 
 DotPlot(object = object_1, features =list('C1'=tmp.c1, 'Peri'=c("RGS5", "PDGFRB", "CD248")), group.by = "seurat_clusters") +
