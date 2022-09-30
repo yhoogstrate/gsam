@@ -1033,7 +1033,7 @@ rm(tmp.c0, sid_print)
 
 
 #### C1-2022 (up) ----
-##### figure S11h ----
+##### figure S12h ----
 
 tmp.c1 <- results.out |>
   dplyr::filter(!is.na(.data$C1.2022)) |> 
@@ -1054,7 +1054,7 @@ DotPlot(object = object_1, features =list('C1'=tmp.c1, 'Peri'=c("RGS5", "PDGFRB"
   labs(x = paste0("Features [C1] in: ",sid_print, " (Yuan dataset)"))
 
 
-ggsave(paste0("output/figures/2022_figure_S11h.pdf"),width=6.5, height=4, scale=1.2)
+ggsave(paste0("output/figures/2022_figure_S12h.pdf"),width=6.5, height=4, scale=1.2)
 rm(tmp.c1, sid_print)
 
 
@@ -1544,7 +1544,7 @@ rm(tmp.c0, sid_print)
 
 
 #### C1-2022 (up) ----
-##### figure S11g ----
+##### figure S12g ----
 
 tmp.c1 <- results.out |>
   dplyr::filter(!is.na(.data$C1.2022)) |> 
@@ -1565,7 +1565,7 @@ DotPlot(object = object_1, features =list('C1'=tmp.c1, 'Peri'=c("RGS5", "PDGFRB"
   labs(x = paste0("Features [C1] in: ",sid_print, " (Yuan dataset)"))
 
 
-ggsave(paste0("output/figures/2022_figure_S11g.pdf"),width=6.5, height=4, scale=1.2)
+ggsave(paste0("output/figures/2022_figure_S12g.pdf"),width=6.5, height=4, scale=1.2)
 rm(tmp.c1, sid_print)
 
 
@@ -2314,7 +2314,7 @@ rm(tmp.c0, sid_print)
 
 
 #### C1-2022 (up) ----
-##### figure S11j ----
+##### figure S12j ----
 
 tmp.c1 <- results.out |>
   dplyr::filter(!is.na(.data$C1.2022)) |> 
@@ -2335,7 +2335,7 @@ DotPlot(object = object_1, features =list('C1'=tmp.c1, 'Peri'=c("RGS5", "PDGFRB"
   labs(x = paste0("Features [C1] in: ",sid_print, " (Yuan dataset)"))
 
 
-ggsave(paste0("output/figures/2022_figure_S11j.pdf"),width=6.5, height=4, scale=1.2)
+ggsave(paste0("output/figures/2022_figure_S12j.pdf"),width=6.5, height=4, scale=1.2)
 rm(tmp.c1, sid_print)
 
 
@@ -2904,7 +2904,7 @@ rm(tmp.c0, sid_print)
 
 
 #### C1-2022 (up) ----
-##### figure S11i ----
+##### figure S12i ----
 
 
 tmp.c1 <- results.out |>
@@ -2926,7 +2926,7 @@ DotPlot(object = object_1, features =list('C1'=tmp.c1, 'Peri'=c("RGS5", "PDGFRB"
   labs(x = paste0("Features [C1] in: ",sid_print, " (Yuan dataset)"))
 
 
-ggsave(paste0("output/figures/2022_figure_S11i.pdf"),width=6.5, height=4, scale=1.2)
+ggsave(paste0("output/figures/2022_figure_S12i.pdf"),width=6.5, height=4, scale=1.2)
 rm(tmp.c1, sid_print)
 
 

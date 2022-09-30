@@ -807,7 +807,7 @@ rm(tmp.c0, sid_print)
 
 
 #### C1-2022 (up) ----
-##### figure S11f ----
+##### figure S12f ----
 
 
 tmp.c1 <- results.out |>
@@ -828,7 +828,7 @@ DotPlot(object = object_1, features =list('C1'=tmp.c1, 'Peri'=c("RGS5", "PDGFRB"
 
 
 
-ggsave(paste0("output/figures/2022_figure_S11f.pdf"),width=6.5, height=4, scale=1.2)
+ggsave(paste0("output/figures/2022_figure_S12f.pdf"),width=6.5, height=4, scale=1.2)
 rm(tmp.c1, sid_print)
 
 

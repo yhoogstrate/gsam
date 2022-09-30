@@ -1393,7 +1393,7 @@ rm(tmp.c0, sid_print)
 
 
 #### C1-2022 (up) ----
-##### figure S11a ----
+##### figure S12a ----
 
 
 tmp.c1 <- results.out |>
@@ -1416,7 +1416,7 @@ DotPlot(object = object_1, features =list('C1'=tmp.c1, 'Peri'=c("RGS5", "PDGFRB"
 
 
 
-ggsave(paste0("output/figures/2022_figure_S11a.pdf"),width=6.5, height=4, scale=1.2)
+ggsave(paste0("output/figures/2022_figure_S12a.pdf"),width=6.5, height=4, scale=1.2)
 rm(tmp.c1, sid_print)
 
 
@@ -2493,7 +2493,7 @@ rm(tmp.c0, sid_print)
 
 
 #### C1-2022 (up) ----
-##### figure S11d ----
+##### figure S12d ----
 
 
 tmp.c1 <- results.out |>
@@ -2516,7 +2516,7 @@ DotPlot(object = object_1, features =list('C1'=tmp.c1, 'Peri'=c("RGS5", "PDGFRB"
 
 
 
-ggsave(paste0("output/figures/2022_figure_S11d.pdf"),width=6.5, height=4, scale=1.2)
+ggsave(paste0("output/figures/2022_figure_S12d.pdf"),width=6.5, height=4, scale=1.2)
 rm(tmp.c1, sid_print)
 
 
@@ -3115,7 +3115,7 @@ rm(tmp.c0, sid_print)
 
 
 #### C1-2022 (up) ----
-##### figure S11b ----
+##### figure S12b ----
 
 
 tmp.c1 <- results.out |>
@@ -3138,7 +3138,7 @@ DotPlot(object = object_1, features =list('C1'=tmp.c1, 'Peri'=c("RGS5", "PDGFRB"
 
 
 
-ggsave(paste0("output/figures/2022_figure_S11b.pdf"),width=6.5, height=4, scale=1.2)
+ggsave(paste0("output/figures/2022_figure_S12b.pdf"),width=6.5, height=4, scale=1.2)
 rm(tmp.c1, sid_print)
 
 
@@ -4554,7 +4554,7 @@ rm(tmp.c0, sid_print)
 
 
 #### C1-2022 (up) ----
-##### figure S11c ----
+##### figure S12c ----
 
 
 tmp.c1 <- results.out |>
@@ -4577,7 +4577,7 @@ DotPlot(object = object_1, features =list('C1'=tmp.c1, 'Peri'=c("RGS5", "PDGFRB"
 
 
 
-ggsave(paste0("output/figures/2022_figure_S11c.pdf"),width=6.5, height=4, scale=1.2)
+ggsave(paste0("output/figures/2022_figure_S12c.pdf"),width=6.5, height=4, scale=1.2)
 rm(tmp.c1, sid_print)
 
 
