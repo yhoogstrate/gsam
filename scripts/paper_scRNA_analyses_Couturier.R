@@ -1392,16 +1392,33 @@ rm(tmp.c0, sid_print)
 
 
 
-#### CC-2022 (up) ----
+#### C1-2022 (up) ----
+##### figure S11a ----
 
 
-DotPlot(object = object_1, features =list('C1'=
-      results.out |> dplyr::filter(C1.2022) |> dplyr::pull(hugo_symbol)
-                                             , 'Peri'=c("RGS5", "PDGFRB", "CD248")), group.by = "seurat_clusters") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-  labs(x = paste0("Features [C1] in: ",sid))
-ggsave(paste0("output/figures/scRNA/Couturier/2022-",sid,"_CC.pdf"),width=7.5, height=4,scale=1.2)
-ggsave(paste0("output/figures/scRNA/Couturier/2022-",sid,"_CC.png"),width=7.5, height=4,scale=1.2)
+tmp.c1 <- results.out |>
+  dplyr::filter(!is.na(.data$C1.2022)) |> 
+  dplyr::filter(.data$C1.2022 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique() |> 
+  sort()
+
+
+sid_print <- sid |> 
+  stringr::str_replace(".filtered_gene_matrices","") |> 
+  stringr::str_replace("_2of2"," (1 & 2 of 2)")
+
+
+DotPlot(object = object_1, features =list('C1'=tmp.c1, 'Peri'=c("RGS5", "PDGFRB", "CD248")), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
+  labs(x = paste0("Features [C1] in: ",sid_print, " (Couturier dataset)"))
+
+
+
+ggsave(paste0("output/figures/2022_figure_S11a.pdf"),width=6.5, height=4, scale=1.2)
+rm(tmp.c1, sid_print)
+
 
 
 #### Wang Sub-types ----
@@ -3081,18 +3098,33 @@ rm(tmp.c0, sid_print)
 
 
 
-#### CC-2022 (up) ----
+
+#### C1-2022 (up) ----
+##### figure S11b ----
 
 
-DotPlot(object = object_1, features =list('C1'=
-                                            
-                                            results.out |> dplyr::filter(C1.2022) |> dplyr::pull(hugo_symbol)
-                                            , 'Peri'=c("RGS5", "PDGFRB", "CD248") ), group.by = "seurat_clusters") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-  labs(x = paste0("Features [C1] in: ",sid))
-ggsave(paste0("output/figures/scRNA/Couturier/2022-",sid,"_CC.pdf"),width=7.5, height=4,scale=1.2)
-ggsave(paste0("output/figures/scRNA/Couturier/2022-",sid,"_CC.png"),width=7.5, height=4,scale=1.2)
+tmp.c1 <- results.out |>
+  dplyr::filter(!is.na(.data$C1.2022)) |> 
+  dplyr::filter(.data$C1.2022 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique() |> 
+  sort()
 
+
+sid_print <- sid |> 
+  stringr::str_replace(".filtered_gene_matrices","") |> 
+  stringr::str_replace("_2of2"," (1 & 2 of 2)")
+
+
+DotPlot(object = object_1, features =list('C1'=tmp.c1, 'Peri'=c("RGS5", "PDGFRB", "CD248")), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
+  labs(x = paste0("Features [C1] in: ",sid_print, " (Couturier dataset)"))
+
+
+
+ggsave(paste0("output/figures/2022_figure_S11b.pdf"),width=6.5, height=4, scale=1.2)
+rm(tmp.c1, sid_print)
 
 
 
@@ -4506,6 +4538,38 @@ rm(tmp.c0, sid_print)
 
 
 
+#### C1-2022 (up) ----
+##### figure S11c ----
+
+
+tmp.c1 <- results.out |>
+  dplyr::filter(!is.na(.data$C1.2022)) |> 
+  dplyr::filter(.data$C1.2022 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique() |> 
+  sort()
+
+
+sid_print <- sid |> 
+  stringr::str_replace(".filtered_gene_matrices","") |> 
+  stringr::str_replace("_2of2"," (1 & 2 of 2)")
+
+
+DotPlot(object = object_1, features =list('C1'=tmp.c1, 'Peri'=c("RGS5", "PDGFRB", "CD248")), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
+  labs(x = paste0("Features [C1] in: ",sid_print, " (Couturier dataset)"))
+
+
+
+ggsave(paste0("output/figures/2022_figure_S11c.pdf"),width=6.5, height=4, scale=1.2)
+rm(tmp.c1, sid_print)
+
+
+
+
+
+
 #### C2-2022 (Endo) (down) ----
 ##### figure S9a ----
 
@@ -4549,56 +4613,6 @@ DotPlot(object = object_1, features = list('C2 (Endothelial)'=tmp.c2,
 
 ggsave(paste0("output/figures/2022_figure_S9a.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
 rm(tmp.c2, tmp.peri, tmp.endo, sid_print)
-
-
-
-#### 2022 C1 (Col/Per) (up) ----
-
-
-##### figure Sxxa ----
-
-
-tmp.c1 <- results.out |>
-  dplyr::filter(.data$C1.2022 == T) |> 
-  dplyr::filter(!is.na(hugo_symbol)) |> 
-  dplyr::pull(hugo_symbol) |> 
-  unique()
-
-tmp.endo <- read_xlsx("data/McKenzie et al. Gene expression different cell types.xlsx", sheet='top_human_specificity') |>
-  dplyr::select(c('grand_mean', 'gene', 'Celltype')) |>
-  dplyr::filter(Celltype == 'end') |> 
-  dplyr::arrange(desc(grand_mean)) |>
-  dplyr::filter(gene %in% all.genes ) |>
-  dplyr::slice_head(n=10) |>
-  dplyr::mutate(grand_mean = NULL) |> 
-  dplyr::pull(gene)
-
-
-tmp.c1.only <- setdiff(tmp.c1, tmp.endo)
-tmp.c1.endo <- intersect(tmp.c1, tmp.endo)
-tmp.endo.only <- setdiff(tmp.endo, tmp.c1)
-
-
-sid_print <- sid |> 
-  stringr::str_replace(".filtered_gene_matrices","") |> 
-  stringr::str_replace("_2of2"," (1 & 2 of 2)")
-
-
-
-DotPlot(object = object_1, features = list('C1'=tmp.c1.only,
-                                           'C1+endo'= tmp.c1.endo,
-                                           'endo'=tmp.endo.only,
-                                           'pericyte'=c('PDGFRB','CD248','RGS5')), group.by = "seurat_clusters") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-  labs(x = paste0("Features [C1 & top10 McKenzy endothelial markers] in: ",sid_print, " (Couturier dataset)"))
-
-
-
-
-
-ggsave(paste0("output/figures/2022_figure_Sxxa.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
-rm(tmp.c3, tmp.opc, tmp.c3.opc, sid_print)
-
 
 
 
