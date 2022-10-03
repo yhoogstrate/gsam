@@ -38,13 +38,14 @@ tmp.metadata <- gsam.rna.metadata |>
   dplyr::filter(.data$sid %in% c('BAI2', 'CAO1-replicate', 'FAB2', 'GAS2-replicate') == F ) |> 
   dplyr::filter(.data$batch != 'old') |> 
   dplyr::filter(.data$tumour.percentage.dna >= 15) |> 
-  dplyr::select(dplyr::contains("rna.signature") | `sid` | `pid` | `GITS.150.svm.2022.subtype` | `resection` | `extent`) |> 
+  dplyr::select(dplyr::contains("rna.signature") | `sid` | `pid` | `GITS.150.svm.2022.subtype` | `resection` | `extent` | `MGMT`) |> 
   dplyr::rename(`Resection or Biopsy` = extent) |> 
   dplyr::mutate(resection = ifelse(resection == "r1","primary","recurrence")) |> 
   dplyr::filter(!is.na(.data$rna.signature.C1.collagen.2022))
 
 
 tmp.metadata.paired <- tmp.metadata |> 
+  dplyr::mutate(MGMT = NULL) |> 
   tidyr::pivot_wider(id_cols =  pid,
                      names_from = resection, 
                      values_from = -c(pid, resection)) |> 
@@ -1338,4 +1339,65 @@ ggsave("output/figures/2022_figure_S13k.pdf", width=8.3 / 2,height=8.3/4.5, scal
 # figure S13l: C1 x MGMT ----
 
 
+
+
+plt_r1 <- tmp.metadata |>
+  dplyr::filter(!is.na(rna.signature.C1.collagen.2022)) |>
+  dplyr::filter(resection == "primary") |>
+  dplyr::select(sid, pid, `MGMT`, rna.signature.C1.collagen.2022) |>
+  dplyr::mutate(type = "primary")
+
+
+plt_r2 <- tmp.metadata |>
+  dplyr::filter(!is.na(rna.signature.C1.collagen.2022)) |>
+  dplyr::filter(resection == "recurrence") |>
+  dplyr::select(sid, pid, `MGMT`, rna.signature.C1.collagen.2022) |>
+  dplyr::mutate(type = "recurrence")
+
+
+plt_both <- tmp.metadata |>
+  dplyr::filter(!is.na(rna.signature.C1.collagen.2022)) |>
+  dplyr::select(sid, pid, `MGMT`, rna.signature.C1.collagen.2022) |>
+  dplyr::mutate(type = "combined")
+
+
+plt <- rbind(plt_r1, plt_r2, plt_both) |>
+  dplyr::filter(pid %in% tmp.metadata.paired$pid) |> 
+  dplyr::mutate(`MGMT` = ifelse(is.na(`MGMT`),"NA",`MGMT`)) |> 
+  dplyr::mutate(`MGMT` = factor(`MGMT`, levels = c("Unmethylated", "Methylated", "NA"))) |> 
+  dplyr::mutate(type = factor(type, levels = c("primary", "recurrence", "combined")))
+
+
+
+ggplot(plt, aes(x = `MGMT`, y = rna.signature.C1.collagen.2022, col=MGMT)) +
+  facet_grid(cols = vars(type)) +
+  ggbeeswarm::geom_quasirandom() +
+  ggsignif::geom_signif(
+    comparisons = list(
+      c("Methylated", "Unmethylated")
+    ),
+    test = "wilcox.test",
+    col = "black"
+  ) +
+  theme_bw() +
+  scale_color_manual(values=c('Methylated'='black', 'Unmethylated'='black','NA'='gray60'),guide="none") +
+  theme(
+    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
+    # strip.background = element_rect(colour="white",fill="white"),
+    axis.title = element_text(face = "bold", size = rel(1)),
+    # axis.text.x = element_blank(),
+    legend.position = "bottom",
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    axis.ticks.x = element_blank(),
+    panel.border = element_rect(colour = "black", fill = NA, size = 1.25)
+  ) +
+  labs(caption = paste0("G-SAM: n=", length(unique(plt$pid)), " patients"), y = "C1/col signature") +
+  scale_y_continuous(expand = expansion(mult = .075))
+
+
+
+ggsave("output/figures/2022_figure_S13k.pdf", width=8.3 / 2,height=8.3/4.5, scale=2)
 
