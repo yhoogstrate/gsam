@@ -376,6 +376,30 @@ gsam.rna.metadata <- gsam.rna.metadata %>%
 rm(tmp)
 
 
+## MGMT ----
+
+tmp <- gsam.rna.metadata |>
+  dplyr::select(sid, pid, resection) |> 
+  dplyr::left_join(
+    gsam.patient.metadata |> 
+      dplyr::select(studyID, mgmtPrimary, mgmtRecurrent)
+    ,
+    by=c('pid'='studyID')
+  ) |> 
+  dplyr::mutate(MGMT = ifelse(resection == "r1", mgmtPrimary, mgmtRecurrent)) |> 
+  dplyr::mutate(pid = NULL) |> 
+  dplyr::mutate(resection = NULL) |>
+  dplyr::mutate(mgmtPrimary=NULL) |>
+  dplyr::mutate(mgmtRecurrent=NULL) |> 
+  dplyr::filter(!is.na(MGMT))
+
+stopifnot(nrow(tmp) == 248)
+
+gsam.rna.metadata <- gsam.rna.metadata %>%
+  dplyr::left_join(tmp, by=c('sid' = 'sid'),suffix = c('',''))
+rm(tmp)
+
+
 
 ## gliovis subtypes ----
 

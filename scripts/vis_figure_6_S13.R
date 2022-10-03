@@ -1334,3 +1334,8 @@ ggplot(plt, aes(x = `tumorLocation`, y = rna.signature.C1.collagen.2022)) +
 ggsave("output/figures/2022_figure_S13k.pdf", width=8.3 / 2,height=8.3/4.5, scale=2)
 
 
+
+# figure S13l: C1 x MGMT ----
+
+
+
