@@ -3,7 +3,7 @@
 # load libs ----
 
 
-library(patchwork) # avoid calling infix functions pls
+library(patchwork) # avoid calling infix functions (+ and /) pls
 
 
 #  load data ----
@@ -100,7 +100,10 @@ tmp.metadata.paired <- tmp.metadata |>
   dplyr::mutate(`MGMT meth` = dplyr::recode( mgmtStability,
                                              "Stable methylated" = "Stable",
                                              "Stable unmethylated" = "Wildtype" ), mgmtStability = NULL ) |> 
-  dplyr::mutate(`Treatment: Beva` = ifelse(bevacizumab.before.recurrence, "Yes","No"), bevacizumab.before.recurrence=NULL) |> 
+  dplyr::mutate(`Treatment: Beva` = case_when(
+    is.na(bevacizumab.before.recurrence) ~ "NA",
+    bevacizumab.before.recurrence ~ "Yes",
+    T ~ "No"), bevacizumab.before.recurrence=NULL) |> 
   dplyr::rename(`Treatment: TMZ` = treatedWithTMZ) |> 
   dplyr::rename(`Treatment: RT` = treatedWithRT) |> 
   dplyr::rename(`GITS subtype R1` = .data$GITS.150.svm.2022.subtype_primary) |> 
@@ -119,9 +122,11 @@ tmp.metadata.paired <- tmp.metadata |>
 
 tmp.metadata <- tmp.metadata |>
   dplyr::left_join(
-    tmp.metadata.paired |> dplyr::select(pid, rank, em.pc.status ),# stats only accessible through pairing
+    tmp.metadata.paired |> dplyr::select(pid, rank, em.pc.status,
+    ),# stats only accessible through pairing
     by=c('pid'='pid'),suffix=c('','')
   ) |> 
+
   dplyr::left_join(
     gsam.patient.metadata |> 
       dplyr::select(
@@ -131,6 +136,12 @@ tmp.metadata <- tmp.metadata |>
         survivalFromSecondSurgeryDays,
         status,
         
+        
+        treatedWithTMZ,
+        treatedWithRT,
+        bevacizumab.before.recurrence,
+        
+        
         age,
         gender
       ) |> 
@@ -138,7 +149,10 @@ tmp.metadata <- tmp.metadata |>
     , by=c('pid'='studyID'), suffix=c('','')
   ) |> 
   dplyr::mutate(event = ifelse(.data$event == "Deceased",1,0)) |> 
-  dplyr::mutate(`age.above.50` = ifelse(age > 50,"Yes","No"))
+  dplyr::mutate(`age.above.50` = ifelse(age > 50,"Yes","No")) |> 
+  dplyr::mutate(`Treatment: Beva` = ifelse(bevacizumab.before.recurrence, "Yes","No"), bevacizumab.before.recurrence=NULL) |> 
+  dplyr::rename(`Treatment: TMZ` = treatedWithTMZ) |> 
+  dplyr::rename(`Treatment: RT` = treatedWithRT)
 
 
 
@@ -916,6 +930,7 @@ fit.cox <- survival::coxph(surv_object ~
                            ,
                            data = tmp.metadata.paired)
 survminer::ggforest(fit.cox, data = tmp.metadata.paired)
+ggsave("/tmp/svvl_no-c0.pdf", width=8.3 / 2,height=8.3/3.4, scale=2)
 ggsave("output/figures/2022_figure_S13f.pdf", width=8.3 / 2,height=8.3/3.4, scale=2)
 
 
@@ -923,18 +938,22 @@ ggsave("output/figures/2022_figure_S13f.pdf", width=8.3 / 2,height=8.3/3.4, scal
 
 #### MGMT at Rec. ----
 
+# beva sub
+
 tmp.metadata.paired.mgmt <- tmp.metadata.paired |> 
-  dplyr::filter(!is.na(`MGMT at Rec.`))
+  dplyr::mutate(`MGMT at Rec.` = as.character(`MGMT at Rec.`)) |> 
+  dplyr::mutate(`MGMT at Rec.` = ifelse(is.na(`MGMT at Rec.`), "unknown", `MGMT at Rec.`))
+#  dplyr::filter(!is.na(`MGMT at Rec.`))
 
 surv_object <- survival::Surv(time = tmp.metadata.paired.mgmt$survivalFromSecondSurgeryDays, event=tmp.metadata.paired.mgmt$event)
 fit.cox <- survival::coxph(surv_object ~
                              `Age above 50` +
                              `Sex` +
                              `KPS 70 or above` +
-                             `Treatment: Beva` +
+                             #`Treatment: Beva` +
                              `Treatment: TMZ` +
                              `MGMT at Rec.` +
-                             #`C0/fuzzy signature at Rec.` +
+                             `C0/fuzzy signature at Rec.` +
                              `C1/col signature at Rec.` +
                              `C2/endo signature at Rec.` +
                              `C3/olig signature at Rec.` +
@@ -945,7 +964,7 @@ survminer::ggforest(fit.cox, data = tmp.metadata.paired.mgmt)
 ggsave("output/figures/2022_figure_S13g.pdf", width=8.3 / 2,height=8.3/3.4, scale=2)
 
 
-plt <- tmp.metadata.paired |> 
+plt <- tmp.metadata.paired.mgmt |> 
   dplyr::select(`MGMT at Rec.`, `C1/col signature at Rec.`) |> 
   table() |> 
   as.data.frame() |> 
@@ -1052,7 +1071,127 @@ fit.cox <- survival::coxph(surv_object ~
 survminer::ggforest(fit.cox, data = tmp.metadata.paired)
 
 
+# figure S13h: C1 x TMZ ----
 
 
+plt_r1 <- tmp.metadata |>
+  dplyr::filter(!is.na(rna.signature.C1.collagen.2022)) |>
+  dplyr::filter(resection == "primary") |>
+  dplyr::select(sid, pid, `Treatment: TMZ`, rna.signature.C1.collagen.2022) |>
+  dplyr::mutate(type = "primary")
+
+
+plt_r2 <- tmp.metadata |>
+  dplyr::filter(!is.na(rna.signature.C1.collagen.2022)) |>
+  dplyr::filter(resection == "recurrence") |>
+  dplyr::select(sid, pid, `Treatment: TMZ`, rna.signature.C1.collagen.2022) |>
+  dplyr::mutate(type = "recurrence") |>
+  dplyr::filter(!is.na(`Treatment: TMZ`))
+
+plt_both <- tmp.metadata |>
+  dplyr::filter(!is.na(rna.signature.C1.collagen.2022)) |>
+  dplyr::select(sid, pid, `Treatment: TMZ`, rna.signature.C1.collagen.2022) |>
+  dplyr::mutate(type = "combined") |>
+  dplyr::filter(!is.na(`Treatment: TMZ`))
+
+
+plt <- rbind(plt_r1, plt_r2, plt_both) |>
+  dplyr::mutate(type = factor(type, levels = c("primary", "recurrence", "combined")))
+
+
+
+ggplot(plt, aes(x = `Treatment: TMZ`, y = rna.signature.C1.collagen.2022)) +
+  facet_grid(cols = vars(type)) +
+  ggbeeswarm::geom_quasirandom() +
+  ggsignif::geom_signif(
+    comparisons = list(c("Yes", "No")),
+    test = "wilcox.test",
+    col = "black"
+  ) +
+  theme_bw() +
+  theme(
+    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
+    # strip.background = element_rect(colour="white",fill="white"),
+    axis.title = element_text(face = "bold", size = rel(1)),
+    # axis.text.x = element_blank(),
+    legend.position = "bottom",
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    axis.ticks.x = element_blank(),
+    panel.border = element_rect(colour = "black", fill = NA, size = 1.25)
+  ) +
+  labs(caption = paste0("G-SAM: n=", length(unique(plt$sid)), " samples"), y = "C1/col signature") +
+  scale_y_continuous(expand = expansion(mult = .075))
+
+
+
+
+ggsave("output/figures/2022_figure_S13h.pdf", width=8.3 / 2,height=8.3/4.5, scale=2)
+
+
+
+# figure S13i: C1 x TMZ ----
+
+
+
+plt_r1 <- tmp.metadata |>
+  dplyr::filter(!is.na(rna.signature.C1.collagen.2022)) |>
+  dplyr::filter(resection == "primary") |>
+  dplyr::select(sid, pid, `Treatment: Beva`, rna.signature.C1.collagen.2022) |>
+  dplyr::mutate(type = "primary")
+
+
+plt_r2 <- tmp.metadata |>
+  dplyr::filter(!is.na(rna.signature.C1.collagen.2022)) |>
+  dplyr::filter(resection == "recurrence") |>
+  dplyr::select(sid, pid, `Treatment: Beva`, rna.signature.C1.collagen.2022) |>
+  dplyr::mutate(type = "recurrence") |>
+  dplyr::filter(!is.na(`Treatment: Beva`))
+
+plt_both <- tmp.metadata |>
+  dplyr::filter(!is.na(rna.signature.C1.collagen.2022)) |>
+  dplyr::select(sid, pid, `Treatment: Beva`, rna.signature.C1.collagen.2022) |>
+  dplyr::mutate(type = "combined") |>
+  dplyr::filter(!is.na(`Treatment: Beva`))
+
+
+plt <- rbind(plt_r1, plt_r2, plt_both) |>
+  dplyr::mutate(type = factor(type, levels = c("primary", "recurrence", "combined")))
+
+
+
+ggplot(plt, aes(x = `Treatment: Beva`, y = rna.signature.C1.collagen.2022)) +
+  facet_grid(cols = vars(type)) +
+  ggbeeswarm::geom_quasirandom() +
+  ggsignif::geom_signif(
+    comparisons = list(c("Yes", "No")),
+    test = "wilcox.test",
+    col = "black"
+  ) +
+  theme_bw() +
+  theme(
+    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
+    # strip.background = element_rect(colour="white",fill="white"),
+    axis.title = element_text(face = "bold", size = rel(1)),
+    # axis.text.x = element_blank(),
+    legend.position = "bottom",
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    axis.ticks.x = element_blank(),
+    panel.border = element_rect(colour = "black", fill = NA, size = 1.25)
+  ) +
+  labs(
+    caption = paste0("G-SAM: n=", length(unique(plt$sid)), " samples"),
+    y = "C1/col signature"
+  ) +
+  scale_y_continuous(expand = expansion(mult = .075))
+
+
+
+ggsave("output/figures/2022_figure_S13i.pdf", width=8.3 / 2,height=8.3/4.5, scale=2)
 
 
