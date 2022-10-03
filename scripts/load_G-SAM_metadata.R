@@ -326,7 +326,7 @@ print(dim(gsam.rna.metadata))
 rm(tmp)
 
 
-# ---- Tumor Percentages (DNA) ----
+# Tumor Percentages (DNA) ----
 
 tmp <- read.delim('data/gsam/output/tables/cnv/tumor.percentage.estimate.txt', sep=" ") %>%
   dplyr::mutate(lfc.3p = NULL) %>%
@@ -343,6 +343,37 @@ gsam.rna.metadata <- gsam.rna.metadata %>%
 
 rm(tmp)
 
+
+
+## resection / biopsy ----
+
+
+tmp <- gsam.rna.metadata |>
+  dplyr::select(sid, pid, resection) |> 
+  dplyr::left_join(
+    gsam.patient.metadata |> 
+      dplyr::select(studyID, extentOfResectionFirstSurgery,extentOfResectionSecondSurgery)
+    ,
+    by=c('pid'='studyID')
+    ) |> 
+  dplyr::mutate(extent = ifelse(resection == "r1",extentOfResectionFirstSurgery,extentOfResectionSecondSurgery)) |> 
+  dplyr::mutate(extent = case_when(
+    is.na(extent) ~ as.character(NA),
+    extent == "Biopsy" ~ "Biopsy",
+    T ~ "Resection"
+  )) |> 
+  dplyr::mutate(pid = NULL) |> 
+  dplyr::mutate(resection = NULL) |>
+  dplyr::mutate(extentOfResectionFirstSurgery=NULL) |>
+  dplyr::mutate(extentOfResectionSecondSurgery=NULL)
+
+stopifnot(nrow(tmp) == 399)
+stopifnot(sum(is.na(tmp$extent)) == 6)
+
+
+gsam.rna.metadata <- gsam.rna.metadata %>%
+  dplyr::left_join(tmp, by=c('sid' = 'sid'),suffix = c('',''))
+rm(tmp)
 
 
 

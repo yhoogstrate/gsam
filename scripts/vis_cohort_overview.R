@@ -41,7 +41,7 @@ tmp <- gsam.rna.metadata |>
     dplyr::select(
       studyID,
       mgmtPrimary,mgmtRecurrent,
-      extentOfResectionFirstSurgery,extentOfResectionSecondSurgery,
+      #extentOfResectionFirstSurgery,extentOfResectionSecondSurgery,
       bevacizumab.before.recurrence,
       status, survivalDays, progressionFreeDays, survivalFromSecondSurgeryDays,
       
@@ -49,12 +49,14 @@ tmp <- gsam.rna.metadata |>
     )
     ,by=c('pid'='studyID'),suffix=c('','')) |> 
   dplyr::mutate(MGMT = gsub("ylated","",ifelse(resection == "r1",mgmtPrimary,mgmtRecurrent))) |> 
-  dplyr::mutate(extent = ifelse(resection == "r1",extentOfResectionFirstSurgery,extentOfResectionSecondSurgery)) |> 
-  dplyr::mutate(extent = case_when(
-    is.na(extent) ~ as.character(NA),
-    extent == "Biopsy" ~ "Biopsy",
-    T ~ "Resection"
-  )) |> 
+  
+  # dplyr::mutate(extent = ifelse(resection == "r1",extentOfResectionFirstSurgery,extentOfResectionSecondSurgery)) |> 
+  # dplyr::mutate(extent = case_when(
+  #   is.na(extent) ~ as.character(NA),
+  #   extent == "Biopsy" ~ "Biopsy",
+  #   T ~ "Resection"
+  # )) |> 
+  
   dplyr::mutate(IDH = ifelse(pat.with.IDH,"+","-")) |> 
   dplyr::rename(TMZ = treatedWithTMZ) |> 
   dplyr::rename(RT = treatedWithRT) |> 
