@@ -1642,7 +1642,7 @@ rm(plt, plt.line.based, n.glass, n.gsam)
 
 
 
-## fig s2 ----
+## figure S2a ----
 
 
 plt <- rbind(
@@ -1745,11 +1745,134 @@ ggplot(plt, aes(x=GITS.150.svm.2022.subtype_recurrent, y=`NMF:150:PCA:eucledian.
 rm(n.glass, n.gsam)
 
 
-ggsave("output/figures/2022_figure_S2.pdf", width=8.3 / 4,height=8.3/4.5, scale=2)
-ggsave("output/figures/2022_figure_S2.svg", width=8.3 / 4,height=8.3/4.5, scale=2)
+ggsave("output/figures/2022_figure_S2a.pdf", width=8.3 / 4,height=8.3/4.5, scale=2)
+ggsave("output/figures/2022_figure_S2a.svg", width=8.3 / 4,height=8.3/4.5, scale=2)
 
 
 rm(plt)
+
+
+
+## figure S2b ----
+
+
+
+
+plt <- rbind(
+  gsam.rna.metadata |>
+    
+    dplyr::filter(blacklist.pca == F) %>%
+    dplyr::filter(pat.with.IDH == F) %>%
+    dplyr::filter(
+      sid %in% c('BAI2', 'CAO1-replicate', 'FAB2', 'GAS2-replicate') == F
+    ) %>%
+    dplyr::filter(tumour.percentage.dna >= 15) |>
+    
+    dplyr::mutate(resection = ifelse(resection == "r1","primary","recurrent")) |> 
+    dplyr::select(
+      `resection`,
+      `pid`,
+      `GITS.150.svm.2022.subtype`
+    ) |> 
+    dplyr::mutate(dataset = "G-SAM")
+  ,
+  glass.gbm.rnaseq.metadata.all.samples |>
+    dplyr::filter(tumour.percentage.2022 >= 15) |> 
+    dplyr::mutate(resection = ifelse(resection == "TP","primary","recurrent")) |>
+    dplyr::select(
+      `resection`,
+      `case_barcode`,
+      `GITS.150.svm.2022.subtype`
+    ) |>
+    #dplyr::rename(sid = aliquot_barcode) |> 
+    dplyr::rename(pid = case_barcode) |> 
+    dplyr::mutate(dataset = "GLASS")
+) |> 
+  dplyr::group_by(pid) |> 
+  dplyr::filter(n() == 2) |> 
+  dplyr::ungroup() |> 
+  dplyr::mutate(GITS.150.svm.2022.subtype = recode(GITS.150.svm.2022.subtype,
+                                                   'Mesenchymal'='MES',
+                                                   'Proneural'='PN',
+                                                   'Classical'='CL'
+                                                   )) |> 
+  
+  tidyr::pivot_wider(id_cols = pid, 
+                     names_from = c(resection),
+                     values_from = c(GITS.150.svm.2022.subtype, dataset)) |> 
+  dplyr::mutate(dataset_primary = NULL) |> 
+  dplyr::rename(dataset = dataset_recurrent) |> 
+  dplyr::mutate(label = paste0(GITS.150.svm.2022.subtype_primary, " -> ", GITS.150.svm.2022.subtype_recurrent))
+
+stopifnot(sum(duplicated(plt$pid)) == 0)
+
+
+
+stats <- data.frame(table(plt$label)) |> 
+  dplyr::left_join(data.frame(table(plt$label) / nrow(plt) * 100) |> dplyr::rename(Percentage = Freq), by=c('Var1'='Var1')) |> 
+  dplyr::mutate(stats = paste0(Freq," (",round(Percentage,1),"%)" ) )
+
+
+
+
+# plot 3 dots
+l <- 10
+plt.dots <- data.frame(x = c(0, l, sinpi(60/360) * l),
+                  y= c(0,0, cospi(60/360) * l),
+                  label = c("MES","CL","PN"),
+                  type="dot"
+                  )
+
+
+plt.labels <- data.table::CJ(plt.dots$label, plt.dots$label) |>
+  dplyr::rename(from = V1, to = V2) |>
+  dplyr::left_join(plt.dots, by = c("from" = "label"), suffix = c("", "")) |>
+  dplyr::mutate(type = NULL) |> 
+  dplyr::rename(x_from = x) |> 
+  dplyr::rename(y_from = y)  |>
+  dplyr::left_join(plt.dots, by = c("to" = "label"), suffix = c("", "")) |>
+  dplyr::mutate(type = NULL) |> 
+  dplyr::rename(x_to = x) |> 
+  dplyr::rename(y_to = y) |> 
+  dplyr::mutate(id = paste0(from , " -> ", to)) |> 
+  dplyr::left_join(stats, by=c('id'='Var1'),suffix=c('','')) |> 
+  dplyr::mutate(label = paste0(id, ": " , stats)) |> 
+  dplyr::mutate(x = (0.6 * x_from) + (0.4 * x_to)) |> 
+  dplyr::mutate(y = (0.6 * y_from) + (0.4 * y_to)) |> 
+  dplyr::mutate(x_from = NULL,   y_from = NULL, x_to = NULL,     y_to = NULL)
+
+
+
+ggplot(plt.dots, aes(x=x,y=y,label=label,fill=label)) +
+  geom_point(cex=30, pch=21) +
+  geom_text(data=rbind(plt.dots |> dplyr::select(x,y,label), plt.labels|> dplyr::select(x,y,label)), cex=5, aes(fill=NULL)) +
+  scale_x_continuous(expand = expansion(mult = .18*1.5)) +
+  scale_y_continuous(expand = expansion(mult = .18*1.5)) +
+  theme_bw()  +
+  theme(
+    axis.title = element_text(face = "bold",size = rel(1)),
+    
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank(),
+    
+    legend.position = 'bottom',
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    panel.border = element_rect(colour = "black", fill=NA, size=1.25)
+  )  + 
+  coord_equal() +
+  labs(x=NULL, y=NULL,fill=NULL) +
+  scale_fill_manual(values = 
+                      mixcol(c('MES' = as.character(subtype_colors['Mesenchymal']), 'PN' = as.character(subtype_colors['Proneural']), 'CL' = as.character(subtype_colors['Classical'])),rep("white",3),0.0)
+    )
+
+
+ggsave("output/figures/2022_figure_S2b.pdf", width=8.3 / 2,height=8.3/2, scale=2)
 
 
 

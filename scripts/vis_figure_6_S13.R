@@ -1399,5 +1399,5 @@ ggplot(plt, aes(x = `MGMT`, y = rna.signature.C1.collagen.2022, col=MGMT)) +
 
 
 
-ggsave("output/figures/2022_figure_S13k.pdf", width=8.3 / 2,height=8.3/4.5, scale=2)
+ggsave("output/figures/2022_figure_S13l.pdf", width=8.3 / 2,height=8.3/4.5, scale=2)
 
