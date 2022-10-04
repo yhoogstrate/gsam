@@ -5,11 +5,11 @@
 
 # load data ----
 
-source("scripts/R/chrom_sizes.R")
 
-if(!exists('glass.gbm.rnaseq.metadata.all.samples')) {
-  source('scripts/load_glass')
-}
+# read directory directly since some TCGA samples have WGS and WXS equivalents, which were averaged for the samples final purity
+
+purities <- read.table('output/tables/cnv/tumor.percentage.estimate_glass.2022.all_samples.txt') 
+
 
 
 # analysis ----
@@ -20,9 +20,8 @@ dat <- 'data/gsam/data/GLASS_GBM_R1-R2/variants_gatk_seg.syn31121137.all_samlpes
   read.table(sep="\t",header=T,stringsAsFactors = F) |> 
   dplyr::mutate(ROW_ID=NULL, ROW_VERSION=NULL) |> 
   dplyr::mutate(portion_barcode = gsub("^([^\\-]+)-([^\\-]+)-([^\\-]+)-([^\\-]+)-([0-9]+).+$$","\\1-\\2-\\3-\\4-\\5",aliquot_barcode)) |> 
-  dplyr::filter(portion_barcode %in% sel$portion_barcode) |> 
   dplyr::mutate(chrom = paste0("chr",chrom) )  |> 
-  #dplyr::filter(grepl('WXS', aliquot_barcode)) %>% # WGS are not as clean, and only present for TCGA  
+
   dplyr::filter(chrom %in% c('chr23', 'chr24') == F) |>  # chr23 is most likely chrX
   dplyr::filter(aliquot_barcode != "GLSS-CU-R017-R1-01D-WXS-C0CBCW") |>  # too noisy data
   dplyr::filter(aliquot_barcode != "GLSS-HF-3118-R1-01D-WXS-QRF6VZ") |>  # too noisy data
@@ -32,7 +31,6 @@ dat <- 'data/gsam/data/GLASS_GBM_R1-R2/variants_gatk_seg.syn31121137.all_samlpes
   dplyr::mutate(aliquot_barcode = as.factor(aliquot_barcode)) 
 
 
-purities <-   purity <- read.table('output/tables/cnv/tumor.percentage.estimate_glass.2022.all_samples.txt') 
 
 
 render <- function(bc) {
@@ -93,7 +91,7 @@ render <- function(bc) {
     ) +
     scale_color_discrete(guide="none") +
     labs(x=NULL, y="log2 copy ratio Synapse portal",
-         caption = paste0("aliquot_barcode W[X/G]S: ", dat.pat$aliquot_barcode[1], "  -  purity estimate: ", purity )) +
+         caption = paste0("aliquot_barcode W[X/G]S: ", dat.pat$aliquot_barcode[1], "  -  purity estimate: ", purity*100, "%" )) +
     scale_x_continuous(breaks = c(0,50,100,150,200,250,300))
   
   ggsave(paste0("output/figures/cnv/glass/2022/",dat.pat$aliquot_barcode[1], "_estimate_gg.pdf"), width=8.3, height=3.5, scale=1.75)
@@ -102,4 +100,5 @@ render <- function(bc) {
 
 
 pbapply::pblapply(unique(dat$aliquot_barcode), render)
+
 
