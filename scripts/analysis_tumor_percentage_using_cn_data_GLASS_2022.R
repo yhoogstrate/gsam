@@ -8,7 +8,7 @@
 source("scripts/R/chrom_sizes.R")
 
 if(!exists('glass.gbm.rnaseq.metadata.all.samples')) {
-  source('scripts/load_glass_expression_data.R')
+  source('scripts/load_GLASS_data.R')
 }
 
 
@@ -38,37 +38,37 @@ dat <- 'data/gsam/data/GLASS_GBM_R1-R2/variants_gatk_seg.syn31121137.all_samlpes
   dplyr::filter(aliquot_barcode != "GLSS-HF-EE74-R1-01D-WXS-5AS51O") |> 
   dplyr::mutate(aliquot_barcode = as.factor(aliquot_barcode)) 
 
-
-chr17.err <- dat |> 
-  dplyr::filter(chrom == "chr17") |> 
-  dplyr::group_by(aliquot_barcode) |> 
-  dplyr::filter(end == max(end))  |>  dplyr::filter(end > 140000000) |>  dplyr::pull(aliquot_barcode)
-
-
-plt <- dat |> 
-  dplyr::filter(chrom == "chr17") |> 
-  dplyr::group_by(aliquot_barcode) |> 
-  dplyr::filter(end == max(end)) 
-plot(sort(plt$end))
-
-
-plt <- dat |> 
-  dplyr::filter(chrom == "chr1") |> 
-  dplyr::group_by(aliquot_barcode) |> 
-  dplyr::filter(end == max(end)) 
-plot(sort(plt$end))
-
-
-plt <- dat |> 
-  dplyr::filter(chrom == "chr2") |> 
-  dplyr::group_by(aliquot_barcode) |> 
-  dplyr::filter(end == max(end)) |> 
-  dplyr::mutate(chr17.err = aliquot_barcode %in% chr17.err)
-ggplot(plt, aes(x=reorder(aliquot_barcode,end), y=end, col=chr17.err)) + 
-  geom_point() +
-  #geom_text(angle=90,size=2, aes(y=(max(plt$end) - min(plt$end))/2)) +
-  theme_bw()
-
+# 
+# chr17.err <- dat |> 
+#   dplyr::filter(chrom == "chr17") |> 
+#   dplyr::group_by(aliquot_barcode) |> 
+#   dplyr::filter(end == max(end))  |>  dplyr::filter(end > 140000000) |>  dplyr::pull(aliquot_barcode)
+# 
+# 
+# plt <- dat |> 
+#   dplyr::filter(chrom == "chr17") |> 
+#   dplyr::group_by(aliquot_barcode) |> 
+#   dplyr::filter(end == max(end)) 
+# plot(sort(plt$end))
+# 
+# 
+# plt <- dat |> 
+#   dplyr::filter(chrom == "chr1") |> 
+#   dplyr::group_by(aliquot_barcode) |> 
+#   dplyr::filter(end == max(end)) 
+# plot(sort(plt$end))
+# 
+# 
+# plt <- dat |> 
+#   dplyr::filter(chrom == "chr2") |> 
+#   dplyr::group_by(aliquot_barcode) |> 
+#   dplyr::filter(end == max(end)) |> 
+#   dplyr::mutate(chr17.err = aliquot_barcode %in% chr17.err)
+# ggplot(plt, aes(x=reorder(aliquot_barcode,end), y=end, col=chr17.err)) + 
+#   geom_point() +
+#   #geom_text(angle=90,size=2, aes(y=(max(plt$end) - min(plt$end))/2)) +
+#   theme_bw()
+# 
 
 
 
@@ -78,14 +78,14 @@ ggplot(plt, aes(x=reorder(aliquot_barcode,end), y=end, col=chr17.err)) +
 
 tpc.estimate = data.frame()
 for(bc in levels(dat$aliquot_barcode)) {
-  #bc = "GLSS-SM-R108-R1-01D-WXS-YRYRWN" # plot ex
+  bc = "GLSS-SM-R108-R1-01D-WXS-YRYRWN" # plot ex
   print(bc)
   
   m <- glass.gbm.rnaseq.metadata.all.samples |> 
     dplyr::filter(portion_barcode == gsub("^([^\\-]+)-([^\\-]+)-([^\\-]+)-([^\\-]+)-([0-9]+).+$$","\\1-\\2-\\3-\\4-\\5",bc))
   
-  p.tpc.estimate <- m$purity.synapse.rna
-  p.tpc.hoogstrate.2021 <- m$tumour.percentage.dna.imputed.rf.2021 / 100
+  #p.tpc.estimate <- m$purity.synapse.rna
+  #p.tpc.hoogstrate.2021 <- m$tumour.percentage.dna.imputed.rf.2021 / 100
   
   center <-  dat %>%
     dplyr::filter(aliquot_barcode == bc)
