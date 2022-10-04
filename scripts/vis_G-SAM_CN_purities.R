@@ -77,7 +77,7 @@ render_gsam <- function(bc) {
     scale_color_discrete(guide = "none") +
     labs(
       x = NULL, y = "CNVKit log2 copy ratio",
-      caption = paste0("", dat.pat$aliquot_barcode[1], "  -  purity estimate: ", purity)
+      caption = paste0("", bc, "  -  purity estimate: ", purity * 100, "%")
     ) +
     scale_x_continuous(breaks = c(0, 50, 100, 150, 200, 250, 300))
 
@@ -85,5 +85,6 @@ render_gsam <- function(bc) {
 }
 
 
-
 pbapply::pblapply(unique(purities$sample), render_gsam)
+
+
