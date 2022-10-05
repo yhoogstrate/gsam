@@ -11,155 +11,235 @@ library(ggplot2)
 
 source("scripts/R/palette.R")
 
-#source("scripts/R/job_gg_theme.R")
-#source("scripts/R/youri_gg_theme.R")
-
-
-#source("scripts/R/ligands.R")
-#source("scripts/R/subtype_genes.R")
-#source('scripts/R/wang_glioma_intrinsic_genes.R')
-
 source("scripts/load_G-SAM_metadata.R")
 source("scripts/load_G-SAM_expression_data.R")
+
 
 source("scripts/load_GLASS_data.R") # glass & tcga validation set
 
 
 # G-SAM ----
 
-## as s.table ----
+## general stats ----
 
-
-tmp <- gsam.rna.metadata |> 
+# all RNA included patients:
+gsam.rna.metadata |> 
   dplyr::filter(blacklist.pca == F) |>  # er zijn patienten met 1 goede en 1 slechte resectie
   dplyr::filter(pat.with.IDH == F) |> 
   dplyr::filter(sid %in% c('BAI2', 'CAO1-replicate', 'FAB2', 'GAS2-replicate') == F ) |> 
-  dplyr::arrange(pid, as.character(resection)) |> 
-  dplyr::mutate(pid = as.factor(as.character(pid))) |> 
-  dplyr::left_join(gsam.patient.metadata %>% dplyr::select(c('studyID','treatedWithTMZ','treatedWithRT','HM')) , by = c('pid' = 'studyID')) %>%
+  dplyr::pull(pid) |> 
+  unique() |> 
+  length()
+
+
+# all RNA included patients w/ TMZ treatment:
+all <- gsam.rna.metadata |> 
+  dplyr::filter(blacklist.pca == F) |>  # er zijn patienten met 1 goede en 1 slechte resectie
+  dplyr::filter(pat.with.IDH == F) |> 
+  dplyr::filter(sid %in% c('BAI2', 'CAO1-replicate', 'FAB2', 'GAS2-replicate') == F ) |> 
+  dplyr::pull(pid) |> 
+  unique()
+
+
+gsam.patient.metadata |>
+  dplyr::filter(studyID %in% all) |> 
+  dplyr::filter(treatedWithTMZ == "Yes") |> 
+  dim()
+
+rm(all)
+
+
+# resection biopsy stats - Primary and recurrence
+gsam.rna.metadata |> 
+  dplyr::filter(blacklist.pca == F) |>  # er zijn patienten met 1 goede en 1 slechte resectie
+  dplyr::filter(pat.with.IDH == F) |> 
+  dplyr::filter(sid %in% c('BAI2', 'CAO1-replicate', 'FAB2', 'GAS2-replicate') == F ) |> 
+  dplyr::filter(extent == "Biopsy") |> 
+  dplyr::pull(sid) 
+
+gsam.rna.metadata |> 
+  #dplyr::filter(blacklist.pca == F) |>  # er zijn patienten met 1 goede en 1 slechte resectie
+  #dplyr::filter(pat.with.IDH == F) |> 
+  dplyr::filter(sid %in% c('EAV1', 'ECH2', 'ECI1', 'GAA2', 'GAQ1', 'JAK2')) |> 
+  dplyr::select(sid, pid, extent, tumour.percentage.dna, blacklist.pca, pat.with.IDH)
+
+
+# experimental therapies?
+all <- gsam.rna.metadata |> 
+  dplyr::filter(blacklist.pca == F) |>  # er zijn patienten met 1 goede en 1 slechte resectie
+  dplyr::filter(pat.with.IDH == F) |> 
+  dplyr::filter(sid %in% c('BAI2', 'CAO1-replicate', 'FAB2', 'GAS2-replicate') == F ) |> 
+  dplyr::pull(pid) |> 
+  unique()
+
+
+gsam.patient.metadata |>
+  dplyr::filter(studyID %in% all) |> 
+  dplyr::mutate(otherTreatmentsBeforeSecondSurgery = recode(otherTreatmentsBeforeSecondSurgery,
+                                                            ' '='-',
+                                                            'no'='-',
+                                                            'NO'='-',
+                                                            'none'='-',
+                                                            'Surgery for rectum carcinoma'='-'
+                                                                         )) |> 
+  dplyr::pull(.data$otherTreatmentsBeforeSecondSurgery) |> 
+  table()
+
+
+
+## as s.table ----
+### G-SAM ----
+
+tmp.gsam <- gsam.rna.metadata |>
+  dplyr::filter(blacklist.pca == F) |> # er zijn patienten met 1 goede en 1 slechte resectie
+  dplyr::filter(pat.with.IDH == F) |>
+  dplyr::filter(sid %in% c("BAI2", "CAO1-replicate", "FAB2", "GAS2-replicate") == F) |>
+  dplyr::arrange(pid, as.character(resection)) |>
+  dplyr::mutate(pid = as.factor(as.character(pid))) |>
   dplyr::left_join(gsam.patient.metadata |>
     dplyr::select(
       studyID,
-      mgmtPrimary,mgmtRecurrent,
-      #extentOfResectionFirstSurgery,extentOfResectionSecondSurgery,
+      treatedWithTMZ, treatedWithRT, HM,
+      mgmtPrimary, mgmtRecurrent,
       bevacizumab.before.recurrence,
+      
+      # svvl related
       status, survivalDays, progressionFreeDays, survivalFromSecondSurgeryDays,
       
+      # treatment related
       otherTreatmentsBeforeSecondSurgery, treatmentDetailsFirstPD, treatmentDetailsFourthPD, treatmentDetailsSecondPD, treatmentDetailsThirdPD
-    )
-    ,by=c('pid'='studyID'),suffix=c('','')) |> 
-  dplyr::mutate(MGMT = gsub("ylated","",ifelse(resection == "r1",mgmtPrimary,mgmtRecurrent))) |> 
-  
-  # dplyr::mutate(extent = ifelse(resection == "r1",extentOfResectionFirstSurgery,extentOfResectionSecondSurgery)) |> 
-  # dplyr::mutate(extent = case_when(
-  #   is.na(extent) ~ as.character(NA),
-  #   extent == "Biopsy" ~ "Biopsy",
-  #   T ~ "Resection"
-  # )) |> 
-  
-  dplyr::mutate(IDH = ifelse(pat.with.IDH,"+","-")) |> 
-  dplyr::rename(TMZ = treatedWithTMZ) |> 
-  dplyr::rename(RT = treatedWithRT) |> 
-  
-  dplyr::rename( `ssGSEA subtype` = `ssGSEA.2022.subtype` ) |> 
-  dplyr::rename( `ssGSEA CL enrichment score` = `ssGSEA.2022.Classical.enrichment_score` ) |> 
-  dplyr::rename( `ssGSEA CL pval` = `ssGSEA.2022.Classical_pval` ) |> 
-  dplyr::rename( `ssGSEA MES enrichment score` = `ssGSEA.2022.Mesenchymal.enrichment_score` ) |> 
-  dplyr::rename( `ssGSEA MES pval` = `ssGSEA.2022.Mesenchymal_pval` ) |> 
-  dplyr::rename( `ssGSEA PN enrichment score` = `ssGSEA.2022.Proneural.enrichment_score` ) |> 
-  dplyr::rename( `ssGSEA PN pval` = `ssGSEA.2022.Proneural_pval` ) |> 
-
-  dplyr::rename( `NMF:150 meta-feature 1` = `NMF:150:1` ) |>
-  dplyr::rename( `NMF:150 meta-feature 2` = `NMF:150:2` ) |>
-  dplyr::rename( `NMF:150 meta-feature 3` = `NMF:150:3` ) |>
-  
-  dplyr::rename( `NMF:150 PC1` = `NMF:150:PC1` ) |>
-  dplyr::rename( `NMF:150 PC2` = `NMF:150:PC2` ) |>
-  
-  dplyr::rename( `NMF:150 PC1 (scaled)` = `NMF:150:PC1.n` ) |>
-  dplyr::rename( `NMF:150 PC2 (scaled)` = `NMF:150:PC2.n` ) |>
-  dplyr::rename( `NMF:150 PC1-2 (scaled) eucledian dist` = `NMF:150:PCA:eucledian.dist` ) |>
-  
-  dplyr::rename( `GITS NMF:150 subtype` = `GITS.150.svm.2022.subtype` ) |>
-
-  #dplyr::mutate(GlioVis.Maj = ifelse(tumour.percentage.dna < 15, NA ,GlioVis.Maj)) |> 
+    ),
+  by = c("pid" = "studyID"), suffix = c("", "")
+  ) |>
+  dplyr::mutate(MGMT = gsub("ylated", "", ifelse(resection == "r1", mgmtPrimary, mgmtRecurrent))) |>
+  dplyr::mutate(IDH = ifelse(pat.with.IDH, "+", "-")) |>
+  dplyr::rename(TMZ = treatedWithTMZ) |>
+  dplyr::rename(RT = treatedWithRT) |>
+  dplyr::rename(`ssGSEA subtype` = `ssGSEA.2022.subtype`) |>
+  dplyr::rename(`ssGSEA CL enrichment score` = `ssGSEA.2022.Classical.enrichment_score`) |>
+  dplyr::rename(`ssGSEA CL pval` = `ssGSEA.2022.Classical_pval`) |>
+  dplyr::rename(`ssGSEA MES enrichment score` = `ssGSEA.2022.Mesenchymal.enrichment_score`) |>
+  dplyr::rename(`ssGSEA MES pval` = `ssGSEA.2022.Mesenchymal_pval`) |>
+  dplyr::rename(`ssGSEA PN enrichment score` = `ssGSEA.2022.Proneural.enrichment_score`) |>
+  dplyr::rename(`ssGSEA PN pval` = `ssGSEA.2022.Proneural_pval`) |>
+  dplyr::rename(`NMF:150 meta-feature 1` = `NMF:150:1`) |>
+  dplyr::rename(`NMF:150 meta-feature 2` = `NMF:150:2`) |>
+  dplyr::rename(`NMF:150 meta-feature 3` = `NMF:150:3`) |>
+  dplyr::rename(`NMF:150 PC1` = `NMF:150:PC1`) |>
+  dplyr::rename(`NMF:150 PC2` = `NMF:150:PC2`) |>
+  dplyr::rename(`NMF:150 PC1 (scaled)` = `NMF:150:PC1.n`) |>
+  dplyr::rename(`NMF:150 PC2 (scaled)` = `NMF:150:PC2.n`) |>
+  dplyr::rename(`NMF:150 PC1-2 (scaled) eucledian dist` = `NMF:150:PCA:eucledian.dist`) |>
+  dplyr::rename(`GITS NMF:150 subtype` = `GITS.150.svm.2022.subtype`) |>
+  # dplyr::mutate(GlioVis.Maj = ifelse(tumour.percentage.dna < 15, NA ,GlioVis.Maj)) |>
   dplyr::mutate(
-    sig.C0.fuz = round(rna.signature.C0.fuzzy.2022,2),
-    sig.C1.col = round(rna.signature.C1.collagen.2022,2),
-    sig.C2.end = round(rna.signature.C2.endothelial.2022,2),
-    sig.C3.oli = round(rna.signature.C3.oligodendrocyte.2022,2),
-    sig.C4.neu = round(rna.signature.C4.neuron.2022,2)
-  ) |> 
+    sig.C0.fuz = round(rna.signature.C0.fuzzy.2022, 2),
+    sig.C1.col = round(rna.signature.C1.collagen.2022, 2),
+    sig.C2.end = round(rna.signature.C2.endothelial.2022, 2),
+    sig.C3.oli = round(rna.signature.C3.oligodendrocyte.2022, 2),
+    sig.C4.neu = round(rna.signature.C4.neuron.2022, 2)
+  ) |>
   dplyr::rename(
     svvl.stat = status,
     svvl.r1.days = survivalDays,
     pfs.days = progressionFreeDays,
     svvl.r2.days = survivalFromSecondSurgeryDays
-  ) |> 
-  dplyr::mutate(angio = ifelse(bevacizumab.before.recurrence, "Bevacizumab", "No")) |> 
-  dplyr::mutate(purity = ifelse(is.na(tumour.percentage.dna),NA,paste0(tumour.percentage.dna, "%"))) |> 
-  dplyr::select(sid, pid, resection, 
-                extent, purity,
-                IDH,HM, MGMT, 
-                TMZ, RT, angio, 
-                svvl.stat, svvl.r1.days, pfs.days, svvl.r2.days,
-                
-                # subtype
-                `ssGSEA subtype` ,
-                `ssGSEA CL enrichment score` , `ssGSEA CL pval` , 
-                `ssGSEA MES enrichment score` , `ssGSEA MES pval` ,
-                `ssGSEA PN enrichment score` , `ssGSEA PN pval` , 
-                `NMF:150 meta-feature 1`, `NMF:150 meta-feature 2`, `NMF:150 meta-feature 3`,
-                `NMF:150 PC1`, `NMF:150 PC2`,
-                `NMF:150 PC1 (scaled)`, `NMF:150 PC2 (scaled)`,
-                `NMF:150 PC1-2 (scaled) eucledian dist`,
-                `GITS NMF:150 subtype`, `GITS travel segments` ,
-                
-                # epic
-                `EPIC: B-cells` ,
-                `EPIC: CAFs` ,
-                `EPIC: CD4 T-cells` ,
-                `EPIC: CD8 T-cells` ,
-                `EPIC: Endothelial` ,
-                `EPIC: Macrophages` ,
-                `EPIC: NK-cells` ,
-                `EPIC: other cells` ,
-                
-                # signatures
-                sig.C0.fuz, sig.C1.col, sig.C2.end, sig.C3.oli, sig.C4.neu,
-                
-                # therapy (extra)
-                otherTreatmentsBeforeSecondSurgery, 
-                treatmentDetailsFirstPD, treatmentDetailsFourthPD,
-                treatmentDetailsSecondPD, treatmentDetailsThirdPD
-                ) |> 
-  dplyr::mutate(sid = gsub('-new','.n',sid))
-head(tmp)
+  ) |>
+  dplyr::mutate(angio = ifelse(bevacizumab.before.recurrence, "Bevacizumab", "No")) |>
+  dplyr::mutate(purity = ifelse(is.na(tumour.percentage.dna), NA, paste0(tumour.percentage.dna, "%"))) |>
+  dplyr::select(
+    sid, pid, resection,
+    extent, purity,
+    IDH, HM, MGMT,
+    TMZ, RT, angio,
+    svvl.stat, svvl.r1.days, pfs.days, svvl.r2.days,
+
+    # subtype
+    `ssGSEA subtype`,
+    `ssGSEA CL enrichment score`, `ssGSEA CL pval`,
+    `ssGSEA MES enrichment score`, `ssGSEA MES pval`,
+    `ssGSEA PN enrichment score`, `ssGSEA PN pval`,
+    `NMF:150 meta-feature 1`, `NMF:150 meta-feature 2`, `NMF:150 meta-feature 3`,
+    `NMF:150 PC1`, `NMF:150 PC2`,
+    `NMF:150 PC1 (scaled)`, `NMF:150 PC2 (scaled)`,
+    `NMF:150 PC1-2 (scaled) eucledian dist`,
+    `GITS NMF:150 subtype`, `GITS travel segments`,
+
+    # epic
+    `EPIC: B-cells`,
+    `EPIC: CAFs`,
+    `EPIC: CD4 T-cells`,
+    `EPIC: CD8 T-cells`,
+    `EPIC: Endothelial`,
+    `EPIC: Macrophages`,
+    `EPIC: NK-cells`,
+    `EPIC: other cells`,
+
+    # signatures
+    sig.C0.fuz, sig.C1.col, sig.C2.end, sig.C3.oli, sig.C4.neu,
+
+    # therapy (extra)
+    otherTreatmentsBeforeSecondSurgery,
+    treatmentDetailsFirstPD, treatmentDetailsFourthPD,
+    treatmentDetailsSecondPD, treatmentDetailsThirdPD
+  ) |>
+  dplyr::mutate(sid = gsub("-new", ".n", sid))
+head(tmp.gsam)
 
 
-# paper stats
-tmp |>
-  dplyr::filter(!duplicated(pid)) |> 
-  nrow()
+### GLASS ----
 
-tmp |>
-  dplyr::filter(!duplicated(pid)) |> 
-  dplyr::pull(TMZ) 
+tmp.glass <- glass.gbm.rnaseq.metadata.all.samples |>
+  dplyr::rename(`ssGSEA subtype` = `ssGSEA.2022.subtype`) |>
+  dplyr::rename(`ssGSEA CL enrichment score` = `ssGSEA.2022.Classical.enrichment_score`) |>
+  dplyr::rename(`ssGSEA CL pval` = `ssGSEA.2022.Classical_pval`) |>
+  dplyr::rename(`ssGSEA MES enrichment score` = `ssGSEA.2022.Mesenchymal.enrichment_score`) |>
+  dplyr::rename(`ssGSEA MES pval` = `ssGSEA.2022.Mesenchymal_pval`) |>
+  dplyr::rename(`ssGSEA PN enrichment score` = `ssGSEA.2022.Proneural.enrichment_score`) |>
+  dplyr::rename(`ssGSEA PN pval` = `ssGSEA.2022.Proneural_pval`) |>
+  dplyr::rename(`NMF:150 meta-feature 1` = `NMF:150:1`) |>
+  dplyr::rename(`NMF:150 meta-feature 2` = `NMF:150:2`) |>
+  dplyr::rename(`NMF:150 meta-feature 3` = `NMF:150:3`) |>
+  dplyr::rename(`NMF:150 PC1` = `NMF:150:PC1`) |>
+  dplyr::rename(`NMF:150 PC2` = `NMF:150:PC2`) |>
+  dplyr::rename(`NMF:150 PC1 (scaled)` = `NMF:150:PC1.n`) |>
+  dplyr::rename(`NMF:150 PC2 (scaled)` = `NMF:150:PC2.n`) |>
+  dplyr::rename(`NMF:150 PC1-2 (scaled) eucledian dist` = `NMF:150:PCA:eucledian.dist`) |>
+  dplyr::rename(`GITS NMF:150 subtype` = `GITS.150.svm.2022.subtype`) |>
+  dplyr::select(
+    aliquot_barcode,
+    tumour.percentage.2022, tumour.percentage.2022.source,
+    `ssGSEA subtype`,
+    `ssGSEA CL enrichment score`, `ssGSEA CL pval`,
+    `ssGSEA MES enrichment score`, `ssGSEA MES pval`,
+    `ssGSEA PN enrichment score`, `ssGSEA PN pval`,
+    `NMF:150 meta-feature 1`, `NMF:150 meta-feature 2`, `NMF:150 meta-feature 3`,
+    `NMF:150 PC1`, `NMF:150 PC2`,
+    `NMF:150 PC1 (scaled)`, `NMF:150 PC2 (scaled)`,
+    `NMF:150 PC1-2 (scaled) eucledian dist`,
+    `GITS NMF:150 subtype`
+  )
 
-#'@todo exp therapies
+
+
+### export ----
+
+openxlsx::createWorkbook(
+  creator = "Dr. Youri Hoogstrate",
+  title = "Clinical information G-SAM study",
+  subject = "Clinical information",
+  category = "G-SAM study"
+) -> wb
+openxlsx::addWorksheet(wb, "Sheet1 - Sample info G-SAM")
+openxlsx::writeDataTable(wb, sheet = "Sheet1 - Sample info G-SAM", x = tmp.gsam)
+openxlsx::addWorksheet(wb, "Sheet1 - Sample info GLASS")
+openxlsx::writeDataTable(wb, sheet = "Sheet1 - Sample info GLASS", x = tmp.glass)
+
+openxlsx::saveWorkbook(wb, file = "output/tables/tab_S1_clinical_information.xlsx", overwrite = T)
 
 
 
-openxlsx::createWorkbook(creator = "Dr. Youri Hoogstrate",
-                         title = "Clinical information G-SAM study",
-                         subject = "Clinical information",
-                         category = "G-SAM study") -> wb
-openxlsx::addWorksheet(wb, "Sheet1 - Sample information") 
-openxlsx::writeDataTable(wb,sheet = "Sheet1 - Sample information", x=tmp)
-openxlsx::saveWorkbook(wb,file= "output/tables/tab_S1_clinical_information.xlsx",overwrite=T)
-
-rm(wb, tmp)
-
+rm(wb, tmp.gsam, tmp.glass)
 
 
 ## fig 2021 ----

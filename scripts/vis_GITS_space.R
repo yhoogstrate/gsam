@@ -1101,7 +1101,7 @@ n.gsam <- plt |>
 ggplot(plt, aes(x=`ssGSEA enrichment score`, y=`NMF contribution`, fill=`ssGSEA.2022.subtype`, shape=misclass)) +
   #facet_grid(cols = vars(`facet`), scales = "free") +
   facet_wrap(~facet, scales = "free") +
-  ggpubr::stat_cor(aes(shape=NULL, col=NULL, fill=NULL), method = "pearson") +
+  ggpubr::stat_cor(aes(shape=NULL, col=NULL, fill=NULL, label = ..r.label..), method = "pearson") +
   geom_point(size=3, data=plt |>  dplyr::filter(misclass != "."), col='black', pch=21, alpha=0.7) +
   geom_point(size=3, data=plt |>   dplyr::filter(misclass == ".") ,col='black', pch=21, alpha=0.7) +
   #geom_point(data = plt |>  dplyr::filter(misclass == "?"), col = 'white',  size=1.2) + # pch=4,
@@ -1231,7 +1231,7 @@ n.gsam <- plt |>
 ggplot(plt, aes(x=`ssGSEA enrichment score`, y=`NMF contribution`, fill=`ssGSEA.2022.subtype`)) +
   facet_wrap(~facet, ncol=4, scales = "free") +
   geom_point(size=3, col='black', pch=21, alpha=0.7) +
-  ggpubr::stat_cor(aes(shape=NULL, col=NULL, fill=NULL), method = "pearson") +
+  ggpubr::stat_cor(aes(shape=NULL, col=NULL, fill=NULL, label = ..r.label..), method = "pearson") +
   labs(x = "ssGSEA enrichment score or tumor purity",
         y="NMF meta-feature score", 
        fill = "Subtype (ssGSEA)",
@@ -1475,8 +1475,8 @@ ggplot(data, aes(x=PC1, y=PC2, col=varnames)) +
   ggrepel::geom_label_repel(data=datapc, aes(x=v1, y=v2, label=varnames), size = 3,
                             vjust=0.6, show.legend=F, col="black") +
   labs(col = "Associated with") +
-  labs(x="PC1 on NMF meta-features",
-       y="PC2 on NMF meta-features",
+  labs(x="PC1 on ssGSEA enrichment scores",
+       y="PC2 on ssGSEA enrichment scores",
        fill = "Subtype (GlioVis)",
        caption = paste0("G-SAM: n=",n.gsam, "  -  GLASS: n=",n.glass," samples")
        ) +
