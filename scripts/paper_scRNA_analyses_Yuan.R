@@ -915,7 +915,7 @@ endo.only <- setdiff(endo, C3)
 
 DotPlot(object = object_1, features = list('C3'=C3.only, 'C3+endo'= C3.and.endo, 'endo'=endo.only,'pericyte'=c('PDGFRB','CD248','RGS5')), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-  labs(x = paste0("Features [C3 & top25 McKenzy endothelial cell markers] in: ",sid))
+  labs(x = paste0("Features [C3 & top25 McKenzie endothelial cell markers] in: ",sid))
 
 
 
@@ -1097,7 +1097,7 @@ DotPlot(object = object_1, features = list('C2 (Endothelial)'=tmp.c2,
                                            'Endothelial'=tmp.endo,
                                            'Pericyte'=tmp.peri), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-  labs(x = paste0("Features [C2 & top25 McKenzy endothelial markers] in: ",sid_print, " (Yuan dataset)"))
+  labs(x = paste0("Features [C2 & top25 McKenzie endothelial markers] in: ",sid_print, " (Yuan dataset)"))
 
 
 
@@ -1432,7 +1432,7 @@ endo.only <- setdiff(endo, C3)
 
 DotPlot(object = object_1, features = list('C3'=C3.only, 'C3+endo'= C3.and.endo, 'endo'=endo.only,'pericyte'=c('PDGFRB','CD248','RGS5')), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-  labs(x = paste0("Features [C3 & top25 McKenzy endothelial cell markers] in: ",sid))
+  labs(x = paste0("Features [C3 & top25 McKenzie endothelial cell markers] in: ",sid))
 
 
 ggsave(paste0("output/figures/scRNA/Yuan/",sid,"_C3.pdf"),width=7.5, height=3,scale=2)
@@ -1608,7 +1608,7 @@ DotPlot(object = object_1, features = list('C2 (Endothelial)'=tmp.c2,
                                            'Endothelial'=tmp.endo,
                                            'Pericyte'=tmp.peri), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-  labs(x = paste0("Features [C2 & top25 McKenzy endothelial markers] in: ",sid_print, " (Yuan dataset)"))
+  labs(x = paste0("Features [C2 & top25 McKenzie endothelial markers] in: ",sid_print, " (Yuan dataset)"))
 
 
 
@@ -2198,7 +2198,7 @@ endo.only <- setdiff(endo, C3)
 
 DotPlot(object = object_1, features = list('C3'=C3.only, 'C3+endo'= C3.and.endo, 'endo'=endo.only,'pericyte'=c('PDGFRB','CD248','RGS5')), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-  labs(x = paste0("Features [C3 & top25 McKenzy endothelial cell markers] in: ",sid))
+  labs(x = paste0("Features [C3 & top25 McKenzie endothelial cell markers] in: ",sid))
 
 
 ggsave(paste0("output/figures/scRNA/Yuan/",sid,"_C3.pdf"),width=7.5, height=3,scale=2)
@@ -2378,7 +2378,7 @@ DotPlot(object = object_1, features = list('C2 (Endothelial)'=tmp.c2,
                                            'Endothelial'=tmp.endo,
                                            'Pericyte'=tmp.peri), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-  labs(x = paste0("Features [C2 & top25 McKenzy endothelial markers] in: ",sid_print, " (Yuan dataset)"))
+  labs(x = paste0("Features [C2 & top25 McKenzie endothelial markers] in: ",sid_print, " (Yuan dataset)"))
 
 
 
@@ -2783,7 +2783,7 @@ endo.only <- setdiff(endo, C3)
 
 DotPlot(object = object_1, features = list('C3'=C3.only, 'C3+endo'= C3.and.endo, 'endo'=endo.only,'pericyte'=c('PDGFRB','CD248','RGS5')), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-  labs(x = paste0("Features [C3 & top25 McKenzy endothelial cell markers] in: ",sid))
+  labs(x = paste0("Features [C3 & top25 McKenzie endothelial cell markers] in: ",sid))
 
 
 ggsave(paste0("output/figures/scRNA/Yuan/",sid,"_C3.pdf"),width=7.5, height=3,scale=2)
@@ -2970,7 +2970,7 @@ DotPlot(object = object_1, features = list('C2 (Endothelial)'=tmp.c2,
                                            'Endothelial'=tmp.endo,
                                            'Pericyte'=tmp.peri), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-  labs(x = paste0("Features [C2 & top25 McKenzy endothelial markers] in: ",sid_print, " (Yuan dataset)"))
+  labs(x = paste0("Features [C2 & top25 McKenzie endothelial markers] in: ",sid_print, " (Yuan dataset)"))
 
 
 

@@ -1753,7 +1753,7 @@ rm(plt)
 
 
 
-## figure S2b ----
+## figure 1d ----
 
 
 
@@ -1872,7 +1872,7 @@ ggplot(plt.dots, aes(x=x,y=y,label=label,fill=label)) +
     )
 
 
-ggsave("output/figures/2022_figure_S2b.pdf", width=8.3 / 2,height=8.3/2, scale=2)
+ggsave("output/figures/2022_figure_1d.pdf", width=8.3 / 2,height=8.3/2, scale=2)
 
 
 

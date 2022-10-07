@@ -1979,19 +1979,19 @@ tmp <- rbind(
   
   results.out %>%
     dplyr::filter(grepl("astrocyte",primary.marker.genes)) %>%
-    dplyr::mutate(label = "McKenzy: ast") %>%
+    dplyr::mutate(label = "McKenzie: ast") %>%
     head(n=14),
   results.out %>%
     dplyr::filter(grepl("neuron",primary.marker.genes)) %>%
-    dplyr::mutate(label = "McKenzy: neu") %>%
+    dplyr::mutate(label = "McKenzie: neu") %>%
     head(n=14),
   results.out %>%
     dplyr::filter(grepl("oligodendrocyte",primary.marker.genes)) %>%
-    dplyr::mutate(label = "McKenzy: oli") %>%
+    dplyr::mutate(label = "McKenzie: oli") %>%
     head(n=14),
   results.out %>%
     dplyr::filter(grepl("microglia",primary.marker.genes)) %>%
-    dplyr::mutate(label = "McKenzy: tam") %>%
+    dplyr::mutate(label = "McKenzie: tam") %>%
     head(n=14)
     
 ) %>%
@@ -2231,7 +2231,7 @@ tmp.meta <- results.out %>% dplyr::filter(grepl("astrocyte",primary.marker.genes
 tmp.meta <- plt.expanded %>%
   dplyr::filter(x %in% tmp.meta & x == y) %>%
   dplyr::mutate(y.order = nrow(plt ) + 15) %>%
-  dplyr::mutate(y = "McKenzy: ast")  %>%
+  dplyr::mutate(y = "McKenzie: ast")  %>%
   dplyr::mutate(type = y) %>% 
   dplyr::mutate(value=0)
 dim(tmp.meta)
@@ -2242,7 +2242,7 @@ tmp.meta <- results.out %>% dplyr::filter(grepl("neuron",primary.marker.genes)) 
 tmp.meta <- plt.expanded %>%
   dplyr::filter(x %in% tmp.meta & x == y) %>%
   dplyr::mutate(y.order = nrow(plt ) + 16) %>%
-  dplyr::mutate(y = "McKenzy: neu")  %>%
+  dplyr::mutate(y = "McKenzie: neu")  %>%
   dplyr::mutate(type = y) %>% 
   dplyr::mutate(value=0)
 dim(tmp.meta)
@@ -2253,7 +2253,7 @@ tmp.meta <- results.out %>% dplyr::filter(grepl("oligodendrocyte",primary.marker
 tmp.meta <- plt.expanded %>%
   dplyr::filter(x %in% tmp.meta & x == y) %>%
   dplyr::mutate(y.order = nrow(plt ) + 17) %>%
-  dplyr::mutate(y = "McKenzy: oli")  %>%
+  dplyr::mutate(y = "McKenzie: oli")  %>%
   dplyr::mutate(type = y) %>% 
   dplyr::mutate(value=0)
 dim(tmp.meta)
@@ -2264,7 +2264,7 @@ tmp.meta <- results.out %>% dplyr::filter(grepl("microglia",primary.marker.genes
 tmp.meta <- plt.expanded %>%
   dplyr::filter(x %in% tmp.meta & x == y) %>%
   dplyr::mutate(y.order = nrow(plt ) + 18) %>%
-  dplyr::mutate(y = "McKenzy: tam")  %>%
+  dplyr::mutate(y = "McKenzie: tam")  %>%
   dplyr::mutate(type = y) %>% 
   dplyr::mutate(value=0)
 dim(tmp.meta)
@@ -2273,7 +2273,7 @@ plt.expanded <- dplyr::bind_rows(plt.expanded, tmp.meta)
 
 
 plt.expanded <- plt.expanded %>%
-  dplyr::mutate(mckenzy = grepl("McKenzy", type))
+  dplyr::mutate(mckenzy = grepl("McKenzie", type))
 
 
 
