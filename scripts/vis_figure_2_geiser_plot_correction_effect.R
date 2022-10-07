@@ -122,7 +122,7 @@ plt.expanded <- rbind(
 #   scale_fill_manual(values = dataset_colors <- c('G-SAM' = '#e69356', 'GLASS' = '#69a4d5', 'no-mg-or-tam'='white') ) + 
 #   theme_bw() + 
 #   labs(x = "log2FC R1 vs. R2",
-#        y="Correlation t-statistic with tumour percentage",
+#        y="Correlation t-statistic with tumor percentage",
 #        shape = "Truncated at x-axis",
 #        size="Truncated at x-axis",
 #        col="Truncated at x-axis") +
@@ -174,7 +174,7 @@ ggplot(plt.expanded, aes(x = log2FoldChange ,
     panel.border = element_rect(colour = "black", fill=NA, size=1.25)
   ) +
   labs(x = "log2FC R1 vs. R2",
-       y="Correlation t-statistic with tumour percentage",
+       y="Correlation t-statistic with tumor percentage",
        shape = "Truncated at x-axis",
        size="Truncated at x-axis",
        col="Truncated at x-axis") +
@@ -364,7 +364,7 @@ p1 <- ggplot(plt.expanded.gsam, aes(x = log2FoldChange ,
     panel.border = element_rect(colour = "black", fill=NA, size=1.25)
   ) +
   labs(x = "log2FC primary vs. recurrence",
-       y="Correlation t-statistic with tumour percentage",
+       y="Correlation t-statistic with tumor percentage",
        shape = "Truncated at x-axis",
        size="Truncated at x-axis",
        col="Truncated at x-axis") +
@@ -419,7 +419,7 @@ p2 <- ggplot(plt.expanded.glass, aes(x = log2FoldChange ,
     panel.border = element_rect(colour = "black", fill=NA, size=1.25)
   ) +
   labs(x = "log2FC primary vs. recurrence",
-       y="Correlation t-statistic with tumour percentage",
+       y="Correlation t-statistic with tumor percentage",
        shape = "Truncated at x-axis",
        size="Truncated at x-axis",
        col="Truncated at x-axis"

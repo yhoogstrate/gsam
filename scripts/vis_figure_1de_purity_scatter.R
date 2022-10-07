@@ -81,7 +81,7 @@ ggplot(plt, aes(x=is.primary,y=purity, fill = is.primary)) +
     panel.border = element_rect(colour = "black", fill=NA, size=1.25)
   ) +
   labs(
-    x = NULL, col = NA, y = "Tumour purity",
+    x = NULL, col = NA, y = "Tumor purity",
     caption=paste0("G-SAM: n=",tmp.n.gsam,"  -  GLASS: n=",tmp.n.glass)  ) +
   theme(panel.border = element_rect(colour = "black", fill=NA, size=1.1)  )
 

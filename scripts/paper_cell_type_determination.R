@@ -988,7 +988,7 @@ plt <- out.sample %>%
 
 
 
-plt <- rbind(plt %>% dplyr::mutate(y = tumour.percentage.dna, type="Tumour purity",
+plt <- rbind(plt %>% dplyr::mutate(y = tumour.percentage.dna, type="Tumor purity",
                                    sign = ifelse(tumour.percentage.dna.log.odds > 0, "increase", "decrease")),
              plt %>% dplyr::mutate(y = EPIC.Macrophages, type="EPIC Macrophages score",
                                    sign = ifelse(EPIC.Macrophages.log.odds > 0, "increase", "decrease")),
