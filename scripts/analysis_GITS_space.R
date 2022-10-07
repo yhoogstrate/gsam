@@ -30,7 +30,6 @@ library(e1071)
 # load data ----
 
 
-#source('scripts/load_G-SAM_metadata.R')
 source('scripts/load_G-SAM_expression_data.R')
 
 source('scripts/load_GLASS_data.R')
@@ -40,15 +39,6 @@ source('scripts/load_results.out.R')
 
 
 source('data/wang/msig.library.12.R')  # no license w/ code provided, can't include it in source tree
-
-#source('scripts/R/subtype_genes.R')
-#source('scripts/R/wang_glioma_intrinsic_genes.R')
-
-
-#'@todo move to vis_GITS_space.R
-# source('scripts/R/job_gg_theme.R')
-# source('scripts/R/youri_gg_theme.R')
-# source('scripts/R/palette.R')
 
 
 # Select and merge samples ----
@@ -470,6 +460,72 @@ tmp.out <- tmp.out |>
 
 
 rm(tmp.paired)
+
+
+## eucl dist for shuffled pairs ----
+
+
+tmp.out <- tmp.out |> 
+  dplyr::mutate(pid = case_when(
+    grepl("GLSS|TCGA", sid) ~ gsub("^(............).+$","\\1",sid),
+    T ~ gsub("^(...).+$","\\1",sid)
+  ))
+
+
+rep <- tmp.out |>
+  dplyr::select(sid, pid, `NMF:150:PC1.n`, `NMF:150:PC2.n`) |>
+  dplyr::mutate(resection = case_when(
+    grepl("GLSS|TCGA", sid) ~ ifelse(gsub("^.............(..).+$", "\\1", sid) == "TP", "primary", "recurrence"),
+    T ~ ifelse(gsub("^...(.).*?$", "R\\1", sid) == "R1", "primary", "recurrence")
+  )) |>
+  dplyr::group_by(pid) |>
+  dplyr::filter(n() > 1) |>
+  dplyr::ungroup()
+
+
+
+shuffle <- tidyr::crossing(
+  rep |>
+    dplyr::filter(.data$resection == "primary") |> 
+    dplyr::select(.data$sid, .data$pid) |>
+    dplyr::rename(`sid.R1` = .data$sid) |>
+    dplyr::rename(`pid.R1` = .data$pid)
+  ,
+  rep |>
+    dplyr::filter(.data$resection == "recurrence") |> 
+    dplyr::select(.data$sid, .data$pid) |>
+    dplyr::rename(`sid.R2` = .data$sid) |>
+    dplyr::rename(`pid.R2` = .data$pid)
+) |> dplyr::filter(.data$pid.R1 != .data$pid.R2) |> 
+  dplyr::mutate(pid.R1 = NULL) |> 
+  dplyr::mutate(pid.R2 = NULL) |> 
+  dplyr::left_join(
+    rep |>
+      dplyr::filter(.data$resection == "primary") |> 
+      dplyr::select(.data$sid, .data$`NMF:150:PC1.n`, .data$`NMF:150:PC2.n`) |> 
+      dplyr::rename_with( ~ paste0(.x, ".R1"))
+    ,
+    by=c('sid.R1'='sid.R1'), suffix=c('','')
+  ) |> 
+  dplyr::left_join(
+    rep |>
+      dplyr::filter(.data$resection == "recurrence") |> 
+      dplyr::select(.data$sid, .data$`NMF:150:PC1.n`, .data$`NMF:150:PC2.n`) |> 
+      dplyr::rename_with( ~ paste0(.x, ".R2"))
+    ,
+    by=c('sid.R2'='sid.R2'), suffix=c('','')
+  )
+
+shuffle <- shuffle |> 
+  dplyr::mutate(`NMF:150:PCA:eucledian.dist` =
+                  sqrt((`NMF:150:PC1.n.R1` - `NMF:150:PC1.n.R2`)^2 +
+                         (`NMF:150:PC2.n.R1` - `NMF:150:PC2.n.R2`)^2))
+
+
+#saveRDS(shuffle, file = "tmp/PCA.eucledian.distances.shuffled.Rds")
+
+
+rm(rep, shuffle)
 
 
 ## calc proprtional segments ----
