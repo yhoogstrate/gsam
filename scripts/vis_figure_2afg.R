@@ -194,9 +194,14 @@ tmp.n.pairs.leq.15 <-  tmp.paired |>
   length()
 
 
-p1 <- ggplot(plt, aes(x = reorder(pid, rank), y=y, col=sign, label=label)) +
-  ggplot2::geom_point(data = subset(plt, resection == "primary"), pch=19, cex=1.2, alpha=0.8) +
-  ggplot2::geom_path(arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.125, "inches")) , alpha = 0.8, lwd=1.05 )  +
+p1 <- 
+ggplot(plt, aes(x = reorder(pid, rank), y=y, col=sign, label=label)) +
+  ggplot2::geom_point(data = subset(plt, resection == "primary"), pch=19, cex=1.2 * 2) +
+  ggplot2::geom_path(
+    lineend = "butt",
+    linejoin = "mitre",
+    lwd=1.25,
+   arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.125*0.65 , "inches")))  +
   ggplot2::scale_color_manual(values = c('increase'='#bb5f6c', 'decrease'='#79b1b1'),guide="none") +
   ggplot2::facet_grid(rows=vars(type), cols=vars(panel), scales="free", space="free_x") +
   ggplot2::geom_text(x=6, data=tmp.labels, col="black",fontface = "italic",hjust = 0, vjust=1) +
@@ -283,16 +288,15 @@ plt <- tmp.paired |>
   
 
 tmp.n.pairs.below.15 <- tmp.paired |>
-  dplyr::filter(has.low.purity.sample) |> 
-  dplyr::pull(pid) |> 
-  unique() |> 
+  dplyr::filter(has.low.purity.sample) |>
+  dplyr::pull(pid) |>
+  unique() |>
   length()
-tmp.n.pairs.leq.15 <-  tmp.paired |>
-  dplyr::filter(!has.low.purity.sample) |> 
-  dplyr::pull(pid) |> 
-  unique() |> 
+tmp.n.pairs.leq.15 <- tmp.paired |>
+  dplyr::filter(!has.low.purity.sample) |>
+  dplyr::pull(pid) |>
+  unique() |>
   length()
-
 
 
 p2 <- ggplot(plt, aes(x = reorder(pid, rank), y=variable, fill = value)) +
