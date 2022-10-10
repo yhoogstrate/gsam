@@ -515,54 +515,18 @@ rm(tmp.call, tmp)
 
 ## NMF stats 2021 ----
 
-# 
-# gsam.rna.metadata[1:3,]
-# 
-# 
-# gsam.rna.metadata <- gsam.rna.metadata %>%
-#   dplyr::left_join(read.table("data/gsam/output/tables/gsam_nmf_lda_data.txt") %>%
-#                      dplyr::mutate(sid = gsub("^GSAM-","",sid)), by=c('sid' = 'sid'))
-# 
-# stopifnot('NMF.123456.PCA.LDA.class' %in% colnames(gsam.rna.metadata) == F)
-#   
-# 
-# 
-# gsam.rna.metadata <- gsam.rna.metadata %>% 
-#   dplyr::mutate(
-#     "NMF.123456.membership" = NULL,
-#     "NMF.123456.PC1" = NULL,
-#     "NMF.123456.PC2" = NULL,
-#     "NMF.123456.PC3" = NULL,
-#     #"NMF.123456.PCA.SVM.class" = NULL,
-#     #"NMF.123456.PCA.SVM.Classical.p" = NULL,
-#     #"NMF.123456.PCA.SVM.Proneural.p" = NULL,
-#     #"NMF.123456.PCA.SVM.Mesenchymal.p" = NULL
-#   ) %>% 
-#   dplyr::left_join(
-#     readRDS("tmp/combi.gbm_nmf_150.new.Rds") %>%
-#       purrr::pluck('123456') %>%
-#       purrr::pluck('H') %>%
-#       t() %>%
-#       as.data.frame() %>%
-#       `colnames<-`(c('NMF:123456.1','NMF:123456.2','NMF:123456.3')) %>% 
-#       tibble::rownames_to_column('sid') %>%
-#       dplyr::mutate(sid = gsub('^GSAM-','',sid))
-#     , by=c('sid'='sid')    
-#   )
+
+tmp <- read.table("data/gsam/output/tables/gsam_nmf_lda_data.txt") |>
+  dplyr::mutate(sid = gsub("^GSAM-", "", .data$sid)) |>
+  dplyr::rename(NMF.123456.PCA.SVM.class_2021 = .data$NMF.123456.PCA.SVM.class) |>
+  dplyr::select(.data$sid, .data$`NMF.123456.PCA.SVM.class_2021`)
+
+gsam.rna.metadata <- gsam.rna.metadata |>
+  dplyr::left_join(tmp, by = c("sid" = "sid"), suffix = c("", ""))
+
+rm(tmp)
 
 
-
-
-# this is from a different NMF run - deprecated
-# nmf_per.sample.error <- readRDS("tmp/nmf_per-sample-error.Rds") %>%
-#   data.frame(stringsAsFactors = F) %>%
-#   `colnames<-`('nmf_per.sample.error') %>%
-#   tibble::rownames_to_column('sid')
-# 
-# gsam.rna.metadata <- gsam.rna.metadata %>%
-#   dplyr::left_join(nmf_per.sample.error, by = c('sid' = 'sid'))
-# 
-# rm(nmf_per.sample.error)
 
 
 ## Gravendeel class ----
@@ -599,18 +563,19 @@ gsam.rna.metadata <- gsam.rna.metadata %>%
   dplyr::mutate(tmp = NULL) %>%
   dplyr::mutate( pat.with.IDH = as.logical(pat.with.IDH) )
 
+
 ## Add PCA signatures 2021 ----
-
-# neuron_oligodendrocyte_endothelial_EM_PCA_scores
-
-gsam.rna.metadata <- gsam.rna.metadata |> 
-  dplyr::left_join(
-    read.table('data/gsam/output/tables/principal_DE_cluster_components.txt') |> 
-      dplyr::mutate(sid = gsub("^GSAM.","",pid), pid=NULL) |> 
-      dplyr::rename_with( ~ paste0(.x,".2021") ,  .cols=matches("compon|signatu",perl=T) ) 
-    , by=c('sid'='sid'), suffix=c('','')) 
+# needed to show changes in cluster numbers 
 
 
+tmp <- read.table("data/gsam/output/tables/principal_DE_cluster_components.txt") |>
+  dplyr::mutate(sid = gsub("^GSAM.", "", pid), pid = NULL) |>
+  dplyr::rename_with(~ paste0(.x, ".2021"), .cols = matches("compon|signatu", perl = T))
+
+gsam.rna.metadata <- gsam.rna.metadata |>
+  dplyr::left_join(tmp, by = c("sid" = "sid"), suffix = c("", ""))
+
+rm(tmp)
 
 ## Add PCA signatures 2022 ----
 
