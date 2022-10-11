@@ -1715,45 +1715,46 @@ plt <- plt |>
 
 
 # FDR + geom_signif -> https://github.com/kassambara/ggpubr/issues/65#issuecomment-400918671
-stats <- compare_means(`NMF:150:PCA:eucledian.dist` ~ `GITS.150.svm.2022.subtype_recurrent`, group.by = "GITS.150.svm.2022.subtype_primary", data = plt) |> 
-  mutate(y_pos = 4.25 + ((1:n() %% 3) * 0.4),p.adj = format.pval(p.adj, digits = 1) )
+stats <- compare_means(`NMF:150:PCA:eucledian.dist` ~ `GITS.150.svm.2022.subtype_recurrent`, group.by = "GITS.150.svm.2022.subtype_primary", data = plt) |>
+  mutate(y_pos = 4.25 + ((1:n() %% 3) * 0.4), p.adj = format.pval(p.adj, digits = 1))
 
 
-ggplot(plt, aes(x=GITS.150.svm.2022.subtype_recurrent, y=`NMF:150:PCA:eucledian.dist`)) +
-  facet_grid(rows = vars(GITS.150.svm.2022.subtype_primary), space="free_x") +
-
+ggplot(plt, aes(x = GITS.150.svm.2022.subtype_recurrent, y = `NMF:150:PCA:eucledian.dist`)) +
+  facet_grid(rows = vars(GITS.150.svm.2022.subtype_primary), space = "free_x") +
   ggsignif::geom_signif(
-    data=stats, 
-    aes(xmin=group1, xmax=group2, annotations=p.adj, y_position=y_pos), 
-    manual=TRUE,
-    textsize=2.5,
-    size=0.375
+    data = stats,
+    aes(xmin = group1, xmax = group2, annotations = p.adj, y_position = y_pos),
+    manual = TRUE,
+    textsize = 2.5,
+    size = 0.375
   ) +
-  geom_violin(width=1.05,aes(fill=stable)) +
-  geom_boxplot(width=0.1,outlier.shape = NA,alpha=0.5,fill=NA,col="black")  +
-  ggbeeswarm::geom_quasirandom(aes(fill=dataset), pch=21,size=3, cex=4) +
-  labs(x = NULL, 
-       y = "Euclidean distance GITS space", 
-       fill = "",
-       caption = paste0("G-SAM: n=",n.gsam, "  -  GLASS: n=",n.glass," pairs" )) +
-  scale_fill_manual(values = c('stable'='gray90', 'transition'='white',dataset_colors['G-SAM'], dataset_colors['GLASS'] )) +
-  scale_y_continuous(limits=c(0,5.25)) + # for the signif
-  theme_bw()  +
+  geom_violin(width = 1.05, aes(fill = stable)) +
+  geom_boxplot(width = 0.1, outlier.shape = NA, alpha = 0.5, fill = NA, col = "black") +
+  ggbeeswarm::geom_quasirandom(aes(fill = dataset), pch = 21, size = 3, cex = 4) +
+  labs(
+    x = NULL,
+    y = "Euclidean distance GITS space",
+    fill = "",
+    caption = paste0("G-SAM: n=", n.gsam, "  -  GLASS: n=", n.glass, " pairs")
+  ) +
+  scale_fill_manual(values = c("stable" = "gray90", "transition" = "white", dataset_colors["G-SAM"], dataset_colors["GLASS"])) +
+  scale_y_continuous(limits = c(0, 5.25)) + # for the signif
+  theme_bw() +
   theme(
     # text = element_text(family = 'Arial'), seems to require a postscript equivalent
-    #strip.background = element_rect(colour="white",fill="white"),
-    axis.title = element_text(face = "bold",size = rel(1)),
-    #axis.text.x = element_blank(),
-    legend.position = 'bottom',
+    # strip.background = element_rect(colour="white",fill="white"),
+    axis.title = element_text(face = "bold", size = rel(1)),
+    # axis.text.x = element_blank(),
+    legend.position = "bottom",
     panel.grid.major.x = element_blank(),
     panel.grid.minor.x = element_blank(),
     panel.grid.major.y = element_blank(),
     panel.grid.minor.y = element_blank(),
     axis.ticks.x = element_blank(),
-    #strip.text = element_text(size = 7),
-    panel.border = element_rect(colour = "black", fill=NA, size=1.1)
+    # strip.text = element_text(size = 7),
+    panel.border = element_rect(colour = "black", fill = NA, size = 1.1)
   ) +
-  guides(fill=guide_legend(ncol=4))
+  guides(fill = guide_legend(ncol = 4))
 
 
 
