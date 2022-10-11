@@ -1703,6 +1703,7 @@ n.glass <- table(plt$dataset_primary)['GLASS']
 n.gsam <- table(plt$dataset_primary)['G-SAM']
 
 
+
 plt <- plt |>
   dplyr::rename(`NMF:150:PCA:eucledian.dist` = `NMF:150:PCA:eucledian.dist_primary`) |> 
   dplyr::mutate(`NMF:150:PCA:eucledian.dist_recurrent` = NULL) |> 
@@ -1712,18 +1713,31 @@ plt <- plt |>
   dplyr::mutate(`GITS.150.svm.2022.subtype_recurrent` = paste0("to: ", `GITS.150.svm.2022.subtype_recurrent`))
 
 
-#, group = type
+
+# FDR + geom_signif -> https://github.com/kassambara/ggpubr/issues/65#issuecomment-400918671
+stats <- compare_means(`NMF:150:PCA:eucledian.dist` ~ `GITS.150.svm.2022.subtype_recurrent`, group.by = "GITS.150.svm.2022.subtype_primary", data = plt) |> 
+  mutate(y_pos = 4.25 + ((1:n() %% 3) * 0.4),p.adj = format.pval(p.adj, digits = 1) )
+
+
 ggplot(plt, aes(x=GITS.150.svm.2022.subtype_recurrent, y=`NMF:150:PCA:eucledian.dist`)) +
   facet_grid(rows = vars(GITS.150.svm.2022.subtype_primary), space="free_x") +
-  #ylim(0, 4.3) +
+
+  ggsignif::geom_signif(
+    data=stats, 
+    aes(xmin=group1, xmax=group2, annotations=p.adj, y_position=y_pos), 
+    manual=TRUE,
+    textsize=2.5,
+    size=0.375
+  ) +
   geom_violin(width=1.05,aes(fill=stable)) +
-  geom_boxplot(width=0.1,outlier.shape = NA,alpha=0.5)  +
+  geom_boxplot(width=0.1,outlier.shape = NA,alpha=0.5,fill=NA,col="black")  +
   ggbeeswarm::geom_quasirandom(aes(fill=dataset), pch=21,size=3, cex=4) +
   labs(x = NULL, 
        y = "Euclidean distance GITS space", 
        fill = "",
        caption = paste0("G-SAM: n=",n.gsam, "  -  GLASS: n=",n.glass," pairs" )) +
   scale_fill_manual(values = c('stable'='gray90', 'transition'='white',dataset_colors['G-SAM'], dataset_colors['GLASS'] )) +
+  scale_y_continuous(limits=c(0,5.25)) + # for the signif
   theme_bw()  +
   theme(
     # text = element_text(family = 'Arial'), seems to require a postscript equivalent
@@ -1742,13 +1756,12 @@ ggplot(plt, aes(x=GITS.150.svm.2022.subtype_recurrent, y=`NMF:150:PCA:eucledian.
   guides(fill=guide_legend(ncol=4))
 
 
+
+ggsave("output/figures/2022_figure_S2a.pdf", width=8.3 / 4,height=8.3/3.2, scale=2)
+ggsave("output/figures/2022_figure_S2a.svg", width=8.3 / 4,height=8.3/3.2, scale=2)
+
+
 rm(n.glass, n.gsam)
-
-
-ggsave("output/figures/2022_figure_S2a.pdf", width=8.3 / 4,height=8.3/4.5, scale=2)
-ggsave("output/figures/2022_figure_S2a.svg", width=8.3 / 4,height=8.3/4.5, scale=2)
-
-
 rm(plt)
 
 
