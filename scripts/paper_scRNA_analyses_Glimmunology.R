@@ -876,6 +876,36 @@ ggsave(paste0("output/figures/2022_figure_S9c.pdf"),width=7.5*1.8, height=3.75,s
 rm(tmp.c2, tmp.peri, tmp.endo, sid_print)
 
 
+#### MES ----
+
+
+tmp <- results.out |> 
+  # TCGA.subtype.marker == "TCGA-MES" | 
+  dplyr::filter(neftel.meta.module.MES1 | neftel.meta.module.MES2) |> 
+  dplyr::select(hugo_symbol,neftel.meta.module.MES1 , neftel.meta.module.MES2) |> 
+  #dplyr::mutate(TCGA.subtype.marker = ifelse(is.na(TCGA.subtype.marker), F,T)) |> 
+  tidyr::pivot_longer(cols=c( neftel.meta.module.MES1 , neftel.meta.module.MES2)) |> 
+  dplyr::filter(value) |> 
+  dplyr::mutate(value = NULL) |> 
+  dplyr::distinct() |> 
+  dplyr::group_by(hugo_symbol) |> 
+  dplyr::summarise(str = paste0(name, collapse=",")) |> 
+  dplyr::ungroup()
+
+
+
+DotPlot(object = object_1, features = list(
+  "MES1"                         = tmp |> dplyr::filter(str == "neftel.meta.module.MES1") |> dplyr::pull(hugo_symbol),
+  #"TCGA.subtype.marker"                            = tmp |> dplyr::filter(str == "TCGA.subtype.marker") |> dplyr::pull(hugo_symbol),
+  "MES2"                         = tmp |> dplyr::filter(str == "neftel.meta.module.MES2") |> dplyr::pull(hugo_symbol),
+  "MES1+2" = tmp |> dplyr::filter(str == "neftel.meta.module.MES1,neftel.meta.module.MES2" ) |> dplyr::pull(hugo_symbol)
+  #"TCGA.subtype.marker,neftel.meta.module.MES1"    = tmp |> dplyr::filter(str == "TCGA.subtype.marker,neftel.meta.module.MES1") |> dplyr::pull(hugo_symbol),
+  #"TCGA.subtype.marker,neftel.meta.module.MES2"    = tmp |> dplyr::filter(str == "TCGA.subtype.marker,neftel.meta.module.MES2") |> dplyr::pull(hugo_symbol)
+), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(x = paste0("Features [MES] in: ",sid))
+
+
 
 ## GLASS-NL purity ----
 

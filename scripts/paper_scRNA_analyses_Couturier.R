@@ -1502,6 +1502,38 @@ FeaturePlot(object = object_sty, features = c("PCmes2_1","PCmes1_1",
 rm(object_sty)
 
 
+
+#### MES ----
+
+
+tmp <- results.out |> 
+  dplyr::filter(TCGA.subtype.marker == "TCGA-MES" | neftel.meta.module.MES1 | neftel.meta.module.MES2) |> 
+  dplyr::select(hugo_symbol, TCGA.subtype.marker , neftel.meta.module.MES1 , neftel.meta.module.MES2) |> 
+  dplyr::mutate(TCGA.subtype.marker = ifelse(is.na(TCGA.subtype.marker), F,T)) |> 
+  tidyr::pivot_longer(cols=c( TCGA.subtype.marker , neftel.meta.module.MES1 , neftel.meta.module.MES2)) |> 
+  dplyr::filter(value) |> 
+  dplyr::mutate(value = NULL) |> 
+  dplyr::distinct() |> 
+  dplyr::group_by(hugo_symbol) |> 
+  dplyr::summarise(str = paste0(name, collapse=",")) |> 
+  dplyr::ungroup()
+
+
+
+DotPlot(object = object_1, features = list(
+  "neftel.meta.module.MES1"                         = tmp |> dplyr::filter(str == "neftel.meta.module.MES1") |> dplyr::pull(hugo_symbol),
+  "TCGA.subtype.marker"                            = tmp |> dplyr::filter(str == "TCGA.subtype.marker") |> dplyr::pull(hugo_symbol),
+  "neftel.meta.module.MES2"                         = tmp |> dplyr::filter(str == "neftel.meta.module.MES2") |> dplyr::pull(hugo_symbol),
+  "neftel.meta.module.MES1,neftel.meta.module.MES2" = tmp |> dplyr::filter(str == "neftel.meta.module.MES1,neftel.meta.module.MES2" ) |> dplyr::pull(hugo_symbol),
+  "TCGA.subtype.marker,neftel.meta.module.MES1"    = tmp |> dplyr::filter(str == "TCGA.subtype.marker,neftel.meta.module.MES1") |> dplyr::pull(hugo_symbol),
+  "TCGA.subtype.marker,neftel.meta.module.MES2"    = tmp |> dplyr::filter(str == "TCGA.subtype.marker,neftel.meta.module.MES2") |> dplyr::pull(hugo_symbol)
+), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(x = paste0("Features [MES] in: ",sid))
+
+
+
+
 ## BT346 [poor separation or high tumor?] ----
 
 

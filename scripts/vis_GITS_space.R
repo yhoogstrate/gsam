@@ -1386,49 +1386,49 @@ rm(plt, plt.contours, n.glass, n.gsam)
 
 
 
-## fig s1k ----
+## fig s1k - ssGSEA PCA ----
 
 
 tmp <- rbind(
-    gsam.rna.metadata |>
+  gsam.rna.metadata |>
+    
+    dplyr::filter(blacklist.pca == F) %>%
+    dplyr::filter(pat.with.IDH == F) %>%
+    dplyr::filter(
+      sid %in% c('BAI2', 'CAO1-replicate', 'FAB2', 'GAS2-replicate') == F
+    ) %>%
+    dplyr::filter(tumour.percentage.dna >= 15) |>
+    
+    dplyr::select(
+      sid,
+      pid,
       
-      dplyr::filter(blacklist.pca == F) %>%
-      dplyr::filter(pat.with.IDH == F) %>%
-      dplyr::filter(
-        sid %in% c('BAI2', 'CAO1-replicate', 'FAB2', 'GAS2-replicate') == F
-      ) %>%
-      dplyr::filter(tumour.percentage.dna >= 15) |>
+      ssGSEA.2022.Proneural.enrichment_score,
+      ssGSEA.2022.Mesenchymal.enrichment_score,
+      ssGSEA.2022.Classical.enrichment_score,
       
-      dplyr::select(
-        sid,
-        pid,
-        
-        ssGSEA.2022.Proneural.enrichment_score,
-        ssGSEA.2022.Mesenchymal.enrichment_score,
-        ssGSEA.2022.Classical.enrichment_score,
-        
-        ssGSEA.2022.subtype,
-        GITS.150.svm.2022.subtype
-      )  |> 
-      dplyr::mutate(dataset = "G-SAM")
-    ,
-    glass.gbm.rnaseq.metadata.all.samples |>
-      dplyr::filter(tumour.percentage.2022 >= 15) |>  # erase NA's
-      dplyr::select(
-        aliquot_barcode,
-        case_barcode,
-        
-        ssGSEA.2022.Proneural.enrichment_score,
-        ssGSEA.2022.Mesenchymal.enrichment_score,
-        ssGSEA.2022.Classical.enrichment_score,
-        
-        ssGSEA.2022.subtype,
-        GITS.150.svm.2022.subtype
-      ) |>
-      dplyr::rename(sid = aliquot_barcode) |>
-      dplyr::rename(pid = case_barcode) |> 
-      dplyr::mutate(dataset = "GLASS")
-  )
+      ssGSEA.2022.subtype,
+      GITS.150.svm.2022.subtype
+    )  |> 
+    dplyr::mutate(dataset = "G-SAM")
+  ,
+  glass.gbm.rnaseq.metadata.all.samples |>
+    dplyr::filter(tumour.percentage.2022 >= 15) |>  # erase NA's
+    dplyr::select(
+      aliquot_barcode,
+      case_barcode,
+      
+      ssGSEA.2022.Proneural.enrichment_score,
+      ssGSEA.2022.Mesenchymal.enrichment_score,
+      ssGSEA.2022.Classical.enrichment_score,
+      
+      ssGSEA.2022.subtype,
+      GITS.150.svm.2022.subtype
+    ) |>
+    dplyr::rename(sid = aliquot_barcode) |>
+    dplyr::rename(pid = case_barcode) |> 
+    dplyr::mutate(dataset = "GLASS")
+)
 
 
 n.glass <- tmp |> 
@@ -1479,7 +1479,7 @@ ggplot(data, aes(x=PC1, y=PC2, col=varnames)) +
        y="PC2 on ssGSEA enrichment scores",
        fill = "Subtype (GlioVis)",
        caption = paste0("G-SAM: n=",n.gsam, "  -  GLASS: n=",n.glass," samples")
-       ) +
+  ) +
   scale_color_manual(values = mixcol(subtype_colors_ssGSEA, rep("black",length(subtype_colors_ssGSEA)),0.15),
                      labels = c('ssGSEA PN score'='PN',
                                 'ssGSEA CL score'='CL',
@@ -1501,6 +1501,135 @@ ggplot(data, aes(x=PC1, y=PC2, col=varnames)) +
 
 
 ggsave("output/figures/2022_figure_S1K.pdf", width=8.3 / 4,height=8.3/4, scale=2)
+
+## fig s1k - 7k PCA equivalent ----
+
+
+tmp <- rbind(
+  gsam.rna.metadata |>
+    
+    dplyr::filter(blacklist.pca == F) %>%
+    dplyr::filter(pat.with.IDH == F) %>%
+    dplyr::filter(
+      sid %in% c('BAI2', 'CAO1-replicate', 'FAB2', 'GAS2-replicate') == F
+    ) %>%
+    dplyr::filter(tumour.percentage.dna >= 15) |>
+    
+    dplyr::select(
+      sid,
+      pid,
+      
+      `NMF:7k:1`,
+      `NMF:7k:2`,
+      `NMF:7k:3`,
+      `NMF:7k:4`,
+      
+      ssGSEA.2022.subtype,
+      GITS.150.svm.2022.subtype
+    )  |> 
+    dplyr::mutate(dataset = "G-SAM")
+  ,
+  glass.gbm.rnaseq.metadata.all.samples |>
+    dplyr::filter(tumour.percentage.2022 >= 15) |>  # erase NA's
+    dplyr::select(
+      aliquot_barcode,
+      case_barcode,
+      
+      `NMF:7k:1`,
+      `NMF:7k:2`,
+      `NMF:7k:3`,
+      `NMF:7k:4`,
+      
+      ssGSEA.2022.subtype,
+      GITS.150.svm.2022.subtype
+    ) |>
+    dplyr::rename(sid = aliquot_barcode) |>
+    dplyr::rename(pid = case_barcode) |> 
+    dplyr::mutate(dataset = "GLASS")
+)
+
+
+n.glass <- tmp |> 
+  dplyr::pull(dataset) |> 
+  table() |> 
+  purrr::pluck('GLASS')
+n.gsam <- tmp |> 
+  dplyr::pull(dataset) |> 
+  table() |> 
+  purrr::pluck('G-SAM')
+
+
+tmp.pca <- tmp |> 
+  tibble::column_to_rownames('sid') |>
+  dplyr::select(
+    `NMF:7k:1`,
+    `NMF:7k:2`,
+    `NMF:7k:4`
+  ) |>
+  prcomp()  
+
+
+# PC being a prcomp object
+data <- data.frame(obsnames=row.names(tmp.pca$x), tmp.pca$x) |> 
+  dplyr::mutate(PC2 = -PC2) |>  # same orientation as first rivision
+  dplyr::left_join(tmp |> dplyr::select(sid, ssGSEA.2022.subtype), by=c('obsnames'='sid'),suffix=c('',''))
+datapc <- data.frame(varnames=rownames(tmp.pca$rotation), tmp.pca$rotation) |> 
+  dplyr::mutate(PC2 = -PC2) |>  # same orientation as first rivision
+  dplyr::mutate(varnames = gsub('NMF:150:','NMF meta-feature ', varnames))
+
+
+x = "PC1"
+y = "PC2"
+mult <- min((max(data[, y]) - min(data[, y]) / (max(datapc[, y]) - min(datapc[, y]))),
+            (max(data[, x]) - min(data[, x]) / (max(datapc[, x]) - min(datapc[, x]))))
+datapc <- transform(datapc,
+                    v1 = .7 * mult * (get(x)),
+                    v2 = .7 * mult * (get(y)))
+
+
+ggplot(data, aes(x = PC1, y = PC2, col = varnames)) +
+  geom_point(size = 3, col = "black", fill = "gray60", pch = 21, alpha = 0.85) +
+  coord_equal() +
+  geom_segment(data = datapc, aes(x = 0, y = 0, xend = v1, yend = v2), arrow = arrow(length = unit(0.4, "cm")), lwd = 1.75, alpha = 0.9) +
+  ggrepel::geom_label_repel(
+    data = datapc, aes(x = v1, y = v2, label = varnames), size = 3,
+    vjust = 0.6, show.legend = F, col = "black"
+  ) +
+  labs(col = "Associated with") +
+  labs(
+    x = "PC1 on NMF [7k+ genes]",
+    y = "PC2 on NMF [7k+ genes]",
+    fill = "Subtype (GlioVis)",
+    caption = paste0("G-SAM: n=", n.gsam, "  -  GLASS: n=", n.glass, " samples")
+  ) +
+  scale_color_manual(
+    values = mixcol(
+      c(
+        "NMF:7k:1" = as.character(subtype_colors["Classical"]),
+        "NMF:7k:2" = as.character(subtype_colors["Proneural"]),
+        "NMF:7k:4" = as.character(subtype_colors["Mesenchymal"])
+      ),
+      rep("black", length(subtype_colors_ssGSEA)), 0.15
+    ),
+    labels = c("NMF:7k:1" = "CL", "NMF:7k:2" = "PN", "NMF:7k:4" = "MES")
+  ) +
+  theme_bw() +
+  theme(
+    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
+    # strip.background = element_rect(colour="white",fill="white"),
+    axis.title = element_text(face = "bold", size = rel(1)),
+    # axis.text.x = element_blank(),
+    legend.position = "bottom",
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    # axis.ticks.x = element_blank(),
+    panel.border = element_rect(colour = "black", fill = NA, size = 1.25)
+  )
+
+
+ggsave("output/figures/2022_figure_S1K_NMF-7k_eq.pdf", width=8.3 / 4,height=8.3/4, scale=2)
 
 
 ## fig s1l ----

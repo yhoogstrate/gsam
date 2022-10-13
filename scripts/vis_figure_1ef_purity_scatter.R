@@ -101,7 +101,7 @@ rm(plt)
 
 
 
-# figure ?? ----
+# figure S2c ----
 
 
 
@@ -147,8 +147,8 @@ tmp.n.glass <- plt |>
 
 
 
-stats <- compare_means(`purity` ~ `GITS.150.svm.2022.subtype`, data = plt) |> # , group.by = "GITS.150.svm.2022.subtype_primary" geen facet
-  dplyr::mutate(y_pos = c(100,96,102), p.adj = format.pval(p.adj, digits = 1)) |> 
+stats <- ggpubr::compare_means(`purity` ~ `GITS.150.svm.2022.subtype`, data = plt) |> # , group.by = "GITS.150.svm.2022.subtype_primary" geen facet
+  dplyr::mutate(y_pos = c(108,96,104), p.adj = format.pval(p.adj, digits = 1)) |> 
   dplyr::mutate(GITS.150.svm.2022.subtype = NA)
 
 
@@ -156,14 +156,12 @@ ggplot(plt, aes(x = GITS.150.svm.2022.subtype, y = purity, fill = GITS.150.svm.2
   ggplot2::geom_violin(draw_quantiles = c(), col = NA, alpha = 0.2) +
   ggbeeswarm::geom_quasirandom(pch = 21, size = 3, col = "black", alpha = 0.85) +
   ggplot2::geom_violin(draw_quantiles = c(0.5), col = "black", fill = alpha("white", 0)) +
-  ggplot2::scale_y_continuous(limits = c(0, NA)) +
-  
+  ggplot2::scale_y_continuous(limits = c(0, 110)) +
   ggsignif::geom_signif(
     data = stats,
     aes(xmin = group1, xmax = group2, annotations = p.adj, y_position = y_pos),
     manual = TRUE
   ) +
-  
   scale_fill_manual(values = c(
     "MES" = as.character(subtype_colors['Mesenchymal']),
     "CL" = as.character(subtype_colors['Classical']),
@@ -188,5 +186,7 @@ ggplot(plt, aes(x = GITS.150.svm.2022.subtype, y = purity, fill = GITS.150.svm.2
     caption = paste0("G-SAM: n=", tmp.n.gsam, "  -  GLASS: n=", tmp.n.glass)
   )
 
+
+ggsave("output/figures/2022_figure_S2c.pdf", width=8.3 / 6,height=8.3/4, scale=2)
 
 
