@@ -1,13 +1,13 @@
 #!/usr/bin/env R
 
-# ---- load libs ----
+# load libs ----
 
 
 library(tidyverse) # for distinct() function
 library(readxl)
 
 
-# ---- patient metadata ----
+# patient metadata ----
 
 
 # three CNV samples samples not in metadata: "AMA" "AMA" "BAO" "BAO" "FAF" "FAF"
@@ -24,13 +24,34 @@ gsam.patient.metadata <- read.csv('data/gsam/administratie/GSAM_combined_clinica
       status == "Censored" ~ 0,
       T ~ as.numeric(NA))) |> 
   dplyr::mutate(survival.months = survivalDays / 365.0 * 12.0) |> 
-  dplyr::mutate(`X.1` = NULL) |> 
-  dplyr::mutate(bevacizumab.before.recurrence = studyID %in% c('GAA','GAG','CCB','CBI','CBV','AAX','HAD','HAF'))
+  dplyr::mutate(`X.1` = NULL)
+
+
+## beva ----
+### before recurrence ----
+
+gsam.patient.metadata <- gsam.patient.metadata |> 
+  dplyr::mutate(bevacizumab.before.recurrence = case_when(
+    studyID %in% c('GAA','GAG','CCB','CBI','CBV','AAX') ~ "Yes",
+    studyID %in% c('HAD','HAF') ~ "Trial participant",
+    T ~ "No"
+  ))
 
 
 
+## PTK787 ---
+### before recurrence ----
 
-## ---- DNA exome-seq ----
+
+gsam.patient.metadata <- gsam.patient.metadata |> 
+  dplyr::mutate(PTK787.before.recurrence = case_when(
+    studyID %in% c('CBR','CBW') ~ "Yes",
+    T ~ "No"
+  ))
+
+
+
+# DNA exome-seq ----
 
 
 # it remains unclear what files are missing
@@ -89,7 +110,7 @@ gsam.cnv.metadata <- read.delim("data/gsam/DNA/sample codes sanger gsam.txt",str
 
 
 
-## ---- RNA-seq metadata [full] ----
+# RNA-seq metadata [full] ----
 
 ## STAR alignment statistics + patient / sample identifiers ----
 
@@ -254,7 +275,7 @@ gsam.rna.metadata <- gsam.rna.metadata %>%
 rm(tmp)
 
 
-# ---- GIGA sequencing facility run statistics----
+## GIGA sequencing facility run statistics----
 
 
 # N sheets: 6
@@ -276,7 +297,7 @@ gsam.rna.metadata <- merge(gsam.rna.metadata, tmp, by.x = 'sid', by.y= 'giga.seq
 rm(tmp)
 
 
-# ---- DV200 ----
+## DV200 ----
 
 
 tmp <- 'data/gsam/documents/PFrench_Summary-sheet_input-DV-qPCR.xlsx'
@@ -326,116 +347,118 @@ print(dim(gsam.rna.metadata))
 rm(tmp)
 
 
-# Tumor Percentages (DNA) ----
+## Tumor Percentages (DNA) ----
 
-tmp <- read.delim('data/gsam/output/tables/cnv/tumor.percentage.estimate.txt', sep=" ") %>%
-  dplyr::mutate(lfc.3p = NULL) %>%
-  dplyr::mutate(lfc.4p = NULL) %>%
-  dplyr::mutate(lfc.n = NULL) %>%
-  dplyr::mutate(dist = NULL) %>%
-  dplyr::rename(tumour.percentage.dna = pct) %>%
+tmp <- read.delim("data/gsam/output/tables/cnv/tumor.percentage.estimate.txt", sep = " ") |>
+  dplyr::mutate(lfc.3p = NULL) |>
+  dplyr::mutate(lfc.4p = NULL) |>
+  dplyr::mutate(lfc.n = NULL) |>
+  dplyr::mutate(dist = NULL) |>
+  dplyr::rename(tumour.percentage.dna = pct) |>
   dplyr::filter(!duplicated(sample))
 
-gsam.rna.metadata <- gsam.rna.metadata %>%
-  dplyr::mutate(tmp = gsub("^(....).*$","\\1", sid) ) %>% # dummy
-  dplyr::left_join(tmp, by=c('tmp' = 'sample')) %>%
+gsam.rna.metadata <- gsam.rna.metadata |>
+  dplyr::mutate(tmp = gsub("^(....).*$", "\\1", sid)) |> # dummy
+  dplyr::left_join(tmp, by = c("tmp" = "sample")) |>
   dplyr::mutate(tmp = NULL)
 
 rm(tmp)
 
 
 
-## resection / biopsy ----
+## Resection / biopsy ----
 
 
 tmp <- gsam.rna.metadata |>
-  dplyr::select(sid, pid, resection) |> 
+  dplyr::select(sid, pid, resection) |>
   dplyr::left_join(
-    gsam.patient.metadata |> 
-      dplyr::select(studyID, extentOfResectionFirstSurgery,extentOfResectionSecondSurgery)
-    ,
-    by=c('pid'='studyID')
-    ) |> 
-  dplyr::mutate(extent = ifelse(resection == "r1",extentOfResectionFirstSurgery,extentOfResectionSecondSurgery)) |> 
+    gsam.patient.metadata |>
+      dplyr::select(studyID, extentOfResectionFirstSurgery, extentOfResectionSecondSurgery),
+    by = c("pid" = "studyID")
+  ) |>
+  dplyr::mutate(extent = ifelse(resection == "r1", extentOfResectionFirstSurgery, extentOfResectionSecondSurgery)) |>
   dplyr::mutate(extent = case_when(
     is.na(extent) ~ as.character(NA),
     extent == "Biopsy" ~ "Biopsy",
     T ~ "Resection"
-  )) |> 
-  dplyr::mutate(pid = NULL) |> 
+  )) |>
+  dplyr::mutate(pid = NULL) |>
   dplyr::mutate(resection = NULL) |>
-  dplyr::mutate(extentOfResectionFirstSurgery=NULL) |>
-  dplyr::mutate(extentOfResectionSecondSurgery=NULL)
+  dplyr::mutate(extentOfResectionFirstSurgery = NULL) |>
+  dplyr::mutate(extentOfResectionSecondSurgery = NULL)
 
 stopifnot(nrow(tmp) == 399)
 stopifnot(sum(is.na(tmp$extent)) == 6)
 
 
 gsam.rna.metadata <- gsam.rna.metadata %>%
-  dplyr::left_join(tmp, by=c('sid' = 'sid'),suffix = c('',''))
+  dplyr::left_join(tmp, by = c("sid" = "sid"), suffix = c("", ""))
 rm(tmp)
+
 
 
 ## MGMT ----
 
+
 tmp <- gsam.rna.metadata |>
-  dplyr::select(sid, pid, resection) |> 
+  dplyr::select(.data$sid, .data$pid, .data$resection) |>
   dplyr::left_join(
-    gsam.patient.metadata |> 
-      dplyr::select(studyID, mgmtPrimary, mgmtRecurrent)
-    ,
-    by=c('pid'='studyID')
-  ) |> 
-  dplyr::mutate(MGMT = ifelse(resection == "r1", mgmtPrimary, mgmtRecurrent)) |> 
-  dplyr::mutate(pid = NULL) |> 
+    gsam.patient.metadata |>
+      dplyr::select(.data$studyID, .data$mgmtPrimary, .data$mgmtRecurrent),
+    by = c("pid" = "studyID")
+  ) |>
+  dplyr::mutate(MGMT = ifelse(.data$resection == "r1", .data$mgmtPrimary, .data$mgmtRecurrent)) |>
+  dplyr::mutate(pid = NULL) |>
   dplyr::mutate(resection = NULL) |>
-  dplyr::mutate(mgmtPrimary=NULL) |>
-  dplyr::mutate(mgmtRecurrent=NULL) |> 
-  dplyr::filter(!is.na(MGMT))
+  dplyr::mutate(mgmtPrimary = NULL) |>
+  dplyr::mutate(mgmtRecurrent = NULL) |>
+  dplyr::filter(!is.na(.data$MGMT))
 
 stopifnot(nrow(tmp) == 248)
 
 gsam.rna.metadata <- gsam.rna.metadata %>%
-  dplyr::left_join(tmp, by=c('sid' = 'sid'),suffix = c('',''))
+  dplyr::left_join(tmp, by = c("sid" = "sid"), suffix = c("", ""))
 rm(tmp)
 
 
 
 ## gliovis subtypes ----
-
 # https://gliovis.shinyapps.io/GlioVis/
 
 
-tmp <- read.csv('output/tables/gliovis/GlioVis_-_Visualization_Tools_for_Glioma_Datasets_ThreeWay.csv') %>%
-  dplyr::rename(gliovis.svm_call = svm_call) %>%
-  dplyr::rename(gliovis.knn_call = knn_call) %>%
-  dplyr::rename(gliovis.gsea_call = gsea_call) %>%
-  dplyr::rename(gliovis.equal_call = equal.call) %>%
-  dplyr::rename(gliovis.majority_call = majority.call) %>%
-  dplyr::left_join(read.csv('output/tables/gliovis/GlioVis_-_Visualization_Tools_for_Glioma_Datasets_SVM.csv') %>%
-                     dplyr::rename(svm.Classical = Classical) %>%
-                     dplyr::rename(svm.Mesenchymal = Mesenchymal) %>%
-                     dplyr::rename(svm.Proneural = Proneural)
-                  , by=c('Sample' = 'Sample')) %>%
-  dplyr::left_join(read.csv('output/tables/gliovis/GlioVis_-_Visualization_Tools_for_Glioma_Datasets_KNN.csv') %>%
-                     dplyr::rename(knn.Classical = Classical) %>%
-                     dplyr::rename(knn.Mesenchymal = Mesenchymal) %>%
-                     dplyr::rename(knn.Proneural = Proneural)
-                  , by=c('Sample' = 'Sample')) %>%
-  dplyr::left_join(read.csv('output/tables/gliovis/GlioVis_-_Visualization_Tools_for_Glioma_Datasets_ssGSEA.csv') %>%
-                     dplyr::mutate(Sample = gsub(".","-",X, fixed=T), X = NULL) %>%
-                     dplyr::rename(ssGSEA.Classical.score = Classical) %>%
-                     dplyr::rename(ssGSEA.Mesenchymal.score = Mesenchymal) %>%
-                     dplyr::rename(ssGSEA.Proneural.score = Proneural) %>%
-                     dplyr::rename(ssGSEA.Classical = Classical_pval) %>%
-                     dplyr::rename(ssGSEA.Mesenchymal = Mesenchymal_pval) %>%
-                     dplyr::rename(ssGSEA.Proneural = Proneural_pval)
-                   , by=c('Sample' = 'Sample')) |> 
-  dplyr::rename(gliovis.ssGSEA.Proneural.score = ssGSEA.Proneural.score) |> 
-  dplyr::rename(gliovis.ssGSEA.Classical.score = ssGSEA.Classical.score) |> 
-  dplyr::rename(gliovis.ssGSEA.Mesenchymal.score = ssGSEA.Mesenchymal.score) |> 
-  dplyr::rename(gliovis.ssGSEA.Proneural = ssGSEA.Proneural) |> 
-  dplyr::rename(gliovis.ssGSEA.Classical = ssGSEA.Classical) |> 
+tmp <- read.csv("output/tables/gliovis/GlioVis_-_Visualization_Tools_for_Glioma_Datasets_ThreeWay.csv") |>
+  dplyr::rename(gliovis.svm_call = svm_call) |>
+  dplyr::rename(gliovis.knn_call = knn_call) |>
+  dplyr::rename(gliovis.gsea_call = gsea_call) |>
+  dplyr::rename(gliovis.equal_call = equal.call) |>
+  dplyr::rename(gliovis.majority_call = majority.call) |>
+  dplyr::left_join(read.csv("output/tables/gliovis/GlioVis_-_Visualization_Tools_for_Glioma_Datasets_SVM.csv") |>
+    dplyr::rename(svm.Classical = Classical) |>
+    dplyr::rename(svm.Mesenchymal = Mesenchymal) |>
+    dplyr::rename(svm.Proneural = Proneural),
+  by = c("Sample" = "Sample")
+  ) |>
+  dplyr::left_join(read.csv("output/tables/gliovis/GlioVis_-_Visualization_Tools_for_Glioma_Datasets_KNN.csv") |>
+    dplyr::rename(knn.Classical = Classical) |>
+    dplyr::rename(knn.Mesenchymal = Mesenchymal) |>
+    dplyr::rename(knn.Proneural = Proneural),
+  by = c("Sample" = "Sample")
+  ) |>
+  dplyr::left_join(read.csv("output/tables/gliovis/GlioVis_-_Visualization_Tools_for_Glioma_Datasets_ssGSEA.csv") |>
+    dplyr::mutate(Sample = gsub(".", "-", X, fixed = T), X = NULL) |>
+    dplyr::rename(ssGSEA.Classical.score = Classical) |>
+    dplyr::rename(ssGSEA.Mesenchymal.score = Mesenchymal) |>
+    dplyr::rename(ssGSEA.Proneural.score = Proneural) |>
+    dplyr::rename(ssGSEA.Classical = Classical_pval) |>
+    dplyr::rename(ssGSEA.Mesenchymal = Mesenchymal_pval) |>
+    dplyr::rename(ssGSEA.Proneural = Proneural_pval),
+  by = c("Sample" = "Sample")
+  ) |>
+  dplyr::rename(gliovis.ssGSEA.Proneural.score = ssGSEA.Proneural.score) |>
+  dplyr::rename(gliovis.ssGSEA.Classical.score = ssGSEA.Classical.score) |>
+  dplyr::rename(gliovis.ssGSEA.Mesenchymal.score = ssGSEA.Mesenchymal.score) |>
+  dplyr::rename(gliovis.ssGSEA.Proneural = ssGSEA.Proneural) |>
+  dplyr::rename(gliovis.ssGSEA.Classical = ssGSEA.Classical) |>
   dplyr::rename(gliovis.ssGSEA.Mesenchymal = ssGSEA.Mesenchymal)
 
 
@@ -444,15 +467,15 @@ stopifnot(tmp$gliovis.knn_call == tmp$knn.subtype.call)
 stopifnot(tmp$gliovis.gsea_call == tmp$gsea.subtype.call)
 
 
-tmp <- tmp %>%
-  dplyr::mutate(svm.subtype.call = NULL) %>%
-  dplyr::mutate(knn.subtype.call = NULL) %>%
+tmp <- tmp |>
+  dplyr::mutate(svm.subtype.call = NULL) |>
+  dplyr::mutate(knn.subtype.call = NULL) |>
   dplyr::mutate(gsea.subtype.call = NULL)
 
 
 
-gsam.rna.metadata <- gsam.rna.metadata %>%
-  dplyr::left_join(tmp, by=c('sid' = 'Sample'),suffix = c('',''))
+gsam.rna.metadata <- gsam.rna.metadata |>
+  dplyr::left_join(tmp, by = c("sid" = "Sample"), suffix = c("", ""))
 
 
 rm(tmp)
