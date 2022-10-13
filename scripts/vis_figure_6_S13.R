@@ -32,95 +32,109 @@ grid.draw.ggsurvplot <- function(x){
 ## prep data table ----
 
 
-tmp.metadata <- gsam.rna.metadata |> 
-  dplyr::filter(.data$blacklist.pca == F)  |> 
-  dplyr::filter(.data$pat.with.IDH == F) |> 
-  dplyr::filter(.data$sid %in% c('BAI2', 'CAO1-replicate', 'FAB2', 'GAS2-replicate') == F ) |> 
-  dplyr::filter(.data$batch != 'old') |> 
-  dplyr::filter(.data$tumour.percentage.dna >= 15) |> 
-  dplyr::select(dplyr::contains("rna.signature") | `sid` | `pid` | `GITS.150.svm.2022.subtype` | `resection` | `extent` | `MGMT`) |> 
-  dplyr::rename(`Resection or Biopsy` = extent) |> 
-  dplyr::mutate(resection = ifelse(resection == "r1","primary","recurrence")) |> 
+tmp.metadata <- gsam.rna.metadata |>
+  dplyr::filter(.data$blacklist.pca == F) |>
+  dplyr::filter(.data$pat.with.IDH == F) |>
+  dplyr::filter(.data$sid %in% c("BAI2", "CAO1-replicate", "FAB2", "GAS2-replicate") == F) |>
+  dplyr::filter(.data$batch != "old") |>
+  dplyr::filter(.data$tumour.percentage.dna >= 15) |>
+  dplyr::select(dplyr::contains("rna.signature") | `sid` | `pid` | `GITS.150.svm.2022.subtype` | `resection` | `extent` | `MGMT`) |>
+  dplyr::rename(`Resection or Biopsy` = extent) |>
+  dplyr::mutate(resection = ifelse(resection == "r1", "primary", "recurrence")) |>
   dplyr::filter(!is.na(.data$rna.signature.C1.collagen.2022))
 
 
-tmp.metadata.paired <- tmp.metadata |> 
-  dplyr::mutate(MGMT = NULL) |> 
-  tidyr::pivot_wider(id_cols =  pid,
-                     names_from = resection, 
-                     values_from = -c(pid, resection)) |> 
-  as.data.frame() |> 
+tmp.metadata.paired <- tmp.metadata |>
+  dplyr::mutate(MGMT = NULL) |>
+  tidyr::pivot_wider(
+    id_cols = pid,
+    names_from = resection,
+    values_from = -c(pid, resection)
+  ) |>
+  as.data.frame() |>
   dplyr::filter(!is.na(sid_primary) & !is.na(sid_recurrence)) |> # only complete pairs for these stats
 
-  dplyr::mutate(delta.rna.signature.C0.fuzzy.2022 = rna.signature.C0.fuzzy.2022_recurrence - rna.signature.C0.fuzzy.2022_primary) |> 
-  dplyr::mutate(delta.rna.signature.C1.collagen.2022 = rna.signature.C1.collagen.2022_recurrence - rna.signature.C1.collagen.2022_primary) |> 
-  dplyr::mutate(delta.rna.signature.C2.endothelial.2022 = rna.signature.C2.endothelial.2022_recurrence - rna.signature.C2.endothelial.2022_primary) |> 
-  dplyr::mutate(delta.rna.signature.C3.oligodendrocyte.2022 = rna.signature.C3.oligodendrocyte.2022_recurrence - rna.signature.C3.oligodendrocyte.2022_primary) |> 
-  dplyr::mutate(delta.rna.signature.C4.neuron.2022 = rna.signature.C4.neuron.2022_recurrence - rna.signature.C4.neuron.2022_primary) |> 
-
-  dplyr::left_join(
-    gsam.patient.metadata |> 
+  dplyr::mutate(delta.rna.signature.C0.fuzzy.2022 = rna.signature.C0.fuzzy.2022_recurrence - rna.signature.C0.fuzzy.2022_primary) |>
+  dplyr::mutate(delta.rna.signature.C1.collagen.2022 = rna.signature.C1.collagen.2022_recurrence - rna.signature.C1.collagen.2022_primary) |>
+  dplyr::mutate(delta.rna.signature.C2.endothelial.2022 = rna.signature.C2.endothelial.2022_recurrence - rna.signature.C2.endothelial.2022_primary) |>
+  dplyr::mutate(delta.rna.signature.C3.oligodendrocyte.2022 = rna.signature.C3.oligodendrocyte.2022_recurrence - rna.signature.C3.oligodendrocyte.2022_primary) |>
+  dplyr::mutate(delta.rna.signature.C4.neuron.2022 = rna.signature.C4.neuron.2022_recurrence - rna.signature.C4.neuron.2022_primary) |>
+  dplyr::left_join(gsam.patient.metadata |>
       dplyr::select(
         studyID,
-        
-        survivalDays, 
+
+        # svvl
+        survivalDays,
         survivalFromSecondSurgeryDays,
         status,
-        
+
+        # asl
         age,
         gender,
         performanceAtSecondSurgery,
-        
+
+        # treat
         treatedWithTMZ,
         treatedWithRT,
         bevacizumab.before.recurrence,
-        
-        mgmtStability,HM,
-        
-        AXIN2,APC,JAK2,
-        RB1,MSH2,BRCA1,
-        BRCA2,ATM,SETD2,ARID2,KMT2C,KMT2D,
-        NF1,ERBB3,
-        EGFR,TP53BP1,TP53,PIK3R1,PIK3CA,TSC2,
-        SETD2,PDGFRA,
-        
+        PTK787.before.recurrence,
+
+        # general genetics
+        mgmtStability, HM,
+
+        # gene muts
+        AXIN2, APC, JAK2,
+        RB1, MSH2, BRCA1,
+        BRCA2, ATM, SETD2, ARID2, KMT2C, KMT2D,
+        NF1, ERBB3,
+        EGFR, TP53BP1, TP53, PIK3R1, PIK3CA, TSC2,
+        SETD2, PDGFRA,
+
+        # cn
         cnStatusCDKN2ABs,
         cnStatusEGFRs,
         cnStatusRB1s,
         cnStatusNF1s,
         cnStatusCDK4s,
         cnStatusMDM2s
-        
-        ) |> 
-      dplyr::rename(event = status)
-      , by=c('pid'='studyID'), suffix=c('','')
-  ) |> 
-  dplyr::mutate(event = ifelse(.data$event == "Deceased",1,0)) |> 
-  dplyr::mutate(Deceased = dplyr::recode(event, "1" = "Yes", "0" = "No" )) |> 
-  dplyr::mutate(rank = order(order(delta.rna.signature.C1.collagen.2022, delta.rna.signature.C1.collagen.2022, pid))) |> 
-  dplyr::mutate(em.pc.status = ifelse(.data$`rna.signature.C1.collagen.2022_recurrence` > .data$`rna.signature.C1.collagen.2022_primary`, "increase", "decrease")) |> 
-  dplyr::mutate(`MGMT meth` = dplyr::recode( mgmtStability,
-                                             "Stable methylated" = "Stable",
-                                             "Stable unmethylated" = "Wildtype" ), mgmtStability = NULL ) |> 
+      ) |>
+      dplyr::rename(event = status),
+    by = c("pid" = "studyID"), suffix = c("", "")
+  ) |>
+  dplyr::mutate(event = ifelse(.data$event == "Deceased", 1, 0)) |>
+  dplyr::mutate(Deceased = dplyr::recode(event, "1" = "Yes", "0" = "No")) |>
+  dplyr::mutate(rank = order(order(delta.rna.signature.C1.collagen.2022, delta.rna.signature.C1.collagen.2022, pid))) |>
+  dplyr::mutate(em.pc.status = ifelse(.data$`rna.signature.C1.collagen.2022_recurrence` > .data$`rna.signature.C1.collagen.2022_primary`, "increase", "decrease")) |>
+  dplyr::mutate(`MGMT meth` = dplyr::recode(mgmtStability,
+    "Stable methylated" = "Stable",
+    "Stable unmethylated" = "Wildtype"
+  ), mgmtStability = NULL) |>
   dplyr::mutate(`Treatment: Beva` = case_when(
     is.na(bevacizumab.before.recurrence) ~ "NA",
-    bevacizumab.before.recurrence ~ "Yes",
-    T ~ "No"), bevacizumab.before.recurrence=NULL) |> 
-  dplyr::rename(`Treatment: TMZ` = treatedWithTMZ) |> 
-  dplyr::rename(`Treatment: RT` = treatedWithRT) |> 
-  dplyr::rename(`GITS subtype R1` = .data$GITS.150.svm.2022.subtype_primary) |> 
-  dplyr::rename(`GITS subtype R2` = .data$GITS.150.svm.2022.subtype_recurrence) |> 
-  dplyr::mutate(`Age above 50` = ifelse(age > 50,"Yes","No")) |> 
-  dplyr::mutate(gender = as.character(gender)) |> 
-  dplyr::rename(Sex = gender) |> 
-  dplyr::mutate(`KPS 70 or above` = factor(ifelse(is.na(performanceAtSecondSurgery) | performanceAtSecondSurgery >= 70, "Yes","No"), levels=c('Yes','No'))) |> 
-  dplyr::mutate(performanceAtSecondSurgery = as.factor(as.character(performanceAtSecondSurgery))) |> 
-  dplyr::mutate(daysToProgression = (survivalDays - survivalFromSecondSurgeryDays)) |> 
-  dplyr::mutate(progression.event = 1) |> 
-  dplyr::rename(`Resection/Biopsy R1` = `Resection or Biopsy_primary`) |> 
+    bevacizumab.before.recurrence == "Trial participant" ~ "NA",
+    bevacizumab.before.recurrence == "Yes" ~ "Yes",
+    T ~ "No"
+  )) |>
+  dplyr::mutate(`Treatment: Beva (randomized)` = case_when(
+    is.na(bevacizumab.before.recurrence) ~ "NA",
+    bevacizumab.before.recurrence == "Trial participant" ~ "Yes",
+    T ~ "No"
+  )) |>
+  dplyr::mutate(bevacizumab.before.recurrence = NULL) |>
+  dplyr::rename(`Treatment: TMZ` = treatedWithTMZ) |>
+  dplyr::rename(`Treatment: RT` = treatedWithRT) |>
+  dplyr::rename(`Treatment: PTK787` = PTK787.before.recurrence) |>
+  dplyr::rename(`GITS subtype R1` = .data$GITS.150.svm.2022.subtype_primary) |>
+  dplyr::rename(`GITS subtype R2` = .data$GITS.150.svm.2022.subtype_recurrence) |>
+  dplyr::mutate(`Age above 50` = ifelse(age > 50, "Yes", "No")) |>
+  dplyr::mutate(gender = as.character(gender)) |>
+  dplyr::rename(Sex = gender) |>
+  dplyr::mutate(`KPS 70 or above` = factor(ifelse(is.na(performanceAtSecondSurgery) | performanceAtSecondSurgery >= 70, "Yes", "No"), levels = c("Yes", "No"))) |>
+  dplyr::mutate(performanceAtSecondSurgery = as.factor(as.character(performanceAtSecondSurgery))) |>
+  dplyr::mutate(daysToProgression = (survivalDays - survivalFromSecondSurgeryDays)) |>
+  dplyr::mutate(progression.event = 1) |>
+  dplyr::rename(`Resection/Biopsy R1` = `Resection or Biopsy_primary`) |>
   dplyr::rename(`Resection/Biopsy R2` = `Resection or Biopsy_recurrence`)
-
-
 
 
 
@@ -128,38 +142,57 @@ tmp.metadata <- tmp.metadata |>
   dplyr::left_join(
     tmp.metadata.paired |> dplyr::select(pid, rank, em.pc.status,
     ),# stats only accessible through pairing
-    by=c('pid'='pid'),suffix=c('','')
+    by=c('pid'='pid'), suffix=c('','')
   ) |> 
 
-  dplyr::left_join(
-    gsam.patient.metadata |> 
-      dplyr::select(
-        studyID,
-        
-        survivalDays, 
-        survivalFromSecondSurgeryDays,
-        status,
-        
-        
-        treatedWithTMZ,
-        treatedWithRT,
-        bevacizumab.before.recurrence,
-        
-        tumorLocation,
-        
-        
-        age,
-        gender
-      ) |> 
-      dplyr::rename(event = status)
-    , by=c('pid'='studyID'), suffix=c('','')
-  ) |> 
-  dplyr::mutate(event = ifelse(.data$event == "Deceased",1,0)) |> 
-  dplyr::mutate(`age.above.50` = ifelse(age > 50,"Yes","No")) |> 
-  dplyr::mutate(`Treatment: Beva` = ifelse(bevacizumab.before.recurrence, "Yes","No"), bevacizumab.before.recurrence=NULL) |> 
-  dplyr::rename(`Treatment: TMZ` = treatedWithTMZ) |> 
+dplyr::left_join(
+  gsam.patient.metadata |>
+    dplyr::select(
+      studyID,
+
+      # svvl
+      survivalDays,
+      survivalFromSecondSurgeryDays,
+      status,
+
+      # treat
+      treatedWithTMZ,
+      treatedWithRT,
+      bevacizumab.before.recurrence,
+      PTK787.before.recurrence, # also angio
+
+      # loc
+      tumorLocation,
+      
+      # mgmt
+      mgmtStability,
+      
+      # asl
+      age,
+      gender
+    ) |>
+    dplyr::rename(event = status), by = c("pid" = "studyID"), suffix = c("", "")) |>
+  dplyr::mutate(event = ifelse(.data$event == "Deceased", 1, 0)) |>
+  dplyr::mutate(`age.above.50` = ifelse(age > 50, "Yes", "No")) |>
+  dplyr::mutate(`MGMT meth` = dplyr::recode(mgmtStability,
+    "Stable methylated" = "Stable",
+    "Stable unmethylated" = "Wildtype"
+  ), mgmtStability = NULL) |>
+  dplyr::mutate(`Treatment: Beva` = case_when(
+    is.na(bevacizumab.before.recurrence) ~ "NA",
+    bevacizumab.before.recurrence == "Trial participant" ~ "NA",
+    bevacizumab.before.recurrence == "Yes" ~ "Yes",
+    T ~ "No"
+  )) |>
+  dplyr::mutate(`Treatment: Beva (randomized)` = case_when(
+    is.na(bevacizumab.before.recurrence) ~ "NA",
+    bevacizumab.before.recurrence == "Trial participant" ~ "Yes",
+    T ~ "No"
+  )) |>
+  dplyr::mutate(bevacizumab.before.recurrence = NULL) |>
+  dplyr::rename(`Treatment: PT787` = PTK787.before.recurrence) |>
+  dplyr::rename(`Treatment: TMZ` = treatedWithTMZ) |>
   dplyr::rename(`Treatment: RT` = treatedWithRT)
-
 
 
 
