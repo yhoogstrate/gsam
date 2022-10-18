@@ -454,4 +454,60 @@ rm(tmp.combined.gene.expression, tmp.combined.metadata)
 #   geom_point()
 # 
 
+# glass ----
+
+
+tmp.metadata <- glass.gbm.rnaseq.metadata.all.samples |>
+  dplyr::filter(tumour.percentage.2022 >= 15) |> # avoid NA values
+  dplyr::mutate(is.primary = resection == "TP") |>
+  dplyr::rename(sid = aliquot_barcode) |>
+  dplyr::select(sid, aliquot_batch_synapse) |>
+  dplyr::mutate(aliquot_batch_synapse = gsub("[", ".", aliquot_batch_synapse, fixed = T)) |>
+  dplyr::mutate(aliquot_batch_synapse = gsub("]", ".", aliquot_batch_synapse, fixed = T)) |>
+  dplyr::mutate(aliquot_batch_synapse = gsub(" ", ".", aliquot_batch_synapse, fixed = T)) |>
+  dplyr::mutate(aliquot_batch_synapse = gsub("-", ".", aliquot_batch_synapse, fixed = T)) |>
+  dplyr::mutate(aliquot_batch_synapse = as.factor(aliquot_batch_synapse))
+
+
+tmp.expression <- glass.gbm.rnaseq.expression.all.samples %>%
+  dplyr::select(tmp.metadata$sid) %>%
+  DESeq2::DESeqDataSetFromMatrix(data.frame(cond = as.factor(paste0("r",round(runif( ncol(.) , 1, 2))))) , ~cond) %>%
+  DESeq2::vst(blind=T) %>%
+  SummarizedExperiment::assay() %>%
+  limma::removeBatchEffect(tmp.metadata$aliquot_batch_synapse) %>%  # remove batch effects
+  as.data.frame()
+
+
+
+
+# C1: Collagen ----
+
+
+tmp.c1.collagen <- tmp.expression |> 
+  tibble::rownames_to_column('ens') |> 
+  dplyr::filter(ens %in% (results.out |> dplyr::filter(C1.2022) |> dplyr::pull(ensembl_id)) ) |> 
+  tibble::column_to_rownames('ens') |> 
+  t() |> 
+  prcomp()
+
+
+plot(tmp.c1.collagen)
+ggbiplot::ggbiplot(tmp.c1.collagen)
+# tmp.c1.collagen$rotation[1,] << see if most are + or -
+
+
+signature.c1.collagen <- tmp.c1.collagen$x %>%
+  as.data.frame() %>%
+  tibble::rownames_to_column('sid') %>%
+  dplyr::select(c('sid','PC1')) %>%
+  dplyr::mutate(inverse = sum(tmp.c1.collagen$rotation[,1] < 0) > sum(tmp.c1.collagen$rotation[,1] > 0)) |> 
+  dplyr::mutate(component = ifelse(inverse , -PC1, PC1) ) |> 
+  dplyr::mutate(inverse = NULL, PC1 = NULL) |> 
+  dplyr::rename(rna.signature.C1.collagen.2022 = component)
+
+rm(tmp.c1.collagen)
+
+
+write.table(signature.c1.collagen , "output/tables/principal_DE_cluster_components_2022_GLASS.txt")
+
 

@@ -300,6 +300,18 @@ stopifnot(
 warning("considerable discrepancies between 2021 & 2022 subtype calling")
 
 
+## survival / syn31121181 ----
+
+
+tmp.clinical_cases <- read.csv('data/gsam/data/GLASS_GBM_R1-R2/clinical_cases_syn31121181_2022.csv') |> 
+  dplyr::mutate(os.event = case_when(
+    case_vital_status == "dead" ~ 1,
+    case_vital_status == "alive" ~ 0
+  )) |> 
+  dplyr::select(case_barcode, os.event, case_overall_survival_mo) |> 
+  dplyr::filter(!is.na(case_overall_survival_mo))
+
+
 
 ## clinical / histological ----
 
@@ -561,6 +573,15 @@ stopifnot("excluded" %in% colnames(glass.gbm.rnaseq.metadata.all.samples) == FAL
 
 glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
   dplyr::mutate(excluded = strsplit("",":")) # quickest way to get a list of empty characters?
+
+
+#### svvl ----
+
+
+glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::left_join(tmp.clinical_cases, by=c('case_barcode'='case_barcode'),suffix=c('',''))
+rm(tmp.clinical_cases)
+
 
 
 #### PCA/batch outliers ----
@@ -825,7 +846,17 @@ glass.gbm.rnaseq.metadata.all.samples |>
   as.data.frame()
 
 
+## Col PCA signature ----
 
+
+tmp <- read.table("output/tables/principal_DE_cluster_components_2022_GLASS.txt")
+
+
+glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::left_join(tmp, by=c('aliquot_barcode'='sid'), suffix=c('',''))
+
+
+rm(tmp)
 
 ## load synapse-portal batch descriptors ----
 
