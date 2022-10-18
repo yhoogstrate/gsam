@@ -60,46 +60,47 @@ tmp.metadata.paired <- tmp.metadata |>
   dplyr::mutate(delta.rna.signature.C3.oligodendrocyte.2022 = rna.signature.C3.oligodendrocyte.2022_recurrence - rna.signature.C3.oligodendrocyte.2022_primary) |>
   dplyr::mutate(delta.rna.signature.C4.neuron.2022 = rna.signature.C4.neuron.2022_recurrence - rna.signature.C4.neuron.2022_primary) |>
   dplyr::left_join(gsam.patient.metadata |>
-      dplyr::select(
-        studyID,
+    dplyr::select(
+      studyID,
 
-        # svvl
-        survivalDays,
-        survivalFromSecondSurgeryDays,
-        status,
+      # svvl
+      survivalDays,
+      survivalFromSecondSurgeryDays,
+      status,
 
-        # asl
-        age,
-        gender,
-        performanceAtSecondSurgery,
+      # asl
+      age,
+      gender,
+      performanceAtSecondSurgery,
+      tumorLocation,
 
-        # treat
-        treatedWithTMZ,
-        treatedWithRT,
-        bevacizumab.before.recurrence,
-        PTK787.before.recurrence,
+      # treat
+      treatedWithTMZ,
+      treatedWithRT,
+      bevacizumab.before.recurrence,
+      PTK787.before.recurrence,
 
-        # general genetics
-        mgmtStability, HM,
+      # general genetics
+      mgmtStability, HM,
 
-        # gene muts
-        AXIN2, APC, JAK2,
-        RB1, MSH2, BRCA1,
-        BRCA2, ATM, SETD2, ARID2, KMT2C, KMT2D,
-        NF1, ERBB3,
-        EGFR, TP53BP1, TP53, PIK3R1, PIK3CA, TSC2,
-        SETD2, PDGFRA,
+      # gene muts
+      AXIN2, APC, JAK2,
+      RB1, MSH2, BRCA1,
+      BRCA2, ATM, SETD2, ARID2, KMT2C, KMT2D,
+      NF1, ERBB3,
+      EGFR, TP53BP1, TP53, PIK3R1, PIK3CA, TSC2,
+      SETD2, PDGFRA,
 
-        # cn
-        cnStatusCDKN2ABs,
-        cnStatusEGFRs,
-        cnStatusRB1s,
-        cnStatusNF1s,
-        cnStatusCDK4s,
-        cnStatusMDM2s
-      ) |>
-      dplyr::rename(event = status),
-    by = c("pid" = "studyID"), suffix = c("", "")
+      # cn
+      cnStatusCDKN2ABs,
+      cnStatusEGFRs,
+      cnStatusRB1s,
+      cnStatusNF1s,
+      cnStatusCDK4s,
+      cnStatusMDM2s
+    ) |>
+    dplyr::rename(event = status),
+  by = c("pid" = "studyID"), suffix = c("", "")
   ) |>
   dplyr::mutate(event = ifelse(.data$event == "Deceased", 1, 0)) |>
   dplyr::mutate(Deceased = dplyr::recode(event, "1" = "Yes", "0" = "No")) |>
@@ -115,7 +116,7 @@ tmp.metadata.paired <- tmp.metadata |>
     bevacizumab.before.recurrence == "Yes" ~ "Yes",
     T ~ "No"
   )) |>
-  dplyr::mutate(`Treatment: Beva` = factor(`Treatment: Beva`, levels=c("No", "Yes", "Randomized trial"))) |> 
+  dplyr::mutate(`Treatment: Beva` = factor(`Treatment: Beva`, levels = c("No", "Yes", "Randomized trial"))) |>
   dplyr::mutate(bevacizumab.before.recurrence = NULL) |>
   dplyr::rename(`Treatment: TMZ` = treatedWithTMZ) |>
   dplyr::rename(`Treatment: RT` = treatedWithRT) |>
@@ -130,7 +131,108 @@ tmp.metadata.paired <- tmp.metadata |>
   dplyr::mutate(daysToProgression = (survivalDays - survivalFromSecondSurgeryDays)) |>
   dplyr::mutate(progression.event = 1) |>
   dplyr::rename(`Resection/Biopsy R1` = `Resection or Biopsy_primary`) |>
-  dplyr::rename(`Resection/Biopsy R2` = `Resection or Biopsy_recurrence`)
+  dplyr::rename(`Resection/Biopsy R2` = `Resection or Biopsy_recurrence`) |>
+  dplyr::mutate(`tumorLocation` = factor(`tumorLocation`, levels = c("Temporal", "Frontal", "Parietal", "Fossa posterior", "Occipital"))) |>
+  dplyr::rename(`Tumor location` = `tumorLocation`)
+
+
+
+
+
+tmp.metadata.paired.breed <- tmp.metadata |>
+  dplyr::mutate(MGMT = NULL) |>
+  tidyr::pivot_wider(
+    id_cols = pid,
+    names_from = resection,
+    values_from = -c(pid, resection)
+  ) |>
+  as.data.frame() |>
+  #dplyr::filter(!is.na(sid_primary) & !is.na(sid_recurrence)) |> # only complete pairs for these stats
+  
+  dplyr::mutate(delta.rna.signature.C0.fuzzy.2022 = rna.signature.C0.fuzzy.2022_recurrence - rna.signature.C0.fuzzy.2022_primary) |>
+  dplyr::mutate(delta.rna.signature.C1.collagen.2022 = rna.signature.C1.collagen.2022_recurrence - rna.signature.C1.collagen.2022_primary) |>
+  dplyr::mutate(delta.rna.signature.C2.endothelial.2022 = rna.signature.C2.endothelial.2022_recurrence - rna.signature.C2.endothelial.2022_primary) |>
+  dplyr::mutate(delta.rna.signature.C3.oligodendrocyte.2022 = rna.signature.C3.oligodendrocyte.2022_recurrence - rna.signature.C3.oligodendrocyte.2022_primary) |>
+  dplyr::mutate(delta.rna.signature.C4.neuron.2022 = rna.signature.C4.neuron.2022_recurrence - rna.signature.C4.neuron.2022_primary) |>
+  dplyr::left_join(gsam.patient.metadata |>
+                     dplyr::select(
+                       studyID,
+                       
+                       # svvl
+                       survivalDays,
+                       survivalFromSecondSurgeryDays,
+                       status,
+                       
+                       # asl
+                       age,
+                       gender,
+                       performanceAtSecondSurgery,
+                       tumorLocation,
+                       
+                       # treat
+                       treatedWithTMZ,
+                       treatedWithRT,
+                       bevacizumab.before.recurrence,
+                       PTK787.before.recurrence,
+                       
+                       # general genetics
+                       mgmtStability, HM,
+                       
+                       # gene muts
+                       AXIN2, APC, JAK2,
+                       RB1, MSH2, BRCA1,
+                       BRCA2, ATM, SETD2, ARID2, KMT2C, KMT2D,
+                       NF1, ERBB3,
+                       EGFR, TP53BP1, TP53, PIK3R1, PIK3CA, TSC2,
+                       SETD2, PDGFRA,
+                       
+                       # cn
+                       cnStatusCDKN2ABs,
+                       cnStatusEGFRs,
+                       cnStatusRB1s,
+                       cnStatusNF1s,
+                       cnStatusCDK4s,
+                       cnStatusMDM2s
+                     ) |>
+                     dplyr::rename(event = status),
+                   by = c("pid" = "studyID"), suffix = c("", "")
+  ) |>
+  dplyr::mutate(event = ifelse(.data$event == "Deceased", 1, 0)) |>
+  dplyr::mutate(Deceased = dplyr::recode(event, "1" = "Yes", "0" = "No")) |>
+  dplyr::mutate(rank = order(order(delta.rna.signature.C1.collagen.2022, delta.rna.signature.C1.collagen.2022, pid))) |>
+  dplyr::mutate(em.pc.status = ifelse(.data$`rna.signature.C1.collagen.2022_recurrence` > .data$`rna.signature.C1.collagen.2022_primary`, "increase", "decrease")) |>
+  dplyr::mutate(`MGMT meth` = dplyr::recode(mgmtStability,
+                                            "Stable methylated" = "Stable",
+                                            "Stable unmethylated" = "Wildtype"
+  ), mgmtStability = NULL) |>
+  dplyr::mutate(`Treatment: Beva` = case_when(
+    is.na(bevacizumab.before.recurrence) ~ "NA",
+    bevacizumab.before.recurrence == "Trial participant" ~ "Randomized trial",
+    bevacizumab.before.recurrence == "Yes" ~ "Yes",
+    T ~ "No"
+  )) |>
+  dplyr::mutate(`Treatment: Beva` = factor(`Treatment: Beva`, levels = c("No", "Yes", "Randomized trial"))) |>
+  dplyr::mutate(bevacizumab.before.recurrence = NULL) |>
+  dplyr::rename(`Treatment: TMZ` = treatedWithTMZ) |>
+  dplyr::rename(`Treatment: RT` = treatedWithRT) |>
+  dplyr::rename(`Treatment: PTK787` = PTK787.before.recurrence) |>
+  dplyr::rename(`GITS subtype R1` = .data$GITS.150.svm.2022.subtype_primary) |>
+  dplyr::rename(`GITS subtype R2` = .data$GITS.150.svm.2022.subtype_recurrence) |>
+  dplyr::mutate(`Age above 50` = ifelse(age > 50, "Yes", "No")) |>
+  dplyr::mutate(gender = as.character(gender)) |>
+  dplyr::rename(Sex = gender) |>
+  dplyr::mutate(`KPS 70 or above` = factor(ifelse(is.na(performanceAtSecondSurgery) | performanceAtSecondSurgery >= 70, "Yes", "No"), levels = c("Yes", "No"))) |>
+  dplyr::mutate(performanceAtSecondSurgery = as.factor(as.character(performanceAtSecondSurgery))) |>
+  dplyr::mutate(daysToProgression = (survivalDays - survivalFromSecondSurgeryDays)) |>
+  dplyr::mutate(progression.event = 1) |>
+  dplyr::rename(`Resection/Biopsy R1` = `Resection or Biopsy_primary`) |>
+  dplyr::rename(`Resection/Biopsy R2` = `Resection or Biopsy_recurrence`) |>
+  dplyr::mutate(`tumorLocation` = factor(`tumorLocation`, levels = c("Temporal", "Frontal", "Parietal", "Fossa posterior", "Occipital"))) |>
+  dplyr::rename(`Tumor location` = `tumorLocation`)
+
+
+
+
 
 
 
@@ -165,11 +267,11 @@ dplyr::left_join(
       
       # asl
       age,
-      gender
+      gender,
+      performanceAtSecondSurgery
     ) |>
     dplyr::rename(event = status), by = c("pid" = "studyID"), suffix = c("", "")) |>
   dplyr::mutate(event = ifelse(.data$event == "Deceased", 1, 0)) |>
-  dplyr::mutate(`age.above.50` = ifelse(age > 50, "Yes", "No")) |>
   dplyr::mutate(`MGMT meth` = dplyr::recode(mgmtStability,
     "Stable methylated" = "Stable",
     "Stable unmethylated" = "Wildtype"
@@ -188,8 +290,15 @@ dplyr::left_join(
   dplyr::mutate(bevacizumab.before.recurrence = NULL) |>
   dplyr::rename(`Treatment: PT787` = PTK787.before.recurrence) |>
   dplyr::rename(`Treatment: TMZ` = treatedWithTMZ) |>
-  dplyr::rename(`Treatment: RT` = treatedWithRT)
-
+  dplyr::rename(`Treatment: RT` = treatedWithRT) |> 
+  dplyr::mutate(daysToProgression = (survivalDays - survivalFromSecondSurgeryDays)) |>
+  dplyr::mutate(progression.event = 1) |> 
+  dplyr::mutate(`Age above 50` = ifelse(age > 50, "Yes", "No")) |> 
+  dplyr::mutate(gender = as.character(gender)) |>
+  dplyr::rename(Sex = gender) |> 
+  dplyr::mutate(`KPS 70 or above` = factor(ifelse(is.na(performanceAtSecondSurgery) | performanceAtSecondSurgery >= 70, "Yes", "No"), levels = c("Yes", "No"))) |> 
+  dplyr::mutate(`tumorLocation` = factor(`tumorLocation`, levels = c("Temporal", "Frontal", "Parietal", "Fossa posterior", "Occipital"))) |>
+  dplyr::rename(`Tumor location` = `tumorLocation`)
 
 
 ## figure S13a: determine cut-off C0 / fuz ----
@@ -839,7 +948,6 @@ tmp.metadata.paired <- tmp.metadata.paired |>
   dplyr::mutate(`C3.olig.signature.rec`  = `C3/olig signature at Rec.` ) |> 
   dplyr::mutate(`C4.neu.signature.rec`   = `C4/neu signature at Rec.`  ) |> 
   
-  
   dplyr::mutate(`MGMT at Rec.` = factor(
     dplyr::recode(`MGMT meth`,
                   'Gained'='Methylated',
@@ -847,7 +955,7 @@ tmp.metadata.paired <- tmp.metadata.paired |>
                   'Wildtype'='Unmethylated',
                   'Lost'='Unmethylated'
     ) ,levels=c('Unmethylated','Methylated'))) |> 
-dplyr::mutate(`MGMT at Prim.` = factor(
+  dplyr::mutate(`MGMT at Prim.` = factor(
   dplyr::recode(`MGMT meth`,
                 'Gained'='Unmethylated',
                 'Stable'='Methylated',
@@ -857,7 +965,53 @@ dplyr::mutate(`MGMT at Prim.` = factor(
 
 
 
+
+tmp.metadata.paired.breed <- tmp.metadata.paired.breed |>
+  
+  dplyr::mutate(`C0/fuzzy signature at Prim.` = factor(ifelse(rna.signature.C0.fuzzy.2022_primary >           c0.fuz.cutoff.p,  "high", "low"), levels=c('low','high'))) |> 
+  dplyr::mutate(`C1/col signature at Prim.`   = factor(ifelse(rna.signature.C1.collagen.2022_primary >        c1.em.cutoff.p,   "high", "low"), levels=c('low','high'))) |> 
+  dplyr::mutate(`C2/endo signature at Prim.`  = factor(ifelse(rna.signature.C2.endothelial.2022_primary >     c2.endo.cutoff.p ,"high", "low"), levels=c('low','high'))) |> 
+  dplyr::mutate(`C3/olig signature at Prim.`  = factor(ifelse(rna.signature.C3.oligodendrocyte.2022_primary > c3.olig.cutoff.p ,"high", "low"), levels=c('low','high'))) |> 
+  dplyr::mutate(`C4/neu signature at Prim.`   = factor(ifelse(rna.signature.C4.neuron.2022_primary >          c4.neur.cutoff.p ,"high", "low"), levels=c('low','high'))) |> 
+  
+  dplyr::mutate(`C0.fuzzy.signature.prim` = `C0/fuzzy signature at Prim.`) |> 
+  dplyr::mutate(`C1.col.signature.prim`   = `C1/col signature at Prim.`  ) |> 
+  dplyr::mutate(`C2.endo.signature.prim`  = `C2/endo signature at Prim.` ) |> 
+  dplyr::mutate(`C3.olig.signature.prim`  = `C3/olig signature at Prim.` ) |> 
+  dplyr::mutate(`C4.neu.signature.prim`   = `C4/neu signature at Prim.`  ) |> 
+  
+  
+  dplyr::mutate(`C0/fuzzy signature at Rec.` = factor(ifelse(rna.signature.C0.fuzzy.2022_recurrence >           c0.fuz.cutoff.p,  "high", "low"), levels=c('low','high'))) |> 
+  dplyr::mutate(`C1/col signature at Rec.`   = factor(ifelse(rna.signature.C1.collagen.2022_recurrence >        c1.em.cutoff.p,   "high", "low"), levels=c('low','high'))) |> 
+  dplyr::mutate(`C2/endo signature at Rec.`  = factor(ifelse(rna.signature.C2.endothelial.2022_recurrence >     c2.endo.cutoff.p ,"high", "low"), levels=c('low','high'))) |> 
+  dplyr::mutate(`C3/olig signature at Rec.`  = factor(ifelse(rna.signature.C3.oligodendrocyte.2022_recurrence > c3.olig.cutoff.p ,"high", "low"), levels=c('low','high'))) |> 
+  dplyr::mutate(`C4/neu signature at Rec.`   = factor(ifelse(rna.signature.C4.neuron.2022_recurrence >          c4.neur.cutoff.p ,"high", "low"), levels=c('low','high'))) |> 
+  
+  dplyr::mutate(`C0.fuzzy.signature.rec` = `C0/fuzzy signature at Rec.`) |> 
+  dplyr::mutate(`C1.col.signature.rec`   = `C1/col signature at Rec.`  ) |> 
+  dplyr::mutate(`C2.endo.signature.rec`  = `C2/endo signature at Rec.` ) |> 
+  dplyr::mutate(`C3.olig.signature.rec`  = `C3/olig signature at Rec.` ) |> 
+  dplyr::mutate(`C4.neu.signature.rec`   = `C4/neu signature at Rec.`  ) |> 
+  
+  dplyr::mutate(`MGMT at Rec.` = factor(
+    dplyr::recode(`MGMT meth`,
+                  'Gained'='Methylated',
+                  'Stable'='Methylated',
+                  'Wildtype'='Unmethylated',
+                  'Lost'='Unmethylated'
+    ) ,levels=c('Unmethylated','Methylated'))) |> 
+  dplyr::mutate(`MGMT at Prim.` = factor(
+    dplyr::recode(`MGMT meth`,
+                  'Gained'='Unmethylated',
+                  'Stable'='Methylated',
+                  'Wildtype'='Unmethylated',
+                  'Lost'='Methylated'
+    ), levels=c('Unmethylated','Methylated')))
+
+
+
 # figure 6d: signature x svvl ----
+
 
 plt <- tmp.metadata.paired |> 
   dplyr::filter(event == 1) |> 
@@ -908,12 +1062,15 @@ ggsave("output/figures/2022_figure_6d.pdf", width=8.3 / 2 * 0.65,height=8.3/5 *0
 
 
 ## R2 col high ----
-### figure 6e: KM R2 -> death ----
+### figure 6e: KM R2 -> death (ppt) ----
+# unpaired 
 
 
-surv_object <- survival::Surv(time = tmp.metadata.paired$survivalFromSecondSurgeryDays, event=tmp.metadata.paired$event)
-fit1 <- survival::survfit(surv_object ~  `C1.col.signature.rec` , data = tmp.metadata.paired)
-p1 <- survminer::ggsurvplot(fit1, data = tmp.metadata.paired, pval = TRUE, risk.table=T, tables.y.text = FALSE,
+
+surv_object <- survival::Surv(time = tmp.metadata.paired.breed$survivalFromSecondSurgeryDays, event=tmp.metadata.paired.breed$event)
+fit1 <- survival::survfit(surv_object ~  `C1.col.signature.rec` , data = tmp.metadata.paired.breed)
+pval.ppt.r2 <- survminer::surv_pvalue(fit1)$pval # post progression time
+p1 <- survminer::ggsurvplot(fit1, data = tmp.metadata.paired.breed, pval = TRUE, risk.table=T, tables.y.text = FALSE,
                             palette = c(
                               'C1/col signature: high'=alpha('#CB75A4',0.7),
                               'C1/col signature: low'=alpha('#009E74',0.7)
@@ -924,18 +1081,35 @@ p1 <- survminer::ggsurvplot(fit1, data = tmp.metadata.paired, pval = TRUE, risk.
 p1
 
 
-
 ggsave("output/figures/2022_figure_6e.pdf", width=8.3 / 2 * 0.8,height=8.3/3.4, scale=2, plot=p1)
 
 
 
 
+
+# paired
+# surv_object <- survival::Surv(time = tmp.metadata.paired$survivalFromSecondSurgeryDays, event=tmp.metadata.paired$event)
+# fit1 <- survival::survfit(surv_object ~  `C1.col.signature.rec` , data = tmp.metadata.paired)
+# p1 <- survminer::ggsurvplot(fit1, data = tmp.metadata.paired, pval = TRUE, risk.table=T, tables.y.text = FALSE,
+#                             palette = c(
+#                               'C1/col signature: high'=alpha('#CB75A4',0.7),
+#                               'C1/col signature: low'=alpha('#009E74',0.7)
+#                             ),
+#                             legend.labs=c('C1.col.signature=high'='C1/col signature: high',
+#                                           'C1.col.signature=low'='C1/col signature: low'),
+#                             xlab="Survival time from recurrence")
+# p1
+
+
+
 ### figure 6f: KM R1 -> R2 (ttp) ----
+# unpaired 
 
-
-surv_object <- survival::Surv(time = tmp.metadata.paired$daysToProgression, event=tmp.metadata.paired$progression.event)
-fit1 <- survival::survfit(surv_object ~  `C1.col.signature.rec` , data = tmp.metadata.paired)
-p1 <- survminer::ggsurvplot(fit1, data = tmp.metadata.paired, pval = TRUE, risk.table=T, tables.y.text = FALSE,
+surv_object <- survival::Surv(time = tmp.metadata.paired.breed$daysToProgression, 
+                              event= tmp.metadata.paired.breed$progression.event)
+fit1 <- survival::survfit(surv_object ~  `C1.col.signature.rec` , data = tmp.metadata.paired.breed)
+pval.ttp.r2 <- survminer::surv_pvalue(fit1)$pval
+p1 <- survminer::ggsurvplot(fit1, data = tmp.metadata.paired.breed, pval = TRUE, risk.table=T, tables.y.text = FALSE,
                             palette = c(
                               'C1/col signature: high'=alpha('#CB75A4',0.7),
                               'C1/col signature: low'=alpha('#009E74',0.7)
@@ -950,12 +1124,31 @@ ggsave("output/figures/2022_figure_6f.pdf", width=8.3 / 2 * 0.8,height=8.3/3.4, 
 
 
 
+# ## paired
+# 
+# surv_object <- survival::Surv(time = tmp.metadata.paired$daysToProgression, event=tmp.metadata.paired$progression.event)
+# fit1 <- survival::survfit(surv_object ~  `C1.col.signature.rec` , data = tmp.metadata.paired)
+# p1 <- survminer::ggsurvplot(fit1, data = tmp.metadata.paired, pval = TRUE, risk.table=T, tables.y.text = FALSE,
+#                             palette = c(
+#                               'C1/col signature: high'=alpha('#CB75A4',0.7),
+#                               'C1/col signature: low'=alpha('#009E74',0.7)
+#                             ),
+#                             legend.labs=c('C1.col.signature=high'='C1/col signature: high',
+#                                           'C1.col.signature=low'='C1/col signature: low'),
+#                             xlab="Time to progression")
+# p1
+# 
+
+
+
+
 ### figure 6g: KM R1 -> R2 (os) ----
+# unpaired 
 
-
-surv_object <- survival::Surv(time = tmp.metadata.paired$survivalDays, event=tmp.metadata.paired$event)
-fit1 <- survival::survfit(surv_object ~  `C1.col.signature.rec` , data = tmp.metadata.paired)
-p1 <- survminer::ggsurvplot(fit1, data = tmp.metadata.paired, pval = TRUE, risk.table=T, tables.y.text = FALSE,
+surv_object <- survival::Surv(time = tmp.metadata.paired.breed$survivalDays, event=tmp.metadata.paired.breed$event)
+fit1 <- survival::survfit(surv_object ~  `C1.col.signature.rec` , data = tmp.metadata.paired.breed)
+pval.os.r2 <- survminer::surv_pvalue(fit1)$pval
+p1 <- survminer::ggsurvplot(fit1, data = tmp.metadata.paired.breed, pval = TRUE, risk.table=T, tables.y.text = FALSE,
                             palette = c(
                               'C1/col signature: high'=alpha('#CB75A4',0.7),
                               'C1/col signature: low'=alpha('#009E74',0.7)
@@ -965,84 +1158,239 @@ p1 <- survminer::ggsurvplot(fit1, data = tmp.metadata.paired, pval = TRUE, risk.
                             xlab="Overall survival")
 p1
 
-
 ggsave("output/figures/2022_figure_6g.pdf", width=8.3 / 2 * 0.8,height=8.3/3.4, scale=2, plot=p1)
+
+
+
+# paired ---
+# surv_object <- survival::Surv(time = tmp.metadata.paired$survivalDays, event=tmp.metadata.paired$event)
+# fit1 <- survival::survfit(surv_object ~  `C1.col.signature.rec` , data = tmp.metadata.paired)
+# p1 <- survminer::ggsurvplot(fit1, data = tmp.metadata.paired, pval = TRUE, risk.table=T, tables.y.text = FALSE,
+#                             palette = c(
+#                               'C1/col signature: high'=alpha('#CB75A4',0.7),
+#                               'C1/col signature: low'=alpha('#009E74',0.7)
+#                             ),
+#                             legend.labs=c('C1.col.signature=high'='C1/col signature: high',
+#                                           'C1.col.signature=low'='C1/col signature: low'),
+#                             xlab="Overall survival")
+# p1
+
 
 
 
 ### figure 6efg padj stats ----
 
-df = data.frame(pval = c(0.0017,0.00016,0.00013,0.12,0.66,0.28)) |>
+df = data.frame(pval = c(pval.ppt.r2,
+                         pval.ttp.r2,
+                         pval.os.r2,
+                         
+                         pval.ppt.r1,
+                         pval.ttp.r1,
+                         pval.os.r1
+                         )) |>
   dplyr::mutate(padj = p.adjust(pval,method="fdr"))
 df
+
 
 rm(df)
 
 
+
 ### figure 6g: ggforest R2 -> death ----
+# unpaired
 
 
-surv_object <- survival::Surv(time = tmp.metadata.paired$survivalFromSecondSurgeryDays, event=tmp.metadata.paired$event)
+surv_object <- survival::Surv(time = tmp.metadata.paired.breed$survivalFromSecondSurgeryDays,
+                              event= tmp.metadata.paired.breed$event)
 fit.cox <- survival::coxph(surv_object ~
                              `Age above 50` +
                              `Sex` +
                              `KPS 70 or above` +
                              `Treatment: Beva` +
                              `Treatment: TMZ` +
-                             #`Treatment: PTK787` +
-                             
+                             `Tumor location` +
+
                              #`MGMT meth` + # incomplete data
-                             
-                             `C0/fuzzy signature at Rec.` +
+
                              `C1/col signature at Rec.` +
                              `C2/endo signature at Rec.` +
                              `C3/olig signature at Rec.` +
                              `C4/neu signature at Rec.`
                            ,
-                           data = tmp.metadata.paired)
-survminer::ggforest(fit.cox, data = tmp.metadata.paired)
+                           data = tmp.metadata.paired.breed)
+survminer::ggforest(fit.cox, data = tmp.metadata.paired.breed)
+
+
+
+data.frame(pval = summary(fit.cox)$coefficients[,5]) |>
+  dplyr::mutate(padj = p.adjust(pval, method="fdr")) |>
+  dplyr::mutate(padj.f = format.pval(padj, digits=2))
 
 
 
 ggsave("output/figures/2022_figure_6g.pdf", width=8.3 / 2,height=8.3/3.4, scale=2)
 
 
+sum(is.na(tmp.metadata.paired.breed$`Age above 50` ))
+sum(is.na(tmp.metadata.paired.breed$`Sex` ))
+sum(is.na(tmp.metadata.paired.breed$`KPS 70 or above` ))
+sum(is.na(tmp.metadata.paired.breed$`Treatment: Beva` ))
+sum(is.na(tmp.metadata.paired.breed$`Treatment: TMZ` ))
+sum(is.na(tmp.metadata.paired.breed$`Tumor location` ))
+
+sum(is.na(tmp.metadata.paired.breed$`C1/col signature at Rec.` ))
+sum(is.na(tmp.metadata.paired.breed$`C2/endo signature at Rec.` ))
+sum(is.na(tmp.metadata.paired.breed$`C3/olig signature at Rec.` ))
+sum(is.na(tmp.metadata.paired.breed$`C4/neu signature at Rec.`))
 
 
-### figure S13x: ggforest R2 -> death [MGMT] ----
+
+# paired samples only
+# 
+# surv_object <- survival::Surv(time = tmp.metadata.paired$survivalFromSecondSurgeryDays, event=tmp.metadata.paired$event)
+# fit.cox <- survival::coxph(surv_object ~
+#                              `Age above 50` +
+#                              `Sex` +
+#                              `KPS 70 or above` +
+#                              `Treatment: Beva` +
+#                              `Treatment: TMZ` +
+#                              `Tumor location` +
+#                              
+#                              #`MGMT meth` + # incomplete data
+#                              
+#                              #`C0/fuzzy signature at Rec.` +
+#                              `C1/col signature at Rec.` +
+#                              `C2/endo signature at Rec.` +
+#                              `C3/olig signature at Rec.` +
+#                              `C4/neu signature at Rec.`
+#                            ,
+#                            data = tmp.metadata.paired)
+# survminer::ggforest(fit.cox, data = tmp.metadata.paired)
+# 
+# 
+# 
+# data.frame(pval = summary(fit.cox)$coefficients[,5]) |> 
+#   dplyr::mutate(padj = p.adjust(pval, method="fdr")) |> 
+#   dplyr::mutate(padj.f = format.pval(padj, digits=2))
 
 
-tmp.metadata.paired.mgmt <- tmp.metadata.paired |> 
-  dplyr::filter(!is.na(`MGMT meth`)) |> 
-  #dplyr::mutate(`MGMT at Rec.` = as.character(`MGMT at Rec.`)) |> 
-  dplyr::mutate(`MGMT at Rec.` = ifelse(is.na(`MGMT at Rec.`), "unknown", `MGMT at Rec.`))
+
+
+
+
+
+
+### figure S13k: ggforest R2 -> death [MGMT] ----
+
+
+
+tmp.metadata.mgmt <- tmp.metadata.paired.breed |> 
+  dplyr::filter(!is.na(`MGMT meth`) & !is.na(`C1/col signature at Rec.`))
+#dplyr::mutate(`MGMT at Rec.` = as.character(`MGMT at Rec.`)) |> 
+#dplyr::mutate(`MGMT at Rec.` = ifelse(is.na(`MGMT at Rec.`), "unknown", `MGMT at Rec.`))
 #dplyr::mutate(`MGMT meth` = ifelse(is.na(`MGMT meth`), "unknown", `MGMT meth`))
 
 
-surv_object <- survival::Surv(time = tmp.metadata.paired.mgmt$survivalFromSecondSurgeryDays, event=tmp.metadata.paired.mgmt$event)
+surv_object <- survival::Surv(time = tmp.metadata.mgmt$survivalFromSecondSurgeryDays, 
+                              event = tmp.metadata.mgmt$event)
 fit.cox <- survival::coxph(surv_object ~
                              `Age above 50` +
                              `Sex` +
                              `KPS 70 or above` +
                              `Treatment: Beva` +
                              `Treatment: TMZ` +
+                             `Tumor location` +
                              
                              `MGMT meth` +
                              
                              `C1/col signature at Rec.`
                            
                            ,
-                           data = tmp.metadata.paired.mgmt)
-survminer::ggforest(fit.cox, data = tmp.metadata.paired.mgmt)
-survminer::ggcoxadjustedcurves(fit.cox, data = tmp.metadata.paired.mgmt)
+                           data = tmp.metadata.mgmt)
+survminer::ggforest(fit.cox, data = tmp.metadata.mgmt)
 
 
-ggsave("output/figures/2022_figure_S13g.pdf", width=8.3 / 2,height=8.3/3.4, scale=2)
+data.frame(pval = summary(fit.cox)$coefficients[,5]) |> 
+  dplyr::mutate(padj = p.adjust(pval, method="fdr")) |> 
+  dplyr::mutate(padj.f = format.pval(padj, digits=3))
+
+
+
+ggsave("output/figures/2022_figure_S13k.pdf", width=8.3 / 2,height=8.3/3.4, scale=2)
+
+
+
+
+# # paired
+# 
+# tmp.metadata.paired.mgmt <- tmp.metadata.paired |> 
+#   dplyr::filter(!is.na(`MGMT meth`)) |> 
+#   #dplyr::mutate(`MGMT at Rec.` = as.character(`MGMT at Rec.`)) |> 
+#   dplyr::mutate(`MGMT at Rec.` = ifelse(is.na(`MGMT at Rec.`), "unknown", `MGMT at Rec.`))
+# #dplyr::mutate(`MGMT meth` = ifelse(is.na(`MGMT meth`), "unknown", `MGMT meth`))
+# 
+# 
+# surv_object <- survival::Surv(time = tmp.metadata.paired.mgmt$survivalFromSecondSurgeryDays, 
+#                               event = tmp.metadata.paired.mgmt$event)
+# fit.cox <- survival::coxph(surv_object ~
+#                              `Age above 50` +
+#                              `Sex` +
+#                              `KPS 70 or above` +
+#                              `Treatment: Beva` +
+#                              `Treatment: TMZ` +
+#                              `Tumor location` +
+#                              
+#                              `MGMT meth` +
+#                              
+#                              `C1/col signature at Rec.`
+#                            
+#                            ,
+#                            data = tmp.metadata.paired.mgmt)
+# survminer::ggforest(fit.cox, data = tmp.metadata.paired.mgmt)
+# 
+# 
+# data.frame(pval = summary(fit.cox)$coefficients[,5]) |> 
+#   dplyr::mutate(padj = p.adjust(pval, method="fdr")) |> 
+#   dplyr::mutate(padj.f = format.pval(padj, digits=1))
+
 
 
 ### figure 6h: ggforest R1 -> R2 (ttp) ----
 
+# unpaired
+surv_object <- survival::Surv(time = tmp.metadata.paired.breed$daysToProgression, 
+                              event= tmp.metadata.paired.breed$progression.event)
+fit.cox <- survival::coxph(surv_object ~
+                             `Age above 50` +
+                             `Sex` +
+                             `KPS 70 or above` +
+                             `Treatment: Beva` +
+                             `Treatment: TMZ` +
+                             `Tumor location` +
+                             
+                             
+                             #`MGMT meth` + # incomplete data
+                             
+                             #`C0/fuzzy signature at Rec.` +
+                             `C1/col signature at Rec.` +
+                             `C2/endo signature at Rec.` +
+                             `C3/olig signature at Rec.` +
+                             `C4/neu signature at Rec.`
+                           ,
+                           data = tmp.metadata.paired.breed)
+survminer::ggforest(fit.cox, data = tmp.metadata.paired.breed)
 
+
+data.frame(pval = summary(fit.cox)$coefficients[,5]) |> 
+  dplyr::mutate(padj = p.adjust(pval, method="fdr")) |> 
+  dplyr::mutate(padj.f = format.pval(padj, digits=1))
+
+
+
+
+
+
+# paired
 surv_object <- survival::Surv(time = tmp.metadata.paired$daysToProgression, event=tmp.metadata.paired$progression.event)
 fit.cox <- survival::coxph(surv_object ~
                              `Age above 50` +
@@ -1050,6 +1398,8 @@ fit.cox <- survival::coxph(surv_object ~
                              `KPS 70 or above` +
                              `Treatment: Beva` +
                              `Treatment: TMZ` +
+                             `Tumor location` +
+                             
 
                              #`MGMT meth` + # incomplete data
                              
@@ -1061,6 +1411,12 @@ fit.cox <- survival::coxph(surv_object ~
                            ,
                            data = tmp.metadata.paired)
 survminer::ggforest(fit.cox, data = tmp.metadata.paired)
+
+
+
+data.frame(pval = summary(fit.cox)$coefficients[,5]) |> 
+  dplyr::mutate(padj = p.adjust(pval, method="fdr")) |> 
+  dplyr::mutate(padj.f = format.pval(padj, digits=1))
 
 
 
@@ -1069,51 +1425,94 @@ ggsave("output/figures/2022_figure_6h.pdf", width=8.3 / 2,height=8.3/3.4, scale=
 
 
 
-### figure S13x: ggforest R1 -> R2 (ttp) [MGMT] ----
+### figure S13l: ggforest R1 -> R2 (ttp) [MGMT] ----
 
-
-tmp.metadata.paired.mgmt <- tmp.metadata.paired |> 
+# unpaired
+tmp.metadata.mgmt <- tmp.metadata.paired.breed |> 
   dplyr::filter(!is.na(`MGMT meth`)) |> 
   #dplyr::mutate(`MGMT at Rec.` = as.character(`MGMT at Rec.`)) |> 
   dplyr::mutate(`MGMT at Rec.` = ifelse(is.na(`MGMT at Rec.`), "unknown", `MGMT at Rec.`))
 #dplyr::mutate(`MGMT meth` = ifelse(is.na(`MGMT meth`), "unknown", `MGMT meth`))
 
 
-surv_object <- survival::Surv(time = tmp.metadata.paired.mgmt$survivalFromSecondSurgeryDays, event=tmp.metadata.paired.mgmt$event)
+surv_object <- survival::Surv(time = tmp.metadata.mgmt$daysToProgression, event=tmp.metadata.mgmt$progression.event)
 fit.cox <- survival::coxph(surv_object ~
                              `Age above 50` +
                              `Sex` +
                              `KPS 70 or above` +
                              `Treatment: Beva` +
                              `Treatment: TMZ` +
+                             `Tumor location` +
+                             
                              
                              `MGMT meth` +
                              
                              `C1/col signature at Rec.`
                            
                            ,
-                           data = tmp.metadata.paired.mgmt)
-survminer::ggforest(fit.cox, data = tmp.metadata.paired.mgmt)
-survminer::ggcoxadjustedcurves(fit.cox, data = tmp.metadata.paired.mgmt)
+                           data = tmp.metadata.mgmt)
+survminer::ggforest(fit.cox, data = tmp.metadata.mgmt)
+
+data.frame(pval = summary(fit.cox)$coefficients[,5]) |> 
+  dplyr::mutate(padj = p.adjust(pval, method="fdr")) |> 
+  dplyr::mutate(padj.f = format.pval(padj, digits=2))
 
 
-ggsave("output/figures/2022_figure_S13g.pdf", width=8.3 / 2,height=8.3/3.4, scale=2)
+
+ggsave("output/figures/2022_figure_S13l.pdf", width=8.3 / 2,height=8.3/3.4, scale=2)
 
 
 
+
+
+
+
+# paired
+# tmp.metadata.paired.mgmt <- tmp.metadata.paired |> 
+#   dplyr::filter(!is.na(`MGMT meth`)) |> 
+#   #dplyr::mutate(`MGMT at Rec.` = as.character(`MGMT at Rec.`)) |> 
+#   dplyr::mutate(`MGMT at Rec.` = ifelse(is.na(`MGMT at Rec.`), "unknown", `MGMT at Rec.`))
+# #dplyr::mutate(`MGMT meth` = ifelse(is.na(`MGMT meth`), "unknown", `MGMT meth`))
+# 
+# 
+# surv_object <- survival::Surv(time = tmp.metadata.paired.mgmt$daysToProgression, event=tmp.metadata.paired.mgmt$progression.event)
+# fit.cox <- survival::coxph(surv_object ~
+#                              `Age above 50` +
+#                              `Sex` +
+#                              `KPS 70 or above` +
+#                              `Treatment: Beva` +
+#                              `Treatment: TMZ` +
+#                              `Tumor location` +
+#                              
+# 
+#                              `MGMT meth` +
+#                              
+#                              `C1/col signature at Rec.`
+#                            
+#                            ,
+#                            data = tmp.metadata.paired.mgmt)
+# survminer::ggforest(fit.cox, data = tmp.metadata.paired.mgmt)
+# 
+# data.frame(pval = summary(fit.cox)$coefficients[,5]) |> 
+#   dplyr::mutate(padj = p.adjust(pval, method="fdr")) |> 
+#   dplyr::mutate(padj.f = format.pval(padj, digits=1))
+# 
+# 
+# 
+# 
 
 
 
 ## R1 col high ----
-### figure 13xa: KM R2 -> death ----
+### figure 13xa: KM R2 -> death (ppt) ----
 
 
-
-
-
-surv_object <- survival::Surv(time = tmp.metadata.paired$survivalFromSecondSurgeryDays, event=tmp.metadata.paired$event)
-fit1 <- survival::survfit(surv_object ~  `C1.col.signature.prim` , data = tmp.metadata.paired)
-p1 <- survminer::ggsurvplot(fit1, data = tmp.metadata.paired, pval = TRUE, risk.table=T, tables.y.text = FALSE,
+# unpaired
+surv_object <- survival::Surv(time = tmp.metadata.paired.breed$survivalFromSecondSurgeryDays, 
+                              event= tmp.metadata.paired.breed$event)
+fit1 <- survival::survfit(surv_object ~  `C1.col.signature.prim` , data = tmp.metadata.paired.breed)
+pval.ppt.r1 <- survminer::surv_pvalue(fit1)$pval # post progression time
+p1 <- survminer::ggsurvplot(fit1, data = tmp.metadata.paired.breed, pval = TRUE, risk.table=T, tables.y.text = FALSE,
                             palette = c(
                               'C1/col signature: high'=alpha('#CB75A4',0.7),
                               'C1/col signature: low'=alpha('#009E74',0.7)
@@ -1128,12 +1527,30 @@ ggsave("output/figures/2022_figure_13xa.pdf", width=8.3 / 2 * 0.8,height=8.3/3.4
 
 
 
+
+# paired
+# surv_object <- survival::Surv(time = tmp.metadata.paired$survivalFromSecondSurgeryDays, event=tmp.metadata.paired$event)
+# fit1 <- survival::survfit(surv_object ~  `C1.col.signature.prim` , data = tmp.metadata.paired)
+# p1 <- survminer::ggsurvplot(fit1, data = tmp.metadata.paired, pval = TRUE, risk.table=T, tables.y.text = FALSE,
+#                             palette = c(
+#                               'C1/col signature: high'=alpha('#CB75A4',0.7),
+#                               'C1/col signature: low'=alpha('#009E74',0.7)
+#                             ),
+#                             legend.labs=c('C1.col.signature=high'='C1/col signature: high',
+#                                           'C1.col.signature=low'='C1/col signature: low'),
+#                             xlab="Survival time from recurrence")
+# p1
+
+
+
 ### figure 13xb: KM R1 -> R2 (ttp) ----
 
 
-surv_object <- survival::Surv(time = tmp.metadata.paired$daysToProgression, event=tmp.metadata.paired$progression.event)
-fit1 <- survival::survfit(surv_object ~  `C1.col.signature.prim` , data = tmp.metadata.paired)
-p1 <- survminer::ggsurvplot(fit1, data = tmp.metadata.paired, pval = TRUE, risk.table=T, tables.y.text = FALSE,
+surv_object <- survival::Surv(time = tmp.metadata.paired.breed$daysToProgression,
+                              event= tmp.metadata.paired.breed$progression.event)
+fit1 <- survival::survfit(surv_object ~  `C1.col.signature.prim` , data = tmp.metadata.paired.breed)
+pval.ttp.r1 <- survminer::surv_pvalue(fit1)$pval
+p1 <- survminer::ggsurvplot(fit1, data = tmp.metadata.paired.breed, pval = TRUE, risk.table=T, tables.y.text = FALSE,
                             palette = c(
                               'C1/col signature: high'=alpha('#CB75A4',0.7),
                               'C1/col signature: low'=alpha('#009E74',0.7)
@@ -1151,9 +1568,11 @@ ggsave("output/figures/2022_figure_13xb.pdf", width=8.3 / 2 * 0.8,height=8.3/3.4
 ### figure 13xc: KM R1 -> R2 (os) ----
 
 
-surv_object <- survival::Surv(time = tmp.metadata.paired$survivalDays, event=tmp.metadata.paired$event)
-fit1 <- survival::survfit(surv_object ~  `C1.col.signature.prim` , data = tmp.metadata.paired)
-p1 <- survminer::ggsurvplot(fit1, data = tmp.metadata.paired, pval = TRUE, risk.table=T, tables.y.text = FALSE,
+surv_object <- survival::Surv(time = tmp.metadata.paired.breed$survivalDays,
+                              event=tmp.metadata.paired.breed$event)
+fit1 <- survival::survfit(surv_object ~  `C1.col.signature.prim` , data = tmp.metadata.paired.breed)
+pval.os.r1 <- survminer::surv_pvalue(fit1)$pval
+p1 <- survminer::ggsurvplot(fit1, data = tmp.metadata.paired.breed, pval = TRUE, risk.table=T, tables.y.text = FALSE,
                             palette = c(
                               'C1/col signature: high'=alpha('#CB75A4',0.7),
                               'C1/col signature: low'=alpha('#009E74',0.7)
@@ -1162,6 +1581,7 @@ p1 <- survminer::ggsurvplot(fit1, data = tmp.metadata.paired, pval = TRUE, risk.
                                           'C1.col.signature=low'='C1/col signature: low'),
                             xlab="Overall survival")
 p1
+
 
 
 ggsave("output/figures/2022_figure_13xc.pdf", width=8.3 / 2 * 0.8,height=8.3/3.4, scale=2, plot=p1)
@@ -1491,4 +1911,5 @@ ggplot(plt, aes(x = `MGMT`, y = rna.signature.C1.collagen.2022, col=MGMT)) +
 
 
 ggsave("output/figures/2022_figure_S13l.pdf", width=8.3 / 2,height=8.3/4.5, scale=2)
+
 
