@@ -759,6 +759,99 @@ rm(p1, p2, plt.1, plt.2, k, d.prim, d.rec)
 
 
 
+## figure S13f: determine cut-off C1 GLASS ----
+
+svvl <- glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::filter(resection != "TP") |> 
+  dplyr::mutate(col.sig = ifelse(rna.signature.C1.collagen.2022 > 4.3, "high","low"))
+#dplyr::mutate(col.sig = factor(col.sig, levels=c('low','high')))
+
+
+
+d.prim <- glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::filter(tumour.percentage.2022 >= 15) |>
+  dplyr::filter(resection == "TP") |> 
+  dplyr::arrange(rna.signature.C1.collagen.2022) |>
+  dplyr::pull(rna.signature.C1.collagen.2022)
+d.rec <- glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::filter(tumour.percentage.2022 >= 15) |>
+  dplyr::filter(resection != "TP") |> 
+  dplyr::arrange(rna.signature.C1.collagen.2022) |>
+  dplyr::pull(rna.signature.C1.collagen.2022)
+
+
+
+k <- 97
+c1.em.cutoff.p.glass <- d.rec[(k-1):k] |>
+  sum() |>
+  (\(x){x/2})() #equivalent to: (function(x){return(x/2)})()
+
+plt.1 <- rbind(
+  data.frame(y = d.rec) |> 
+    dplyr::mutate(type = 'recurrence') |> 
+    dplyr::mutate(x = order(order(1:n()))),
+  data.frame(y = d.prim) |> 
+    dplyr::mutate(type = 'primary') |> 
+    dplyr::mutate(x = order(order(1:n())))  |> 
+    dplyr::mutate(x = x * length(d.rec) / length(d.prim))
+)
+
+plt.2 <- data.frame(y = delta(d.rec)) |> 
+  dplyr::rename(`delta C1/col at Rec.` = y) |> 
+  dplyr::mutate(x = order(order(1:n())) + 0.5)
+
+
+p1 <- ggplot(plt.1, aes(y=y, col=type, x=x)) +
+  geom_hline(yintercept=c1.em.cutoff.p.glass, lwd=1.5, color = "red") +
+  annotate(geom="text", x=40, y=14, label="\nCutoff: change in rate\nat recurrence", size=3) +
+  geom_line(data = plt.1 |> dplyr::filter(type == "primary")) +
+  geom_point(data = plt.1 |> dplyr::filter(type == "primary")) +
+  geom_line(data = plt.1 |> dplyr::filter(type == "recurrence")) +
+  geom_point(data = plt.1 |> dplyr::filter(type == "recurrence")) +
+  xlim(1,max(plt.1$x)) +
+  labs(y='C1/collagen') + 
+  scale_color_manual(name = "ordered at", values = c('primary'='gray60','recurrence'='black')) +
+  #scale_color_manual(name = "ordered at", values = resection_colors[c('primary','recurrence')]) +
+  #scale_alpha_manual(name=NULL, values=c('primary'=0.5,'recurrence'=1),guide="none") +
+  theme_bw() +
+  theme(
+    axis.title = element_text(face = "bold",size = rel(1)),
+    axis.text.x = element_blank(),
+    legend.position = 'bottom',
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    axis.ticks.x = element_blank(),
+    panel.border = element_rect(colour = "black", fill=NA, size=1.25)
+  ) +
+  labs(x=NULL)
+
+p2 <- ggplot(plt.2, aes(y=`delta C1/col at Rec.`, x=x)) +
+  geom_hline(yintercept= 0, lwd=1.5, color = "gray50") +
+  geom_vline(xintercept=k - 0.5, lwd=1.5, color = "red") +
+  geom_line() +
+  geom_point() +
+  xlim(1,max(plt.1$x)) +
+  theme_bw()  +
+  theme(
+    axis.title = element_text(face = "bold",size = rel(1)),
+    axis.text.x = element_blank(),
+    legend.position = 'bottom',
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    axis.ticks.x = element_blank(),
+    panel.border = element_rect(colour = "black", fill=NA, size=1.25)
+  )  +
+  labs(x=NULL, y="1st derivative")
+
+
+p1 / p2
+
+
+
 
 ## plot(s) ----
 
@@ -1195,8 +1288,43 @@ df
 rm(df)
 
 
+### figure S13h? OS GLASS ----
 
-### figure 6g: ggforest R2 -> death ----
+
+svvl <- glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::filter(resection != "TP") |> 
+  dplyr::mutate(col.sig = ifelse(rna.signature.C1.collagen.2022 > c1.em.cutoff.p.glass , "high","low"))
+#dplyr::mutate(col.sig = factor(col.sig, levels=c('low','high')))
+
+
+plot(sort(svvl$rna.signature.C1.collagen.2022))
+#abline(h=5.6)
+abline(h=4.3)
+
+
+
+surv_object <- survival::Surv(time = svvl$case_overall_survival_mo, event=svvl$os.event)
+fit1 <- survival::survfit(surv_object ~  col.sig , data = svvl)
+#pval.os.r2 <- survminer::surv_pvalue(fit1)$pval
+p1 <- survminer::ggsurvplot(fit1, data = svvl, pval = TRUE, risk.table=T, tables.y.text = FALSE,
+                            palette = c(
+                              'C1/col signature: high'=alpha('#009E74',0.7),
+                              'C1/col signature: low'=alpha('#CB75A4',0.7)
+                            ),
+                            legend.labs=c('col.sig=high'='C1/col signature: high',
+                                          'col.sig=low'='C1/col signature: low'),
+                            xlab="Overall survival (months)")
+p1
+
+ggsave("output/figures/2022_figure_S13h.pdf", width=8.3 / 2 * 0.8,height=8.3/3.4, scale=2, plot=p1)
+
+
+
+
+
+
+
+### figure 6h: ggforest R2 -> death ----
 # unpaired
 
 
@@ -1228,7 +1356,7 @@ data.frame(pval = summary(fit.cox)$coefficients[,5]) |>
 
 
 
-ggsave("output/figures/2022_figure_6g.pdf", width=8.3 / 2,height=8.3/3.4, scale=2)
+ggsave("output/figures/2022_figure_6h.pdf", width=8.3 / 2,height=8.3/3.4, scale=2)
 
 
 sum(is.na(tmp.metadata.paired.breed$`Age above 50` ))
@@ -1355,7 +1483,7 @@ ggsave("output/figures/2022_figure_S13k.pdf", width=8.3 / 2,height=8.3/3.4, scal
 
 
 
-### figure 6h: ggforest R1 -> R2 (ttp) ----
+### figure 6i: ggforest R1 -> R2 (ttp) ----
 
 # unpaired
 surv_object <- survival::Surv(time = tmp.metadata.paired.breed$daysToProgression, 
@@ -1383,44 +1511,44 @@ survminer::ggforest(fit.cox, data = tmp.metadata.paired.breed)
 
 data.frame(pval = summary(fit.cox)$coefficients[,5]) |> 
   dplyr::mutate(padj = p.adjust(pval, method="fdr")) |> 
-  dplyr::mutate(padj.f = format.pval(padj, digits=1))
+  dplyr::mutate(padj.f = format.pval(padj, digits=2))
 
 
 
-
+ggsave("output/figures/2022_figure_6i.pdf", width=8.3 / 2,height=8.3/3.4, scale=2)
 
 
 # paired
-surv_object <- survival::Surv(time = tmp.metadata.paired$daysToProgression, event=tmp.metadata.paired$progression.event)
-fit.cox <- survival::coxph(surv_object ~
-                             `Age above 50` +
-                             `Sex` +
-                             `KPS 70 or above` +
-                             `Treatment: Beva` +
-                             `Treatment: TMZ` +
-                             `Tumor location` +
-                             
+# surv_object <- survival::Surv(time = tmp.metadata.paired$daysToProgression, event=tmp.metadata.paired$progression.event)
+# fit.cox <- survival::coxph(surv_object ~
+#                              `Age above 50` +
+#                              `Sex` +
+#                              `KPS 70 or above` +
+#                              `Treatment: Beva` +
+#                              `Treatment: TMZ` +
+#                              `Tumor location` +
+#                              
+# 
+#                              #`MGMT meth` + # incomplete data
+#                              
+#                              `C0/fuzzy signature at Rec.` +
+#                              `C1/col signature at Rec.` +
+#                              `C2/endo signature at Rec.` +
+#                              `C3/olig signature at Rec.` +
+#                              `C4/neu signature at Rec.`
+#                            ,
+#                            data = tmp.metadata.paired)
+# survminer::ggforest(fit.cox, data = tmp.metadata.paired)
+# 
+# 
+# 
+# data.frame(pval = summary(fit.cox)$coefficients[,5]) |> 
+#   dplyr::mutate(padj = p.adjust(pval, method="fdr")) |> 
+#   dplyr::mutate(padj.f = format.pval(padj, digits=1))
+# 
 
-                             #`MGMT meth` + # incomplete data
-                             
-                             `C0/fuzzy signature at Rec.` +
-                             `C1/col signature at Rec.` +
-                             `C2/endo signature at Rec.` +
-                             `C3/olig signature at Rec.` +
-                             `C4/neu signature at Rec.`
-                           ,
-                           data = tmp.metadata.paired)
-survminer::ggforest(fit.cox, data = tmp.metadata.paired)
 
 
-
-data.frame(pval = summary(fit.cox)$coefficients[,5]) |> 
-  dplyr::mutate(padj = p.adjust(pval, method="fdr")) |> 
-  dplyr::mutate(padj.f = format.pval(padj, digits=1))
-
-
-
-ggsave("output/figures/2022_figure_6h.pdf", width=8.3 / 2,height=8.3/3.4, scale=2)
 
 
 
