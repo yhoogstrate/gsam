@@ -1722,29 +1722,34 @@ ggsave("output/figures/2022_figure_13xc.pdf", width=8.3 / 2 * 0.8,height=8.3/3.4
 
 
 
-# figure S13h: C1 x TMZ ----
-
+# figure S13g: C1 x TMZ ----
+stopifnot(nrow(tmp.metadata) == 287)
+unique(length(tmp.metadata$pid))
 
 plt_r1 <- tmp.metadata |>
   dplyr::filter(!is.na(rna.signature.C1.collagen.2022)) |>
   dplyr::filter(resection == "primary") |>
   dplyr::select(sid, pid, `Treatment: TMZ`, rna.signature.C1.collagen.2022) |>
   dplyr::mutate(type = "primary")
+unique(length(plt_r1$pid))
 
 plt_r2 <- tmp.metadata |>
   dplyr::filter(!is.na(rna.signature.C1.collagen.2022)) |>
   dplyr::filter(resection == "recurrence") |>
   dplyr::select(sid, pid, `Treatment: TMZ`, rna.signature.C1.collagen.2022) |>
   dplyr::mutate(type = "recurrence")
+unique(length(plt_r2$pid))
+
 
 plt_both <- tmp.metadata |>
   dplyr::filter(!is.na(rna.signature.C1.collagen.2022)) |>
   dplyr::select(sid, pid, `Treatment: TMZ`, rna.signature.C1.collagen.2022) |>
   dplyr::mutate(type = "combined")
+unique(length(plt_both$pid))
 
 
 plt <- rbind(plt_r1, plt_r2, plt_both) |>
-  dplyr::filter(pid %in% tmp.metadata.paired$pid) |> 
+  #dplyr::filter(pid %in% tmp.metadata.paired$pid) |> 
   dplyr::mutate(type = factor(type, levels = c("primary", "recurrence", "combined")))
 
 
@@ -1755,7 +1760,8 @@ ggplot(plt, aes(x = `Treatment: TMZ`, y = rna.signature.C1.collagen.2022)) +
   ggsignif::geom_signif(
     comparisons = list(c("Yes", "No")),
     test = "wilcox.test",
-    col = "black"
+    col = "black",
+    tip_length = 0
   ) +
   theme_bw() +
   theme(
@@ -1771,53 +1777,58 @@ ggplot(plt, aes(x = `Treatment: TMZ`, y = rna.signature.C1.collagen.2022)) +
     axis.ticks.x = element_blank(),
     panel.border = element_rect(colour = "black", fill = NA, size = 1.25)
   ) +
-  labs(caption = paste0("G-SAM: n=", length(unique(plt$pid)), " patients"), y = "C1/col signature") +
+  labs(caption = paste0("G-SAM: n=", nrow(plt_both), " samples"), y = "C1/col signature") +
   scale_y_continuous(expand = expansion(mult = .075))
 
+ggsave("output/figures/2022_figure_S13g.pdf", width=8.3 / 2,height=8.3/4.5, scale=2)
 
 
 
-ggsave("output/figures/2022_figure_S13h.pdf", width=8.3 / 2,height=8.3/4.5, scale=2)
+# figure S13h: C1 x Beva ----
 
 
-
-# figure S13i: C1 x Beva ----
-
-
+tmp.metadata <- tmp.metadata |> 
+  dplyr::mutate(`Treatment: Beva: factor` = case_when(
+    `Treatment: Beva (randomized)` == "Yes" ~ "Rand. trial",
+    `Treatment: Beva` == "Yes" ~ "Yes",
+    `Treatment: Beva` == "No" ~ "No"
+  )) |> 
+  dplyr::mutate(`Treatment: Beva: factor`= factor(`Treatment: Beva: factor`, levels=c("No", "Yes", "Rand. trial")))
 
 plt_r1 <- tmp.metadata |>
   dplyr::filter(!is.na(rna.signature.C1.collagen.2022)) |>
   dplyr::filter(resection == "primary") |>
-  dplyr::select(sid, pid, `Treatment: Beva`, rna.signature.C1.collagen.2022) |>
+  dplyr::select(sid, pid, `Treatment: Beva: factor`, rna.signature.C1.collagen.2022) |>
   dplyr::mutate(type = "primary")
 
 
 plt_r2 <- tmp.metadata |>
   dplyr::filter(!is.na(rna.signature.C1.collagen.2022)) |>
   dplyr::filter(resection == "recurrence") |>
-  dplyr::select(sid, pid, `Treatment: Beva`, rna.signature.C1.collagen.2022) |>
+  dplyr::select(sid, pid, `Treatment: Beva: factor`, rna.signature.C1.collagen.2022) |>
   dplyr::mutate(type = "recurrence")
 
 
 plt_both <- tmp.metadata |>
   dplyr::filter(!is.na(rna.signature.C1.collagen.2022)) |>
-  dplyr::select(sid, pid, `Treatment: Beva`, rna.signature.C1.collagen.2022) |>
+  dplyr::select(sid, pid, `Treatment: Beva: factor`, rna.signature.C1.collagen.2022) |>
   dplyr::mutate(type = "combined")
 
 
 plt <- rbind(plt_r1, plt_r2, plt_both) |>
-  dplyr::filter(pid %in% tmp.metadata.paired$pid) |> 
+  #dplyr::filter(pid %in% tmp.metadata.paired$pid) |> 
   dplyr::mutate(type = factor(type, levels = c("primary", "recurrence", "combined")))
 
 
 
-ggplot(plt, aes(x = `Treatment: Beva`, y = rna.signature.C1.collagen.2022)) +
+ggplot(plt, aes(x = `Treatment: Beva: factor`, y = rna.signature.C1.collagen.2022)) +
   facet_grid(cols = vars(type)) +
   ggbeeswarm::geom_quasirandom() +
   ggsignif::geom_signif(
     comparisons = list(c("Yes", "No")),
     test = "wilcox.test",
-    col = "black"
+    col = "black",
+    tip_length = 0
   ) +
   theme_bw() +
   theme(
@@ -1833,15 +1844,15 @@ ggplot(plt, aes(x = `Treatment: Beva`, y = rna.signature.C1.collagen.2022)) +
     axis.ticks.x = element_blank(),
     panel.border = element_rect(colour = "black", fill = NA, size = 1.25)
   ) +
-  labs(caption = paste0("G-SAM: n=", length(unique(plt$pid)), " patients"), y = "C1/col signature") +
+  labs(caption = paste0("G-SAM: n=", nrow(plt_both), " samples"), y = "C1/col signature",x="Treatment: Beva") +
   scale_y_continuous(expand = expansion(mult = .075))
 
 
 
-ggsave("output/figures/2022_figure_S13i.pdf", width=8.3 / 2,height=8.3/4.5, scale=2)
+ggsave("output/figures/2022_figure_S13h.pdf", width=8.3 / 2,height=8.3/4.5, scale=2)
 
 
-# figure S13j: C1 x Biopsy~Resection ----
+# figure S13i: C1 x Biopsy~Resection ----
 
 
 
@@ -1879,7 +1890,8 @@ ggplot(plt, aes(x = `Resection or Biopsy`, y = rna.signature.C1.collagen.2022)) 
   ggsignif::geom_signif(
     comparisons = list(c("Resection", "Biopsy")),
     test = "wilcox.test",
-    col = "black"
+    col = "black",
+    tip_length = 0
   ) +
   theme_bw() +
   theme(
@@ -1895,7 +1907,88 @@ ggplot(plt, aes(x = `Resection or Biopsy`, y = rna.signature.C1.collagen.2022)) 
     axis.ticks.x = element_blank(),
     panel.border = element_rect(colour = "black", fill = NA, size = 1.25)
   ) +
-  labs(caption = paste0("G-SAM: n=", length(unique(plt$pid)), " patients"), y = "C1/col signature") +
+  labs(caption = paste0("G-SAM: n=", nrow(plt_both), " samples"), y = "C1/col signature") +
+  scale_y_continuous(expand = expansion(mult = .075))
+
+
+
+ggsave("output/figures/2022_figure_S13i.pdf", width=8.3 / 2,height=8.3/4.5, scale=2)
+
+
+# figure S13j: C1 x TumorLocation ----
+
+
+
+plt_r1 <- tmp.metadata |>
+  dplyr::filter(!is.na(rna.signature.C1.collagen.2022)) |>
+  dplyr::filter(resection == "primary") |>
+  dplyr::select(sid, pid, `Tumor location`, rna.signature.C1.collagen.2022) |>
+  dplyr::mutate(type = "primary")
+
+
+plt_r2 <- tmp.metadata |>
+  dplyr::filter(!is.na(rna.signature.C1.collagen.2022)) |>
+  dplyr::filter(resection == "recurrence") |>
+  dplyr::select(sid, pid, `Tumor location`, rna.signature.C1.collagen.2022) |>
+  dplyr::mutate(type = "recurrence")
+
+
+plt_both <- tmp.metadata |>
+  dplyr::filter(!is.na(rna.signature.C1.collagen.2022)) |>
+  dplyr::select(sid, pid, `Tumor location`, rna.signature.C1.collagen.2022) |>
+  dplyr::mutate(type = "combined")
+
+
+plt <- rbind(plt_r1, plt_r2, plt_both) |>
+  #dplyr::filter(pid %in% tmp.metadata.paired$pid) |> 
+  dplyr::mutate(`Tumor location` = as.character(`Tumor location`)) |> 
+  dplyr::mutate(`Tumor location` = ifelse(is.na(`Tumor location`),"NA",`Tumor location`)) |> 
+  dplyr::mutate(`Tumor location` = ifelse(`Tumor location` == "Fossa posterior","Fossa\nposterior",`Tumor location`)) |> 
+  dplyr::mutate(`Tumor location` = factor(`Tumor location`, levels=c("Temporal","Occipital","Frontal","Parietal","Fossa\nposterior", "NA"))) |> 
+  dplyr::mutate(type = factor(type, levels = c("primary", "recurrence", "combined")))
+
+
+
+ggplot(plt, aes(x = `Tumor location`, y = rna.signature.C1.collagen.2022)) +
+  facet_grid(cols = vars(type)) +
+  ggbeeswarm::geom_quasirandom() +
+  ggpubr::stat_compare_means(method = "anova", label.x = 5) +
+  # ggsignif::geom_signif(
+  #   comparisons = list(
+  #     c("Temporal", "Occipital"),
+  #     c("Temporal", "Frontal"),
+  #     c("Temporal", "Parietal"),
+  #     c("Temporal", "Fossa\nposterior"),
+  #     
+  #     c("Occipital","Frontal"),
+  #     c("Occipital","Parietal"),
+  #     c("Occipital","Fossa\nposterior"),
+  #     
+  #     
+  #     c("Frontal", "Fossa\nposterior"),
+  #     c("Parietal", "Fossa\nposterior")
+  #     
+  #   ),
+  #   y_position=c(14,16,18,20,22,24,26,14,16),
+  #   test = "wilcox.test",
+  #   col = "black",
+  #   tip_length = 0
+  # ) +
+  theme_bw() +
+  theme(
+    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
+    # strip.background = element_rect(colour="white",fill="white"),
+    axis.title = element_text(face = "bold", size = rel(1)),
+    # axis.text.x = element_blank(),
+    legend.position = "bottom",
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    axis.ticks.x = element_blank(),
+    panel.border = element_rect(colour = "black", fill = NA, size = 1.25)
+  ) +
+  labs(caption = paste0("G-SAM: n=", nrow(plt_both), " samples"), y = "C1/col signature") +
   scale_y_continuous(expand = expansion(mult = .075))
 
 
@@ -1903,80 +1996,8 @@ ggplot(plt, aes(x = `Resection or Biopsy`, y = rna.signature.C1.collagen.2022)) 
 ggsave("output/figures/2022_figure_S13j.pdf", width=8.3 / 2,height=8.3/4.5, scale=2)
 
 
-# figure S13k: C1 x Biopsy~Resection ----
 
-
-
-plt_r1 <- tmp.metadata |>
-  dplyr::filter(!is.na(rna.signature.C1.collagen.2022)) |>
-  dplyr::filter(resection == "primary") |>
-  dplyr::select(sid, pid, `tumorLocation`, rna.signature.C1.collagen.2022) |>
-  dplyr::mutate(type = "primary")
-
-
-plt_r2 <- tmp.metadata |>
-  dplyr::filter(!is.na(rna.signature.C1.collagen.2022)) |>
-  dplyr::filter(resection == "recurrence") |>
-  dplyr::select(sid, pid, `tumorLocation`, rna.signature.C1.collagen.2022) |>
-  dplyr::mutate(type = "recurrence")
-
-
-plt_both <- tmp.metadata |>
-  dplyr::filter(!is.na(rna.signature.C1.collagen.2022)) |>
-  dplyr::select(sid, pid, `tumorLocation`, rna.signature.C1.collagen.2022) |>
-  dplyr::mutate(type = "combined")
-
-
-plt <- rbind(plt_r1, plt_r2, plt_both) |>
-  dplyr::filter(pid %in% tmp.metadata.paired$pid) |> 
-  dplyr::mutate(`tumorLocation` = ifelse(is.na(`tumorLocation`),"NA",`tumorLocation`)) |> 
-  #dplyr::mutate(`tumorLocation` = factor(`tumorLocation`, levels = c("Resection", "Biopsy", "NA"))) |> 
-  dplyr::mutate(type = factor(type, levels = c("primary", "recurrence", "combined")))
-
-
-
-ggplot(plt, aes(x = `tumorLocation`, y = rna.signature.C1.collagen.2022)) +
-  facet_grid(cols = vars(type)) +
-  ggbeeswarm::geom_quasirandom() +
-  ggsignif::geom_signif(
-    comparisons = list(
-      c("Temporal", "Frontal"),
-      c("Temporal", "Occipital"),
-      c("Temporal", "Parietal"),
-      
-      c("Parietal", "Frontal"),
-      c("Parietal", "Occipital"),
-      
-      c("Occipital","Frontal")
-    ),
-    y_position=c(14,18,16,20,22,24),
-    test = "wilcox.test",
-    col = "black"
-  ) +
-  theme_bw() +
-  theme(
-    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
-    # strip.background = element_rect(colour="white",fill="white"),
-    axis.title = element_text(face = "bold", size = rel(1)),
-    # axis.text.x = element_blank(),
-    legend.position = "bottom",
-    panel.grid.major.x = element_blank(),
-    panel.grid.minor.x = element_blank(),
-    panel.grid.major.y = element_blank(),
-    panel.grid.minor.y = element_blank(),
-    axis.ticks.x = element_blank(),
-    panel.border = element_rect(colour = "black", fill = NA, size = 1.25)
-  ) +
-  labs(caption = paste0("G-SAM: n=", length(unique(plt$pid)), " patients"), y = "C1/col signature") +
-  scale_y_continuous(expand = expansion(mult = .075))
-
-
-
-ggsave("output/figures/2022_figure_S13k.pdf", width=8.3 / 2,height=8.3/4.5, scale=2)
-
-
-
-# figure S13l: C1 x MGMT ----
+# figure S13k: C1 x MGMT ----
 
 
 
@@ -2002,7 +2023,7 @@ plt_both <- tmp.metadata |>
 
 
 plt <- rbind(plt_r1, plt_r2, plt_both) |>
-  dplyr::filter(pid %in% tmp.metadata.paired$pid) |> 
+  #dplyr::filter(pid %in% tmp.metadata.paired$pid) |> 
   dplyr::mutate(`MGMT` = ifelse(is.na(`MGMT`),"NA",`MGMT`)) |> 
   dplyr::mutate(`MGMT` = factor(`MGMT`, levels = c("Unmethylated", "Methylated", "NA"))) |> 
   dplyr::mutate(type = factor(type, levels = c("primary", "recurrence", "combined")))
@@ -2017,7 +2038,8 @@ ggplot(plt, aes(x = `MGMT`, y = rna.signature.C1.collagen.2022, col=MGMT)) +
       c("Methylated", "Unmethylated")
     ),
     test = "wilcox.test",
-    col = "black"
+    col = "black",
+    tip_length = 0
   ) +
   theme_bw() +
   scale_color_manual(values=c('Methylated'='black', 'Unmethylated'='black','NA'='gray60'),guide="none") +
@@ -2034,11 +2056,11 @@ ggplot(plt, aes(x = `MGMT`, y = rna.signature.C1.collagen.2022, col=MGMT)) +
     axis.ticks.x = element_blank(),
     panel.border = element_rect(colour = "black", fill = NA, size = 1.25)
   ) +
-  labs(caption = paste0("G-SAM: n=", length(unique(plt$pid)), " patients"), y = "C1/col signature") +
+  labs(caption = paste0("G-SAM: n=", nrow(plt_both), " samples"), y = "C1/col signature") +
   scale_y_continuous(expand = expansion(mult = .075))
 
 
 
-ggsave("output/figures/2022_figure_S13l.pdf", width=8.3 / 2,height=8.3/4.5, scale=2)
+ggsave("output/figures/2022_figure_S13k.pdf", width=8.3 / 2,height=8.3/4.5, scale=2)
 
 
