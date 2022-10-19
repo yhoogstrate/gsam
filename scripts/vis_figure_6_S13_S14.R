@@ -1169,7 +1169,7 @@ p1 <- survminer::ggsurvplot(fit1, data = tmp.metadata.paired.breed, pval = TRUE,
                             ),
                             legend.labs=c('C1.col.signature=high'='C1/col signature: high',
                                           'C1.col.signature=low'='C1/col signature: low'),
-                            xlab="Survival time from recurrence")
+                            xlab="Survival time from recurrence (days)")
 p1
 
 
@@ -1208,7 +1208,7 @@ p1 <- survminer::ggsurvplot(fit1, data = tmp.metadata.paired.breed, pval = TRUE,
                             ),
                             legend.labs=c('C1.col.signature=high'='C1/col signature: high',
                                           'C1.col.signature=low'='C1/col signature: low'),
-                            xlab="Time to progression")
+                            xlab="Time to progression (days)")
 p1
 
 
@@ -1247,7 +1247,7 @@ p1 <- survminer::ggsurvplot(fit1, data = tmp.metadata.paired.breed, pval = TRUE,
                             ),
                             legend.labs=c('C1.col.signature=high'='C1/col signature: high',
                                           'C1.col.signature=low'='C1/col signature: low'),
-                            xlab="Overall survival")
+                            xlab="Overall survival (days)")
 p1
 
 ggsave("output/figures/2022_figure_6g.pdf", width=8.3 / 2 * 0.8,height=8.3/3.4, scale=2, plot=p1)
@@ -1287,13 +1287,9 @@ df
 rm(df)
 
 
-### figure S13h? OS GLASS ----
+### figure S14d OS GLASS ----
 
 
-svvl <- glass.gbm.rnaseq.metadata.all.samples |> 
-  dplyr::filter(resection != "TP") |> 
-  dplyr::mutate(col.sig = ifelse(rna.signature.C1.collagen.2022 > c1.em.cutoff.p.glass , "high","low"))
-#dplyr::mutate(col.sig = factor(col.sig, levels=c('low','high')))
 
 
 plot(sort(svvl$rna.signature.C1.collagen.2022))
@@ -1315,7 +1311,7 @@ p1 <- survminer::ggsurvplot(fit1, data = svvl, pval = TRUE, risk.table=T, tables
                             xlab="Overall survival (months)")
 p1
 
-ggsave("output/figures/2022_figure_S13h.pdf", width=8.3 / 2 * 0.8,height=8.3/3.4, scale=2, plot=p1)
+ggsave("output/figures/2022_figure_S14d.pdf", width=8.3 / 2 * 0.8,height=8.3/3.4, scale=2, plot=p1)
 
 
 
@@ -1633,7 +1629,7 @@ ggsave("output/figures/2022_figure_S13l.pdf", width=8.3 / 2,height=8.3/3.4, scal
 
 
 ## R1 col high ----
-### figure 13xa: KM R2 -> death (ppt) ----
+### figure 14a: KM R2 -> death (ppt) ----
 
 
 # unpaired
@@ -1648,11 +1644,11 @@ p1 <- survminer::ggsurvplot(fit1, data = tmp.metadata.paired.breed, pval = TRUE,
                             ),
                             legend.labs=c('C1.col.signature=high'='C1/col signature: high',
                                           'C1.col.signature=low'='C1/col signature: low'),
-                            xlab="Survival time from recurrence")
+                            xlab="Survival time from recurrence (days)")
 p1
 
 
-ggsave("output/figures/2022_figure_13xa.pdf", width=8.3 / 2 * 0.8,height=8.3/3.4, scale=2, plot=p1)
+ggsave("output/figures/2022_figure_14a.pdf", width=8.3 / 2 * 0.8,height=8.3/3.4, scale=2, plot=p1)
 
 
 
@@ -1672,7 +1668,7 @@ ggsave("output/figures/2022_figure_13xa.pdf", width=8.3 / 2 * 0.8,height=8.3/3.4
 
 
 
-### figure 13xb: KM R1 -> R2 (ttp) ----
+### figure 14b: KM R1 -> R2 (ttp) ----
 
 
 surv_object <- survival::Surv(time = tmp.metadata.paired.breed$daysToProgression,
@@ -1686,15 +1682,15 @@ p1 <- survminer::ggsurvplot(fit1, data = tmp.metadata.paired.breed, pval = TRUE,
                             ),
                             legend.labs=c('C1.col.signature=high'='C1/col signature: high',
                                           'C1.col.signature=low'='C1/col signature: low'),
-                            xlab="Time to progression")
+                            xlab="Time to progression (days)")
 p1
 
 
-ggsave("output/figures/2022_figure_13xb.pdf", width=8.3 / 2 * 0.8,height=8.3/3.4, scale=2, plot=p1)
+ggsave("output/figures/2022_figure_14b.pdf", width=8.3 / 2 * 0.8,height=8.3/3.4, scale=2, plot=p1)
 
 
 
-### figure 13xc: KM R1 -> R2 (os) ----
+### figure 14c: KM R1 -> R2 (os) ----
 
 
 surv_object <- survival::Surv(time = tmp.metadata.paired.breed$survivalDays,
@@ -1708,12 +1704,12 @@ p1 <- survminer::ggsurvplot(fit1, data = tmp.metadata.paired.breed, pval = TRUE,
                             ),
                             legend.labs=c('C1.col.signature=high'='C1/col signature: high',
                                           'C1.col.signature=low'='C1/col signature: low'),
-                            xlab="Overall survival")
+                            xlab="Overall survival (days)")
 p1
 
 
 
-ggsave("output/figures/2022_figure_13xc.pdf", width=8.3 / 2 * 0.8,height=8.3/3.4, scale=2, plot=p1)
+ggsave("output/figures/2022_figure_14c.pdf", width=8.3 / 2 * 0.8,height=8.3/3.4, scale=2, plot=p1)
 
 
 
@@ -1918,98 +1914,9 @@ ggplot(plt, aes(x = `Resection or Biopsy`, y = rna.signature.C1.collagen.2022, c
 ggsave("output/figures/2022_figure_S13i.pdf", width=8.3 / 2,height=8.3/4.5, scale=2)
 
 
-# figure S13j: C1 x TumorLocation ----
 
 
-
-plt_r1 <- tmp.metadata |>
-  dplyr::filter(!is.na(rna.signature.C1.collagen.2022)) |>
-  dplyr::filter(resection == "primary") |>
-  dplyr::select(sid, pid, `Tumor location`, rna.signature.C1.collagen.2022) |>
-  dplyr::mutate(type = "primary")
-
-
-plt_r2 <- tmp.metadata |>
-  dplyr::filter(!is.na(rna.signature.C1.collagen.2022)) |>
-  dplyr::filter(resection == "recurrence") |>
-  dplyr::select(sid, pid, `Tumor location`, rna.signature.C1.collagen.2022) |>
-  dplyr::mutate(type = "recurrence")
-
-
-plt_both <- tmp.metadata |>
-  dplyr::filter(!is.na(rna.signature.C1.collagen.2022)) |>
-  dplyr::select(sid, pid, `Tumor location`, rna.signature.C1.collagen.2022) |>
-  dplyr::mutate(type = "combined")
-
-
-plt <- rbind(plt_r1, plt_r2, plt_both) |>
-  #dplyr::filter(pid %in% tmp.metadata.paired$pid) |> 
-  dplyr::mutate(`Tumor location` = as.character(`Tumor location`)) |> 
-  #dplyr::mutate(`Tumor location` = ifelse(is.na(`Tumor location`),"NA",`Tumor location`)) |> 
-  dplyr::mutate(`Tumor location` = ifelse(`Tumor location` == "Fossa posterior","Fossa\nposterior",`Tumor location`)) |> 
-  dplyr::mutate(`Tumor location` = ifelse(`Tumor location` == "Temporal","\nTemporal",`Tumor location`)) |> 
-  dplyr::mutate(`Tumor location` = ifelse(`Tumor location` == "Frontal","\nFrontal",`Tumor location`)) |> 
-  dplyr::mutate(`Tumor location` = ifelse(`Tumor location` == "Fossa posterior","Fossa\nposterior",`Tumor location`)) |> 
-  dplyr::mutate(`Tumor location` = factor(`Tumor location`, levels=c("\nTemporal","Occipital","\nFrontal","Parietal","Fossa\nposterior", "NA"))) |> 
-  dplyr::mutate(type = factor(type, levels = c("primary", "recurrence", "combined")))
-
-
-
-ggplot(plt, aes(x = `Tumor location`, y = rna.signature.C1.collagen.2022, col=`Tumor location`)) +
-  facet_grid(cols = vars(type)) +
-  ggbeeswarm::geom_quasirandom() +
-  ggpubr::stat_compare_means(method = "anova", label.x = 4.25) +
-  # ggsignif::geom_signif( # becomes a visual mess
-  #   comparisons = list(
-  #     c("Temporal", "Occipital"),
-  #     c("Temporal", "Frontal"),
-  #     c("Temporal", "Parietal"),
-  #     c("Temporal", "Fossa\nposterior"),
-  #     
-  #     c("Occipital","Frontal"),
-  #     c("Occipital","Parietal"),
-  #     c("Occipital","Fossa\nposterior"),
-  #     
-  #     
-  #     c("Frontal", "Fossa\nposterior"),
-  #     c("Parietal", "Fossa\nposterior")
-  #     
-  #   ),
-  #   y_position=c(14,16,18,20,22,24,26,14,16),
-  #   test = "wilcox.test",
-  #   col = "black",
-  #   tip_length = 0
-  # ) +
-  theme_bw() +
-  scale_color_manual(values=c(
-    "\nTemporal"="black",
-    "Occipital"="black",
-    "\nFrontal"="black",
-    "Parietal"="black",
-    "Fossa\nposterior"="black",
-    'NA'='gray60'), guide="none") +
-  theme(
-    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
-    # strip.background = element_rect(colour="white",fill="white"),
-    axis.title = element_text(face = "bold", size = rel(1)),
-    # axis.text.x = element_blank(),
-    legend.position = "bottom",
-    panel.grid.major.x = element_blank(),
-    panel.grid.minor.x = element_blank(),
-    panel.grid.major.y = element_blank(),
-    panel.grid.minor.y = element_blank(),
-    axis.ticks.x = element_blank(),
-    panel.border = element_rect(colour = "black", fill = NA, size = 1.25)
-  ) +
-  labs(caption = paste0("G-SAM: n=", nrow(plt_both), " samples"), y = "C1/col signature") +
-  scale_y_continuous(expand = expansion(mult = .075))
-
-
-ggsave("output/figures/2022_figure_S13j.pdf", width=8.3 / 2,height=8.3/4.5, scale=2)
-
-
-
-# figure S13k: C1 x MGMT ----
+# figure S13j: C1 x MGMT ----
 
 
 
@@ -2068,11 +1975,99 @@ ggplot(plt, aes(x = `MGMT`, y = rna.signature.C1.collagen.2022, col=MGMT)) +
     axis.ticks.x = element_blank(),
     panel.border = element_rect(colour = "black", fill = NA, size = 1.25)
   ) +
-  labs(caption = paste0("G-SAM: n=", nrow(plt_both), " samples"), y = "C1/col signature") +
+  labs(caption = paste0("G-SAM: n=", nrow(plt_both), " samples"), y = "C1/col signature", x="MGMT methylation status") +
   scale_y_continuous(expand = expansion(mult = .075))
 
 
 
-ggsave("output/figures/2022_figure_S13k.pdf", width=8.3 / 2,height=8.3/4.5, scale=2)
+ggsave("output/figures/2022_figure_S13j.pdf", width=8.3 / 2,height=8.3/4.5, scale=2)
+
+
+
+
+# figure S13k: C1 x TumorLocation ----
+
+
+
+plt_r1 <- tmp.metadata |>
+  dplyr::filter(!is.na(rna.signature.C1.collagen.2022)) |>
+  dplyr::filter(resection == "primary") |>
+  dplyr::select(sid, pid, `Tumor location`, rna.signature.C1.collagen.2022) |>
+  dplyr::mutate(type = "primary")
+
+
+plt_r2 <- tmp.metadata |>
+  dplyr::filter(!is.na(rna.signature.C1.collagen.2022)) |>
+  dplyr::filter(resection == "recurrence") |>
+  dplyr::select(sid, pid, `Tumor location`, rna.signature.C1.collagen.2022) |>
+  dplyr::mutate(type = "recurrence")
+
+
+plt_both <- tmp.metadata |>
+  dplyr::filter(!is.na(rna.signature.C1.collagen.2022)) |>
+  dplyr::select(sid, pid, `Tumor location`, rna.signature.C1.collagen.2022) |>
+  dplyr::mutate(type = "combined")
+
+
+plt <- rbind(plt_r1, plt_r2, plt_both) |>
+  #dplyr::filter(pid %in% tmp.metadata.paired$pid) |> 
+  dplyr::mutate(`Tumor location` = as.character(`Tumor location`)) |> 
+  #dplyr::mutate(`Tumor location` = ifelse(`Tumor location` == "Fossa posterior","Fossa\nposterior",`Tumor location`)) |> 
+  dplyr::mutate(`Tumor location` = factor(`Tumor location`, levels=c("Temporal","Occipital","Frontal","Parietal","Fossa posterior", "NA"))) |> 
+  dplyr::mutate(type = factor(type, levels = c("primary", "recurrence", "combined")))
+
+
+
+ggplot(plt, aes(x = `Tumor location`, y = rna.signature.C1.collagen.2022, col=`Tumor location`)) +
+  facet_grid(cols = vars(type)) +
+  ggbeeswarm::geom_quasirandom() +
+  ggpubr::stat_compare_means(method = "anova", label.x = 4.25) +
+  # ggsignif::geom_signif( # becomes a visual mess
+  #   comparisons = list(
+  #     c("Temporal", "Occipital"),
+  #     c("Temporal", "Frontal"),
+  #     c("Temporal", "Parietal"),
+  #     c("Temporal", "Fossa\nposterior"),
+  #     
+  #     c("Occipital","Frontal"),
+  #     c("Occipital","Parietal"),
+  #     c("Occipital","Fossa\nposterior"),
+  #     
+  #     
+  #     c("Frontal", "Fossa\nposterior"),
+  #     c("Parietal", "Fossa\nposterior")
+  #     
+  #   ),
+  #   y_position=c(14,16,18,20,22,24,26,14,16),
+  #   test = "wilcox.test",
+  #   col = "black",
+  #   tip_length = 0
+  # ) +
+  theme_bw() +
+  scale_color_manual(values=c(
+    "Temporal"="black",
+    "Occipital"="black",
+    "Frontal"="black",
+    "Parietal"="black",
+    "Fossa posterior"="black",
+    'NA'='gray60'), guide="none") +
+  theme(
+    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
+    # strip.background = element_rect(colour="white",fill="white"),
+    axis.title = element_text(face = "bold", size = rel(1)),
+    # axis.text.x = element_blank(),
+    legend.position = "bottom",
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    axis.ticks.x = element_blank(),
+    panel.border = element_rect(colour = "black", fill = NA, size = 1.25)
+  ) +
+  labs(caption = paste0("G-SAM: n=", nrow(plt_both), " samples"), y = "C1/col signature") +
+  scale_y_continuous(expand = expansion(mult = .075))
+
+
+ggsave("output/figures/2022_figure_S13k.pdf", width=8.3 / 1,height=8.3/4.5, scale=2)
 
 
