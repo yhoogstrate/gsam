@@ -743,7 +743,7 @@ p2 <- ggplot(plt.2, aes(y=`delta C4/neu at Rec.`, x=x)) +
     axis.ticks.x = element_blank(),
     panel.border = element_rect(colour = "black", fill=NA, size=1.25)
   ) +
-  labs(x=NULL, y="1st derivative")
+  labs(x=NULL, y="1st derivative") 
 
 
 p1 / p2
@@ -760,12 +760,6 @@ rm(p1, p2, plt.1, plt.2, k, d.prim, d.rec)
 
 
 ## figure S13f: determine cut-off C1 GLASS ----
-
-svvl <- glass.gbm.rnaseq.metadata.all.samples |> 
-  dplyr::filter(resection != "TP") |> 
-  dplyr::mutate(col.sig = ifelse(rna.signature.C1.collagen.2022 > 4.3, "high","low"))
-#dplyr::mutate(col.sig = factor(col.sig, levels=c('low','high')))
-
 
 
 d.prim <- glass.gbm.rnaseq.metadata.all.samples |> 
@@ -845,10 +839,15 @@ p2 <- ggplot(plt.2, aes(y=`delta C1/col at Rec.`, x=x)) +
     axis.ticks.x = element_blank(),
     panel.border = element_rect(colour = "black", fill=NA, size=1.25)
   )  +
-  labs(x=NULL, y="1st derivative")
+  labs(x=NULL, y="1st derivative") + 
+  coord_cartesian(ylim=c(0, 2.0))
 
 
 p1 / p2
+
+
+
+ggsave("output/figures/2022_figure_S13f.pdf", width=8.3 / 5,height=8.3/5*1.17, scale=2)
 
 
 
@@ -1340,6 +1339,7 @@ fit.cox <- survival::coxph(surv_object ~
 
                              #`MGMT meth` + # incomplete data
 
+                             `C0/fuzzy signature at Rec.` +
                              `C1/col signature at Rec.` +
                              `C2/endo signature at Rec.` +
                              `C3/olig signature at Rec.` +
@@ -1484,8 +1484,9 @@ ggsave("output/figures/2022_figure_S13k.pdf", width=8.3 / 2,height=8.3/3.4, scal
 
 
 ### figure 6i: ggforest R1 -> R2 (ttp) ----
-
 # unpaired
+
+
 surv_object <- survival::Surv(time = tmp.metadata.paired.breed$daysToProgression, 
                               event= tmp.metadata.paired.breed$progression.event)
 fit.cox <- survival::coxph(surv_object ~
@@ -1499,7 +1500,7 @@ fit.cox <- survival::coxph(surv_object ~
                              
                              #`MGMT meth` + # incomplete data
                              
-                             #`C0/fuzzy signature at Rec.` +
+                             `C0/fuzzy signature at Rec.` +
                              `C1/col signature at Rec.` +
                              `C2/endo signature at Rec.` +
                              `C3/olig signature at Rec.` +
@@ -1511,7 +1512,7 @@ survminer::ggforest(fit.cox, data = tmp.metadata.paired.breed)
 
 data.frame(pval = summary(fit.cox)$coefficients[,5]) |> 
   dplyr::mutate(padj = p.adjust(pval, method="fdr")) |> 
-  dplyr::mutate(padj.f = format.pval(padj, digits=2))
+  dplyr::mutate(padj.f = format.pval(padj, digits=1))
 
 
 
