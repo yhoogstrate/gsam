@@ -1303,8 +1303,8 @@ fit1 <- survival::survfit(surv_object ~  col.sig , data = svvl)
 #pval.os.r2 <- survminer::surv_pvalue(fit1)$pval
 p1 <- survminer::ggsurvplot(fit1, data = svvl, pval = TRUE, risk.table=T, tables.y.text = FALSE,
                             palette = c(
-                              'C1/col signature: high'=alpha('#009E74',0.7),
-                              'C1/col signature: low'=alpha('#CB75A4',0.7)
+                              'C1/col signature: high'=alpha('#f346b3',0.7),
+                              'C1/col signature: low'=alpha('#4384fd',0.7)
                             ),
                             legend.labs=c('col.sig=high'='C1/col signature: high',
                                           'col.sig=low'='C1/col signature: low'),
