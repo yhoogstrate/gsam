@@ -1270,7 +1270,7 @@ ggsave("output/figures/2022_figure_6g.pdf", width=8.3 / 2 * 0.8,height=8.3/3.4, 
 
 
 
-### figure 6efg padj stats ----
+### figure 6efg+S14abc padj stats ----
 
 df = data.frame(pval = c(pval.ppt.r2,
                          pval.ttp.r2,
@@ -1404,7 +1404,7 @@ sum(is.na(tmp.metadata.paired.breed$`C4/neu signature at Rec.`))
 
 
 
-### figure S13k: ggforest R2 -> death [MGMT] ----
+### figure S14e: ggforest R2 -> death [MGMT] ----
 
 
 
@@ -1440,7 +1440,7 @@ data.frame(pval = summary(fit.cox)$coefficients[,5]) |>
 
 
 
-ggsave("output/figures/2022_figure_S13k.pdf", width=8.3 / 2,height=8.3/3.4, scale=2)
+ggsave("output/figures/2022_figure_S14e.pdf", width=8.3 / 2,height=8.3/3.4, scale=2)
 
 
 
@@ -1550,7 +1550,7 @@ ggsave("output/figures/2022_figure_6i.pdf", width=8.3 / 2,height=8.3/3.4, scale=
 
 
 
-### figure S13l: ggforest R1 -> R2 (ttp) [MGMT] ----
+### figure S14f: ggforest R1 -> R2 (ttp) [MGMT] ----
 
 # unpaired
 tmp.metadata.mgmt <- tmp.metadata.paired.breed |> 
@@ -1584,7 +1584,7 @@ data.frame(pval = summary(fit.cox)$coefficients[,5]) |>
 
 
 
-ggsave("output/figures/2022_figure_S13l.pdf", width=8.3 / 2,height=8.3/3.4, scale=2)
+ggsave("output/figures/2022_figure_S14f.pdf", width=8.3 / 2,height=8.3/3.4, scale=2)
 
 
 
