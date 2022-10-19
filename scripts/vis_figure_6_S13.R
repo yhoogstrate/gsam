@@ -1780,6 +1780,7 @@ ggplot(plt, aes(x = `Treatment: TMZ`, y = rna.signature.C1.collagen.2022)) +
   labs(caption = paste0("G-SAM: n=", nrow(plt_both), " samples"), y = "C1/col signature") +
   scale_y_continuous(expand = expansion(mult = .075))
 
+
 ggsave("output/figures/2022_figure_S13g.pdf", width=8.3 / 2,height=8.3/4.5, scale=2)
 
 
@@ -1821,7 +1822,7 @@ plt <- rbind(plt_r1, plt_r2, plt_both) |>
 
 
 
-ggplot(plt, aes(x = `Treatment: Beva: factor`, y = rna.signature.C1.collagen.2022)) +
+ggplot(plt, aes(x = `Treatment: Beva: factor`, y = rna.signature.C1.collagen.2022, col=`Treatment: Beva: factor`)) +
   facet_grid(cols = vars(type)) +
   ggbeeswarm::geom_quasirandom() +
   ggsignif::geom_signif(
@@ -1831,6 +1832,7 @@ ggplot(plt, aes(x = `Treatment: Beva: factor`, y = rna.signature.C1.collagen.202
     tip_length = 0
   ) +
   theme_bw() +
+  scale_color_manual(values=c('Yes'='black', 'No'='black','Rand. trial'='gray60'), guide="none") +
   theme(
     # text = element_text(family = 'Arial'), seems to require a postscript equivalent
     # strip.background = element_rect(colour="white",fill="white"),
@@ -1884,7 +1886,7 @@ plt <- rbind(plt_r1, plt_r2, plt_both) |>
 
 
 
-ggplot(plt, aes(x = `Resection or Biopsy`, y = rna.signature.C1.collagen.2022)) +
+ggplot(plt, aes(x = `Resection or Biopsy`, y = rna.signature.C1.collagen.2022, col=`Resection or Biopsy`)) +
   facet_grid(cols = vars(type)) +
   ggbeeswarm::geom_quasirandom() +
   ggsignif::geom_signif(
@@ -1894,6 +1896,7 @@ ggplot(plt, aes(x = `Resection or Biopsy`, y = rna.signature.C1.collagen.2022)) 
     tip_length = 0
   ) +
   theme_bw() +
+  scale_color_manual(values=c('Resection'='black', 'Biopsy'='black','NA'='gray60'), guide="none") +
   theme(
     # text = element_text(family = 'Arial'), seems to require a postscript equivalent
     # strip.background = element_rect(colour="white",fill="white"),
@@ -1942,18 +1945,21 @@ plt_both <- tmp.metadata |>
 plt <- rbind(plt_r1, plt_r2, plt_both) |>
   #dplyr::filter(pid %in% tmp.metadata.paired$pid) |> 
   dplyr::mutate(`Tumor location` = as.character(`Tumor location`)) |> 
-  dplyr::mutate(`Tumor location` = ifelse(is.na(`Tumor location`),"NA",`Tumor location`)) |> 
+  #dplyr::mutate(`Tumor location` = ifelse(is.na(`Tumor location`),"NA",`Tumor location`)) |> 
   dplyr::mutate(`Tumor location` = ifelse(`Tumor location` == "Fossa posterior","Fossa\nposterior",`Tumor location`)) |> 
-  dplyr::mutate(`Tumor location` = factor(`Tumor location`, levels=c("Temporal","Occipital","Frontal","Parietal","Fossa\nposterior", "NA"))) |> 
+  dplyr::mutate(`Tumor location` = ifelse(`Tumor location` == "Temporal","\nTemporal",`Tumor location`)) |> 
+  dplyr::mutate(`Tumor location` = ifelse(`Tumor location` == "Frontal","\nFrontal",`Tumor location`)) |> 
+  dplyr::mutate(`Tumor location` = ifelse(`Tumor location` == "Fossa posterior","Fossa\nposterior",`Tumor location`)) |> 
+  dplyr::mutate(`Tumor location` = factor(`Tumor location`, levels=c("\nTemporal","Occipital","\nFrontal","Parietal","Fossa\nposterior", "NA"))) |> 
   dplyr::mutate(type = factor(type, levels = c("primary", "recurrence", "combined")))
 
 
 
-ggplot(plt, aes(x = `Tumor location`, y = rna.signature.C1.collagen.2022)) +
+ggplot(plt, aes(x = `Tumor location`, y = rna.signature.C1.collagen.2022, col=`Tumor location`)) +
   facet_grid(cols = vars(type)) +
   ggbeeswarm::geom_quasirandom() +
-  ggpubr::stat_compare_means(method = "anova", label.x = 5) +
-  # ggsignif::geom_signif(
+  ggpubr::stat_compare_means(method = "anova", label.x = 4.25) +
+  # ggsignif::geom_signif( # becomes a visual mess
   #   comparisons = list(
   #     c("Temporal", "Occipital"),
   #     c("Temporal", "Frontal"),
@@ -1975,6 +1981,13 @@ ggplot(plt, aes(x = `Tumor location`, y = rna.signature.C1.collagen.2022)) +
   #   tip_length = 0
   # ) +
   theme_bw() +
+  scale_color_manual(values=c(
+    "\nTemporal"="black",
+    "Occipital"="black",
+    "\nFrontal"="black",
+    "Parietal"="black",
+    "Fossa\nposterior"="black",
+    'NA'='gray60'), guide="none") +
   theme(
     # text = element_text(family = 'Arial'), seems to require a postscript equivalent
     # strip.background = element_rect(colour="white",fill="white"),
@@ -1990,7 +2003,6 @@ ggplot(plt, aes(x = `Tumor location`, y = rna.signature.C1.collagen.2022)) +
   ) +
   labs(caption = paste0("G-SAM: n=", nrow(plt_both), " samples"), y = "C1/col signature") +
   scale_y_continuous(expand = expansion(mult = .075))
-
 
 
 ggsave("output/figures/2022_figure_S13j.pdf", width=8.3 / 2,height=8.3/4.5, scale=2)
