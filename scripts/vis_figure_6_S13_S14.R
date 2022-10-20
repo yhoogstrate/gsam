@@ -1323,8 +1323,14 @@ ggsave("output/figures/2022_figure_S14d.pdf", width=8.3 / 2 * 0.8,height=8.3/3.4
 # unpaired
 
 
-surv_object <- survival::Surv(time = tmp.metadata.paired.breed$survivalFromSecondSurgeryDays,
-                              event= tmp.metadata.paired.breed$event)
+svvl <- tmp.metadata.paired.breed |> 
+  dplyr::filter(!is.na(`C1/col signature at Rec.`)) |> 
+  dplyr::filter(!is.na(`Tumor location`))
+
+
+
+surv_object <- survival::Surv(time = svvl$survivalFromSecondSurgeryDays,
+                              event= svvl$event)
 fit.cox <- survival::coxph(surv_object ~
                              `Age above 50` +
                              `Sex` +
@@ -1341,8 +1347,8 @@ fit.cox <- survival::coxph(surv_object ~
                              `C3/olig signature at Rec.` +
                              `C4/neu signature at Rec.`
                            ,
-                           data = tmp.metadata.paired.breed)
-survminer::ggforest(fit.cox, data = tmp.metadata.paired.breed)
+                           data = svvl)
+survminer::ggforest(fit.cox, data = svvl)
 
 
 
@@ -1409,6 +1415,7 @@ sum(is.na(tmp.metadata.paired.breed$`C4/neu signature at Rec.`))
 
 
 tmp.metadata.mgmt <- tmp.metadata.paired.breed |> 
+  dplyr::filter(!is.na(`C1/col signature at Rec.`)) |> 
   dplyr::filter(!is.na(`MGMT meth`) & !is.na(`C1/col signature at Rec.`))
 #dplyr::mutate(`MGMT at Rec.` = as.character(`MGMT at Rec.`)) |> 
 #dplyr::mutate(`MGMT at Rec.` = ifelse(is.na(`MGMT at Rec.`), "unknown", `MGMT at Rec.`))
@@ -1483,8 +1490,14 @@ ggsave("output/figures/2022_figure_S14e.pdf", width=8.3 / 2,height=8.3/3.4, scal
 # unpaired
 
 
-surv_object <- survival::Surv(time = tmp.metadata.paired.breed$daysToProgression, 
-                              event= tmp.metadata.paired.breed$progression.event)
+svvl <- tmp.metadata.paired.breed |> 
+  dplyr::filter(!is.na(`C1/col signature at Rec.`)) |> 
+  dplyr::filter(!is.na(`Tumor location`))
+
+
+
+surv_object <- survival::Surv(time = svvl$daysToProgression, 
+                              event= svvl$progression.event)
 fit.cox <- survival::coxph(surv_object ~
                              `Age above 50` +
                              `Sex` +
@@ -1502,8 +1515,8 @@ fit.cox <- survival::coxph(surv_object ~
                              `C3/olig signature at Rec.` +
                              `C4/neu signature at Rec.`
                            ,
-                           data = tmp.metadata.paired.breed)
-survminer::ggforest(fit.cox, data = tmp.metadata.paired.breed)
+                           data = svvl)
+survminer::ggforest(fit.cox, data = svvl)
 
 
 data.frame(pval = summary(fit.cox)$coefficients[,5]) |> 
@@ -1555,6 +1568,7 @@ ggsave("output/figures/2022_figure_6i.pdf", width=8.3 / 2,height=8.3/3.4, scale=
 # unpaired
 tmp.metadata.mgmt <- tmp.metadata.paired.breed |> 
   dplyr::filter(!is.na(`MGMT meth`)) |> 
+  dplyr::filter(!is.na(`C1/col signature at Rec.`)) |> 
   #dplyr::mutate(`MGMT at Rec.` = as.character(`MGMT at Rec.`)) |> 
   dplyr::mutate(`MGMT at Rec.` = ifelse(is.na(`MGMT at Rec.`), "unknown", `MGMT at Rec.`))
 #dplyr::mutate(`MGMT meth` = ifelse(is.na(`MGMT meth`), "unknown", `MGMT meth`))
@@ -1582,6 +1596,15 @@ data.frame(pval = summary(fit.cox)$coefficients[,5]) |>
   dplyr::mutate(padj = p.adjust(pval, method="fdr")) |> 
   dplyr::mutate(padj.f = format.pval(padj, digits=2))
 
+
+sum(is.na( tmp.metadata.mgmt$`Age above 50`  ))
+sum(is.na( tmp.metadata.mgmt$`Sex`  ))
+sum(is.na( tmp.metadata.mgmt$`KPS 70 or above`  ))
+sum(is.na( tmp.metadata.mgmt$`Treatment: Beva`  ))
+sum(is.na( tmp.metadata.mgmt$`Treatment: TMZ`  ))
+sum(is.na( tmp.metadata.mgmt$`Tumor location`  ))
+sum(is.na( tmp.metadata.mgmt$`MGMT meth`  ))
+sum(is.na( tmp.metadata.mgmt$`C1/col signature at Rec.` ))
 
 
 ggsave("output/figures/2022_figure_S14f.pdf", width=8.3 / 2,height=8.3/3.4, scale=2)
