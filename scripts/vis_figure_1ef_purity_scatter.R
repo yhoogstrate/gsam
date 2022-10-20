@@ -147,7 +147,11 @@ tmp.n.glass <- plt |>
 
 
 
-stats <- ggpubr::compare_means(`purity` ~ `GITS.150.svm.2022.subtype`, data = plt) |> # , group.by = "GITS.150.svm.2022.subtype_primary" geen facet
+stats <- ggpubr::compare_means(`purity` ~ `GITS.150.svm.2022.subtype`, 
+                               data = plt,
+                               method="wilcox.test",
+                               p.adjust.method ="holm",
+                               ) |> # , group.by = "GITS.150.svm.2022.subtype_primary" geen facet
   dplyr::mutate(y_pos = c(108,96,104), p.adj = format.pval(p.adj, digits = 1)) |> 
   dplyr::mutate(GITS.150.svm.2022.subtype = NA)
 

@@ -1242,6 +1242,26 @@ FeaturePlot(object = object_1, features = c("CFH"))
 
 
 
+##### figure S12l ----
+
+sid_print <- sid |> 
+  stringr::str_replace(".filtered_gene_matrices","") |> 
+  stringr::str_replace("_2of2"," (1 & 2 of 2)")
+
+
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters") +
+  guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
+  labs(subtitle=sid)
+ggsave("output/figures/2022_figure_S12l_labels.pdf",width=6.5, height=4,scale=1.2)
+
+
+FeaturePlot(object = object_1, features = c("COL1A1","COL1A2", "PDGFRB","PECAM1"),            min.cutoff = 1 ,order=T,pt.size=0.15) +
+  labs(caption=sid)
+ggsave("output/figures/2022_figure_S12l.pdf",width=6.5, height=4,scale=1.2)
+
+
+
+
 
 #### C3 (down) :: endothelial ----
 
@@ -3024,6 +3044,7 @@ FeaturePlot(object = object_1, features = "ITGA1") # endo + peri?
 FeaturePlot(object = object_1, features = "RGS5")
 FeaturePlot(object = object_1, features = "PDGFRB")
 FeaturePlot(object = object_1, features = "CD248")
+
 
 
 

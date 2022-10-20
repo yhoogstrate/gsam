@@ -179,12 +179,42 @@ tmp.gsam <- gsam.rna.metadata |>
     sig.C0.fuz, sig.C1.col, sig.C2.end, sig.C3.oli, sig.C4.neu,
 
     # therapy (extra)
-    otherTreatmentsBeforeSecondSurgery,
-    treatmentDetailsFirstPD, treatmentDetailsFourthPD,
-    treatmentDetailsSecondPD, treatmentDetailsThirdPD
+    otherTreatmentsBeforeSecondSurgery
   ) |>
-  dplyr::mutate(sid = gsub("-new", ".n", sid))
+  dplyr::mutate(sid = gsub("-new", ".n", sid)) |> 
+  dplyr::mutate(otherTreatmentsBeforeSecondSurgery = tolower(otherTreatmentsBeforeSecondSurgery)) |> 
+  dplyr::mutate(otherTreatmentsBeforeSecondSurgery = gsub(":[ ]+[0-9]+\\.[0-9]+\\.[0-9]+[ \\-]+[0-9]+.[0-9]+.[0-9]+","",otherTreatmentsBeforeSecondSurgery)) |> # includes date |> 
+  dplyr::mutate(otherTreatmentsBeforeSecondSurgery = gsub("^re-surgery [0-9\\.]+: no tumor, no tissue available; (.+) at first pd \\(.+\\)","\\1",otherTreatmentsBeforeSecondSurgery)) |> 
+  dplyr::mutate(otherTreatmentsBeforeSecondSurgery = gsub("^yes ","",otherTreatmentsBeforeSecondSurgery)) |> 
+  dplyr::mutate(otherTreatmentsBeforeSecondSurgery = gsub("^\\(","",otherTreatmentsBeforeSecondSurgery)) |>  
+  dplyr::mutate(otherTreatmentsBeforeSecondSurgery = gsub("\\)","",otherTreatmentsBeforeSecondSurgery)) |> 
+  dplyr::mutate(otherTreatmentsBeforeSecondSurgery = gsub("\\)","",otherTreatmentsBeforeSecondSurgery)) |> 
+  dplyr::mutate(otherTreatmentsBeforeSecondSurgery = gsub(" after progression under tmz","",otherTreatmentsBeforeSecondSurgery)) |> 
+  dplyr::mutate(otherTreatmentsBeforeSecondSurgery = gsub(" 2 cycles","",otherTreatmentsBeforeSecondSurgery)) |> 
+  dplyr::mutate(otherTreatmentsBeforeSecondSurgery = gsub(" leuven","",otherTreatmentsBeforeSecondSurgery)) |> 
+  dplyr::mutate(otherTreatmentsBeforeSecondSurgery = gsub("lomustina","lomustine",otherTreatmentsBeforeSecondSurgery)) |> 
+  dplyr::mutate(otherTreatmentsBeforeSecondSurgery = gsub(", "," & ",otherTreatmentsBeforeSecondSurgery, fixed=T)) |> 
+  dplyr::mutate(otherTreatmentsBeforeSecondSurgery = gsub("+","&",otherTreatmentsBeforeSecondSurgery, fixed=T)) |> 
+  dplyr::mutate(otherTreatmentsBeforeSecondSurgery = gsub("&"," & ",otherTreatmentsBeforeSecondSurgery, fixed=T)) |> 
+  dplyr::mutate(otherTreatmentsBeforeSecondSurgery = gsub("[ ]+\\&[ ]+"," & ",otherTreatmentsBeforeSecondSurgery, fixed=F)) |> 
+  dplyr::mutate(otherTreatmentsBeforeSecondSurgery = gsub("resection & ","",otherTreatmentsBeforeSecondSurgery, fixed=T)) |> 
+  dplyr::mutate(otherTreatmentsBeforeSecondSurgery = dplyr::recode(otherTreatmentsBeforeSecondSurgery,
+                                                                   'no'='',
+                                                                   'none'='',
+                                                                   're-irradiation'='', # standard of care
+                                                                   'temozolomide'='', # standard of care
+                                                                   'temsirolimius'='temsirolimus',
+                                                                   'lomustine bevacizumab'='lomustine & bevacizumab'
+  )) |> 
+  dplyr::mutate(otherTreatmentsBeforeSecondSurgery = gsub("resection & ","",otherTreatmentsBeforeSecondSurgery, fixed=T))
+
+# x-check for personal data
+#  dplyr::pull(otherTreatmentsBeforeSecondSurgery) |> 
+#  unique() |> 
+#  sort()
+
 head(tmp.gsam)
+
 
 
 ### GLASS ----
@@ -206,9 +236,12 @@ tmp.glass <- glass.gbm.rnaseq.metadata.all.samples |>
   dplyr::rename(`NMF:150 PC2 (scaled)` = `NMF:150:PC2.n`) |>
   dplyr::rename(`NMF:150 PC1-2 (scaled) eucledian dist` = `NMF:150:PCA:eucledian.dist`) |>
   dplyr::rename(`GITS NMF:150 subtype` = `GITS.150.svm.2022.subtype`) |>
+  dplyr::mutate(sig.C1.col = round(rna.signature.C1.collagen.2022, 2)) |> 
+  dplyr::mutate(purity = paste0(round(tumour.percentage.2022),"%")) |> 
+  dplyr::rename(purity.source = tumour.percentage.2022.source) |> 
   dplyr::select(
     aliquot_barcode,
-    tumour.percentage.2022, tumour.percentage.2022.source,
+    purity, purity.source,
     `ssGSEA subtype`,
     `ssGSEA CL enrichment score`, `ssGSEA CL pval`,
     `ssGSEA MES enrichment score`, `ssGSEA MES pval`,
@@ -217,7 +250,8 @@ tmp.glass <- glass.gbm.rnaseq.metadata.all.samples |>
     `NMF:150 PC1`, `NMF:150 PC2`,
     `NMF:150 PC1 (scaled)`, `NMF:150 PC2 (scaled)`,
     `NMF:150 PC1-2 (scaled) eucledian dist`,
-    `GITS NMF:150 subtype`
+    `GITS NMF:150 subtype`,
+    sig.C1.col
   )
 
 

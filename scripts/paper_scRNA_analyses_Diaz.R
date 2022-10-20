@@ -3209,6 +3209,9 @@ FeaturePlot(object = object_1, features = "PDGFRB")
 FeaturePlot(object = object_1, features = "CD248")
 
 
+
+
+
 #### C3 :: endothelial (down) ----
 
 

@@ -7,9 +7,9 @@ library(tidyverse)
 library(Matrix)
 library(DropletUtils)
 library(Seurat)
-library(infercnv)
-library(AnnotationHub)
-library(ensembldb)
+#library(infercnv)
+#library(AnnotationHub)
+#library(ensembldb)
 
 
 # load data ----
@@ -591,12 +591,24 @@ FeaturePlot(object = object_1, features = "ITGA1") # endo + peri?
 FeaturePlot(object = object_1, features = c("RGS5","PDGFRB","CD248","PEAR1", "HEYL" , "CFH"))
 
 FeaturePlot(object = object_1, features = c("RGS5"))
-FeaturePlot(object = object_1, features = c("PDGFRB"))
-FeaturePlot(object = object_1, features = c("CD248"))
 FeaturePlot(object = object_1, features = c("PEAR1"))
 FeaturePlot(object = object_1, features = c("HEYL"))
 FeaturePlot(object = object_1, features = c("CFH"))
 
+
+
+DimPlot(object_1, reduction = "umap", 
+        label = TRUE, pt.size = .6, group.by = "seurat_clusters") +
+  guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
+  labs(subtitle=sid)
+ggsave("output/figures/2022_figure_S12k_labels.pdf",width=6.5, height=4,scale=1.2)
+
+FeaturePlot(object = object_1, 
+            features = c("COL1A1","COL1A2", "PDGFRB","PECAM1"),      
+            min.cutoff = 1 ,
+order=T,
+pt.size=0.15)
+ggsave("output/figures/2022_figure_S12k.pdf",width=6.5, height=4,scale=1.2)
 
 
 
@@ -898,12 +910,34 @@ DotPlot(object = object_1, features = list(
   "MES1"                         = tmp |> dplyr::filter(str == "neftel.meta.module.MES1") |> dplyr::pull(hugo_symbol),
   #"TCGA.subtype.marker"                            = tmp |> dplyr::filter(str == "TCGA.subtype.marker") |> dplyr::pull(hugo_symbol),
   "MES2"                         = tmp |> dplyr::filter(str == "neftel.meta.module.MES2") |> dplyr::pull(hugo_symbol),
-  "MES1+2" = tmp |> dplyr::filter(str == "neftel.meta.module.MES1,neftel.meta.module.MES2" ) |> dplyr::pull(hugo_symbol)
+  "MES1+2" = tmp |> dplyr::filter(str == "neftel.meta.module.MES1,neftel.meta.module.MES2" ) |> dplyr::pull(hugo_symbol),
+  'markers?' = c('DOCK7','DOCK10') # 'ZBTB20'
   #"TCGA.subtype.marker,neftel.meta.module.MES1"    = tmp |> dplyr::filter(str == "TCGA.subtype.marker,neftel.meta.module.MES1") |> dplyr::pull(hugo_symbol),
   #"TCGA.subtype.marker,neftel.meta.module.MES2"    = tmp |> dplyr::filter(str == "TCGA.subtype.marker,neftel.meta.module.MES2") |> dplyr::pull(hugo_symbol)
 ), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
   labs(x = paste0("Features [MES] in: ",sid))
+
+
+
+## de markers for MES [tumor intrinsic] vs [enviroment]
+tmp.mes <- FindMarkers(object_1, 
+                       ident.1 = c(1,9,18,20),
+                       ident.2 = c(21,4,6,12,19,16,15,22,5,10,13,14,
+                                   17,11,8,7,3,0
+                                   ))
+
+head(tmp.mes,n=15)
+
+
+FeaturePlot(object = object_1, features = "ST6GALNAC3")
+FeaturePlot(object = object_1, features = "RNF149")
+FeaturePlot(object = object_1, features = "DOCK7")
+FeaturePlot(object = object_1, features = "DOCK10")
+FeaturePlot(object = object_1, features = "KCNN3")
+FeaturePlot(object = object_1, features = "ZBTB20")
+
+
 
 
 
