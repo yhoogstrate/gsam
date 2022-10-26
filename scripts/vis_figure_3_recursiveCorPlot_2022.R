@@ -22,21 +22,33 @@ source('scripts/load_G-SAM_expression_data.R')
 metadata.genes <- results.out |> 
     dplyr::select(-contains("glass.tpc")) |>  # remove 2021/small batch
     
-    dplyr::filter(!is.na(log2FoldChange.gsam.tpc.res)) %>%
-    dplyr::filter(!is.na(`log2FoldChange.glass-2022.tpc.res`)) %>%
-    dplyr::filter(!is.na(padj.gsam.tpc.res)) %>%
-    dplyr::filter(!is.na(`padj.glass-2022.tpc.res`)) %>%
+    dplyr::filter(!is.na(log2FoldChange.gsam.tpc.res)) |> 
+    dplyr::filter(!is.na(`log2FoldChange.glass-2022.tpc.res`)) |> 
+    dplyr::filter(!is.na(padj.gsam.tpc.res)) |> 
+    dplyr::filter(!is.na(`padj.glass-2022.tpc.res`)) |> 
     
-    dplyr::mutate(direction.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res > 0 , "up", "down")) %>%
-    dplyr::mutate(`direction.glass-2022.tpc.res` = ifelse(`log2FoldChange.glass-2022.tpc.res` > 0 , "up", "down")) %>%
+    dplyr::mutate(direction.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res > 0 , "up", "down")) |> 
+    dplyr::mutate(`direction.glass-2022.tpc.res` = ifelse(`log2FoldChange.glass-2022.tpc.res` > 0 , "up", "down")) |> 
     
     dplyr::mutate(significant.2022 = 
                     padj.gsam.tpc.res < 0.01 &
                     abs(log2FoldChange.gsam.tpc.res) > 0.5 &
                     abs(`log2FoldChange.glass-2022.tpc.res`) > 0.5 & 
-                    direction.gsam.tpc.res == `direction.glass-2022.tpc.res`) |> 
-    
-    dplyr::filter(significant.2022 == T)
+                    direction.gsam.tpc.res == `direction.glass-2022.tpc.res`)
+
+
+# stats - DE Genes G-SAM:
+metadata.genes |> 
+  dplyr::filter(
+    padj.gsam.tpc.res < 0.01 &
+      abs(log2FoldChange.gsam.tpc.res) > 0.5
+  ) |>  dim()
+
+
+
+metadata.genes <- metadata.genes |> 
+  dplyr::filter(significant.2022 == T)
+
 
 
 k.genes <- nrow(metadata.genes)
@@ -72,7 +84,51 @@ if(!'TAM' %in% colnames(plt.labels)) {
 }
 
 
+### export Table S2:
 
+tmp.order <- readRDS('tmp/h.2022.Rds')
+tmp.order <- data.frame(hugo_symbol = tmp.order$labels, order = tmp.order$order)
+
+exp.ts2 <- plt.labels |> 
+  dplyr::rename(`increases over time`=up) |> 
+  dplyr::rename(`decreases over time`=down) |> 
+  
+  dplyr::mutate(oligodendrocyte = NULL) |> 
+  dplyr::mutate(endothelial = NULL) |> 
+  dplyr::mutate(neuron = NULL) |> 
+  dplyr::mutate(astrocyte = NULL) |> 
+  dplyr::mutate(TAM = NULL) |> 
+  
+  dplyr::left_join(tmp.order, by=c('hugo_symbol'='hugo_symbol'), suffix=c('','')) |> 
+  
+  dplyr::left_join(
+    results.out |> 
+      dplyr::select(gid, ensembl_id, cluster.2022 ,`McKenzie_celltype_top_human_specificity`),
+    by=c('gid'='gid'),suffix=c('','')
+  ) |> 
+  dplyr::arrange(desc(order(order))) |> 
+  dplyr::mutate(order=  NULL) |> 
+  dplyr::mutate(gid =  NULL)
+
+stopifnot(nrow(tmp.order) == 484)
+
+
+
+openxlsx::createWorkbook(
+  creator = "Dr. Youri Hoogstrate",
+  title = "Gene cluster information G-SAM study",
+  subject = "Gene clusters",
+  category = "G-SAM study"
+) -> wb
+openxlsx::addWorksheet(wb, "Sheet1 - Gene clusters G-SAM")
+openxlsx::writeDataTable(wb, sheet = "Sheet1 - Gene clusters G-SAM", x = exp.ts2)
+
+openxlsx::saveWorkbook(wb, file = "output/tables/tab_S2_DGE_gene_clusters.xlsx", overwrite = T)
+
+
+
+
+# :: ::: 
 
 
 
