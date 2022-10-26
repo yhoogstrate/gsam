@@ -23,7 +23,7 @@ plt <- rbind(
   gsam.rna.metadata |>
     dplyr::filter(blacklist.pca == F) |>
     dplyr::filter(pat.with.IDH == F) |>
-    dplyr::filter(sid %in% c("BAI2", "CAO1-replicate", "FAB2", "GAS2-replicate") == F) |> 
+    dplyr::filter(sid %in% c("BAI2", "CAO1-replicate", "FAB2", "GAS2-replicate") == F) |>
     # dplyr::filter(tumour.percentage.dna >= 15) |> - has no effect on RNA levels here, so keep included
     dplyr::mutate(is.primary = resection == "r1") |>
     dplyr::select(
@@ -49,6 +49,7 @@ plt <- rbind(
 
 
 
+
 tmp.n.gsam <- plt |>
   dplyr::filter(dataset == "G-SAM") |>
   nrow()
@@ -58,23 +59,62 @@ tmp.n.glass <- plt |>
 
 
 
-ggplot(plt, aes(x = is.primary, y = purity, fill = is.primary)) +
+# add median stats
+plt <- plt |> 
+  rbind(
+    plt |>
+      dplyr::filter(dataset == "G-SAM") |>
+      dplyr::filter(is.primary == "Primary" & !is.na(purity)) |>
+      dplyr::mutate(purity = median(purity)) |>
+      head(n = 1) |>
+      dplyr::mutate(sid = "median"),
+    plt |>
+      dplyr::filter(dataset == "G-SAM") |>
+      dplyr::filter(is.primary != "Primary" & !is.na(purity)) |>
+      dplyr::mutate(purity = median(purity)) |>
+      head(n = 1) |>
+      dplyr::mutate(sid = "median"),
+    plt |>
+      dplyr::filter(dataset == "GLASS") |>
+      dplyr::filter(is.primary == "Primary" & !is.na(purity)) |>
+      dplyr::mutate(purity = median(purity)) |>
+      head(n = 1) |>
+      dplyr::mutate(sid = "median"),
+    plt |>
+      dplyr::filter(dataset == "GLASS") |>
+      dplyr::filter(is.primary != "Primary" & !is.na(purity)) |>
+      dplyr::mutate(purity = median(purity)) |>
+      head(n = 1) |>
+      dplyr::mutate(sid = "median")
+  ) |> 
+  dplyr::mutate(purity = round(purity,1))
+
+
+
+
+ggplot(plt |> dplyr::filter(sid != 'median'), aes(x = is.primary, y = purity, fill = is.primary)) +
   facet_grid(cols = vars(dataset), scales = "free", space = "free_y") +
   geom_hline(yintercept = 15, color = "gray60") +
   geom_violin(draw_quantiles = c(), col = NA, alpha = 0.2) +
   # geom_jitter( position=position_jitter(0.2), size=2.5, pch=21, col="black") +
   ggbeeswarm::geom_quasirandom(pch = 21, size = 3, col = "black", alpha = 0.85) +
-  geom_violin(draw_quantiles = c(0.5), col = "black", fill = alpha("white", 0)) +
+  #geom_violin(draw_quantiles = c(0.5), col = "black", fill = alpha("white", 0)) +
   ylim(0, 100) +
   ggsignif::geom_signif(
     comparisons = list(c("Primary", "Recurrence")),
     test = "wilcox.test",
-    col = "black"
+    col = "black",
+    tip_length = 0
   ) +
-  scale_fill_manual(values = c("Primary" = resection_colors[["R1"]], "Recurrence" = resection_colors[["R2"]]), name = "Resection", guide = "none") +
+  geom_hline(data = plt |> dplyr::filter(sid == 'median'), 
+             aes(yintercept = purity,col = is.primary)) +
+  scale_color_manual(values = c("Primary" = resection_colors[["R1"]], 
+                               "Recurrence" = resection_colors[["R2"]]), name = "Resection", guide = "none") +
+  scale_fill_manual(values = c("Primary" = resection_colors[["R1"]], 
+                               "Recurrence" = resection_colors[["R2"]]), name = "Resection", guide = "none") +
+  geom_text(data = plt |> dplyr::filter(sid == 'median'), aes(label = purity),nudge_y=3,nudge_x=-0.25) +
   theme_bw() +
   theme(
-    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
     # strip.background = element_rect(colour="white",fill="white"),
     axis.title = element_text(face = "bold", size = rel(1)),
     # axis.text.x = element_blank(),
@@ -87,14 +127,20 @@ ggplot(plt, aes(x = is.primary, y = purity, fill = is.primary)) +
     panel.border = element_rect(colour = "black", fill = NA, size = 1.25)
   ) +
   labs(
-    x = NULL, col = NA, y = "Tumor purity",
+    x = NULL, 
+    y = "Tumor purity",
+    col = NA, 
     caption = paste0("G-SAM: n=", tmp.n.gsam, "  -  GLASS: n=", tmp.n.glass)
   ) +
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 1.1))
 
-
 ggsave("output/figures/2022_figure_1ef_purity_scatter.pdf", width=8.3 / 4,height=8.3/4, scale=2)
-ggsave("output/figures/2022_figure_1ef_purity_scatter.svg", width=8.3 / 4,height=8.3/4, scale=2)
+#ggsave("output/figures/2022_figure_1ef_purity_scatter.svg", width=8.3 / 4,height=8.3/4, scale=2)
+
+
+
+
+
 
 
 rm(plt)
