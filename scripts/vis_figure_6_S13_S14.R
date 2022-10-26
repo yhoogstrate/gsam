@@ -380,8 +380,8 @@ p1 / p2
 
 
 
-ggsave("output/figures/2022_figure_S13a.pdf", width=8.3 / 5,height=8.3/5*1.17, scale=2)
-ggsave("output/figures/2022_figure_S13a.svg", width=8.3 / 5,height=8.3/5*1.17, scale=2)
+#ggsave("output/figures/2022_figure_S13a.pdf", width=8.3 / 5,height=8.3/5*1.17, scale=2)
+#ggsave("output/figures/2022_figure_S13a.svg", width=8.3 / 5,height=8.3/5*1.17, scale=2)
 
 
 rm(p1, p2, plt.1, plt.2, d.prim, d.rec)
@@ -470,8 +470,8 @@ p1 / p2
 
 
 
-ggsave("output/figures/2022_figure_S13b.pdf", width=8.3 / 5,height=8.3/5*1.17, scale=2)
-ggsave("output/figures/2022_figure_S13b.svg", width=8.3 / 5,height=8.3/5*1.17, scale=2)
+#ggsave("output/figures/2022_figure_S13b.pdf", width=8.3 / 5,height=8.3/5*1.17, scale=2)
+#ggsave("output/figures/2022_figure_S13b.svg", width=8.3 / 5,height=8.3/5*1.17, scale=2)
 
 
 rm(p1, p2, plt.1, plt.2, k, d.prim, d.rec)
@@ -561,8 +561,8 @@ p1 / p2
 
 
 
-ggsave("output/figures/2022_figure_S13c.pdf", width=8.3 / 5,height=8.3/5*1.17, scale=2)
-ggsave("output/figures/2022_figure_S13c.svg", width=8.3 / 5,height=8.3/5*1.17, scale=2)
+#ggsave("output/figures/2022_figure_S13c.pdf", width=8.3 / 5,height=8.3/5*1.17, scale=2)
+#ggsave("output/figures/2022_figure_S13c.svg", width=8.3 / 5,height=8.3/5*1.17, scale=2)
 
 
 rm(p1, p2, plt.1, plt.2, d.prim, d.rec)
@@ -656,8 +656,8 @@ p1 / p2
 
 
 
-ggsave("output/figures/2022_figure_S13d.pdf", width=8.3 / 5,height=8.3/5*1.17, scale=2)
-ggsave("output/figures/2022_figure_S13d.svg", width=8.3 / 5,height=8.3/5*1.17, scale=2)
+#ggsave("output/figures/2022_figure_S13d.pdf", width=8.3 / 5,height=8.3/5*1.17, scale=2)
+#ggsave("output/figures/2022_figure_S13d.svg", width=8.3 / 5,height=8.3/5*1.17, scale=2)
 
 
 rm(p1, p2, plt.1, plt.2, d.prim, d.rec)
@@ -751,8 +751,8 @@ p1 / p2
 
 
 
-ggsave("output/figures/2022_figure_S13e.pdf", width=8.3 / 5,height=8.3/5*1.17, scale=2)
-ggsave("output/figures/2022_figure_S13e.svg", width=8.3 / 5,height=8.3/5*1.17, scale=2)
+#ggsave("output/figures/2022_figure_S13e.pdf", width=8.3 / 5,height=8.3/5*1.17, scale=2)
+#ggsave("output/figures/2022_figure_S13e.svg", width=8.3 / 5,height=8.3/5*1.17, scale=2)
 
 
 rm(p1, p2, plt.1, plt.2, k, d.prim, d.rec)
@@ -847,7 +847,7 @@ p1 / p2
 
 
 
-ggsave("output/figures/2022_figure_S13f.pdf", width=8.3 / 5,height=8.3/5*1.17, scale=2)
+#ggsave("output/figures/2022_figure_S13f.pdf", width=8.3 / 5,height=8.3/5*1.17, scale=2)
 
 
 
@@ -1101,6 +1101,26 @@ tmp.metadata.paired.breed <- tmp.metadata.paired.breed |>
     ), levels=c('Unmethylated','Methylated')))
 
 
+## stats prevalence MES @ C1 high ----
+
+
+tmp.stats <- tmp.metadata |> 
+  dplyr::filter(resection == "recurrence") |> 
+  #dplyr::mutate(`C1/col signature` = factor(ifelse(rna.signature.C1.collagen.2022 > c1.em.cutoff.p, "high", "low"), levels=c('low','high'))) |> 
+  
+  dplyr::mutate(GITS.150.svm.2022.subtype = ifelse(GITS.150.svm.2022.subtype != "Mesenchymal", "Non-MES", "MES")) |> 
+  dplyr::select(GITS.150.svm.2022.subtype, rna.signature.C1.collagen.2022 )
+
+wilcox.test(
+  tmp.stats |>
+    dplyr::filter(GITS.150.svm.2022.subtype == "MES") |> 
+    dplyr::pull(rna.signature.C1.collagen.2022),
+  tmp.stats |>
+    dplyr::filter(GITS.150.svm.2022.subtype == "Non-MES") |> 
+    dplyr::pull(rna.signature.C1.collagen.2022)
+  )
+
+
 
 # figure 6d: signature x svvl ----
 
@@ -1291,6 +1311,12 @@ rm(df)
 
 
 
+svvl <- glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::filter(tumour.percentage.2022 >= 15) |>
+  dplyr::filter(resection != "TP") |> 
+  dplyr::mutate(`col.sig` = factor(ifelse(rna.signature.C1.collagen.2022 > c1.em.cutoff.p.glass , "high", "low"), levels=c('low','high')))
+  #dplyr::arrange(rna.signature.C1.collagen.2022) |>
+  #dplyr::pull(rna.signature.C1.collagen.2022)
 
 plot(sort(svvl$rna.signature.C1.collagen.2022))
 #abline(h=5.6)
@@ -1300,7 +1326,7 @@ abline(h=4.3)
 
 surv_object <- survival::Surv(time = svvl$case_overall_survival_mo, event=svvl$os.event)
 fit1 <- survival::survfit(surv_object ~  col.sig , data = svvl)
-#pval.os.r2 <- survminer::surv_pvalue(fit1)$pval
+print(survminer::surv_pvalue(fit1)$pval)
 p1 <- survminer::ggsurvplot(fit1, data = svvl, pval = TRUE, risk.table=T, tables.y.text = FALSE,
                             palette = c(
                               'C1/col signature: high'=alpha('#f346b3',0.7),
