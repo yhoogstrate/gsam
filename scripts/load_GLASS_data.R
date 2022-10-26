@@ -849,12 +849,13 @@ glass.gbm.rnaseq.metadata.all.samples |>
 ## Col PCA signature ----
 
 
-tmp <- read.table("output/tables/principal_DE_cluster_components_2022_GLASS.txt")
+tmp <- read.table("output/tables/principal_DE_cluster_components_2022.txt")
 
 
 glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
   dplyr::left_join(tmp, by=c('aliquot_barcode'='sid'), suffix=c('',''))
 
+stopifnot(sum(!is.na(glass.gbm.rnaseq.metadata.all.samples$rna.signature.C4.neuron.2022)) == 216)
 
 rm(tmp)
 
@@ -962,29 +963,6 @@ rm(tmp)
 stopifnot(is.na(glass.gbm.rnaseq.metadata.all.samples$aliquot_barcode) == F)
 
 
-
-
-
-### Synapse RNA-imputed 2022 ----
-
-# I suspect these are determined using ESTIMATE and RNA data
-
-tmp <- 'data/gsam/data/GLASS_GBM_R1-R2/analysis_estimate_purity_syn31121157.tsv' |> 
-  read.table(sep="\t",header=T,stringsAsFactors = F) |> 
-  dplyr::mutate(ROW_ID=NULL) |> 
-  dplyr::mutate(ROW_VERSION=NULL) |> 
-  dplyr::rename(stromal_score.synapse.rna = stromal_score) |> 
-  dplyr::rename(immune_score.synapse.rna = immune_score) |> 
-  dplyr::rename(estimate_score.synapse.rna = estimate_score) |> 
-  dplyr::rename(purity.synapse.rna = purity)
-
-
-
-glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
-  dplyr::left_join(tmp, by=c('aliquot_barcode'='aliquot_barcode'), suffix=c('','')) 
-
-
-rm(tmp)
 
 
 
