@@ -79,7 +79,7 @@ plt <- prcomp(plt.data, scale=F)$x %>%
 # binnen een subtype moet deze correlatie eigenlijk best laag zijn... checken dus
 
 
-# PC3 = tumour purity...
+# PC3 = tumor purity...
 ggplot2::ggplot(plt, aes(x = PC1, y=PC2, col = gliovis.majority_call, shape =  tumour.percentage.dna >= 20, group=pid)) + 
   geom_line(alpha=0.2, col="gray60") +
   geom_point(size = 3) +
@@ -88,7 +88,7 @@ ggplot2::ggplot(plt, aes(x = PC1, y=PC2, col = gliovis.majority_call, shape =  t
   scale_shape_manual(values=c(19, 1))
 ggsave("output/figures/paper_subtype_pca.png",width=10 * 1.3, height=6 * 1.3)
 
-# PC3 = tumour purity...
+# PC3 = tumor purity...
 ggplot2::ggplot(plt, aes(x = PC1, y=PC2, col = gliovis.majority_call, shape = resection, group=pid)) + 
   geom_line(alpha=0.2, col="gray60") +
   geom_point(size = 3) +

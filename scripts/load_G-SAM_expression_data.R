@@ -4,7 +4,7 @@
 
 
 if(!exists("gsam.rna.metadata")) {
-  source('scripts/R/gsam_metadata.R')
+  source('scripts/load_G-SAM_metadata.R')
 }
 
 if(!exists("gsam.viii.rnaseq")) {
@@ -97,33 +97,58 @@ rm(blacklist)
 # VST transform ----
 
 
+## expression data ----
 
-if(!exists('gsam.rnaseq.expression.vst')) {
-  tmp.1 <- gsam.rnaseq.expression %>%
-      dplyr::filter(rowSums(.) >= ncol(.))
 
-  tmp.2 <- gsam.viii.rnaseq %>%
-      dplyr::mutate(wt.reads = NULL) %>%
-      dplyr::mutate(n.reads = NULL) %>%
-      dplyr::mutate(egfrviii.pct = NULL) %>%
-      dplyr::mutate(sid = NULL) %>%
-      dplyr::rename(EGFRvIII = vIII.reads) %>%
-      tibble::column_to_rownames('sample') %>%
-      t() %>%
-      as.data.frame(stringsAsFactors = F) %>%
-      dplyr::select(colnames(tmp.1))
+sel <- gsam.rna.metadata |> 
+  dplyr::filter(blacklist.pca == F) |> 
+  dplyr::filter(pat.with.IDH == F) |> 
+  dplyr::filter(sid %in% c('BAI2', 'CAO1-replicate', 'FAB2', 'GAS2-replicate') == F ) |>  # replicates
+  dplyr::filter(tumour.percentage.dna >= 15) |> 
+  dplyr::pull(sid)
+#n.gsam.samples <- length(sel)
 
-    tmp <- rbind(tmp.1, tmp.2)
-  
-  rm(tmp.1, tmp.2)
-  
-  cond <- as.factor(paste0('r',sample(c(1,2),ncol(tmp), T)))
-  tmp <- DESeq2::DESeqDataSetFromMatrix(tmp, S4Vectors::DataFrame(cond), ~cond)
-  gsam.rnaseq.expression.vst <- SummarizedExperiment::assay(DESeq2::vst(tmp,blind=T))
-  rm(cond, tmp)
 
-}
+gsam.gene.expression.all <- gsam.rnaseq.expression |> 
+  dplyr::select(sel) |> 
+  dplyr::filter(rowSums(dplyr::across()) > ncol(dplyr::across()) * 3)
+stopifnot(colnames(gsam.gene.expression.all) == sel)
 
+
+gsam.gene.expression.all.vst <- gsam.gene.expression.all %>%
+  DESeq2::DESeqDataSetFromMatrix(data.frame(cond = as.factor(paste0("r",round(runif( ncol(.) , 1, 2))))) , ~cond) %>%
+  DESeq2::vst(blind=T) %>%
+  SummarizedExperiment::assay()
+
+
+rm(sel)
+
+
+# if(!exists('gsam.rnaseq.expression.vst')) {
+#   tmp.1 <- gsam.rnaseq.expression %>%
+#       dplyr::filter(rowSums(.) >= ncol(.) * 3)
+# 
+#   tmp.2 <- gsam.viii.rnaseq %>%
+#       dplyr::mutate(wt.reads = NULL) %>%
+#       dplyr::mutate(n.reads = NULL) %>%
+#       dplyr::mutate(egfrviii.pct = NULL) %>%
+#       dplyr::mutate(sid = NULL) %>%
+#       dplyr::rename(EGFRvIII = vIII.reads) %>%
+#       tibble::column_to_rownames('sample') %>%
+#       t() %>%
+#       as.data.frame(stringsAsFactors = F) %>%
+#       dplyr::select(colnames(tmp.1))
+# 
+#     tmp <- rbind(tmp.1, tmp.2)
+#   
+#   rm(tmp.1, tmp.2)
+#   
+#   cond <- as.factor(paste0('r',sample(c(1,2),ncol(tmp), T)))
+#   tmp <- DESeq2::DESeqDataSetFromMatrix(tmp, S4Vectors::DataFrame(cond), ~cond)
+#   gsam.rnaseq.expression.vst <- SummarizedExperiment::assay(DESeq2::vst(tmp,blind=T))
+#   rm(cond, tmp)
+# 
+# }
 
 
 # ## egfr high/low 

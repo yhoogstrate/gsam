@@ -275,6 +275,7 @@ DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "se
   guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
   labs(subtitle=sid)
 
+
 ggsave(paste0("output/figures/scRNA/Yuan/",sid,"_UMAP.pdf"),width=10,height=8)
 ggsave(paste0("output/figures/scRNA/Yuan/",sid,"_UMAP.png"),width=10,height=8)
 
@@ -528,6 +529,36 @@ FeaturePlot(object = object_1, features =  "ASS1" )
 FeaturePlot(object = object_1, features =  "PERP" )
 # FeaturePlot(object = object_1, features =  "KLHDC7B" )
 FeaturePlot(object = object_1, features =  "CCL8" )
+
+
+#### C0-2022 ----
+##### figure S10k ----
+
+
+tmp.c0 <- results.out |>
+  dplyr::filter(!is.na(.data$C0.2022)) |> 
+  dplyr::filter(.data$C0.2022 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+
+
+sid_print <- sid |> 
+  stringr::str_replace(".filtered_gene_matrices","") |> 
+  stringr::str_replace("_",": ")
+
+
+
+DotPlot(object = object_1, features =list('C0'=tmp.c0), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
+  labs(x = paste0("Features [C0] in: ",sid_print, " (Yuan dataset)"))
+
+
+
+ggsave(paste0("output/figures/2022_figure_S10k.pdf"),width=6.5, height=4,scale=1.2)
+rm(tmp.c0, sid_print)
+
+
 
 
 
@@ -788,12 +819,42 @@ FeaturePlot(object = object_1, features = "TMEM144")
 
 
 
-DotPlot(object = object_1, features =list('C2'=oligodendrocyte.genes , 'OPC'=OPC ), group.by = "seurat_clusters") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
-  labs(x = paste0("Features [C2/OPC] in: ",sid))
 
-ggsave(paste0("output/figures/scRNA/Yuan/",sid,"_C2_OPC.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
-ggsave(paste0("output/figures/scRNA/Yuan/",sid,"_C2_OPC.png"),width=7.5*1.8, height=3.75,scale=1.2)
+##### figure S7g ----
+
+
+tmp.c3 <- results.out |>
+  dplyr::filter(!is.na(.data$C3.2022)) |> 
+  dplyr::filter(.data$C3.2022 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+tmp.opc <- results.out |> 
+  dplyr::filter(!is.na(.data$neftel.meta.modules.OPC)) |> 
+  dplyr::filter(.data$neftel.meta.modules.OPC == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+tmp.c3.opc <- intersect(tmp.c3, tmp.opc)
+tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
+tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
+
+
+sid_print <- sid |> 
+  stringr::str_replace(".filtered_gene_matrices","") |> 
+  stringr::str_replace("_",": ")
+
+
+DotPlot(object = object_1, features =list('C3'=tmp.c3, 'OPC'=tmp.opc, 'C3+OPC'=tmp.c3.opc), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
+  labs(x = paste0("Features [C3/OPC] in: ",sid_print, " (Yuan dataset)"))
+
+
+
+ggsave(paste0("output/figures/2022_figure_S7g.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+rm(tmp.c3, tmp.opc, tmp.c3.opc, sid_print)
+
+
 
 
 
@@ -854,7 +915,7 @@ endo.only <- setdiff(endo, C3)
 
 DotPlot(object = object_1, features = list('C3'=C3.only, 'C3+endo'= C3.and.endo, 'endo'=endo.only,'pericyte'=c('PDGFRB','CD248','RGS5')), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-  labs(x = paste0("Features [C3 & top25 McKenzy endothelial cell markers] in: ",sid))
+  labs(x = paste0("Features [C3 & top25 McKenzie endothelial cell markers] in: ",sid))
 
 
 
@@ -942,11 +1003,115 @@ FeaturePlot(object = object_1, features =  "CCL8" )
 
 
 
+#### C0-2022 ----
+##### figure S10l ----
+
+
+tmp.c0 <- results.out |>
+  dplyr::filter(!is.na(.data$C0.2022)) |> 
+  dplyr::filter(.data$C0.2022 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+
+
+sid_print <- sid |> 
+  stringr::str_replace(".filtered_gene_matrices","") |> 
+  stringr::str_replace("_",": ")
+
+
+
+DotPlot(object = object_1, features =list('C0'=tmp.c0), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
+  labs(x = paste0("Features [C0] in: ",sid_print, " (Yuan dataset)"))
+
+
+
+ggsave(paste0("output/figures/2022_figure_S10l.pdf"),width=6.5, height=4,scale=1.2)
+rm(tmp.c0, sid_print)
+
+
+
+#### C1-2022 (up) ----
+##### figure S12h ----
+
+tmp.c1 <- results.out |>
+  dplyr::filter(!is.na(.data$C1.2022)) |> 
+  dplyr::filter(.data$C1.2022 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique() |> 
+  sort()
+
+
+sid_print <- sid |> 
+  stringr::str_replace(".filtered_gene_matrices","") |> 
+  stringr::str_replace("_",": ")
+
+
+DotPlot(object = object_1, features =list('C1'=tmp.c1, 'Peri'=c("RGS5", "PDGFRB", "CD248")), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
+  labs(x = paste0("Features [C1] in: ",sid_print, " (Yuan dataset)"))
+
+
+ggsave(paste0("output/figures/2022_figure_S12h.pdf"),width=6.5, height=4, scale=1.2)
+rm(tmp.c1, sid_print)
+
+
+
+#### C2-2022 (Endo) (down) ----
+##### figure S9e ----
+
+
+tmp.c2 <- results.out |>
+  dplyr::filter(.data$C2.2022 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+
+tmp.endo <- read_xlsx("data/McKenzie et al. Gene expression different cell types.xlsx", sheet='top_human_specificity') |>
+  dplyr::select(c('grand_mean', 'gene', 'Celltype')) |>
+  dplyr::filter(Celltype == 'end') |> 
+  dplyr::arrange(desc(grand_mean)) |>
+  dplyr::filter(gene %in% all.genes ) |>
+  dplyr::slice_head(n=25) |>
+  dplyr::mutate(grand_mean = NULL) |> 
+  dplyr::pull(gene)
+
+tmp.peri <- c('PDGFRB','CD248','RGS5')
+
+
+
+tmp.c2 <- setdiff(tmp.c2, c(tmp.peri))
+tmp.endo <- setdiff(tmp.endo, c(tmp.peri,tmp.c2))
+tmp.peri <- setdiff(tmp.peri, c(tmp.c2, tmp.endo))
+
+
+sid_print <- sid |> 
+  stringr::str_replace(".filtered_gene_matrices","") |> 
+  stringr::str_replace("_",": ")
+
+
+
+DotPlot(object = object_1, features = list('C2 (Endothelial)'=tmp.c2,
+                                           'Endothelial'=tmp.endo,
+                                           'Pericyte'=tmp.peri), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(x = paste0("Features [C2 & top25 McKenzie endothelial markers] in: ",sid_print, " (Yuan dataset)"))
+
+
+
+ggsave(paste0("output/figures/2022_figure_S9e.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+rm(tmp.c2, tmp.peri, tmp.endo, sid_print)
+
+
+
+
 ## D :: GSM2758474_PJ025 :: T,MG,TC ----
 # Glioblastoma, WHO grade IV, idh1 status: wt, EGFR-ampli
 
-
 rm(object_1, sid)
+gc()
 
 sid <- 'GSM2758474_PJ025'
 object_1 <- Read10X(data.dir = paste0("data/scRNA/GSE103224_Yuan/",sid))
@@ -977,8 +1142,8 @@ print(paste0("Median(nFeature_RNA) in ",sid, " = ",round(median(object_1$nFeatur
 # plot variable features with and without labels
 
 plot1 <- VariableFeaturePlot(object_1)
-plot2 <- LabelPoints(plot = plot1, points = top10, repel = TRUE)
-CombinePlots(plots = list(plot1, plot2))     
+LabelPoints(plot = plot1, points = top10, repel = TRUE)
+#CombinePlots(plots = list(plot1, plot2))     
 
 ### scaling of data 
 #Shifts the expression of each gene, so that the mean expression across cells is 0
@@ -1028,10 +1193,10 @@ object_1$seurat_clusters <- factor(object_1$seurat_clusters, levels=c(
 ))
 
 
-
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters") +
   guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
   labs(subtitle=sid)
+
 
 
 ggsave(paste0("output/figures/scRNA/Yuan/",sid,"_UMAP.pdf"),width=10,height=8)
@@ -1218,6 +1383,19 @@ FeaturePlot(object = object_1, features = "PDGFRB")
 FeaturePlot(object = object_1, features = "CD248")
 
 
+
+
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters") +
+  guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
+  labs(subtitle=sid)
+ggsave("output/figures/2022_figure_S12m_labels.pdf",width=6.5, height=4,scale=1.2)
+
+FeaturePlot(object = object_1, features = c("COL1A1", "COL1A2","PDGFRB", "PECAM1"),order=T,pt.size=0.15)
+ggsave("output/figures/2022_figure_S12m.pdf",width=6.5, height=4,scale=1.2)
+
+
+
+
 #### 6. Til/T-cell (-) ----
 
 
@@ -1267,7 +1445,7 @@ endo.only <- setdiff(endo, C3)
 
 DotPlot(object = object_1, features = list('C3'=C3.only, 'C3+endo'= C3.and.endo, 'endo'=endo.only,'pericyte'=c('PDGFRB','CD248','RGS5')), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-  labs(x = paste0("Features [C3 & top25 McKenzy endothelial cell markers] in: ",sid))
+  labs(x = paste0("Features [C3 & top25 McKenzie endothelial cell markers] in: ",sid))
 
 
 ggsave(paste0("output/figures/scRNA/Yuan/",sid,"_C3.pdf"),width=7.5, height=3,scale=2)
@@ -1350,7 +1528,105 @@ FeaturePlot(object = object_1, features =  "KLHDC7B" )
 # FeaturePlot(object = object_1, features =  "CCL8" )
 
 
+#### C0-2022 ----
+##### figure S10m ----
 
+
+tmp.c0 <- results.out |>
+  dplyr::filter(!is.na(.data$C0.2022)) |> 
+  dplyr::filter(.data$C0.2022 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+
+
+sid_print <- sid |> 
+  stringr::str_replace(".filtered_gene_matrices","") |> 
+  stringr::str_replace("_",": ")
+
+
+
+DotPlot(object = object_1, features =list('C0'=tmp.c0), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
+  labs(x = paste0("Features [C0] in: ",sid_print, " (Yuan dataset)"))
+
+
+
+ggsave(paste0("output/figures/2022_figure_S10m.pdf"),width=6.5, height=4,scale=1.2)
+rm(tmp.c0, sid_print)
+
+
+#### C1-2022 (up) ----
+##### figure S12g ----
+
+tmp.c1 <- results.out |>
+  dplyr::filter(!is.na(.data$C1.2022)) |> 
+  dplyr::filter(.data$C1.2022 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique() |> 
+  sort()
+
+
+sid_print <- sid |> 
+  stringr::str_replace(".filtered_gene_matrices","") |> 
+  stringr::str_replace("_",": ")
+
+
+DotPlot(object = object_1, features =list('C1'=tmp.c1, 'Peri'=c("RGS5", "PDGFRB", "CD248")), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
+  labs(x = paste0("Features [C1] in: ",sid_print, " (Yuan dataset)"))
+
+
+ggsave(paste0("output/figures/2022_figure_S12g.pdf"),width=6.5, height=4, scale=1.2)
+rm(tmp.c1, sid_print)
+
+
+
+#### C2-2022 (Endo) (down) ----
+##### figure S9d ----
+
+
+tmp.c2 <- results.out |>
+  dplyr::filter(.data$C2.2022 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+
+tmp.endo <- read_xlsx("data/McKenzie et al. Gene expression different cell types.xlsx", sheet='top_human_specificity') |>
+  dplyr::select(c('grand_mean', 'gene', 'Celltype')) |>
+  dplyr::filter(Celltype == 'end') |> 
+  dplyr::arrange(desc(grand_mean)) |>
+  dplyr::filter(gene %in% all.genes ) |>
+  dplyr::slice_head(n=25) |>
+  dplyr::mutate(grand_mean = NULL) |> 
+  dplyr::pull(gene)
+
+tmp.peri <- c('PDGFRB','CD248','RGS5')
+
+
+
+tmp.c2 <- setdiff(tmp.c2, c(tmp.peri))
+tmp.endo <- setdiff(tmp.endo, c(tmp.peri,tmp.c2))
+tmp.peri <- setdiff(tmp.peri, c(tmp.c2, tmp.endo))
+
+
+sid_print <- sid |> 
+  stringr::str_replace(".filtered_gene_matrices","") |> 
+  stringr::str_replace("_",": ")
+
+
+
+DotPlot(object = object_1, features = list('C2 (Endothelial)'=tmp.c2,
+                                           'Endothelial'=tmp.endo,
+                                           'Pericyte'=tmp.peri), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(x = paste0("Features [C2 & top25 McKenzie endothelial markers] in: ",sid_print, " (Yuan dataset)"))
+
+
+
+ggsave(paste0("output/figures/2022_figure_S9d.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+rm(tmp.c2, tmp.peri, tmp.endo, sid_print)
 
 
 
@@ -1687,8 +1963,8 @@ print(paste0("Median(nFeature_RNA) in ",sid, " = ",round(median(object_1$nFeatur
 # plot variable features with and without labels
 
 plot1 <- VariableFeaturePlot(object_1)
-plot2 <- LabelPoints(plot = plot1, points = top10, repel = TRUE)
-CombinePlots(plots = list(plot1, plot2))     
+LabelPoints(plot = plot1, points = top10, repel = TRUE)
+#CombinePlots(plots = list(plot1, plot2))     
 
 
 ### scaling of data
@@ -1935,7 +2211,7 @@ endo.only <- setdiff(endo, C3)
 
 DotPlot(object = object_1, features = list('C3'=C3.only, 'C3+endo'= C3.and.endo, 'endo'=endo.only,'pericyte'=c('PDGFRB','CD248','RGS5')), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-  labs(x = paste0("Features [C3 & top25 McKenzy endothelial cell markers] in: ",sid))
+  labs(x = paste0("Features [C3 & top25 McKenzie endothelial cell markers] in: ",sid))
 
 
 ggsave(paste0("output/figures/scRNA/Yuan/",sid,"_C3.pdf"),width=7.5, height=3,scale=2)
@@ -2018,6 +2294,110 @@ FeaturePlot(object = object_1, features =  "ASS1" )
 FeaturePlot(object = object_1, features =  "PERP" )
 # FeaturePlot(object = object_1, features =  "KLHDC7B" )
 FeaturePlot(object = object_1, features =  "CCL8" )
+
+
+
+#### C0-2022 ----
+##### figure S10n ----
+
+
+tmp.c0 <- results.out |>
+  dplyr::filter(!is.na(.data$C0.2022)) |> 
+  dplyr::filter(.data$C0.2022 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+
+
+sid_print <- sid |> 
+  stringr::str_replace(".filtered_gene_matrices","") |> 
+  stringr::str_replace("_",": ")
+
+
+
+DotPlot(object = object_1, features =list('C0'=tmp.c0), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
+  labs(x = paste0("Features [C0] in: ",sid_print, " (Yuan dataset)"))
+
+
+
+ggsave(paste0("output/figures/2022_figure_S10n.pdf"),width=6.5, height=4,scale=1.2)
+rm(tmp.c0, sid_print)
+
+
+
+#### C1-2022 (up) ----
+##### figure S12j ----
+
+tmp.c1 <- results.out |>
+  dplyr::filter(!is.na(.data$C1.2022)) |> 
+  dplyr::filter(.data$C1.2022 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique() |> 
+  sort()
+
+
+sid_print <- sid |> 
+  stringr::str_replace(".filtered_gene_matrices","") |> 
+  stringr::str_replace("_",": ")
+
+
+DotPlot(object = object_1, features =list('C1'=tmp.c1, 'Peri'=c("RGS5", "PDGFRB", "CD248")), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
+  labs(x = paste0("Features [C1] in: ",sid_print, " (Yuan dataset)"))
+
+
+ggsave(paste0("output/figures/2022_figure_S12j.pdf"),width=6.5, height=4, scale=1.2)
+rm(tmp.c1, sid_print)
+
+
+
+#### C2-2022 (Endo) (down) ----
+##### figure S9g ----
+
+
+tmp.c2 <- results.out |>
+  dplyr::filter(.data$C2.2022 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+
+tmp.endo <- read_xlsx("data/McKenzie et al. Gene expression different cell types.xlsx", sheet='top_human_specificity') |>
+  dplyr::select(c('grand_mean', 'gene', 'Celltype')) |>
+  dplyr::filter(Celltype == 'end') |> 
+  dplyr::arrange(desc(grand_mean)) |>
+  dplyr::filter(gene %in% all.genes ) |>
+  dplyr::slice_head(n=25) |>
+  dplyr::mutate(grand_mean = NULL) |> 
+  dplyr::pull(gene)
+
+tmp.peri <- c('PDGFRB','CD248','RGS5')
+
+
+
+tmp.c2 <- setdiff(tmp.c2, c(tmp.peri))
+tmp.endo <- setdiff(tmp.endo, c(tmp.peri,tmp.c2))
+tmp.peri <- setdiff(tmp.peri, c(tmp.c2, tmp.endo))
+
+
+sid_print <- sid |> 
+  stringr::str_replace(".filtered_gene_matrices","") |> 
+  stringr::str_replace("_",": ")
+
+
+
+DotPlot(object = object_1, features = list('C2 (Endothelial)'=tmp.c2,
+                                           'Endothelial'=tmp.endo,
+                                           'Pericyte'=tmp.peri), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(x = paste0("Features [C2 & top25 McKenzie endothelial markers] in: ",sid_print, " (Yuan dataset)"))
+
+
+
+ggsave(paste0("output/figures/2022_figure_S9g.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+rm(tmp.c2, tmp.peri, tmp.endo, sid_print)
+
 
 
 ### Find DE genes voor 5 ----
@@ -2155,6 +2535,11 @@ object_1$seurat_clusters <- factor(object_1$seurat_clusters, levels=c(
 
 
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "seurat_clusters") +
+  guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
+  labs(subtitle=sid)
+
+
+DimPlot(object_1, reduction = "pca", label = TRUE, pt.size = .8, group.by = "seurat_clusters") +
   guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
   labs(subtitle=sid)
 
@@ -2328,13 +2713,39 @@ FeaturePlot(object = object_1, features = "TMEM125")
 
 
 
-DotPlot(object = object_1, features =list('C2'=oligodendrocyte.genes , 'OPC'=OPC ), group.by = "seurat_clusters") +
+##### figure S7h ----
+
+
+tmp.c3 <- results.out |>
+  dplyr::filter(!is.na(.data$C3.2022)) |> 
+  dplyr::filter(.data$C3.2022 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+tmp.opc <- results.out |> 
+  dplyr::filter(!is.na(.data$neftel.meta.modules.OPC)) |> 
+  dplyr::filter(.data$neftel.meta.modules.OPC == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+tmp.c3.opc <- intersect(tmp.c3, tmp.opc)
+tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
+tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
+
+
+sid_print <- sid |> 
+  stringr::str_replace(".filtered_gene_matrices","") |> 
+  stringr::str_replace("_",": ")
+
+
+DotPlot(object = object_1, features =list('C3'=tmp.c3, 'OPC'=tmp.opc, 'C3+OPC'=tmp.c3.opc), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
-  labs(x = paste0("Features [C2/OPC] in: ",sid))
+  labs(x = paste0("Features [C3/OPC] in: ",sid_print, " (Yuan dataset)"))
 
-ggsave(paste0("output/figures/scRNA/Yuan/",sid,"_C2_OPC.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
-ggsave(paste0("output/figures/scRNA/Yuan/",sid,"_C2_OPC.png"),width=7.5*1.8, height=3.75,scale=1.2)
 
+
+ggsave(paste0("output/figures/2022_figure_S7h.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+rm(tmp.c3, tmp.opc, tmp.c3.opc, sid_print)
 
 
 
@@ -2385,7 +2796,7 @@ endo.only <- setdiff(endo, C3)
 
 DotPlot(object = object_1, features = list('C3'=C3.only, 'C3+endo'= C3.and.endo, 'endo'=endo.only,'pericyte'=c('PDGFRB','CD248','RGS5')), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-  labs(x = paste0("Features [C3 & top25 McKenzy endothelial cell markers] in: ",sid))
+  labs(x = paste0("Features [C3 & top25 McKenzie endothelial cell markers] in: ",sid))
 
 
 ggsave(paste0("output/figures/scRNA/Yuan/",sid,"_C3.pdf"),width=7.5, height=3,scale=2)
@@ -2473,6 +2884,112 @@ FeaturePlot(object = object_1, features =  "ASS1" )
 FeaturePlot(object = object_1, features =  "PERP" )
 # FeaturePlot(object = object_1, features =  "KLHDC7B" )
 #FeaturePlot(object = object_1, features =  "CCL8" )
+
+
+
+#### C0-2022 ----
+##### figure S10o ----
+
+
+tmp.c0 <- results.out |>
+  dplyr::filter(!is.na(.data$C0.2022)) |> 
+  dplyr::filter(.data$C0.2022 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+
+
+sid_print <- sid |> 
+  stringr::str_replace(".filtered_gene_matrices","") |> 
+  stringr::str_replace("_",": ")
+
+
+
+DotPlot(object = object_1, features =list('C0'=tmp.c0), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
+  labs(x = paste0("Features [C0] in: ",sid_print, " (Yuan dataset)"))
+
+
+
+ggsave(paste0("output/figures/2022_figure_S10o.pdf"),width=6.5, height=4,scale=1.2)
+rm(tmp.c0, sid_print)
+
+
+
+#### C1-2022 (up) ----
+##### figure S12i ----
+
+
+tmp.c1 <- results.out |>
+  dplyr::filter(!is.na(.data$C1.2022)) |> 
+  dplyr::filter(.data$C1.2022 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique() |> 
+  sort()
+
+
+sid_print <- sid |> 
+  stringr::str_replace(".filtered_gene_matrices","") |> 
+  stringr::str_replace("_",": ")
+
+
+DotPlot(object = object_1, features =list('C1'=tmp.c1, 'Peri'=c("RGS5", "PDGFRB", "CD248")), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
+  labs(x = paste0("Features [C1] in: ",sid_print, " (Yuan dataset)"))
+
+
+ggsave(paste0("output/figures/2022_figure_S12i.pdf"),width=6.5, height=4, scale=1.2)
+rm(tmp.c1, sid_print)
+
+
+
+
+#### C2-2022 (Endo) (down) ----
+##### figure S9f ----
+
+
+tmp.c2 <- results.out |>
+  dplyr::filter(.data$C2.2022 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+
+tmp.endo <- read_xlsx("data/McKenzie et al. Gene expression different cell types.xlsx", sheet='top_human_specificity') |>
+  dplyr::select(c('grand_mean', 'gene', 'Celltype')) |>
+  dplyr::filter(Celltype == 'end') |> 
+  dplyr::arrange(desc(grand_mean)) |>
+  dplyr::filter(gene %in% all.genes ) |>
+  dplyr::slice_head(n=25) |>
+  dplyr::mutate(grand_mean = NULL) |> 
+  dplyr::pull(gene)
+
+tmp.peri <- c('PDGFRB','CD248','RGS5')
+
+
+
+tmp.c2 <- setdiff(tmp.c2, c(tmp.peri))
+tmp.endo <- setdiff(tmp.endo, c(tmp.peri,tmp.c2))
+tmp.peri <- setdiff(tmp.peri, c(tmp.c2, tmp.endo))
+
+
+sid_print <- sid |> 
+  stringr::str_replace(".filtered_gene_matrices","") |> 
+  stringr::str_replace("_",": ")
+
+
+
+DotPlot(object = object_1, features = list('C2 (Endothelial)'=tmp.c2,
+                                           'Endothelial'=tmp.endo,
+                                           'Pericyte'=tmp.peri), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(x = paste0("Features [C2 & top25 McKenzie endothelial markers] in: ",sid_print, " (Yuan dataset)"))
+
+
+
+ggsave(paste0("output/figures/2022_figure_S9f.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+rm(tmp.c2, tmp.peri, tmp.endo, sid_print)
+
 
 
 

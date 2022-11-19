@@ -31,3 +31,9 @@ ___
        \   /     \   /     \   /     \   /     \   /     \   /     \   /     \   /     \   /  
         `-~       `-~       `-~       `-~       `-~       `-~       `-~       `-~       `-~   
 ___
+
+
+
+# G-SAM RNA pipe-line and analysis code #
+
+Dr. Youri Hoogstrate, 2019 - 2022

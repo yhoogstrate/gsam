@@ -139,7 +139,7 @@ gsam.gene.expression.all.vst <- gsam.gene.expression.all %>%
 
 
 
-## GLASS ----
+## GLASS 2021 ----
 
 
 
@@ -174,7 +174,7 @@ wilcox.test(glass.metadata.tp %>% dplyr::pull(tumour.percentage.dna.imputed.rf) 
 #   #geom_segment(aes(x=1.55, y=m2.gsam, xend=2.45, yend=m2.gsam),lty=1,lwd=0.15, col="gray40") +
 #   geom_jitter( position=position_jitter(0.2), size=0.9) +
 #   ylim(25, 80) +
-#   labs(x = NULL, col = NULL, y = "WES estimate tumour cell percentage" ) +
+#   labs(x = NULL, col = NULL, y = "WES estimate tumor cell percentage" ) +
 #   job_gg_theme
 
 
@@ -763,7 +763,7 @@ results.out <- results.out %>%
 
 
 
-# DE unpaired all [GLASS] ----
+# DE unpaired all [GLASS 2021] ----
 
 
 stopifnot(colnames(glass.gene.expression.all) == glass.metadata.all$sid)
@@ -794,10 +794,11 @@ results.out <- results.out %>%
 
 
 glass.gene.expression.all.vst <- DESeqDataSetFromMatrix(glass.gene.expression.all %>%
-                                                         dplyr::filter(rowSums(.) > ncol(.) * 3)
-                                                       , glass.metadata.all, ~condition ) %>% # + resection
+                                                          dplyr::filter(rowSums(.) > ncol(.) * 3)
+                                                        , glass.metadata.all, ~condition ) %>% # + resection
   assay() %>%
   vst(blind=T)
+
 
 
 
@@ -866,7 +867,8 @@ results.out <- results.out %>%
 # Import (quick) ----
 
 
-results.out <- readRDS(file = 'tmp/results.out.Rds')
+#results.out <- readRDS(file = 'tmp/results.out.Rds')
+source('scripts/load_results.out.R')
 
 
 # stats ----
@@ -1411,7 +1413,7 @@ z$plots[[3]]
 # 
 # # TODO exclude IDH mutants [check]
 # # TODO x-check replicates/duplicates? [check] << taken out using 'gsam.rnaseq.expression'
-# # TODO exclude low tumour percentage ? << not if BFGs are explitily used & double test?
+# # TODO exclude low tumor percentage ? << not if BFGs are explitily used & double test?
 # 
 # 
 # gsam.bfg.res.tpc <- DESeqDataSetFromMatrix(gsam.bfg.expression.all, gsam.metadata.all, ~tpc ) %>% # + tpc
@@ -1471,7 +1473,7 @@ z$plots[[3]]
 #   scale_color_manual(values = c('TRUE'='red', 'FALSE' = 'black') ) +
 #   geom_text_repel(data = subset(gsam.bfg.res.combined, significant.res == T & abs(log2FoldChange.res) > 1), size = 2.4 )  +
 #   labs(x = "log2FC R1 vs. R2 (unpaired)",
-#        y="Correlation t-statistic with tumour percentage",
+#        y="Correlation t-statistic with tumor percentage",
 #        col="Difference significant (R1 ~ R2)"
 #   ) +
 #   youri_gg_theme
@@ -1484,8 +1486,8 @@ z$plots[[3]]
 #   geom_point(data=subset(gsam.bfg.res.combined, significant.tpc.res == T ),pch=19,cex=0.5) +
 #   scale_color_manual(values = c('TRUE'='red', 'FALSE' = 'black') ) +
 #   geom_text_repel(data = subset(gsam.bfg.res.combined, significant.tpc.res == T & abs(log2FoldChange.tpc.res) > 1), size = 2.4 )  +
-#   labs(x = "log2FC R1 vs. R2 (unpaired)", y="Correlation t-statistic with tumour percentage",
-#        col="Difference significant (R1 ~ R2; tumour percentage corrected)") +
+#   labs(x = "log2FC R1 vs. R2 (unpaired)", y="Correlation t-statistic with tumor percentage",
+#        col="Difference significant (R1 ~ R2; tumor percentage corrected)") +
 #   youri_gg_theme
 # 
 # p1 + p2
@@ -1710,7 +1712,7 @@ p1 <- ggplot(plt, aes(x = log2FoldChange.res.paired , y = statistic.cor.tpc , la
   geom_text_repel(data =subset(plt, show.label == T),col="red") +
   youri_gg_theme + 
   labs(x = "log2FC R1 vs. R2 (paired)",
-       y="Correlation t-statistic with tumour percentage") +
+       y="Correlation t-statistic with tumor percentage") +
   xlim(-2.5,4)
 
 
@@ -1728,7 +1730,7 @@ p2 <- ggplot(plt, aes(x = log2FoldChange.tpc.res.paired , y = statistic.cor.tpc 
   geom_text_repel(data =subset(plt, show.label == T),col='red') +
   youri_gg_theme + 
   labs(x = "log2FC R1 vs. R2 (paired)",
-       y="Correlation t-statistic with tumour percentage") +
+       y="Correlation t-statistic with tumor percentage") +
   xlim(-2.5,4)
 
 
@@ -1756,7 +1758,7 @@ p.corr <- ggplot(plt, aes(x = log2FoldChange.tpc.res.paired , y = log2FoldChange
   geom_text_repel(data =subset(plt, gid %in% a),col="red") +
   youri_gg_theme + 
   labs(x = "log2FC R1 vs. R2 (paired)",
-       y="Correlation t-statistic with tumour percentage") + 
+       y="Correlation t-statistic with tumor percentage") + 
   xlim(-2,4) +
   ylim(-2,4) 
 
@@ -1810,7 +1812,7 @@ ggplot(plt, aes(x = stat.tpc.res.paired , y = stat.tpc.res , label=hugo_symbol
   geom_text_repel(data =subset(plt, show.label == T),col="red") +
   youri_gg_theme + 
   labs(x = "log2FC R1 vs. R2 (paired)",
-       y="Correlation t-statistic with tumour percentage")
+       y="Correlation t-statistic with tumor percentage")
 #+
 #xlim(-3,10)+
 #ylim(-3,10)
@@ -1977,19 +1979,19 @@ tmp <- rbind(
   
   results.out %>%
     dplyr::filter(grepl("astrocyte",primary.marker.genes)) %>%
-    dplyr::mutate(label = "McKenzy: ast") %>%
+    dplyr::mutate(label = "McKenzie: ast") %>%
     head(n=14),
   results.out %>%
     dplyr::filter(grepl("neuron",primary.marker.genes)) %>%
-    dplyr::mutate(label = "McKenzy: neu") %>%
+    dplyr::mutate(label = "McKenzie: neu") %>%
     head(n=14),
   results.out %>%
     dplyr::filter(grepl("oligodendrocyte",primary.marker.genes)) %>%
-    dplyr::mutate(label = "McKenzy: oli") %>%
+    dplyr::mutate(label = "McKenzie: oli") %>%
     head(n=14),
   results.out %>%
     dplyr::filter(grepl("microglia",primary.marker.genes)) %>%
-    dplyr::mutate(label = "McKenzy: tam") %>%
+    dplyr::mutate(label = "McKenzie: tam") %>%
     head(n=14)
     
 ) %>%
@@ -2229,7 +2231,7 @@ tmp.meta <- results.out %>% dplyr::filter(grepl("astrocyte",primary.marker.genes
 tmp.meta <- plt.expanded %>%
   dplyr::filter(x %in% tmp.meta & x == y) %>%
   dplyr::mutate(y.order = nrow(plt ) + 15) %>%
-  dplyr::mutate(y = "McKenzy: ast")  %>%
+  dplyr::mutate(y = "McKenzie: ast")  %>%
   dplyr::mutate(type = y) %>% 
   dplyr::mutate(value=0)
 dim(tmp.meta)
@@ -2240,7 +2242,7 @@ tmp.meta <- results.out %>% dplyr::filter(grepl("neuron",primary.marker.genes)) 
 tmp.meta <- plt.expanded %>%
   dplyr::filter(x %in% tmp.meta & x == y) %>%
   dplyr::mutate(y.order = nrow(plt ) + 16) %>%
-  dplyr::mutate(y = "McKenzy: neu")  %>%
+  dplyr::mutate(y = "McKenzie: neu")  %>%
   dplyr::mutate(type = y) %>% 
   dplyr::mutate(value=0)
 dim(tmp.meta)
@@ -2251,7 +2253,7 @@ tmp.meta <- results.out %>% dplyr::filter(grepl("oligodendrocyte",primary.marker
 tmp.meta <- plt.expanded %>%
   dplyr::filter(x %in% tmp.meta & x == y) %>%
   dplyr::mutate(y.order = nrow(plt ) + 17) %>%
-  dplyr::mutate(y = "McKenzy: oli")  %>%
+  dplyr::mutate(y = "McKenzie: oli")  %>%
   dplyr::mutate(type = y) %>% 
   dplyr::mutate(value=0)
 dim(tmp.meta)
@@ -2262,7 +2264,7 @@ tmp.meta <- results.out %>% dplyr::filter(grepl("microglia",primary.marker.genes
 tmp.meta <- plt.expanded %>%
   dplyr::filter(x %in% tmp.meta & x == y) %>%
   dplyr::mutate(y.order = nrow(plt ) + 18) %>%
-  dplyr::mutate(y = "McKenzy: tam")  %>%
+  dplyr::mutate(y = "McKenzie: tam")  %>%
   dplyr::mutate(type = y) %>% 
   dplyr::mutate(value=0)
 dim(tmp.meta)
@@ -2271,7 +2273,7 @@ plt.expanded <- dplyr::bind_rows(plt.expanded, tmp.meta)
 
 
 plt.expanded <- plt.expanded %>%
-  dplyr::mutate(mckenzy = grepl("McKenzy", type))
+  dplyr::mutate(mckenzy = grepl("McKenzie", type))
 
 
 
@@ -2427,7 +2429,7 @@ ggplot(plt, aes(x = log2FoldChange.gsam.res ,
   scale_fill_manual(values = c('truncated'= 'black', 'not at chr7' = rgb(0,0,0,0.35), 'at chr7'= rgb(1,0,0,1)  )    ) +
   youri_gg_theme + 
   labs(x = "log2FC R1 vs. R2 (unpaired)",
-       y="Correlation t-statistic with tumour percentage",
+       y="Correlation t-statistic with tumor percentage",
        shape = "Truncated at x-axis",
        size="Truncated at x-axis",
        col="Truncated at x-axis") + 
@@ -2468,7 +2470,7 @@ p1 <- ggplot(plt, aes(x = log2FoldChange.gsam.res ,
   scale_color_manual(values = c('TRUE'= 'black', 'FALSE' = rgb(0,0,0,0.35))    ) +
   youri_gg_theme + 
   labs(x = "log2FC R1 vs. R2 (unpaired)",
-       y="Correlation t-statistic with tumour percentage",
+       y="Correlation t-statistic with tumor percentage",
        shape = "Truncated at x-axis",
        size="Truncated at x-axis",
        col="Truncated at x-axis") +
@@ -2492,7 +2494,7 @@ p2 <- ggplot(plt, aes(x = log2FoldChange.gsam.res ,
   scale_fill_manual(values = c('truncated'= 'black', 'not at chr7' = rgb(0,0,0,0.35), 'at chr7'= rgb(1,0,0,1)  )    ) +
   youri_gg_theme + 
   labs(x = "log2FC R1 vs. R2 (unpaired)",
-       y="Correlation t-statistic with tumour percentage",
+       y="Correlation t-statistic with tumor percentage",
        shape = "Truncated at x-axis",
        size="Truncated at x-axis",
        col="Truncated at x-axis") +
@@ -2516,7 +2518,7 @@ p3 <- ggplot(plt, aes(x = log2FoldChange.gsam.res ,
   scale_fill_manual(values = c('truncated'= 'black', 'not at chr10' = rgb(0,0,0,0.35), 'at chr10'= rgb(1,0,0,1)  )    ) +
   youri_gg_theme + 
   labs(x = "log2FC R1 vs. R2 (unpaired)",
-       y="Correlation t-statistic with tumour percentage",
+       y="Correlation t-statistic with tumor percentage",
        shape = "Truncated at x-axis",
        size="Truncated at x-axis",
        col="Truncated at x-axis") +
@@ -2574,7 +2576,7 @@ p1 <- ggplot(plt, aes(x = log2FoldChange.glass.res ,
   scale_color_manual(values = c('TRUE'= 'black', 'FALSE' = rgb(0,0,0,0.65))    ) +
   youri_gg_theme + 
   labs(x = "log2FC R1 vs. R2 (unpaired)",
-       y="Correlation t-statistic with tumour percentage",
+       y="Correlation t-statistic with tumor percentage",
        shape = "Truncated at x-axis",
        size="Truncated at x-axis",
        col="Truncated at x-axis") +
@@ -2597,7 +2599,7 @@ p2 <- ggplot(plt, aes(x = log2FoldChange.glass.tpc.res ,
   scale_color_manual(values = c('TRUE'= 'black', 'FALSE' = rgb(0,0,0,0.65))    ) +
   youri_gg_theme + 
   labs(x = "log2FC R1 vs. R2 (unpaired)",
-       y="Correlation t-statistic with tumour percentage",
+       y="Correlation t-statistic with tumor percentage",
        shape = "Truncated at x-axis",
        size="Truncated at x-axis",
        col="Truncated at x-axis") +
@@ -2629,7 +2631,7 @@ p3 <- ggplot(plt, aes(x = log2FoldChange.gsam.res ,
   scale_color_manual(values = c('TRUE'= 'black', 'FALSE' = rgb(0,0,0,0.65))    ) +
   youri_gg_theme + 
   labs(x = "log2FC R1 vs. R2 (unpaired)",
-       y="Correlation t-statistic with tumour percentage",
+       y="Correlation t-statistic with tumor percentage",
        shape = "Truncated at x-axis",
        size="Truncated at x-axis",
        col="Truncated at x-axis") +
@@ -2651,7 +2653,7 @@ p4 <- ggplot(plt, aes(x = log2FoldChange.gsam.tpc.res ,
   scale_color_manual(values = c('TRUE'= 'black', 'FALSE' = rgb(0,0,0,0.65))    ) +
   youri_gg_theme + 
   labs(x = "log2FC R1 vs. R2 (unpaired)",
-       y="Correlation t-statistic with tumour percentage",
+       y="Correlation t-statistic with tumor percentage",
        shape = "Truncated at x-axis",
        size="Truncated at x-axis",
        col="Truncated at x-axis") +
@@ -2747,7 +2749,7 @@ ggplot(plt.expanded, aes(x = log2FoldChange ,
   scale_fill_manual(values = dataset_colors <- c('G-SAM' = '#e6935622', 'GLASS' = '#69a4d522') ) + 
   youri_gg_theme + 
   labs(x = "log2FC R1 vs. R2 (unpaired)",
-       y="Correlation t-statistic with tumour percentage",
+       y="Correlation t-statistic with tumor percentage",
        shape = "Truncated at x-axis",
        size="Truncated at x-axis",
        col="Truncated at x-axis") +
@@ -2835,7 +2837,7 @@ ggplot(plt.expanded, aes(x = log2FoldChange ,
   scale_fill_manual(values = dataset_colors <- c('G-SAM' = '#e69356', 'GLASS' = '#69a4d5', 'no-mg-or-tam'='white') ) + 
   youri_gg_theme + 
   labs(x = "log2FC R1 vs. R2 (unpaired)",
-       y="Correlation t-statistic with tumour percentage",
+       y="Correlation t-statistic with tumor percentage",
        shape = "Truncated at x-axis",
        size="Truncated at x-axis",
        col="Truncated at x-axis") +
@@ -2956,7 +2958,7 @@ ggplot(plt.expanded, aes(x = log2FoldChange ,
   scale_fill_manual(values = dataset_colors <- c('G-SAM' = '#e69356', 'GLASS' = '#69a4d5', 'no-mg-or-tam'='white') ) + 
   youri_gg_theme + 
   labs(x = "log2FC R1 vs. R2",
-       y="Correlation t-statistic with tumour percentage",
+       y="Correlation t-statistic with tumor percentage",
        shape = "Truncated at x-axis",
        size="Truncated at x-axis",
        col="Truncated at x-axis") +
@@ -3036,7 +3038,7 @@ ggplot(plt.expanded, aes(x = log2FoldChange ,
   scale_fill_manual(values = dataset_colors <- c('G-SAM' = '#e69356', 'GLASS' = '#69a4d5', 'no-EM'='white') ) + 
   youri_gg_theme + 
   labs(x = "log2FC R1 vs. R2 (unpaired)",
-       y="Correlation t-statistic with tumour percentage",
+       y="Correlation t-statistic with tumor percentage",
        shape = "Truncated at x-axis",
        size="Truncated at x-axis",
        col="Truncated at x-axis") +
@@ -3124,7 +3126,7 @@ ggplot(plt.expanded, aes(x = log2FoldChange ,
   geom_text_repel(data=subset(plt.expanded, col == "pericyte marker"), size=2.5 , segment.size = 0.25, segment.linetype = 1, nudge_x = -3.1, direction = "y", hjust = "right",col="black" ) +
   youri_gg_theme + 
   labs(x = "log2FC R1 vs. R2 (unpaired)",
-       y="Correlation t-statistic with tumour percentage",
+       y="Correlation t-statistic with tumor percentage",
        shape = "Truncated at x-axis",
        size="Truncated at x-axis",
        col="Truncated at x-axis") +
@@ -3256,7 +3258,7 @@ p1 <- ggplot(plt, aes(x = log2FoldChange.glass.res ,
   scale_color_manual(values = c('FALSE'= 'black', 'TRUE' = rgb(1,0,0,0.85)))  +
   youri_gg_theme + 
   labs(x = "log2FC GLASS",
-       y="Correlation t-statistic with tumour percentage",
+       y="Correlation t-statistic with tumor percentage",
        shape = "Truncated at x-axis",
        size="Truncated at x-axis",
        col="Truncated at x-axis")  +
@@ -3281,7 +3283,7 @@ p2 <- ggplot(plt, aes(x = log2FoldChange.gsam.res ,
   scale_color_manual(values = c('FALSE'= 'black', 'TRUE' = rgb(1,0,0,0.85)))  +
   youri_gg_theme + 
   labs(x = "log2FC G-SAM",
-       y="Correlation t-statistic with tumour percentage",
+       y="Correlation t-statistic with tumor percentage",
        shape = "Truncated at x-axis",
        size="Truncated at x-axis",
        col="Truncated at x-axis")  +
@@ -3351,7 +3353,7 @@ ggplot(plt, aes(x=lfc, y=cor ) ) +
               se = FALSE,  formula=y ~ x, orientation="y", col="red" , size=0.8) +
   scale_color_manual(values = c('remaining'='black','chr7'='red') ) +
   labs(x = "log2FC R1 vs. R2 (Tumor cell percentage corrected)",
-       y="Correlation t-statistic with tumour percentage"
+       y="Correlation t-statistic with tumor percentage"
        #,col="Difference significant (R1 ~ R2)"
   ) +
   facet_grid(cols = vars(DGE.tumor.cell.percentage.correction), rows=vars(dataset), scales = "free", space = "free") +
@@ -3394,7 +3396,7 @@ p1 <- ggplot(plt, aes(x=log2FoldChange.gsam.res ,
   scale_size_manual(values = c('not significant'=0.85, 'significant'=0.85, 'GABA'=1.75, 'neuronal'=1.75 ,'TRUE'=2)) +
   scale_color_manual(values = c('not significant'= rgb(0,0,0,0.15),'significant'= rgb(0,0,0,0.15),'TRUE'='red','GABA'='red','neuronal'=rgb(0.2,0.2,1.0))) +
   labs(x = "log2FC R1 vs. R2 G-SAM (tumor cell-% corrected)",
-       y="Correlation t-statistic with tumour percentage GSAM"
+       y="Correlation t-statistic with tumor percentage GSAM"
        ,col="Difference significant (R1 ~ R2)"
   ) +
   youri_gg_theme + xlim(-3.5, 3.5)
@@ -3409,7 +3411,7 @@ p2 <- ggplot(plt, aes(x=log2FoldChange.gsam.res ,
   scale_size_manual(values = c('not significant'=0.85, 'significant'=0.85, 'GABA'=1.75, 'neuronal'=1.75 )) +
   scale_color_manual(values = c('not significant'= rgb(0,0,0,0.15),'significant'= rgb(0,0,0,0.15),'GABA'='red','neuronal'=rgb(0.2,0.2,1.0))) +
   labs(x = "log2FC R1 vs. R2 G-SAM (tumor cell-% corrected)",
-       y="Correlation t-statistic with tumour percentage GLASS"
+       y="Correlation t-statistic with tumor percentage GLASS"
        ,col="Difference significant (R1 ~ R2)"
   ) +
   youri_gg_theme + xlim(-3.5, 3.5)
@@ -3424,7 +3426,7 @@ p3 <- ggplot(plt, aes(x=log2FoldChange.glass.res ,
   scale_size_manual(values = c('not significant'=0.65, 'significant'=0.85, 'GABA'=1.75, 'neuronal'=1.75 )) +
   scale_color_manual(values = c('not significant'= rgb(0,0,0,0.15),'significant'= rgb(0,0,0,0.15),'GABA'='red','neuronal'=rgb(0.2,0.2,1.0))) +
   labs(x = "log2FC R1 vs. R2 GLASS (tumor cell-% corrected)",
-       y="Correlation t-statistic with tumour percentage G-SAM"
+       y="Correlation t-statistic with tumor percentage G-SAM"
        ,col="Difference significant (R1 ~ R2)"
   ) +
   geom_vline(xintercept = 0, col="red") +
@@ -3440,7 +3442,7 @@ p4 <- ggplot(plt, aes(x=log2FoldChange.glass.res ,
   scale_size_manual(values = c('not significant'=0.65, 'significant'=0.85, 'GABA'=1.75, 'neuronal'=1.75 )) +
   scale_color_manual(values = c('not significant'= rgb(0,0,0,0.15),'significant'= rgb(0,0,0,0.15),'GABA'='red','neuronal'=rgb(0.2,0.2,1.0))) +
   labs(x = "log2FC R1 vs. R2 GLASS (tumor cell-% corrected)",
-       y="Correlation t-statistic with tumour percentage GLASS"
+       y="Correlation t-statistic with tumor percentage GLASS"
        ,col="Difference significant (R1 ~ R2)"
   ) +
   geom_vline(xintercept = 0, col="red") +
@@ -3491,7 +3493,7 @@ p1 <- ggplot(plt, aes(x=log2FoldChange.gsam.res ,
   geom_text_repel(data=subset(plt, (show.label == 'GABA' | show.label.neuronal.label ) & log2FoldChange.gsam.tpc.res < 0), size=2.5 , segment.size = 0.25, segment.linetype = 1,
                   nudge_x = -3.1, direction = "y", hjust = "right" ) +
   labs(x = "log2FC R1 vs. R2 G-SAM (tumor cell-% corrected)",
-       y="Correlation t-statistic with tumour percentage"
+       y="Correlation t-statistic with tumor percentage"
        ,col="Difference significant (R1 ~ R2)"
   ) +
   youri_gg_theme + xlim(-3.5, 3.5)
@@ -3535,7 +3537,7 @@ p2 <- ggplot(plt, aes(x=log2FoldChange.glass.res ,
   geom_text_repel(data=subset(plt, (show.label == 'GABA' | show.label.neuronal.label ) == T & log2FoldChange.glass.res < 0), size=2.5 ,
                   nudge_x = -3.1, direction = "y", hjust = "right" , segment.size = 0.25 , segment.linetype = 1) +
   labs(x = "log2FC R1 vs. R2 GLASS",
-       y="Correlation t-statistic with tumour percentage (in G-SAM!)"
+       y="Correlation t-statistic with tumor percentage (in G-SAM!)"
        ,col="Difference significant (R1 ~ R2)" ) +
   youri_gg_theme + 
   xlim(-3.5, 3.5)
@@ -3577,7 +3579,7 @@ p1 <- ggplot(plt, aes(x=log2FoldChange.gsam.tpc.res ,
                   nudge_x = -2.9, direction = "y", hjust = "right")+ #, lwd=0.5
   scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
   labs(x = "log2FC R1 vs. R2 (Tumor cell percentage corrected)",
-       y="Correlation t-statistic with tumour percentage"
+       y="Correlation t-statistic with tumor percentage"
        ,col="Difference significant (R1 ~ R2)"
   ) +
   youri_gg_theme + 
@@ -3614,7 +3616,7 @@ p2 <- ggplot(plt, aes(x=log2FoldChange.glass.res ,
   ) +
   scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
   labs(x = "log2FC R1 vs. R2 GLASS",
-       y="Correlation t-statistic with tumour percentage"
+       y="Correlation t-statistic with tumor percentage"
        ,col="Difference significant (R1 ~ R2)"
   ) +
   youri_gg_theme + 
@@ -3664,7 +3666,7 @@ p1 <- ggplot(plt, aes(x=log2FoldChange.gsam.res ,
   #                 nudge_x = -2.9, direction = "y", hjust = "right")+ #, lwd=0.5
   scale_color_manual(values = c('TRUE'='gray60','FALSE'='gray60')) +
   labs(x = "log2FC R1 vs. R2 (Tumor cell percentage corrected)",
-       y="Correlation t-statistic with tumour percentage"
+       y="Correlation t-statistic with tumor percentage"
        ,col="Difference significant (R1 ~ R2)"
   ) +
   youri_gg_theme + 
@@ -3713,7 +3715,7 @@ p2 <- ggplot(plt, aes(x=log2FoldChange.glass.res ,
   # ) +
   scale_color_manual(values = c('TRUE'='gray60','FALSE'='gray60')) +
   labs(x = "log2FC R1 vs. R2 GLASS",
-       y="Correlation t-statistic with tumour percentage"
+       y="Correlation t-statistic with tumor percentage"
        ,col="Difference significant (R1 ~ R2)"
   ) +
   youri_gg_theme + 
@@ -3802,7 +3804,7 @@ ggplot(plt, aes(x=log2FoldChange.gsam.tpc.res ,
   #                nudge_x = 3.1, direction = "y", hjust = "left")+ #, lwd=0.5
   scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
   labs(x = "log2FC R1 vs. R2 (Tumor cell percentage corrected)",
-       y="Correlation t-statistic with tumour percentage"
+       y="Correlation t-statistic with tumor percentage"
        ,col="Difference significant (R1 ~ R2)"
   ) +
   youri_gg_theme + 
@@ -3839,7 +3841,7 @@ p2 <- ggplot(plt, aes(x=log2FoldChange.glass.res ,
   ) +
   scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
   labs(x = "log2FC R1 vs. R2 GLASS",
-       y="Correlation t-statistic with tumour percentage"
+       y="Correlation t-statistic with tumor percentage"
        ,col="Difference significant (R1 ~ R2)"
   ) +
   youri_gg_theme + 
@@ -3901,7 +3903,7 @@ p1a <- ggplot(plt, aes(x=log2FoldChange.gsam.tpc.res , y=statistic.gsam.cor.tpc 
   geom_text_repel(data=subset(plt, show.label.other == T & log2FoldChange.gsam.tpc.res < 0), col="blue", size=2.5 , nudge_x = -3.1, direction = "y", hjust = "right", segment.size=0.35) + 
   scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
   labs(x = "log2FC R1 vs. R2 (Tumor cell percentage corrected)",
-       y="Correlation t-statistic with tumour percentage"
+       y="Correlation t-statistic with tumor percentage"
        ,col="Other genes of interest in GBM") +
   youri_gg_theme + xlim(-3, 3)
 p1b <- ggplot(plt, aes(x=log2FoldChange.glass.tpc.res , y=statistic.glass.cor.tpc , col=significant, label = hugo_symbol )) + 
@@ -3915,7 +3917,7 @@ p1b <- ggplot(plt, aes(x=log2FoldChange.glass.tpc.res , y=statistic.glass.cor.tp
   geom_text_repel(data=subset(plt, show.label.other == T & log2FoldChange.glass.tpc.res < 0), col="blue", size=2.5 , nudge_x = -3.1, direction = "y", hjust = "right", segment.size=0.35) + 
   scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
   labs(x = "log2FC R1 vs. R2 (Tumor cell percentage corrected)",
-       y="Correlation t-statistic with tumour percentage"
+       y="Correlation t-statistic with tumor percentage"
        ,col="Other genes of interest in GBM") +
   youri_gg_theme + xlim(-3, 3)
 
@@ -3931,7 +3933,7 @@ p2a <- ggplot(plt, aes(x=log2FoldChange.gsam.tpc.res , y=statistic.gsam.cor.tpc 
   geom_text_repel(data=subset(plt, show.label.gains == T & log2FoldChange.gsam.tpc.res < 0), col="blue", size=2.5 , nudge_x = -3.1, direction = "y", hjust = "right", segment.size=0.35) + 
   scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
   labs(x = "log2FC R1 vs. R2 (Tumor cell percentage corrected)",
-       y="Correlation t-statistic with tumour percentage"
+       y="Correlation t-statistic with tumor percentage"
        ,col="Commonly gained genes in GBM") +
   youri_gg_theme + xlim(-3, 3)
 p2b <- ggplot(plt, aes(x=log2FoldChange.glass.tpc.res , y=statistic.glass.cor.tpc , col=significant, label = hugo_symbol )) + 
@@ -3945,7 +3947,7 @@ p2b <- ggplot(plt, aes(x=log2FoldChange.glass.tpc.res , y=statistic.glass.cor.tp
   geom_text_repel(data=subset(plt, show.label.gains == T & log2FoldChange.glass.tpc.res < 0), col="blue", size=2.5 , nudge_x = -3.1, direction = "y", hjust = "right", segment.size=0.35) + 
   scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
   labs(x = "log2FC R1 vs. R2 (Tumor cell percentage corrected)",
-       y="Correlation t-statistic with tumour percentage"
+       y="Correlation t-statistic with tumor percentage"
        ,col="Commonly gained genes in GBM") +
   youri_gg_theme + xlim(-3, 3)
 
@@ -3962,7 +3964,7 @@ p3a <- ggplot(plt, aes(x=log2FoldChange.gsam.tpc.res , y=statistic.gsam.cor.tpc 
   geom_text_repel(data=subset(plt, show.label.losses == T & log2FoldChange.gsam.tpc.res < 0), col="blue", size=2.5 , nudge_x = -3.1, direction = "y", hjust = "right", segment.size=0.35) + 
   scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
   labs(x = "log2FC R1 vs. R2 (Tumor cell percentage corrected)",
-       y="Correlation t-statistic with tumour percentage"
+       y="Correlation t-statistic with tumor percentage"
        ,col="Commonly lost genes in GBM") +
   youri_gg_theme + xlim(-3, 3)
 p3b <- ggplot(plt, aes(x=log2FoldChange.glass.tpc.res , y=statistic.glass.cor.tpc , col=significant, label = hugo_symbol )) + 
@@ -3976,7 +3978,7 @@ p3b <- ggplot(plt, aes(x=log2FoldChange.glass.tpc.res , y=statistic.glass.cor.tp
   geom_text_repel(data=subset(plt, show.label.losses == T & log2FoldChange.glass.tpc.res < 0), col="blue", size=2.5 , nudge_x = -3.1, direction = "y", hjust = "right", segment.size=0.35) + 
   scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
   labs(x = "log2FC R1 vs. R2 (Tumor cell percentage corrected)",
-       y="Correlation t-statistic with tumour percentage"
+       y="Correlation t-statistic with tumor percentage"
        ,col="Commonly lost genes in GBM") +
   youri_gg_theme + xlim(-3, 3)
 
@@ -5582,7 +5584,7 @@ p1 <- ggplot(plt, aes(x=log2FoldChange.gsam.tpc.res , y=statistic.gsam.cor.tpc ,
   
   scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
   labs(x = "log2FC R1 vs. R2 (Tumor cell percentage corrected)",
-       y="Correlation t-statistic with tumour percentage"
+       y="Correlation t-statistic with tumor percentage"
        ,col="Difference significant (R1 ~ R2)") +
   youri_gg_theme + xlim(-3, 3)
 
@@ -5598,7 +5600,7 @@ p2 <- ggplot(plt, aes(x=log2FoldChange.glass.tpc.res ,
   
   scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
   labs(x = "log2FC R1 vs. R2 GLASS",
-       y="Correlation t-statistic with tumour percentage"
+       y="Correlation t-statistic with tumor percentage"
        ,col="Difference significant (R1 ~ R2)"
   ) +
   youri_gg_theme + 
@@ -5901,7 +5903,7 @@ p1 <- ggplot(plt, aes(x=log2FoldChange.gsam.res , y=statistic.gsam.cor.tpc , col
   #geom_text_repel(data=subset(plt, show.label == T & log2FoldChange.gsam.tpc.res < 0), col="blue", size=2.5 , nudge_x = -3.1, direction = "y", hjust = "right", segment.size=0.35) + 
   scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
   labs(x = "log2FC R1 vs. R2 (Tumor cell percentage corrected)",
-       y="Correlation t-statistic with tumour percentage"
+       y="Correlation t-statistic with tumor percentage"
        ,col="Difference significant (R1 ~ R2)") +
   youri_gg_theme + xlim(-3, 3)
 
@@ -5915,7 +5917,7 @@ p2 <- ggplot(plt, aes(x=log2FoldChange.glass.res ,
   #geom_text_repel(data=subset(plt, show.label == T & log2FoldChange.gsam.tpc.res < 0), col="blue", size=2.5 ,                  nudge_x = -3.1, direction = "y", hjust = "right"  ) +
   scale_color_manual(values = c('TRUE'=rgb(0,0,0,0.35),'FALSE'='gray60')) +
   labs(x = "log2FC R1 vs. R2 GLASS",
-       y="Correlation t-statistic with tumour percentage"
+       y="Correlation t-statistic with tumor percentage"
        ,col="Difference significant (R1 ~ R2)"
   ) +
   youri_gg_theme + 
@@ -6600,7 +6602,7 @@ p1 <- ggplot(gsam.gene.res.combined, aes(x=log2FoldChange.res ,
   #scale_shape_manual(values = c('TRUE'=1, 'FALSE' = 19) ) +
   #geom_text_repel(data = subset(gsam.gene.res.combined, significant.res == T & abs(log2FoldChange.res) > 1.5), size = 2.4 )  +
   labs(x = "log2FC R1 vs. R2 (unpaired)",
-       y="Correlation t-statistic with tumour percentage",
+       y="Correlation t-statistic with tumor percentage",
        col="Difference significant (R1 ~ R2)"
   ) +
   youri_gg_theme
@@ -6618,8 +6620,8 @@ p2 <- ggplot(gsam.gene.res.combined, aes(x=log2FoldChange.tpc.res ,
   geom_text_repel(data = subset(gsam.gene.res.combined, significant.tpc.res == T & pharma.relation), size = 5,
                   #box.padding = 1.5,
                   nudge_x = 3.1, direction = "y", hjust = "left" )  +
-  labs(x = "log2FC R1 vs. R2 (unpaired)", y="Correlation t-statistic with tumour percentage",
-       col="Difference significant (R1 ~ R2; tumour percentage corrected)") +
+  labs(x = "log2FC R1 vs. R2 (unpaired)", y="Correlation t-statistic with tumor percentage",
+       col="Difference significant (R1 ~ R2; tumor percentage corrected)") +
   youri_gg_theme
 
 p1 + p2
@@ -6645,7 +6647,7 @@ p1 <- ggplot(plt, aes(x=log2FoldChange.res , y=statistic, col = show.label , lab
   geom_point(data=subset(plt, show.label == F & significant.res == F ), cex=0.15, pch=19, alpha=0.4) +
   geom_point(data=subset(plt, show.label == T ), cex=0.5, pch=19) +
   scale_color_manual(values = c('TRUE'='red', 'FALSE' = 'black') )  +
-  labs(x = "log2FC R1 vs. R2 (unpaired)", y="Correlation t-statistic with tumour percentage", col="Difference significant (R1 ~ R2)") +
+  labs(x = "log2FC R1 vs. R2 (unpaired)", y="Correlation t-statistic with tumor percentage", col="Difference significant (R1 ~ R2)") +
   youri_gg_theme
 
 p2 <- ggplot(plt, aes(x=log2FoldChange.tpc.res , y= statistic, col = show.label  , label=hugo_symbol.tpc.res )) + 
@@ -6653,7 +6655,7 @@ p2 <- ggplot(plt, aes(x=log2FoldChange.tpc.res , y= statistic, col = show.label 
   geom_point(data=subset(plt, show.label == F & significant.tpc.res == F ), cex=0.15, pch=19, alpha=0.4) +
   geom_point(data=subset(plt, show.label  == T ), cex=0.5, pch=19) +
   scale_color_manual(values = c('TRUE'='red', 'FALSE' = 'black') ) +
-  labs(x = "log2FC R1 vs. R2 (unpaired)", y="Correlation t-statistic with tumour percentage", col="Difference significant (R1 ~ R2; tumour percentage corrected)") +
+  labs(x = "log2FC R1 vs. R2 (unpaired)", y="Correlation t-statistic with tumor percentage", col="Difference significant (R1 ~ R2; tumor percentage corrected)") +
   youri_gg_theme
 
 p1 + p2
@@ -6676,7 +6678,7 @@ p1 <- ggplot(plt, aes(x=log2FoldChange.res , y=statistic, col = show.label , lab
   scale_color_manual(values = c('TRUE'='red', 'FALSE' = 'black') )  +
   geom_text_repel(data = subset(plt, show.label & log2FoldChange.res > 0 ), size = 5, nudge_x = 3.1, direction = "y", hjust = "left" )  +
   geom_text_repel(data = subset(plt, show.label & log2FoldChange.res < 0 ), size = 5, nudge_x = -3.1, direction = "y", hjust = "right" )  +
-  labs(x = "log2FC R1 vs. R2 (unpaired)", y="Correlation t-statistic with tumour percentage", col="Difference significant (R1 ~ R2)") +
+  labs(x = "log2FC R1 vs. R2 (unpaired)", y="Correlation t-statistic with tumor percentage", col="Difference significant (R1 ~ R2)") +
   youri_gg_theme
 
 p2 <- ggplot(plt, aes(x=log2FoldChange.tpc.res , y= statistic, col = show.label  , label=hugo_symbol.tpc.res )) + 
@@ -6685,7 +6687,7 @@ p2 <- ggplot(plt, aes(x=log2FoldChange.tpc.res , y= statistic, col = show.label 
   scale_color_manual(values = c('TRUE'='red', 'FALSE' = 'black') ) +
   geom_text_repel(data = subset(plt, show.label & log2FoldChange.tpc.res > 0 ), size = 5, nudge_x = 3.1, direction = "y", hjust = "left" )  +
   geom_text_repel(data = subset(plt, show.label & log2FoldChange.tpc.res < 0 ), size = 5, nudge_x = -3.1, direction = "y", hjust = "right" )  +
-  labs(x = "log2FC R1 vs. R2 (unpaired)", y="Correlation t-statistic with tumour percentage", col="Difference significant (R1 ~ R2; tumour percentage corrected)") +
+  labs(x = "log2FC R1 vs. R2 (unpaired)", y="Correlation t-statistic with tumor percentage", col="Difference significant (R1 ~ R2; tumor percentage corrected)") +
   youri_gg_theme
 
 p1 + p2
@@ -6708,7 +6710,7 @@ p1 <- ggplot(plt, aes(x=log2FoldChange.res , y=statistic, col = show.label , lab
   scale_color_manual(values = c('TRUE'='red', 'FALSE' = 'black') )  +
   geom_text_repel(data = subset(plt, show.label & log2FoldChange.res > 0 ), size = 5, nudge_x = 3.1, direction = "y", hjust = "left" )  +
   geom_text_repel(data = subset(plt, show.label & log2FoldChange.res < 0 ), size = 5, nudge_x = -3.1, direction = "y", hjust = "right" )  +
-  labs(x = "log2FC R1 vs. R2 (unpaired)", y="Correlation t-statistic with tumour percentage", col="Difference significant (R1 ~ R2)") +
+  labs(x = "log2FC R1 vs. R2 (unpaired)", y="Correlation t-statistic with tumor percentage", col="Difference significant (R1 ~ R2)") +
   youri_gg_theme
 
 p2 <- ggplot(plt, aes(x=log2FoldChange.tpc.res , y= statistic, col = show.label  , label=hugo_symbol.tpc.res )) + 
@@ -6717,7 +6719,7 @@ p2 <- ggplot(plt, aes(x=log2FoldChange.tpc.res , y= statistic, col = show.label 
   scale_color_manual(values = c('TRUE'='red', 'FALSE' = 'black') ) +
   geom_text_repel(data = subset(plt, show.label & log2FoldChange.tpc.res > 0 ), size = 5, nudge_x = 3.1, direction = "y", hjust = "left" )  +
   geom_text_repel(data = subset(plt, show.label & log2FoldChange.tpc.res < 0 ), size = 5, nudge_x = -3.1, direction = "y", hjust = "right" )  +
-  labs(x = "log2FC R1 vs. R2 (unpaired)", y="Correlation t-statistic with tumour percentage", col="Difference significant (R1 ~ R2; tumour percentage corrected)") +
+  labs(x = "log2FC R1 vs. R2 (unpaired)", y="Correlation t-statistic with tumor percentage", col="Difference significant (R1 ~ R2; tumor percentage corrected)") +
   youri_gg_theme
 
 p1 + p2
@@ -6745,7 +6747,7 @@ p1 <- ggplot(plt, aes(x=log2FoldChange.res , y=statistic, col = show.label , lab
   scale_color_manual(values = c('TRUE'='red', 'FALSE' = 'black') )  +
   geom_text_repel(data = subset(plt, show.label & log2FoldChange.res > 0 ), size = 5, nudge_x = 3.1, direction = "y", hjust = "left" )  +
   geom_text_repel(data = subset(plt, show.label & log2FoldChange.res < 0 ), size = 5, nudge_x = -3.1, direction = "y", hjust = "right" )  +
-  labs(x = "log2FC R1 vs. R2 (unpaired)", y="Correlation t-statistic with tumour percentage", col="Difference significant (R1 ~ R2)") +
+  labs(x = "log2FC R1 vs. R2 (unpaired)", y="Correlation t-statistic with tumor percentage", col="Difference significant (R1 ~ R2)") +
   youri_gg_theme
 
 p2 <- ggplot(plt, aes(x=log2FoldChange.tpc.res , y= statistic, col = show.label  , label=hugo_symbol.tpc.res )) + 
@@ -6754,7 +6756,7 @@ p2 <- ggplot(plt, aes(x=log2FoldChange.tpc.res , y= statistic, col = show.label 
   scale_color_manual(values = c('TRUE'='red', 'FALSE' = 'black') ) +
   geom_text_repel(data = subset(plt, show.label & log2FoldChange.tpc.res > 0 ), size = 5, nudge_x = 3.1, direction = "y", hjust = "left" )  +
   geom_text_repel(data = subset(plt, show.label & log2FoldChange.tpc.res < 0 ), size = 5, nudge_x = -3.1, direction = "y", hjust = "right" )  +
-  labs(x = "log2FC R1 vs. R2 (unpaired)", y="Correlation t-statistic with tumour percentage", col="Difference significant (R1 ~ R2; tumour percentage corrected)") +
+  labs(x = "log2FC R1 vs. R2 (unpaired)", y="Correlation t-statistic with tumor percentage", col="Difference significant (R1 ~ R2; tumor percentage corrected)") +
   youri_gg_theme
 
 p1 + p2
@@ -6775,7 +6777,7 @@ p1 <- ggplot(plt, aes(x=log2FoldChange.res , y=statistic, col = show.label , lab
   scale_color_manual(values = c('TRUE'='red', 'FALSE' = 'black') )  +
   geom_text_repel(data = subset(plt, show.label & log2FoldChange.res > 0 ), size = 5, nudge_x = 3.1, direction = "y", hjust = "left" )  +
   geom_text_repel(data = subset(plt, show.label & log2FoldChange.res < 0 ), size = 5, nudge_x = -3.1, direction = "y", hjust = "right" )  +
-  labs(x = "log2FC R1 vs. R2 (unpaired)", y="Correlation t-statistic with tumour percentage", col="Difference significant (R1 ~ R2)") +
+  labs(x = "log2FC R1 vs. R2 (unpaired)", y="Correlation t-statistic with tumor percentage", col="Difference significant (R1 ~ R2)") +
   youri_gg_theme
 
 p2 <- ggplot(plt, aes(x=log2FoldChange.tpc.res , y= statistic, col = show.label  , label=hugo_symbol.tpc.res )) + 
@@ -6784,7 +6786,7 @@ p2 <- ggplot(plt, aes(x=log2FoldChange.tpc.res , y= statistic, col = show.label 
   scale_color_manual(values = c('TRUE'='red', 'FALSE' = 'black') ) +
   geom_text_repel(data = subset(plt, show.label & log2FoldChange.tpc.res > 0 ), size = 5, nudge_x = 3.1, direction = "y", hjust = "left" )  +
   geom_text_repel(data = subset(plt, show.label & log2FoldChange.tpc.res < 0 ), size = 5, nudge_x = -3.1, direction = "y", hjust = "right" )  +
-  labs(x = "log2FC R1 vs. R2 (unpaired)", y="Correlation t-statistic with tumour percentage", col="Difference significant (R1 ~ R2; tumour percentage corrected)") +
+  labs(x = "log2FC R1 vs. R2 (unpaired)", y="Correlation t-statistic with tumor percentage", col="Difference significant (R1 ~ R2; tumor percentage corrected)") +
   youri_gg_theme
 
 p1 + p2
@@ -6808,7 +6810,7 @@ p1 <- ggplot(plt, aes(x=log2FoldChange.res , y=statistic, col = show.label , lab
   scale_color_manual(values = c('TRUE'='red', 'FALSE' = 'black') )  +
   geom_text_repel(data = subset(plt, show.label & log2FoldChange.res > 0 ), size = 5, nudge_x = 3.1, direction = "y", hjust = "left" )  +
   geom_text_repel(data = subset(plt, show.label & log2FoldChange.res < 0 ), size = 5, nudge_x = -3.1, direction = "y", hjust = "right" )  +
-  labs(x = "log2FC R1 vs. R2 (unpaired)", y="Correlation t-statistic with tumour percentage", col="Difference significant (R1 ~ R2)") +
+  labs(x = "log2FC R1 vs. R2 (unpaired)", y="Correlation t-statistic with tumor percentage", col="Difference significant (R1 ~ R2)") +
   youri_gg_theme
 
 p2 <- ggplot(plt, aes(x=log2FoldChange.tpc.res , y= statistic, col = show.label  , label=hugo_symbol.tpc.res )) + 
@@ -6817,7 +6819,7 @@ p2 <- ggplot(plt, aes(x=log2FoldChange.tpc.res , y= statistic, col = show.label 
   scale_color_manual(values = c('TRUE'='red', 'FALSE' = 'black') ) +
   geom_text_repel(data = subset(plt, show.label & log2FoldChange.tpc.res > 0 ), size = 5, nudge_x = 3.1, direction = "y", hjust = "left" )  +
   geom_text_repel(data = subset(plt, show.label & log2FoldChange.tpc.res < 0 ), size = 5, nudge_x = -3.1, direction = "y", hjust = "right" )  +
-  labs(x = "log2FC R1 vs. R2 (unpaired)", y="Correlation t-statistic with tumour percentage", col="Difference significant (R1 ~ R2; tumour percentage corrected)") +
+  labs(x = "log2FC R1 vs. R2 (unpaired)", y="Correlation t-statistic with tumor percentage", col="Difference significant (R1 ~ R2; tumor percentage corrected)") +
   youri_gg_theme
 
 p1 + p2
@@ -6855,7 +6857,7 @@ p1 <- ggplot(plt, aes(x=log2FoldChange.res , y=statistic, col = show.label , lab
   scale_color_manual(values = c('TRUE'='red', 'FALSE' = 'black') )  +
   #geom_text_repel(data = subset(plt, show.label & log2FoldChange.res > 0 & significant.res ), size = 5, nudge_x = 3.1, direction = "y", hjust = "left" )  +
   #geom_text_repel(data = subset(plt, show.label & log2FoldChange.res < 0 & significant.res ), size = 5, nudge_x = -3.1, direction = "y", hjust = "right" )  +
-  labs(x = "log2FC R1 vs. R2 (unpaired)", y="Correlation t-statistic with tumour percentage", col="Difference significant (R1 ~ R2)") +
+  labs(x = "log2FC R1 vs. R2 (unpaired)", y="Correlation t-statistic with tumor percentage", col="Difference significant (R1 ~ R2)") +
   youri_gg_theme
 
 p2 <- ggplot(plt, aes(x=log2FoldChange.tpc.res , y= statistic, col = show.label  , label=hugo_symbol.tpc.res )) + 
@@ -6864,7 +6866,7 @@ p2 <- ggplot(plt, aes(x=log2FoldChange.tpc.res , y= statistic, col = show.label 
   scale_color_manual(values = c('TRUE'='red', 'FALSE' = 'black') ) +
   geom_text_repel(data = subset(plt, show.label & log2FoldChange.tpc.res > 0 & significant.tpc.res ), size = 5, nudge_x = 3.1, direction = "y", hjust = "left" )  +
   geom_text_repel(data = subset(plt, show.label & log2FoldChange.tpc.res < 0 & significant.tpc.res ), size = 5, nudge_x = -3.1, direction = "y", hjust = "right" )  +
-  labs(x = "log2FC R1 vs. R2 (unpaired)", y="Correlation t-statistic with tumour percentage", col="Difference significant (R1 ~ R2; tumour percentage corrected)") +
+  labs(x = "log2FC R1 vs. R2 (unpaired)", y="Correlation t-statistic with tumor percentage", col="Difference significant (R1 ~ R2; tumor percentage corrected)") +
   youri_gg_theme
 
 p1 + p2
@@ -6889,7 +6891,7 @@ p1 <- ggplot(plt, aes(x=log2FoldChange.res , y=statistic, col = show.label , lab
   scale_color_manual(values = c('TRUE'='red', 'FALSE' = 'black') )  +
   #geom_text_repel(data = subset(plt, show.label & log2FoldChange.res > 0 & significant.res ), size = 5, nudge_x = 3.1, direction = "y", hjust = "left" )  +
   #geom_text_repel(data = subset(plt, show.label & log2FoldChange.res < 0 & significant.res ), size = 5, nudge_x = -3.1, direction = "y", hjust = "right" )  +
-  labs(x = "log2FC R1 vs. R2 (unpaired)", y="Correlation t-statistic with tumour percentage", col="Difference significant (R1 ~ R2)") +
+  labs(x = "log2FC R1 vs. R2 (unpaired)", y="Correlation t-statistic with tumor percentage", col="Difference significant (R1 ~ R2)") +
   youri_gg_theme
 
 p2 <- ggplot(plt, aes(x=log2FoldChange.tpc.res , y= statistic, col = show.label  , label=hugo_symbol.tpc.res )) + 
@@ -6898,7 +6900,7 @@ p2 <- ggplot(plt, aes(x=log2FoldChange.tpc.res , y= statistic, col = show.label 
   scale_color_manual(values = c('TRUE'='red', 'FALSE' = 'black') ) +
   geom_text_repel(data = subset(plt, show.label & log2FoldChange.tpc.res > 0 & significant.tpc.res ), size = 5, nudge_x = 3.1, direction = "y", hjust = "left" )  +
   geom_text_repel(data = subset(plt, show.label & log2FoldChange.tpc.res < 0 & significant.tpc.res ), size = 5, nudge_x = -3.1, direction = "y", hjust = "right" )  +
-  labs(x = "log2FC R1 vs. R2 (unpaired)", y="Correlation t-statistic with tumour percentage", col="Difference significant (R1 ~ R2; tumour percentage corrected)") +
+  labs(x = "log2FC R1 vs. R2 (unpaired)", y="Correlation t-statistic with tumor percentage", col="Difference significant (R1 ~ R2; tumor percentage corrected)") +
   youri_gg_theme
 
 p1 + p2
@@ -6926,7 +6928,7 @@ p1 <- ggplot(plt, aes(x=log2FoldChange.res , y=statistic, col = show.label , lab
   scale_color_manual(values = c('TRUE'='red', 'FALSE' = 'black') )  +
   #geom_text_repel(data = subset(plt, show.label & log2FoldChange.res > 0 & significant.res ), size = 5, nudge_x = 3.1, direction = "y", hjust = "left" )  +
   #geom_text_repel(data = subset(plt, show.label & log2FoldChange.res < 0 & significant.res ), size = 5, nudge_x = -3.1, direction = "y", hjust = "right" )  +
-  labs(x = "log2FC R1 vs. R2 (unpaired)", y="Correlation t-statistic with tumour percentage", col="Difference significant (R1 ~ R2)") +
+  labs(x = "log2FC R1 vs. R2 (unpaired)", y="Correlation t-statistic with tumor percentage", col="Difference significant (R1 ~ R2)") +
   youri_gg_theme
 
 p2 <- ggplot(plt, aes(x=log2FoldChange.tpc.res , y= statistic, col = show.label  , label=hugo_symbol.tpc.res )) + 
@@ -6935,7 +6937,7 @@ p2 <- ggplot(plt, aes(x=log2FoldChange.tpc.res , y= statistic, col = show.label 
   scale_color_manual(values = c('TRUE'='red', 'FALSE' = 'black') ) +
   geom_text_repel(data = subset(plt, show.label & log2FoldChange.tpc.res > 0 & significant.tpc.res ), size = 5, nudge_x = 3.1, direction = "y", hjust = "left" )  +
   geom_text_repel(data = subset(plt, show.label & log2FoldChange.tpc.res < 0 & significant.tpc.res ), size = 5, nudge_x = -3.1, direction = "y", hjust = "right" )  +
-  labs(x = "log2FC R1 vs. R2 (unpaired)", y="Correlation t-statistic with tumour percentage", col="Difference significant (R1 ~ R2; tumour percentage corrected)") +
+  labs(x = "log2FC R1 vs. R2 (unpaired)", y="Correlation t-statistic with tumor percentage", col="Difference significant (R1 ~ R2; tumor percentage corrected)") +
   youri_gg_theme
 
 p1 + p2
@@ -7012,7 +7014,7 @@ p1 <- ggplot(plt, aes(x=log2FoldChange.res , y=statistic, col = show.label , lab
   scale_color_manual(values = c('TRUE'='red', 'FALSE' = 'black') )  +
   #geom_text_repel(data = subset(plt, show.label & log2FoldChange.res > 0 & significant.res ), size = 5, nudge_x = 3.1, direction = "y", hjust = "left" )  +
   #geom_text_repel(data = subset(plt, show.label & log2FoldChange.res < 0 & significant.res ), size = 5, nudge_x = -3.1, direction = "y", hjust = "right" )  +
-  labs(x = "log2FC R1 vs. R2 (unpaired)", y="Correlation t-statistic with tumour percentage", col="Difference significant (R1 ~ R2)") +
+  labs(x = "log2FC R1 vs. R2 (unpaired)", y="Correlation t-statistic with tumor percentage", col="Difference significant (R1 ~ R2)") +
   youri_gg_theme
 
 p2 <- ggplot(plt, aes(x=log2FoldChange.tpc.res , y= statistic, col = show.label  , label=hugo_symbol.tpc.res )) + 
@@ -7021,7 +7023,7 @@ p2 <- ggplot(plt, aes(x=log2FoldChange.tpc.res , y= statistic, col = show.label 
   scale_color_manual(values = c('TRUE'='red', 'FALSE' = 'black') ) +
   geom_text_repel(data = subset(plt, show.label & log2FoldChange.tpc.res > 0 & significant.tpc.res ), size = 5, nudge_x = 3.1, direction = "y", hjust = "left" )  +
   geom_text_repel(data = subset(plt, show.label & log2FoldChange.tpc.res < 0 & significant.tpc.res ), size = 5, nudge_x = -3.1, direction = "y", hjust = "right" )  +
-  labs(x = "log2FC R1 vs. R2 (unpaired)", y="Correlation t-statistic with tumour percentage", col="Difference significant (R1 ~ R2; tumour percentage corrected)") +
+  labs(x = "log2FC R1 vs. R2 (unpaired)", y="Correlation t-statistic with tumor percentage", col="Difference significant (R1 ~ R2; tumor percentage corrected)") +
   youri_gg_theme
 
 p1 + p2
@@ -7125,7 +7127,7 @@ p2 <- ggplot(plt,  aes(x=log2FoldChange.tpc.res,
   scale_color_manual(values = c('TRUE'='red', 'FALSE' = 'black') ) +
   geom_text_repel(data = subset(combined.gene.res.res, significant.tpc.res == T & (log2FoldChange.tpc.res > 1.5 | log2FoldChange.tpc.res < 0.85)), size = 2.4 )  +
   labs(x = "log2FC R1 vs. R2 (unpaired)",
-       y="Correlation t-statistic with tumour percentage",
+       y="Correlation t-statistic with tumor percentage",
        col="Difference significant (R1 ~ R2)"
   ) +
   youri_gg_theme
@@ -7213,7 +7215,7 @@ ggplot(combined.gene.res.res, aes(x= log2FoldChange.glass.res,
   scale_color_manual(values = c('TRUE'='red', 'FALSE' = 'black') ) +
   geom_text_repel(data = subset(combined.gene.res.res, significant.glass.res == T & abs(log2FoldChange.glass.res) > 1.5), size = 2.4 )  +
   labs(x = "log2FC R1 vs. R2 (unpaired)",
-       y="Correlation t-statistic with tumour percentage",
+       y="Correlation t-statistic with tumor percentage",
        col="Difference significant (R1 ~ R2)"
   ) +
   youri_gg_theme
@@ -7238,7 +7240,7 @@ ggplot(plt, aes(x= log2FoldChange.glass.res,
   scale_color_manual(values = c('TRUE'='red', 'FALSE' = 'black') ) +
   geom_text_repel(data = subset(plt, show.label), size = 3.4 )  +
   labs(x = "log2FC R1 vs. R2 (unpaired)",
-       y="Correlation t-statistic with tumour percentage",
+       y="Correlation t-statistic with tumor percentage",
        col="Difference significant (R1 ~ R2)"
   ) +
   youri_gg_theme
