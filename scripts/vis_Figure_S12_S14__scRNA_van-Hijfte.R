@@ -555,34 +555,33 @@ rm(tmp.c1, sid_print)
 
 
 #### C2-2022 (Endo) (down) ----
-##### figure S9c ----
+##### F] Figure S11C - C2 ----
 
 
 tmp.c2 <- results.out |>
-  dplyr::filter(.data$C2.2022 == T) |> 
-  dplyr::filter(!is.na(hugo_symbol)) |> 
-  dplyr::pull(hugo_symbol) |> 
+  dplyr::filter(.data$C2.2022 == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
   unique()
 
-tmp.endo <- read_xlsx("data/McKenzie et al. Gene expression different cell types.xlsx", sheet='top_human_specificity') |>
-  dplyr::select(c('grand_mean', 'gene', 'Celltype')) |>
-  dplyr::filter(Celltype == 'end') |> 
+tmp.endo <- read_xlsx("data/McKenzie et al. Gene expression different cell types.xlsx", sheet = "top_human_specificity") |>
+  dplyr::select(c("grand_mean", "gene", "Celltype")) |>
+  dplyr::filter(Celltype == "end") |>
   dplyr::arrange(desc(grand_mean)) |>
-  dplyr::filter(gene %in% all.genes ) |>
-  dplyr::slice_head(n=25) |>
-  dplyr::mutate(grand_mean = NULL) |> 
+  dplyr::filter(gene %in% all.genes) |>
+  dplyr::slice_head(n = 25) |>
+  dplyr::mutate(grand_mean = NULL) |>
   dplyr::pull(gene)
 
-tmp.peri <- c('PDGFRB','CD248','RGS5')
-
+tmp.peri <- c("PDGFRB", "CD248", "RGS5")
 
 
 tmp.c2 <- setdiff(tmp.c2, c(tmp.peri))
-tmp.endo <- setdiff(tmp.endo, c(tmp.peri,tmp.c2))
+tmp.endo <- setdiff(tmp.endo, c(tmp.peri, tmp.c2))
 tmp.peri <- setdiff(tmp.peri, c(tmp.c2, tmp.endo))
 
 
-sid_print <- 'Samply Y (van Hijfte dataset - single nucleus RNA-seq)'
+sid_print <- "Samply Y (van Hijfte dataset - single nucleus RNA-seq)"
 
 
 DotPlot(object = object_1, features = list('C2 (Endothelial)'=tmp.c2,
@@ -592,7 +591,7 @@ DotPlot(object = object_1, features = list('C2 (Endothelial)'=tmp.c2,
   labs(x = paste0("Features [C2 & top25 McKenzie endothelial markers] in: ",sid_print))
 
 
-ggsave(paste0("output/figures/2022_figure_S9c.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S11C.pdf"), width = 7.5 * 1.8, height = 3.75, scale = 1.2)
 rm(tmp.c2, tmp.peri, tmp.endo, sid_print)
 
 

@@ -832,37 +832,35 @@ rm(tmp.c1, sid_print)
 
 
 #### C2-2022 (Endo) (down) ----
-##### figure S9e ----
+##### F] Figure S11E - C2 ----
 
 
 tmp.c2 <- results.out |>
-  dplyr::filter(.data$C2.2022 == T) |> 
-  dplyr::filter(!is.na(hugo_symbol)) |> 
-  dplyr::pull(hugo_symbol) |> 
+  dplyr::filter(.data$C2.2022 == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
   unique()
 
-tmp.endo <- read_xlsx("data/McKenzie et al. Gene expression different cell types.xlsx", sheet='top_human_specificity') |>
-  dplyr::select(c('grand_mean', 'gene', 'Celltype')) |>
-  dplyr::filter(Celltype == 'end') |> 
+tmp.endo <- read_xlsx("data/McKenzie et al. Gene expression different cell types.xlsx", sheet = "top_human_specificity") |>
+  dplyr::select(c("grand_mean", "gene", "Celltype")) |>
+  dplyr::filter(Celltype == "end") |>
   dplyr::arrange(desc(grand_mean)) |>
-  dplyr::filter(gene %in% all.genes ) |>
-  dplyr::slice_head(n=25) |>
-  dplyr::mutate(grand_mean = NULL) |> 
+  dplyr::filter(gene %in% all.genes) |>
+  dplyr::slice_head(n = 25) |>
+  dplyr::mutate(grand_mean = NULL) |>
   dplyr::pull(gene)
 
-tmp.peri <- c('PDGFRB','CD248','RGS5')
-
+tmp.peri <- c("PDGFRB", "CD248", "RGS5")
 
 
 tmp.c2 <- setdiff(tmp.c2, c(tmp.peri))
-tmp.endo <- setdiff(tmp.endo, c(tmp.peri,tmp.c2))
+tmp.endo <- setdiff(tmp.endo, c(tmp.peri, tmp.c2))
 tmp.peri <- setdiff(tmp.peri, c(tmp.c2, tmp.endo))
 
 
-sid_print <- sid |> 
-  stringr::str_replace(".filtered_gene_matrices","") |> 
-  stringr::str_replace("_",": ")
-
+sid_print <- sid |>
+  stringr::str_replace(".filtered_gene_matrices", "") |>
+  stringr::str_replace("_", ": ")
 
 
 DotPlot(object = object_1, features = list('C2 (Endothelial)'=tmp.c2,
@@ -872,10 +870,8 @@ DotPlot(object = object_1, features = list('C2 (Endothelial)'=tmp.c2,
   labs(x = paste0("Features [C2 & top25 McKenzie endothelial markers] in: ",sid_print, " (Yuan dataset)"))
 
 
-
-ggsave(paste0("output/figures/2022_figure_S9e.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S11E.pdf"), width = 7.5 * 1.8, height = 3.75, scale = 1.2)
 rm(tmp.c2, tmp.peri, tmp.endo, sid_print)
-
 
 
 
@@ -1252,37 +1248,35 @@ rm(tmp.c1, sid_print)
 
 
 #### C2-2022 (Endo) (down) ----
-##### figure S9d ----
+##### F] Figure S11D - C2 ----
 
 
 tmp.c2 <- results.out |>
-  dplyr::filter(.data$C2.2022 == T) |> 
-  dplyr::filter(!is.na(hugo_symbol)) |> 
-  dplyr::pull(hugo_symbol) |> 
+  dplyr::filter(.data$C2.2022 == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
   unique()
 
-tmp.endo <- read_xlsx("data/McKenzie et al. Gene expression different cell types.xlsx", sheet='top_human_specificity') |>
-  dplyr::select(c('grand_mean', 'gene', 'Celltype')) |>
-  dplyr::filter(Celltype == 'end') |> 
+tmp.endo <- read_xlsx("data/McKenzie et al. Gene expression different cell types.xlsx", sheet = "top_human_specificity") |>
+  dplyr::select(c("grand_mean", "gene", "Celltype")) |>
+  dplyr::filter(Celltype == "end") |>
   dplyr::arrange(desc(grand_mean)) |>
-  dplyr::filter(gene %in% all.genes ) |>
-  dplyr::slice_head(n=25) |>
-  dplyr::mutate(grand_mean = NULL) |> 
+  dplyr::filter(gene %in% all.genes) |>
+  dplyr::slice_head(n = 25) |>
+  dplyr::mutate(grand_mean = NULL) |>
   dplyr::pull(gene)
 
-tmp.peri <- c('PDGFRB','CD248','RGS5')
-
+tmp.peri <- c("PDGFRB", "CD248", "RGS5")
 
 
 tmp.c2 <- setdiff(tmp.c2, c(tmp.peri))
-tmp.endo <- setdiff(tmp.endo, c(tmp.peri,tmp.c2))
+tmp.endo <- setdiff(tmp.endo, c(tmp.peri, tmp.c2))
 tmp.peri <- setdiff(tmp.peri, c(tmp.c2, tmp.endo))
 
 
-sid_print <- sid |> 
-  stringr::str_replace(".filtered_gene_matrices","") |> 
-  stringr::str_replace("_",": ")
-
+sid_print <- sid |>
+  stringr::str_replace(".filtered_gene_matrices", "") |>
+  stringr::str_replace("_", ": ")
 
 
 DotPlot(object = object_1, features = list('C2 (Endothelial)'=tmp.c2,
@@ -1292,8 +1286,7 @@ DotPlot(object = object_1, features = list('C2 (Endothelial)'=tmp.c2,
   labs(x = paste0("Features [C2 & top25 McKenzie endothelial markers] in: ",sid_print, " (Yuan dataset)"))
 
 
-
-ggsave(paste0("output/figures/2022_figure_S9d.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S11D.pdf"), width = 7.5 * 1.8, height = 3.75, scale = 1.2)
 rm(tmp.c2, tmp.peri, tmp.endo, sid_print)
 
 
@@ -1845,7 +1838,7 @@ rm(tmp.c1, sid_print)
 
 
 #### C2-2022 (Endo) (down) ----
-##### figure S9g ----
+##### F] Figure S11G - C2 ----
 
 
 tmp.c2 <- results.out |>
@@ -1866,7 +1859,6 @@ tmp.endo <- read_xlsx("data/McKenzie et al. Gene expression different cell types
 tmp.peri <- c('PDGFRB','CD248','RGS5')
 
 
-
 tmp.c2 <- setdiff(tmp.c2, c(tmp.peri))
 tmp.endo <- setdiff(tmp.endo, c(tmp.peri,tmp.c2))
 tmp.peri <- setdiff(tmp.peri, c(tmp.c2, tmp.endo))
@@ -1877,7 +1869,6 @@ sid_print <- sid |>
   stringr::str_replace("_",": ")
 
 
-
 DotPlot(object = object_1, features = list('C2 (Endothelial)'=tmp.c2,
                                            'Endothelial'=tmp.endo,
                                            'Pericyte'=tmp.peri), group.by = "seurat_clusters") +
@@ -1885,8 +1876,7 @@ DotPlot(object = object_1, features = list('C2 (Endothelial)'=tmp.c2,
   labs(x = paste0("Features [C2 & top25 McKenzie endothelial markers] in: ",sid_print, " (Yuan dataset)"))
 
 
-
-ggsave(paste0("output/figures/2022_figure_S9g.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S11G.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
 rm(tmp.c2, tmp.peri, tmp.endo, sid_print)
 
 
@@ -2315,7 +2305,7 @@ rm(tmp.c1, sid_print)
 
 
 #### C2-2022 (Endo) (down) ----
-##### figure S9f ----
+##### F] Figure S11F - C2 ----
 
 
 tmp.c2 <- results.out |>
@@ -2336,7 +2326,6 @@ tmp.endo <- read_xlsx("data/McKenzie et al. Gene expression different cell types
 tmp.peri <- c('PDGFRB','CD248','RGS5')
 
 
-
 tmp.c2 <- setdiff(tmp.c2, c(tmp.peri))
 tmp.endo <- setdiff(tmp.endo, c(tmp.peri,tmp.c2))
 tmp.peri <- setdiff(tmp.peri, c(tmp.c2, tmp.endo))
@@ -2347,7 +2336,6 @@ sid_print <- sid |>
   stringr::str_replace("_",": ")
 
 
-
 DotPlot(object = object_1, features = list('C2 (Endothelial)'=tmp.c2,
                                            'Endothelial'=tmp.endo,
                                            'Pericyte'=tmp.peri), group.by = "seurat_clusters") +
@@ -2355,11 +2343,8 @@ DotPlot(object = object_1, features = list('C2 (Endothelial)'=tmp.c2,
   labs(x = paste0("Features [C2 & top25 McKenzie endothelial markers] in: ",sid_print, " (Yuan dataset)"))
 
 
-
-ggsave(paste0("output/figures/2022_figure_S9f.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S11F.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
 rm(tmp.c2, tmp.peri, tmp.endo, sid_print)
-
-
 
 
 
