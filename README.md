@@ -37,3 +37,12 @@ ___
 # G-SAM RNA pipe-line and analysis code #
 
 Dr. Youri Hoogstrate, 2019 - 2022
+
+---
+
+Directory structure:
+
+```
+./scripts/load_*.R    [loading of data]
+
+```
