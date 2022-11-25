@@ -1,9 +1,12 @@
 #!/usr/bin/env R
 
+#' load IF tile data as expored by imageJ
+
+
+# load data ----
+
 data <- readRDS('data/gsam/IF/Experiments revisions/COL1A1_PDGFRB_CD31_GFAP/rerun analysis/measurement_CD31_Collagen_PDGFRB.RDS')
 
-
-## full intensities per tile ----
 
 parse_csv <- function (fn) {
   dat <- read.csv(fn) |> 
@@ -33,6 +36,8 @@ stopifnot(files.CD31$regionname %in% files.PDGFRB$regionname)
 stopifnot(files.PDGFRB$regionname %in% files.CD31$regionname)
 
 
+
+# F] Figure S16A - PDGRB x CD31 per tile cor ----
 
 plt <- files.CD31 |> 
   dplyr::left_join(files.PDGFRB, by=c('regionname'='regionname'), suffix=c('','')) |> 
@@ -87,9 +92,8 @@ m = median(df$R)
 
 df <- rbind(
   df |> dplyr::mutate(type="data"),
-  df |> dplyr::mutate(R= 0, type="offset") # nice for lines
+  df |> dplyr::mutate(R= 0, type="offset") # the 0-offset, needed for lines
 )
-
 
 
 ggplot(df, aes(x=sid, y=R, group=sid)) +
@@ -113,11 +117,7 @@ ggplot(df, aes(x=sid, y=R, group=sid)) +
     panel.border = element_rect(colour = "black", fill=NA, size=1.25)
   )
 
-ggsave("output/figures/2022_figure_S-PDGFRB_x_CD31_cor.pdf", width=8.3 / 4,height=8.3/4, scale=2)
-
-
-
-
+ggsave("output/figures/2022_Figure_S16A.pdf", width=8.3 / 4,height=8.3/4, scale=2)
 
 
 
