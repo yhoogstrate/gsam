@@ -850,7 +850,7 @@ ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_UMAP.png"),width=10,height
 
 
 
-median(object_1[,object_1$seurat_clusters == "1. PE"]$nCount_RNA) # -> strongest C6 cluster
+median(object_1[,object_1$seurat_clusters == "1. PE"]$nCount_RNA)
 median(object_1[,object_1$seurat_clusters == "1. PE"]$nFeature_RNA)
 mean(object_1[,object_1$seurat_clusters == "1. PE"]$nCount_RNA)
 mean(object_1[,object_1$seurat_clusters == "1. PE"]$nFeature_RNA)
@@ -1142,7 +1142,7 @@ FeaturePlot(object = object_1, features = c("CFH"))
 
 
 
-##### F] Figure S14L ----
+##### F] Figure S14L - Pericytes ----
 
 sid_print <- sid |>
   stringr::str_replace(".filtered_gene_matrices", "") |>
@@ -2111,34 +2111,6 @@ FeaturePlot(object = object_1, features = "PDGFRB")
 FeaturePlot(object = object_1, features = "CD248",pt.size=0.04)
 
 
-#### C3 endo (down) ----
-
-
-
-endo <- read_xlsx("data/McKenzie et al. Gene expression different cell types.xlsx", sheet='top_human_specificity') %>%
-  dplyr::select(c('grand_mean', 'gene', 'Celltype')) %>%
-  dplyr::filter(Celltype == 'end') %>% 
-  dplyr::arrange(desc(grand_mean)) %>%
-  dplyr::filter(gene %in% all.genes ) %>%
-  dplyr::slice_head(n=25) %>%
-  dplyr::mutate(grand_mean = NULL) %>% 
-  dplyr::pull(gene)
-
-
-C3.only <- setdiff(C3, endo)
-C3.and.endo <- intersect(endo, C3)
-endo.only <- setdiff(endo, C3)
-
-
-DotPlot(object = object_1, features = list('C3'=C3.only, 'C3+endo'= C3.and.endo, 'endo'=endo.only,'pericyte'=c('PDGFRB','CD248','RGS5')), group.by = "seurat_clusters") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-  labs(x = paste0("Features [C3 & top25 McKenzie endothelial cell markers] in: ",sid))
-
-
-ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C3.pdf"),width=7.5, height=3,scale=2)
-ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C3.png"),width=7.5, height=3,scale=2)
-
-
 
 #### C0-2022 ----
 ##### figure S10b ----
@@ -2169,33 +2141,30 @@ rm(tmp.c0, sid_print)
 
 
 #### C1-2022 (up) ----
-##### figure S12d ----
+##### F] Figure S14D - C1 ----
 
 
 tmp.c1 <- results.out |>
-  dplyr::filter(!is.na(.data$C1.2022)) |> 
-  dplyr::filter(.data$C1.2022 == T) |> 
-  dplyr::filter(!is.na(hugo_symbol)) |> 
-  dplyr::pull(hugo_symbol) |> 
-  unique() |> 
+  dplyr::filter(!is.na(.data$C1.2022)) |>
+  dplyr::filter(.data$C1.2022 == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
+  unique() |>
   sort()
 
 
-sid_print <- sid |> 
-  stringr::str_replace(".filtered_gene_matrices","") |> 
-  stringr::str_replace("_2of2"," (1 & 2 of 2)")
+sid_print <- sid |>
+  stringr::str_replace(".filtered_gene_matrices", "") |>
+  stringr::str_replace("_2of2", " (1 & 2 of 2)")
 
 
-DotPlot(object = object_1, features =list('C1'=tmp.c1, 'Peri'=c("RGS5", "PDGFRB", "CD248")), group.by = "seurat_clusters") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
-  labs(x = paste0("Features [C1] in: ",sid_print, " (Couturier dataset)"))
+DotPlot(object = object_1, features = list("C1" = tmp.c1, "Peri" = c("RGS5", "PDGFRB", "CD248")), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
+  labs(x = paste0("Features [C1] in: ", sid_print, " (Couturier dataset)"))
 
 
-
-ggsave(paste0("output/figures/2022_figure_S12d.pdf"),width=6.5, height=4, scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S14D.pdf"), width = 6.5, height = 4, scale = 1.2)
 rm(tmp.c1, sid_print)
-
-
 
 
 
@@ -2672,95 +2641,6 @@ FeaturePlot(object = object_1, features = "CD248")
 
 
 
-
-#### C3 endo (down) ----
-
-
-endo <- read_xlsx("data/McKenzie et al. Gene expression different cell types.xlsx", sheet='top_human_specificity') %>%
-  dplyr::select(c('grand_mean', 'gene', 'Celltype')) %>%
-  dplyr::filter(Celltype == 'end') %>% 
-  dplyr::arrange(desc(grand_mean)) %>%
-  dplyr::filter(gene %in% all.genes ) %>%
-  dplyr::slice_head(n=25) %>%
-  dplyr::mutate(grand_mean = NULL) %>% 
-  dplyr::pull(gene)
-
-
-C3.only <- setdiff(C3, endo)
-C3.and.endo <- intersect(endo, C3)
-endo.only <- setdiff(endo, C3)
-
-
-DotPlot(object = object_1, features = list('C3'=C3.only, 'C3+endo'= C3.and.endo, 'endo'=endo.only,'pericyte'=c('PDGFRB','CD248','RGS5')), group.by = "seurat_clusters") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-  labs(x = paste0("Features [C3 & top25 McKenzie endothelial cell markers] in: ",sid))
-
-
-ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C3.pdf"),width=7.5, height=3,scale=2)
-ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C3.png"),width=7.5, height=3,scale=2)
-
-
-
-
-#### C4 (up) ----
-
-DotPlot(object = object_1, features = c(C4A, C4B), group.by = "seurat_clusters") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-  labs(x = paste0("Features [C4] in: ",sid))
-ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C4.pdf"),width=6.5, height=4,scale=1.2)
-ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C4.png"),width=6.5, height=4,scale=1.2)
-
-
-
-FeaturePlot(object = object_1, features = C4A[1:4])
-FeaturePlot(object = object_1, features = C4A[5:8])
-FeaturePlot(object = object_1, features = C4A[9:12])
-FeaturePlot(object = object_1, features = C4A[13:16])
-FeaturePlot(object = object_1, features = C4A[17:19])
-
-FeaturePlot(object = object_1, features = C4B[1:4])
-FeaturePlot(object = object_1, features = C4B[5:9])
-
-
-
-#### C5 (down) ----
-
-f <- C5
-DotPlot(object = object_1, features = c(C5),  group.by = "seurat_clusters") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-  labs(x = paste0("Features [C5] in: ",sid))
-ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C5.pdf"),width=6.5, height=4,scale=1.2)
-ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C5.png"),width=6.5, height=4,scale=1.2)
-
-
-FeaturePlot(object = object_1, features = C5[1:4])
-FeaturePlot(object = object_1, features = C5[5:8])
-FeaturePlot(object = object_1, features = C5[9:12])
-FeaturePlot(object = object_1, features = C5[13:16])
-
-#### C6 (up) ----
-
-# DotPlot(object = object_1, features =list('C6'=C6 , 'Peri'=c("RGS5", "PDGFRB", "CD248","HEYL","CFH") ), group.by = "seurat_clusters") +
-DotPlot(object = object_1, features =list('C6'=C6 , 'Peri'=c("RGS5", "PDGFRB", "CD248") ), group.by = "seurat_clusters") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-  labs(x = paste0("Features [C6] in: ",sid))
-
-ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C6.pdf"),width=7.5, height=4,scale=1.2)
-ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C6.png"),width=7.5, height=4,scale=1.2)
-
-
-
-RidgePlot(object = object_1, features = c(C6), group.by = "seurat_clusters",stack=T)
-VlnPlot(object = object_1, features = c(C6), group.by = "seurat_clusters",stack=T)
-
-FeaturePlot(object = object_1, features = C6)
-
-FeaturePlot(object = object_1, features = C6[1:8])
-FeaturePlot(object = object_1, features = C6[9:16])
-FeaturePlot(object = object_1, features = C6[17:24])
-FeaturePlot(object = object_1, features = C6[25:33])
-
-
 #### C0-2022 ----
 ##### figure S10c ----
 
@@ -2792,30 +2672,29 @@ rm(tmp.c0, sid_print)
 
 
 #### C1-2022 (up) ----
-##### figure S12b ----
+##### F] Figure S14B - C1 ----
 
 
 tmp.c1 <- results.out |>
-  dplyr::filter(!is.na(.data$C1.2022)) |> 
-  dplyr::filter(.data$C1.2022 == T) |> 
-  dplyr::filter(!is.na(hugo_symbol)) |> 
-  dplyr::pull(hugo_symbol) |> 
-  unique() |> 
+  dplyr::filter(!is.na(.data$C1.2022)) |>
+  dplyr::filter(.data$C1.2022 == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
+  unique() |>
   sort()
 
 
-sid_print <- sid |> 
-  stringr::str_replace(".filtered_gene_matrices","") |> 
-  stringr::str_replace("_2of2"," (1 & 2 of 2)")
+sid_print <- sid |>
+  stringr::str_replace(".filtered_gene_matrices", "") |>
+  stringr::str_replace("_2of2", " (1 & 2 of 2)")
 
 
-DotPlot(object = object_1, features =list('C1'=tmp.c1, 'Peri'=c("RGS5", "PDGFRB", "CD248")), group.by = "seurat_clusters") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
-  labs(x = paste0("Features [C1] in: ",sid_print, " (Couturier dataset)"))
+DotPlot(object = object_1, features = list("C1" = tmp.c1, "Peri" = c("RGS5", "PDGFRB", "CD248")), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
+  labs(x = paste0("Features [C1] in: ", sid_print, " (Couturier dataset)"))
 
 
-
-ggsave(paste0("output/figures/2022_figure_S12b.pdf"),width=6.5, height=4, scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S14B.pdf"), width = 6.5, height = 4, scale = 1.2)
 rm(tmp.c1, sid_print)
 
 
@@ -3109,43 +2988,6 @@ FeaturePlot(object = object_1, features = "CD248")
 
 
 
-#### C4 (up) ----
-
-DotPlot(object = object_1, features = c(C4A, C4B), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-VlnPlot(object = object_1, features = c(C4A, C4B), group.by = "seurat_clusters",stack=T)
-RidgePlot(object = object_1, features = c(C4A, C4B), group.by = "seurat_clusters",stack=T)
-
-
-FeaturePlot(object = object_1, features = C4A)
-FeaturePlot(object = object_1, features = C4B)
-
-
-#### C5 (down) ----
-
-
-DotPlot(object = object_1, features = c(C5), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-RidgePlot(object = object_1, features = c(C5), group.by = "seurat_clusters",stack=T)
-VlnPlot(object = object_1, features = c(C5), group.by = "seurat_clusters",stack=T)
-
-FeaturePlot(object = object_1, features = C5)
-
-
-
-#### C6 (up) ----
-
-#f <- c(C6 , c("RGS5", "PDGFRB", "CD248") )
-f <- C6
-
-DotPlot(object = object_1, features = c(f), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-RidgePlot(object = object_1, features = c(f), group.by = "seurat_clusters",stack=T) 
-VlnPlot(object = object_1, features = c(f), group.by = "seurat_clusters",stack=T)
-
-
-FeaturePlot(object = object_1, features = C6)
-
-
-
-
 ## BT389 [95-100% tumor, low res] ----
 
 rm(object_1)
@@ -3350,29 +3192,6 @@ FeaturePlot(object = object_1, features = "ITGA1") # endo + peri?
 FeaturePlot(object = object_1, features = "RGS5")
 FeaturePlot(object = object_1, features = "PDGFRB")
 FeaturePlot(object = object_1, features = "CD248")
-
-
-
-#### C4 (up) ----
-
-DotPlot(object = object_1, features = c(C4A, C4B), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-VlnPlot(object = object_1, features = c(C4A, C4B), group.by = "seurat_clusters",stack=T)
-RidgePlot(object = object_1, features = c(C4A, C4B), group.by = "seurat_clusters",stack=T)
-
-
-FeaturePlot(object = object_1, features = C4A)
-FeaturePlot(object = object_1, features = C4B)
-
-
-#### C5 (down) ----
-
-
-DotPlot(object = object_1, features = c(C5), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-RidgePlot(object = object_1, features = c(C5), group.by = "seurat_clusters",stack=T)
-VlnPlot(object = object_1, features = c(C5), group.by = "seurat_clusters",stack=T)
-
-FeaturePlot(object = object_1, features = C5)
-
 
 
 
@@ -3656,52 +3475,6 @@ FeaturePlot(object = object_1, features = "ITGA1") # endo + peri?
 FeaturePlot(object = object_1, features = "RGS5")
 FeaturePlot(object = object_1, features = "PDGFRB")
 FeaturePlot(object = object_1, features = "CD248")
-
-#### C3 (up) ----
-
-f <- C3
-DotPlot(object = object_1, features = f, group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-
-
-#### C4 (up) ----
-
-f <- c(C4A,C4B)
-DotPlot(object = object_1, features = c(f), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-
-FeaturePlot(object = object_1, features = C4A[1:4])
-FeaturePlot(object = object_1, features = C4A[5:8])
-FeaturePlot(object = object_1, features = C4A[9:12])
-FeaturePlot(object = object_1, features = C4A[13:16])
-FeaturePlot(object = object_1, features = C4A[17:19])
-
-FeaturePlot(object = object_1, features = C4B[1:4])
-FeaturePlot(object = object_1, features = C4B[5:9])
-
-
-
-#### C5 (down) ----
-
-f <- C5
-DotPlot(object = object_1, features = c(f), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-
-
-FeaturePlot(object = object_1, features = C5[1:4])
-FeaturePlot(object = object_1, features = C5[5:8])
-FeaturePlot(object = object_1, features = C5[9:12])
-FeaturePlot(object = object_1, features = C5[13:16])
-
-
-#### C6 (up) ----
-
-
-f <- c(C6 , c("RGS5", "PDGFRB", "CD248") )
-f <- C6
-
-DotPlot(object = object_1, features = f, group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-RidgePlot(object = object_1, features = f, group.by = "seurat_clusters",stack=T)
-VlnPlot(object = object_1, features = f, group.by = "seurat_clusters",stack=T)
-
-FeaturePlot(object = object_1, features = C6)
 
 
 
@@ -4106,34 +3879,6 @@ FeaturePlot(object = object_1, features = "PDGFRB")
 FeaturePlot(object = object_1, features = "CD248")
 
 
-#### C3 (up) ----
-
-
-endo <- read_xlsx("data/McKenzie et al. Gene expression different cell types.xlsx", sheet='top_human_specificity') %>%
-  dplyr::select(c('grand_mean', 'gene', 'Celltype')) %>%
-  dplyr::filter(Celltype == 'end') %>% 
-  dplyr::arrange(desc(grand_mean)) %>%
-  dplyr::filter(gene %in% all.genes ) %>%
-  dplyr::slice_head(n=25) %>%
-  dplyr::mutate(grand_mean = NULL) %>% 
-  dplyr::pull(gene)
-
-
-C3.only <- setdiff(C3, endo)
-C3.and.endo <- intersect(endo, C3)
-endo.only <- setdiff(endo, C3)
-
-
-
-DotPlot(object = object_1, features = list('C3'=C3.only, 'C3+endo'= C3.and.endo, 'endo'=endo.only,'pericyte'=c('PDGFRB','CD248','RGS5')), group.by = "seurat_clusters") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-  labs(x = paste0("Features [C3 & top25 McKenzie endothelial cell markers] in: ",sid))
-
-ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C3.pdf"),width=7.5, height=3,scale=2)
-ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C3.png"),width=7.5, height=3,scale=2)
-
-
-
 #### C0-2022 ----
 ##### figure S10d ----
 
@@ -4163,34 +3908,30 @@ rm(tmp.c0, sid_print)
 
 
 #### C1-2022 (up) ----
-##### figure S12c ----
+##### F] Figure S14C - C1 ----
 
 
 tmp.c1 <- results.out |>
-  dplyr::filter(!is.na(.data$C1.2022)) |> 
-  dplyr::filter(.data$C1.2022 == T) |> 
-  dplyr::filter(!is.na(hugo_symbol)) |> 
-  dplyr::pull(hugo_symbol) |> 
-  unique() |> 
+  dplyr::filter(!is.na(.data$C1.2022)) |>
+  dplyr::filter(.data$C1.2022 == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
+  unique() |>
   sort()
 
 
-sid_print <- sid |> 
-  stringr::str_replace(".filtered_gene_matrices","") |> 
-  stringr::str_replace("_2of2"," (1 & 2 of 2)")
+sid_print <- sid |>
+  stringr::str_replace(".filtered_gene_matrices", "") |>
+  stringr::str_replace("_2of2", " (1 & 2 of 2)")
 
 
-DotPlot(object = object_1, features =list('C1'=tmp.c1, 'Peri'=c("RGS5", "PDGFRB", "CD248")), group.by = "seurat_clusters") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
-  labs(x = paste0("Features [C1] in: ",sid_print, " (Couturier dataset)"))
+DotPlot(object = object_1, features = list("C1" = tmp.c1, "Peri" = c("RGS5", "PDGFRB", "CD248")), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
+  labs(x = paste0("Features [C1] in: ", sid_print, " (Couturier dataset)"))
 
 
-
-ggsave(paste0("output/figures/2022_figure_S12c.pdf"),width=6.5, height=4, scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S14C.pdf"), width = 6.5, height = 4, scale = 1.2)
 rm(tmp.c1, sid_print)
-
-
-
 
 
 
