@@ -7,29 +7,10 @@ library(tidyverse)
 library(Matrix)
 library(DropletUtils)
 library(Seurat)
-library(infercnv)
+#library(infercnv)
 library(AnnotationHub)
 library(ensembldb)
 
-
-# cluster genes ----
-
-C3 <- c('VWF', 'TIE1', 'HIGD1B', 'MMRN1', 'CYSLTR2', 'MMP25','FLT4', 'BCL6B', 'GRAP', 'LAMC3', 'DPEP1', 'PXDNL', 'ANGPT2',
-        'PALD1', 'ADGRD1', 'GBP6', 'SLC52A3', 'CLDN5', 'VWA2', 'ABCB1', 'THSD7B', 'SPINK8', 'FOXQ1', 'ZIC3', 'NODAL')
-
-C4A <- c('SOD3', "FSTL3", "FAM180A", "OSGIN1", "NDRG1", "AC010327.1","TRIM29", "HSPB7", "TNNT1", "CCN5", "MICAL2", "GLIS1", "SLIT3",
-        "CYP26B1", "NPR3", "FGF5", "CCBE1", "GPR68", "SH3RF2")
-C4B <- c("WNT11", "SCUBE3", "KRT17", "GPR78","CPZ","GLI1", "PRB2","MAFA","HAPLN1")
-
-C5 <- c("PRF1", "ARHGAP9", "FCMR","LXN","KCNE3", "NR5A2","FPR2", "CCL13",
-        "MMP7",
-        "CALCR", "LRG1", "SAA2", "PI3", "LIF", "HSPA6")
-
-C6 <- c('CRABP2', 'CILP2', 'DPT', 'FGF7', 'COL10A1', 'FBN1', 'GLT8D2',
-        'IRX3', 'MFAP5', 'MFAP4', "COL8A2", "FNDC1", "MMP11", "MFAP2",
-        "COL1A2", "COL1A1", "COL5A1", "ADAMTS2", "TPSB2", "KRT8", "OMD",
-        "OGN", "MME", "MLPH", "MRC1L1", "PTGFR", "TWIST2", "C5orf46",
-        "TNNT3", "ASS1", "PERP","KLHDC7B", "CCL8")
 
 
 # generate annotation table ----
@@ -439,33 +420,29 @@ FeaturePlot(object = object_1, features = "TRBC2")
 
 
 #### C0-2022 ----
-##### figure S10k ----
+##### F] Figure S12K - C0 ----
 
 
 tmp.c0 <- results.out |>
-  dplyr::filter(!is.na(.data$C0.2022)) |> 
-  dplyr::filter(.data$C0.2022 == T) |> 
-  dplyr::filter(!is.na(hugo_symbol)) |> 
-  dplyr::pull(hugo_symbol) |> 
+  dplyr::filter(!is.na(.data$C0.2022)) |>
+  dplyr::filter(.data$C0.2022 == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
   unique()
 
 
-sid_print <- sid |> 
-  stringr::str_replace(".filtered_gene_matrices","") |> 
-  stringr::str_replace("_",": ")
+sid_print <- sid |>
+  stringr::str_replace(".filtered_gene_matrices", "") |>
+  stringr::str_replace("_", ": ")
 
 
-
-DotPlot(object = object_1, features =list('C0'=tmp.c0), group.by = "seurat_clusters") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
-  labs(x = paste0("Features [C0] in: ",sid_print, " (Yuan dataset)"))
-
+DotPlot(object = object_1, features = list("C0" = tmp.c0), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
+  labs(x = paste0("Features [C0] in: ", sid_print, " (Yuan dataset)"))
 
 
-ggsave(paste0("output/figures/2022_figure_S10k.pdf"),width=6.5, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S12K.pdf"), width = 6.5, height = 4, scale = 1.2)
 rm(tmp.c0, sid_print)
-
-
 
 
 
@@ -802,32 +779,29 @@ FeaturePlot(object = object_1, features = "TRBC2")
 
 
 #### C0-2022 ----
-##### figure S10l ----
+##### F] Figure S12L - C0 ----
 
 
 tmp.c0 <- results.out |>
-  dplyr::filter(!is.na(.data$C0.2022)) |> 
-  dplyr::filter(.data$C0.2022 == T) |> 
-  dplyr::filter(!is.na(hugo_symbol)) |> 
-  dplyr::pull(hugo_symbol) |> 
+  dplyr::filter(!is.na(.data$C0.2022)) |>
+  dplyr::filter(.data$C0.2022 == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
   unique()
 
 
-sid_print <- sid |> 
-  stringr::str_replace(".filtered_gene_matrices","") |> 
-  stringr::str_replace("_",": ")
+sid_print <- sid |>
+  stringr::str_replace(".filtered_gene_matrices", "") |>
+  stringr::str_replace("_", ": ")
 
 
-
-DotPlot(object = object_1, features =list('C0'=tmp.c0), group.by = "seurat_clusters") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
-  labs(x = paste0("Features [C0] in: ",sid_print, " (Yuan dataset)"))
-
+DotPlot(object = object_1, features = list("C0" = tmp.c0), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
+  labs(x = paste0("Features [C0] in: ", sid_print, " (Yuan dataset)"))
 
 
-ggsave(paste0("output/figures/2022_figure_S10l.pdf"),width=6.5, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S12L.pdf"), width = 6.5, height = 4, scale = 1.2)
 rm(tmp.c0, sid_print)
-
 
 
 #### C1-2022 (up) ----
@@ -1224,7 +1198,7 @@ FeaturePlot(object = object_1, features = c("EGFR", "FGFR3"))
 
 
 #### C0-2022 ----
-##### figure S10m ----
+##### F] Figure S12M - C0 ----
 
 
 tmp.c0 <- results.out |>
@@ -1240,15 +1214,14 @@ sid_print <- sid |>
   stringr::str_replace("_",": ")
 
 
-
 DotPlot(object = object_1, features =list('C0'=tmp.c0), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
   labs(x = paste0("Features [C0] in: ",sid_print, " (Yuan dataset)"))
 
 
-
-ggsave(paste0("output/figures/2022_figure_S10m.pdf"),width=6.5, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S12M.pdf"),width=6.5, height=4,scale=1.2)
 rm(tmp.c0, sid_print)
+
 
 
 #### C1-2022 (up) ----
@@ -1818,30 +1791,28 @@ FeaturePlot(object = object_1, features = "NDRG1")
 
 
 #### C0-2022 ----
-##### figure S10n ----
+##### F] Figure S12N - C0 ----
 
 
 tmp.c0 <- results.out |>
-  dplyr::filter(!is.na(.data$C0.2022)) |> 
-  dplyr::filter(.data$C0.2022 == T) |> 
-  dplyr::filter(!is.na(hugo_symbol)) |> 
-  dplyr::pull(hugo_symbol) |> 
+  dplyr::filter(!is.na(.data$C0.2022)) |>
+  dplyr::filter(.data$C0.2022 == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
   unique()
 
 
-sid_print <- sid |> 
-  stringr::str_replace(".filtered_gene_matrices","") |> 
-  stringr::str_replace("_",": ")
+sid_print <- sid |>
+  stringr::str_replace(".filtered_gene_matrices", "") |>
+  stringr::str_replace("_", ": ")
 
 
-
-DotPlot(object = object_1, features =list('C0'=tmp.c0), group.by = "seurat_clusters") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
-  labs(x = paste0("Features [C0] in: ",sid_print, " (Yuan dataset)"))
-
+DotPlot(object = object_1, features = list("C0" = tmp.c0), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
+  labs(x = paste0("Features [C0] in: ", sid_print, " (Yuan dataset)"))
 
 
-ggsave(paste0("output/figures/2022_figure_S10n.pdf"),width=6.5, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S12N.pdf"), width = 6.5, height = 4, scale = 1.2)
 rm(tmp.c0, sid_print)
 
 
@@ -2288,30 +2259,28 @@ FeaturePlot(object = object_1, features = "CD248")
 
 
 #### C0-2022 ----
-##### figure S10o ----
+##### F] Figure S12O - C0 ----
 
 
 tmp.c0 <- results.out |>
-  dplyr::filter(!is.na(.data$C0.2022)) |> 
-  dplyr::filter(.data$C0.2022 == T) |> 
-  dplyr::filter(!is.na(hugo_symbol)) |> 
-  dplyr::pull(hugo_symbol) |> 
+  dplyr::filter(!is.na(.data$C0.2022)) |>
+  dplyr::filter(.data$C0.2022 == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
   unique()
 
 
-sid_print <- sid |> 
-  stringr::str_replace(".filtered_gene_matrices","") |> 
-  stringr::str_replace("_",": ")
+sid_print <- sid |>
+  stringr::str_replace(".filtered_gene_matrices", "") |>
+  stringr::str_replace("_", ": ")
 
 
-
-DotPlot(object = object_1, features =list('C0'=tmp.c0), group.by = "seurat_clusters") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
-  labs(x = paste0("Features [C0] in: ",sid_print, " (Yuan dataset)"))
-
+DotPlot(object = object_1, features = list("C0" = tmp.c0), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
+  labs(x = paste0("Features [C0] in: ", sid_print, " (Yuan dataset)"))
 
 
-ggsave(paste0("output/figures/2022_figure_S10o.pdf"),width=6.5, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S12O.pdf"), width = 6.5, height = 4, scale = 1.2)
 rm(tmp.c0, sid_print)
 
 
