@@ -1082,33 +1082,30 @@ FeaturePlot(object = object_1, features = "CD248",order=T)
 
 
 #### C0-2022 ----
-##### figure S10h ----
+##### F] Figure S12H - C0 ----
 
 
 tmp.c0 <- results.out |>
-  dplyr::filter(!is.na(.data$C0.2022)) |> 
-  dplyr::filter(.data$C0.2022 == T) |> 
-  dplyr::filter(!is.na(hugo_symbol)) |> 
-  dplyr::pull(hugo_symbol) |> 
+  dplyr::filter(!is.na(.data$C0.2022)) |>
+  dplyr::filter(.data$C0.2022 == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
   unique()
 
 
-sid_print <- sid |> 
-  stringr::str_replace("snRNA_","(single nucleus RNA-seq) ") |> 
-  stringr::str_replace("scRNA_","(single cell RNA-seq) ") |> 
-  stringr::str_replace("_",": ")
+sid_print <- sid |>
+  stringr::str_replace("snRNA_", "(single nucleus RNA-seq) ") |>
+  stringr::str_replace("scRNA_", "(single cell RNA-seq) ") |>
+  stringr::str_replace("_", ": ")
 
 
-
-DotPlot(object = object_1, features =list('C0'=tmp.c0), group.by = "seurat_clusters") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
-  labs(x = paste0("Features [C0] in: ",sid_print, " (Diaz dataset)"))
-
+DotPlot(object = object_1, features = list("C0" = tmp.c0), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
+  labs(x = paste0("Features [C0] in: ", sid_print, " (Diaz dataset)"))
 
 
-ggsave(paste0("output/figures/2022_figure_S10h.pdf"),width=6.5, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S12H.pdf"), width = 6.5, height = 4, scale = 1.2)
 rm(tmp.c0, sid_print)
-
 
 
 
@@ -1646,33 +1643,30 @@ FeaturePlot(object = object_1, features = c("CFH"))
 
 
 #### C0-2022 ----
-##### figure S10i ----
+##### F] Figure S12I ----
 
 
 tmp.c0 <- results.out |>
-  dplyr::filter(!is.na(.data$C0.2022)) |> 
-  dplyr::filter(.data$C0.2022 == T) |> 
-  dplyr::filter(!is.na(hugo_symbol)) |> 
-  dplyr::pull(hugo_symbol) |> 
+  dplyr::filter(!is.na(.data$C0.2022)) |>
+  dplyr::filter(.data$C0.2022 == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
   unique()
 
 
-sid_print <- sid |> 
-  stringr::str_replace("snRNA_","(single nucleus RNA-seq) ") |> 
-  stringr::str_replace("scRNA_","(single cell RNA-seq) ") |> 
-  stringr::str_replace("_",": ")
+sid_print <- sid |>
+  stringr::str_replace("snRNA_", "(single nucleus RNA-seq) ") |>
+  stringr::str_replace("scRNA_", "(single cell RNA-seq) ") |>
+  stringr::str_replace("_", ": ")
 
 
-
-DotPlot(object = object_1, features =list('C0'=tmp.c0), group.by = "seurat_clusters") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
-  labs(x = paste0("Features [C0] in: ",sid_print, " (Diaz dataset)"))
-
+DotPlot(object = object_1, features = list("C0" = tmp.c0), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
+  labs(x = paste0("Features [C0] in: ", sid_print, " (Diaz dataset)"))
 
 
-ggsave(paste0("output/figures/2022_figure_S10i.pdf"),width=6.5, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S12I.pdf"), width = 6.5, height = 4, scale = 1.2)
 rm(tmp.c0, sid_print)
-
 
 
 
