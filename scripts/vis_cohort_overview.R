@@ -227,6 +227,15 @@ tmp.glass <- glass.gbm.rnaseq.metadata.all.samples |>
   dplyr::rename(`ssGSEA MES pval` = `ssGSEA.2022.Mesenchymal_pval`) |>
   dplyr::rename(`ssGSEA PN enrichment score` = `ssGSEA.2022.Proneural.enrichment_score`) |>
   dplyr::rename(`ssGSEA PN pval` = `ssGSEA.2022.Proneural_pval`) |>
+  
+  dplyr::mutate(`ssGSEA subtype` = ifelse(tumour.percentage.2022 >= 15, `ssGSEA subtype` , '')) |> 
+  dplyr::mutate(`ssGSEA CL enrichment score` = ifelse(tumour.percentage.2022 >= 15, `ssGSEA CL enrichment score` , '')) |> 
+  dplyr::mutate(`ssGSEA CL pval` = ifelse(tumour.percentage.2022 >= 15, `ssGSEA CL pval` , '')) |> 
+  dplyr::mutate(`ssGSEA MES enrichment score` = ifelse(tumour.percentage.2022 >= 15, `ssGSEA MES enrichment score` , '')) |> 
+  dplyr::mutate(`ssGSEA MES pval` = ifelse(tumour.percentage.2022 >= 15, `ssGSEA MES pval` , '')) |> 
+  dplyr::mutate(`ssGSEA PN enrichment score` = ifelse(tumour.percentage.2022 >= 15, `ssGSEA PN enrichment score` , '')) |> 
+  dplyr::mutate(`ssGSEA PN pval` = ifelse(tumour.percentage.2022 >= 15, `ssGSEA PN pval` , '')) |> 
+  
   dplyr::rename(`NMF:150 meta-feature 1` = `NMF:150:1`) |>
   dplyr::rename(`NMF:150 meta-feature 2` = `NMF:150:2`) |>
   dplyr::rename(`NMF:150 meta-feature 3` = `NMF:150:3`) |>

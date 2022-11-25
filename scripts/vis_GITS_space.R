@@ -724,13 +724,10 @@ rm(n.glass, n.gsam, mult, tmp.pca, data, x, y, datapc, sel)
 plt <- rbind(
   gsam.rna.metadata |>
 
-    dplyr::filter(blacklist.pca == F) %>%
-    dplyr::filter(pat.with.IDH == F) %>%
-    dplyr::filter(
-      sid %in% c('BAI2', 'CAO1-replicate', 'FAB2', 'GAS2-replicate') == F
-    ) %>%
+    dplyr::filter(blacklist.pca == F) |> 
+    dplyr::filter(pat.with.IDH == F) |> 
+    dplyr::filter(sid %in% c('BAI2', 'CAO1-replicate', 'FAB2', 'GAS2-replicate') == F) |> 
     dplyr::filter(tumour.percentage.dna >= 15) |> # avoid NA values
-    
     dplyr::mutate(is.primary = resection == "r1") |> 
     dplyr::select(
       sid,
@@ -1844,8 +1841,12 @@ plt <- plt |>
 
 
 # FDR + geom_signif -> https://github.com/kassambara/ggpubr/issues/65#issuecomment-400918671
-stats <- compare_means(`NMF:150:PCA:eucledian.dist` ~ `GITS.150.svm.2022.subtype_recurrent`, group.by = "GITS.150.svm.2022.subtype_primary", data = plt) |>
-  mutate(y_pos = 4.25 + ((1:n() %% 3) * 0.4), p.adj = format.pval(p.adj, digits = 1))
+stats <- ggpubr::compare_means(`NMF:150:PCA:eucledian.dist` ~ `GITS.150.svm.2022.subtype_recurrent`,
+                               group.by = "GITS.150.svm.2022.subtype_primary", 
+                               data = plt
+                               ) |>
+  dplyr::mutate(y_pos = 4.25 + ((1:n() %% 3) * 0.4)) |> 
+  dplyr::mutate(p.adj = format.pval(p.adj, digits = 1))
 
 
 ggplot(plt, aes(x = GITS.150.svm.2022.subtype_recurrent, y = `NMF:150:PCA:eucledian.dist`)) +
@@ -1887,8 +1888,8 @@ ggplot(plt, aes(x = GITS.150.svm.2022.subtype_recurrent, y = `NMF:150:PCA:eucled
 
 
 
-ggsave("output/figures/2022_figure_S2a.pdf", width=8.3 / 4,height=8.3/3.2, scale=2)
-ggsave("output/figures/2022_figure_S2a.svg", width=8.3 / 4,height=8.3/3.2, scale=2)
+ggsave("output/figures/2022_figure_S2a.pdf", width=8.3 / ((3/2) * 2),height=8.3/3.2, scale=2)
+ggsave("output/figures/2022_figure_S2a.svg", width=8.3 / ((3/2) * 2),height=8.3/3.2, scale=2)
 
 
 rm(n.glass, n.gsam)

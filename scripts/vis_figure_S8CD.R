@@ -18,6 +18,7 @@ plt <- gsam.rna.metadata |>
 ggplot(plt, aes(x=tumour.percentage.dna, y=rna.signature.C4.neuron.2022, fill=resection))+
   geom_point(pch = 21, size = 2, col = "black", alpha = 0.85) +
   ggpubr::stat_cor(aes(shape=NULL, col=NULL, fill=NULL, label = ..r.label..), method = "pearson",label.x=70) +
+  #stat_smooth(method="loess",se=FALSE,aes(fill=NULL),col="red") +
   scale_fill_manual(values = c("Primary" = resection_colors[["R1"]],
                                "Recurrence" = resection_colors[["R2"]]), name = "Resection") +
   theme_bw() +

@@ -736,22 +736,686 @@ saveRDS(
 )
 
 
-# 〰 © Dr. Youri Hoogstrate 〰 ----
 
 
-tmp.out = readRDS(file = "cache/analysis_GITS_space.Rds") |> 
+# contour diff revisions ----
+
+# 1. subtypes as in initial manuscript
+# - G-SAM: gliovis.majority_call
+# - GLASS: GBM.transcriptional.subtype.Synapse.2021
+
+stopifnot(nrow(tmp.combined.metadata) == (287+216))
+
+
+fv <- Vectorize(function(x,y){
+  x <- unique(strsplit(x, "\\|")[[1]])
+  x[x != "Mesenchymal"] <- "Non-Mesenchymal"
+  
+  y <- unique(strsplit(y, "\\|")[[1]])
+  y[y != "Mesenchymal"] <- "Non-Mesenchymal"
+  
+  isct <- intersect(x,y)
+  
+  x <- setdiff(x, isct)
+  y <- setdiff(y, isct)
+  
+  if(length(x) > 0) {
+    x <- paste0(x, " (first submission)")
+  }
+  if(length(y) > 0) {
+    y <- paste0(y, " (revision)")
+  }
+  
+  z <- c(isct, sort(unique(c(x,y))))
+  
+  return(as.character(paste0(z, collapse="|")))
+})
+
+fv("ASD","DEF")
+fv("ASD","ASD")
+fv("ASD|DEF","DEF")
+fv("ASD","DEF|DEF")
+fv("ASD|DEF","ASD|DEF")
+
+
+## metadata table ----
+
+tmp.train <- tmp.combined.metadata |>
+  dplyr::left_join(
+    glass.gbm.rnaseq.metadata.all.samples |>
+      dplyr::select(
+        aliquot_barcode,
+        case_barcode,
+        resection,
+
+        # subtype classes:
+        ssGSEA.2022.subtype,
+        GBM.transcriptional.subtype.Synapse.2021,
+
+        # coordinates:
+        "NMF:150:PC1", "NMF:150:PC2"
+      ) |>
+      dplyr::rename(`NMF:150:PC1_glass` = `NMF:150:PC1`) |>
+      dplyr::rename(`NMF:150:PC2_glass` = `NMF:150:PC2`) |> 
+      dplyr::rename(`subtype.first.draft_glass` = GBM.transcriptional.subtype.Synapse.2021) |> 
+      dplyr::rename(`subtype.revision_glass` = ssGSEA.2022.subtype)  |> 
+      dplyr::rename(pid_glass = case_barcode) |> 
+      dplyr::mutate(resection_glass = ifelse(resection == "TP", "primary","recurrence"), resection=NULL)
+    ,
+    by = c("sid" = "aliquot_barcode"), suffix = c("", "")
+  ) |>
+  dplyr::mutate(dataset = NULL) |>
+  dplyr::mutate(batch = NULL) |>
+  dplyr::mutate(ssGSEA.2022.subtype = NULL) |>
+  dplyr::left_join(
+    gsam.rna.metadata |>
+      dplyr::select(
+        sid,
+        pid,
+        resection, 
+        
+        # subtype classes:
+        ssGSEA.2022.subtype,
+        gliovis.majority_call,
+
+        # coordinates:
+        "NMF:150:PC1", "NMF:150:PC2"
+      ) |>
+      dplyr::rename(pid_gsam = pid) |> 
+      dplyr::rename(`NMF:150:PC1_gsam` = `NMF:150:PC1`) |>
+      dplyr::rename(`NMF:150:PC2_gsam` = `NMF:150:PC2`) |> 
+      dplyr::rename(`subtype.first.draft_gsam` = gliovis.majority_call) |> 
+      dplyr::rename(`subtype.revision_gsam` = ssGSEA.2022.subtype) |> 
+      dplyr::mutate(resection_gsam = ifelse(resection == "r1", "primary","recurrence"), resection=NULL)
+    ,
+    by = c("sid" = "sid"), suffix = c("", "")
+  ) |>
+  dplyr::mutate(subtype.first.draft_gsam = as.character(subtype.first.draft_gsam)) |> 
+  dplyr::mutate(subtype.revision_gsam = as.character(subtype.revision_gsam)) |> 
+  dplyr::mutate(subtype.first.draft_glass = as.character(subtype.first.draft_glass)) |> 
+  dplyr::mutate(subtype.revision_glass = as.character(subtype.revision_glass)) |> 
+  
+  dplyr::mutate(subtype.first.draft = ifelse(is.na(subtype.first.draft_gsam), subtype.first.draft_glass, subtype.first.draft_gsam)) |>
+  dplyr::mutate(subtype.revision = ifelse(is.na(subtype.revision_gsam), subtype.revision_glass, subtype.revision_gsam)) |>
+  dplyr::mutate(resection = ifelse(is.na(resection_gsam), resection_glass, resection_gsam)) |>
+  dplyr::mutate(pid = ifelse(is.na(pid_gsam), pid_glass, pid_gsam)) |>
+  
+  dplyr::mutate(`NMF:150:PC1` = ifelse(is.na(`NMF:150:PC1_gsam`), `NMF:150:PC1_glass`, `NMF:150:PC1_gsam`)) |>
+  dplyr::mutate(`NMF:150:PC2` = ifelse(is.na(`NMF:150:PC2_gsam`), `NMF:150:PC2_glass`, `NMF:150:PC2_gsam`)) |> 
+  dplyr::select(!contains("_gsam") & !contains("_glass")) |> 
+  #dplyr::mutate(subtype_label = fv(ssGSEA.2022.subtype, subtypeme.gliovis.majority.call.2022)) |> 
+  
+  dplyr::mutate(subtype = fv(subtype.first.draft, subtype.revision)) |> 
+
+  dplyr::mutate(subtype.first.draft = as.factor(subtype.first.draft)) |> 
+  dplyr::mutate(subtype.revision = as.factor(subtype.revision)) |> 
+  dplyr::mutate(revisions = ifelse(is.na(subtype.first.draft),"only revised manuscript","both")) |> 
+
   tibble::column_to_rownames('sid')
 
 
-library(M3C)
-tsne(t(tmp.out |>
-         dplyr::select(`NMF:150:1`, `NMF:150:2`, `NMF:150:3`)),
-     labels = as.factor(tmp.out$GITS.150.svm.2022.subtype),
-     perplex=20)
+## contours first revision ----
+
+tmp.model.first.draft <- e1071::svm(x = tmp.train |> dplyr::select(c('NMF:150:PC1', 'NMF:150:PC2')) ,
+                                    y = tmp.train |> dplyr::pull('subtype.first.draft')
+                                    ,
+                                    scale = F,
+                                    #type = "C-classification",
+                                    kernel = 'linear',
+                                    tolerance = 0.0001,
+                                    cost = 3
+                                    )
 
 
-umap(t(tmp.out |>
-         dplyr::select(`NMF:150:1`, `NMF:150:2`, `NMF:150:3`)),
-     labels = as.factor(tmp.out$GITS.150.svm.2022.subtype))
+resolution <- 250 # 1000 x 1000 data points
+
+off_x <- (max(-tmp.train$`NMF:150:PC1`) - min(-tmp.train$`NMF:150:PC1`)) * 0.025
+off_y <- (max(-tmp.train$`NMF:150:PC2`) - min(-tmp.train$`NMF:150:PC2`)) * 0.025
+
+
+range_pc1 = seq(from = min(-tmp.train$`NMF:150:PC1`) - off_x, to = max(-tmp.train$`NMF:150:PC1`) + off_x, length.out = resolution)
+range_pc2 = seq(from = min(-tmp.train$`NMF:150:PC2`) - off_y, to = max(-tmp.train$`NMF:150:PC2`) + off_y, length.out = resolution)
+
+range_df = expand.grid('NMF:150:PC1' = range_pc1, 'NMF:150:PC2' = range_pc2)
+gits.contours.first.draft <- data.frame(class = predict(tmp.model.first.draft , newdata = range_df)) |> 
+  cbind(range_df) |> 
+  dplyr::select(c('class', 'NMF:150:PC1', 'NMF:150:PC2')) |> 
+  dplyr::mutate(type="Contour") |> 
+  dplyr::mutate(class = as.character(class))
+
+rm(resolution, off_x, off_y, range_pc1, range_pc2, range_df)
+
+
+## contours revision ----
+
+tmp.model.revision <- e1071::svm(x = tmp.train |> dplyr::select(c('NMF:150:PC1', 'NMF:150:PC2')) ,
+                                 y = tmp.train |> dplyr::pull('subtype.revision')
+                                 ,
+                                 scale = F,
+                                 #type = "C-classification",
+                                 kernel = 'linear',
+                                 tolerance = 0.0001,
+                                 cost = 3)
+
+resolution <- 250 # 1000 x 1000 data points
+
+off_x <- (max(-tmp.train$`NMF:150:PC1`) - min(-tmp.train$`NMF:150:PC1`)) * 0.025
+off_y <- (max(-tmp.train$`NMF:150:PC2`) - min(-tmp.train$`NMF:150:PC2`)) * 0.025
+
+
+range_pc1 = seq(from = min(-tmp.train$`NMF:150:PC1`) - off_x, to = max(-tmp.train$`NMF:150:PC1`) + off_x, length.out = resolution)
+range_pc2 = seq(from = min(-tmp.train$`NMF:150:PC2`) - off_y, to = max(-tmp.train$`NMF:150:PC2`) + off_y, length.out = resolution)
+
+range_df = expand.grid('NMF:150:PC1' = range_pc1, 'NMF:150:PC2' = range_pc2)
+gits.contours.revision <- data.frame(class = predict(tmp.model.revision , newdata = range_df)) |> 
+  cbind(range_df) |> 
+  dplyr::select(c('class', 'NMF:150:PC1', 'NMF:150:PC2')) |> 
+  dplyr::mutate(type="Contour") |> 
+  dplyr::mutate(class = as.character(class))
+
+rm(resolution, off_x, off_y, range_pc1, range_pc2, range_df)
+
+
+
+
+## integrate / diff contours ----
+
+stopifnot(gits.contours.first.draft$`NMF:150:PC1` == gits.contours.revision$`NMF:150:PC1`)
+stopifnot(gits.contours.first.draft$`NMF:150:PC2` == gits.contours.revision$`NMF:150:PC2`)
+stopifnot(sum(gits.contours.first.draft$class != gits.contours.revision$class) > 0)
+
+
+gits.contours <- data.frame(
+  `NMF:150:PC1` = gits.contours.first.draft$`NMF:150:PC1`,
+  `NMF:150:PC2` = gits.contours.first.draft$`NMF:150:PC2`,
+  class.first.draft = gits.contours.first.draft$class,
+  class.revision = gits.contours.revision$class,
+  check.names=F
+) |> 
+  dplyr::mutate(class.first.draft = as.character(class.first.draft)) |> 
+  dplyr::mutate(class.revision = as.character (class.revision)) |> 
+  #dplyr::filter(class.first.draft != class.revision) |> 
+  dplyr::mutate(class = fv(class.first.draft, class.revision))
+
+
+
+## plt ----
+
+
+
+primary.mes.first.draft <- tmp.train |> 
+  dplyr::filter(resection == "primary" & subtype.first.draft == "Mesenchymal") |> 
+  dplyr::pull(pid)
+
+primary.mes.revision <- tmp.train |> 
+  dplyr::filter(resection == "primary" & subtype.revision == "Mesenchymal") |> 
+  dplyr::pull(pid)
+
+
+plt <- tmp.train |> 
+  dplyr::group_by(pid) |> 
+  dplyr::filter(n() == 2) |> 
+  dplyr::ungroup() |> 
+  dplyr::mutate(primary.mes.first.draft = pid %in% primary.mes.first.draft) |> 
+  dplyr::mutate(primary.mes.revision = pid %in% primary.mes.revision)
+
+
+
+
+plt.contours <- gits.contours |> 
+  dplyr::mutate(`subtype` = class, `pid` = NA)
+
+
+
+p1 <- ggplot(plt |> 
+               dplyr::filter(resection == "primary" &
+                               revisions == "both"
+               ), aes(x=-`NMF:150:PC1`, y=-`NMF:150:PC2`)) +
+  theme_bw() +
+  geom_raster(aes(fill=subtype), data = plt.contours, alpha=0.15) +
+  geom_contour(data=  plt.contours,
+               aes(z=as.numeric(class)),
+               colour="black",
+               size=1.25,
+               lty=2,
+               breaks=c(1.5,2.5)*0.00008) +
+  # geom_point(size=3, 
+  #            fill = "white",
+  #            col='black',
+  #            pch=21, alpha=0.7) +
+  coord_equal() +
+  labs(x="PC1 on NMF meta-features", 
+       y="PC2 on NMF meta-features",
+       fill = "Subtype (ssGSEA)"
+  ) +
+  scale_fill_manual(values = c(
+    subtype_colors_ext['Mesenchymal'],
+    'Non-Mesenchymal'= as.character("white"),
+    "Mesenchymal (revision)|Non-Mesenchymal (first submission)" = 'red',
+    'TRUE'='blue',
+    'FALSE'='gray90'),
+    labels=c('TRUE'='primary tumor MES', 'FALSE'='primary tumor non-MES')
+  ) +
+  theme_bw()  +
+  theme(
+    axis.title = element_text(face = "bold",size = rel(1)),
+    legend.position = 'bottom',
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    #axis.ticks.x = element_blank(),
+    panel.border = element_rect(colour = "black", fill=NA, size=1.25)
+  ) +
+  guides(fill=guide_legend(ncol=2)) +
+  labs(subtitle = "GITS space at revision, classifiers by GlioVis + Synapse (first submission) or ssGSEA (revision)")
+
+
+
+
+p2 <- ggplot(plt |> 
+               dplyr::filter(resection == "recurrence" &
+                               revisions == "both"
+               ), aes(x=-`NMF:150:PC1`, y=-`NMF:150:PC2`)) +
+  theme_bw() +
+  geom_raster(aes(fill=subtype), data = plt.contours, alpha=0.15) +
+  geom_contour(data=  plt.contours,
+               aes(z=as.numeric(class)),
+               colour="black",
+               size=1.25,
+               lty=2,
+               breaks=c(1.5,2.5)*0.00008) +
+  geom_point(size=3, 
+             aes(fill = primary.mes.first.draft), 
+             #fill = "gray",
+             col='black',
+             pch=21, alpha=0.7) +
+  coord_equal() +
+  labs(x="PC1 on NMF meta-features", 
+       y="PC2 on NMF meta-features",
+       fill = "Subtype (ssGSEA)"
+       #caption = paste0("G-SAM: n=",n.gsam, "  -  GLASS: n=",n.glass," samples")
+  ) +
+  scale_fill_manual(values = c(
+    subtype_colors_ext['Mesenchymal'],
+    'Non-Mesenchymal'= as.character("white"),
+    "Mesenchymal (revision)|Non-Mesenchymal (first submission)" = 'red',
+    'TRUE'='blue',
+    'FALSE'='gray90'),
+    labels=c('TRUE'='primary tumor MES', 'FALSE'='primary tumor non-MES')
+  ) +
+  theme_bw()  +
+  theme(
+    axis.title = element_text(face = "bold",size = rel(1)),
+    legend.position = 'bottom',
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    #axis.ticks.x = element_blank(),
+    panel.border = element_rect(colour = "black", fill=NA, size=1.25)
+  ) +
+  guides(fill=guide_legend(ncol=2)) +
+  labs(subtitle = "Recurrent tumors, both manuscript versions, MES status @ first submission")
+
+
+
+
+
+p3 <- ggplot(plt |> 
+               dplyr::filter(resection == "recurrence" &
+                               revisions == "both"
+               ), aes(x=-`NMF:150:PC1`, y=-`NMF:150:PC2`, fill=subtype)) +
+  
+  theme_bw() +
+  geom_raster(data = plt.contours, alpha=0.15) +
+  geom_contour(data=  plt.contours,
+               aes(z=as.numeric(class)),
+               colour="gray40",
+               size=0.25,
+               lty=2,
+               breaks=c(1.5,2.5)) +
+  geom_point(size=3, 
+             aes(fill = primary.mes.revision), 
+             #fill = "gray",
+             col='black',
+             pch=21, alpha=0.7) +
+  coord_equal() +
+  labs(x="PC1 on NMF meta-features", 
+       y="PC2 on NMF meta-features",
+       fill = "Subtype (ssGSEA)"
+  ) +
+  scale_fill_manual(values = c(
+    subtype_colors_ext['Mesenchymal'],
+    'Non-Mesenchymal'= as.character("white"),
+    "Mesenchymal (revision)|Non-Mesenchymal (first submission)" = 'red',
+    'TRUE'='blue',
+    'FALSE'='gray90'),
+    labels=c('TRUE'='primary tumor MES', 'FALSE'='primary tumor non-MES')
+  ) +
+  theme_bw()  +
+  theme(
+    axis.title = element_text(face = "bold",size = rel(1)),
+    legend.position = 'bottom',
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    panel.border = element_rect(colour = "black", fill=NA, size=1.25)
+  ) +
+  guides(fill=guide_legend(ncol=2)) +
+  labs(subtitle = "Recurrent tumors, both manuscript versions, MES status @ revision")
+
+
+
+p4 <- ggplot(plt |> 
+               dplyr::filter(resection == "primary" &
+                               revisions == "only revised manuscript"
+               ), aes(x=-`NMF:150:PC1`, y=-`NMF:150:PC2`, fill=subtype)) +
+  theme_bw() +
+  geom_raster(data = plt.contours, alpha=0.15) +
+  geom_contour(data=  plt.contours,
+               aes(z=as.numeric(class)),
+               colour="gray40",
+               size=0.25,
+               lty=2,
+               breaks=c(1.5,2.5)) +
+  geom_point(size=3, 
+             #aes(fill = primary.mes.first.draft), 
+             fill = "white",
+             col='black',
+             pch=21, alpha=0.7) +
+  coord_equal() +
+  labs(x="PC1 on NMF meta-features", 
+       y="PC2 on NMF meta-features",
+       fill = "Subtype (ssGSEA)"
+       #caption = paste0("G-SAM: n=",n.gsam, "  -  GLASS: n=",n.glass," samples")
+  ) +
+  scale_fill_manual(values = c(
+    subtype_colors_ext['Mesenchymal'],
+    'Non-Mesenchymal'= as.character("white"),
+    "Mesenchymal (revision)|Non-Mesenchymal (first submission)" = 'red',
+    'TRUE'='blue',
+    'FALSE'='gray90'),
+    labels=c('TRUE'='primary tumor MES', 'FALSE'='primary tumor non-MES')
+  ) +
+  theme_bw()  +
+  theme(
+    axis.title = element_text(face = "bold",size = rel(1)),
+    legend.position = 'bottom',
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    #axis.ticks.x = element_blank(),
+    panel.border = element_rect(colour = "black", fill=NA, size=1.25)
+  ) +
+  guides(fill=guide_legend(ncol=2)) +
+  labs(subtitle = "Primary tumors, appended in revision")
+
+
+
+p5 <- ggplot(plt |> 
+               dplyr::filter(resection == "recurrence" &
+                               revisions == "only revised manuscript"
+               ), aes(x=-`NMF:150:PC1`, y=-`NMF:150:PC2`, fill=subtype)) +
+  theme_bw() +
+  geom_raster(data = plt.contours, alpha=0.15) +
+  geom_contour(data=  plt.contours,
+               aes(z=as.numeric(class)),
+               colour="gray40",
+               size=0.25,
+               lty=2,
+               breaks=c(1.5,2.5)) +
+  geom_point(size=3, 
+             aes(fill = primary.mes.first.draft), 
+             #fill = "gray",
+             col='black',
+             pch=21, alpha=0.7) +
+  coord_equal() +
+  labs(x="PC1 on NMF meta-features", 
+       y="PC2 on NMF meta-features",
+       fill = "Subtype (ssGSEA)"
+       #caption = paste0("G-SAM: n=",n.gsam, "  -  GLASS: n=",n.glass," samples")
+  ) +
+  scale_fill_manual(values = c(
+    subtype_colors_ext['Mesenchymal'],
+    'Non-Mesenchymal'= as.character("white"),
+    "Mesenchymal (revision)|Non-Mesenchymal (first submission)" = 'red',
+    'TRUE'='blue',
+    'FALSE'='gray90'),
+    labels=c('TRUE'='primary tumor MES', 'FALSE'='primary tumor non-MES')
+  ) +
+  theme_bw()  +
+  theme(
+    axis.title = element_text(face = "bold",size = rel(1)),
+    legend.position = 'bottom',
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    #axis.ticks.x = element_blank(),
+    panel.border = element_rect(colour = "black", fill=NA, size=1.25)
+  ) +
+  guides(fill=guide_legend(ncol=2)) +
+  labs(subtitle = "Primary tumors, appended in revision")
+
+
+
+p6 <- ggplot(plt |> 
+               dplyr::filter(resection == "recurrence" & revisions == "only revised manuscript"),
+             
+             
+             aes(x=-`NMF:150:PC1`, y=-`NMF:150:PC2`, fill=subtype)) +
+  theme_bw() +
+  geom_raster(data = plt.contours, alpha=0.15) +
+  geom_contour(data=  plt.contours,
+               aes(z=as.numeric(class)),
+               colour="gray40",
+               size=0.25,
+               lty=2,
+               breaks=c(1.5,2.5)) +
+  geom_point(size=3, 
+             aes(fill = primary.mes.revision), 
+             #fill = "gray",
+             col='black',
+             pch=21, alpha=0.7) +
+  coord_equal() +
+  labs(x="PC1 on NMF meta-features", 
+       y="PC2 on NMF meta-features",
+       fill = "Subtype (ssGSEA)"
+       #caption = paste0("G-SAM: n=",n.gsam, "  -  GLASS: n=",n.glass," samples")
+  ) +
+  scale_fill_manual(values = c(
+    subtype_colors_ext['Mesenchymal'],
+    'Non-Mesenchymal'= as.character("white"),
+    "Mesenchymal (revision)|Non-Mesenchymal (first submission)" = 'red',
+    'TRUE'='blue',
+    'FALSE'='gray90'),
+    labels=c('TRUE'='primary tumor MES', 'FALSE'='primary tumor non-MES')
+  ) +
+  theme_bw()  +
+  theme(
+    axis.title = element_text(face = "bold",size = rel(1)),
+    legend.position = 'bottom',
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    #axis.ticks.x = element_blank(),
+    panel.border = element_rect(colour = "black", fill=NA, size=1.25)
+  ) +
+  guides(fill=guide_legend(ncol=2)) +
+  labs(subtitle = "Recurrent tumors, appended in revision")
+
+
+
+(p1 + p2 + p3) / (p4 + p5 + p6)
+
+
+
+
+# vis 2e ----
+
+
+plt <- rbind(
+  gsam.rna.metadata |>
+    
+    dplyr::filter(blacklist.pca == F) %>%
+    dplyr::filter(pat.with.IDH == F) %>%
+    dplyr::filter(
+      sid %in% c('BAI2', 'CAO1-replicate', 'FAB2', 'GAS2-replicate') == F
+    ) %>%
+    dplyr::filter(tumour.percentage.dna >= 15) |>
+    
+    dplyr::mutate(is.primary = resection == "r1") |> 
+    dplyr::select(
+      sid,
+      pid,
+      is.primary,
+      `NMF:150:PC1`,
+      `NMF:150:PC2`,
+      ssGSEA.2022.subtype,
+      GITS.150.svm.2022.subtype
+    ) |> 
+    dplyr::mutate(dataset = "G-SAM")
+  ,
+  glass.gbm.rnaseq.metadata.all.samples |>
+    dplyr::filter(tumour.percentage.2022 >= 15) |> # avoid NA values
+    dplyr::mutate(is.primary = resection == "TP") |> 
+    dplyr::select(
+      aliquot_barcode,
+      case_barcode,
+      is.primary,
+      `NMF:150:PC1`,
+      `NMF:150:PC2`,
+      ssGSEA.2022.subtype,
+      GITS.150.svm.2022.subtype
+    ) |>
+    dplyr::rename(sid = aliquot_barcode) |>
+    dplyr::rename(pid = case_barcode) |> 
+    dplyr::mutate(dataset = "GLASS")
+)
+
+
+n.glass <- plt |> dplyr::pull(.data$dataset) |> table() |> purrr::pluck('GLASS')
+n.gsam <- plt |> dplyr::pull(.data$dataset) |> table() |> purrr::pluck('G-SAM')
+
+
+gits.contours.dual <- readRDS("tmp/analysis_GITS_space_GITS_contours_dual.Rds") |> 
+  dplyr::mutate(class = ifelse(
+    
+  ))
+plt.contours <- gits.contours.dual |> 
+  dplyr::mutate(`ssGSEA.2022.subtype` = class, `pid` = NA)
+
+
+ggplot(plt, aes(x=-`NMF:150:PC1`, y=-`NMF:150:PC2`, fill=ssGSEA.2022.subtype, group=pid)) +
+  theme_bw() +
+  geom_raster(data = plt.contours, alpha=0.15) +
+  geom_contour(data=  plt.contours,
+               aes(z=as.numeric(class)), 
+               colour="gray40", 
+               size=0.25, 
+               lty=2,
+               breaks=c(1.5,2.5)) +
+  geom_point(size=3,  col='black', pch=21, alpha=0.7) +
+  coord_equal() +
+  labs(x="PC1 on NMF meta-features", 
+       y="PC2 on NMF meta-features",
+       fill = "Subtype (ssGSEA)",
+       caption = paste0("G-SAM: n=",n.gsam, "  -  GLASS: n=",n.glass," samples")
+  ) +
+  #scale_fill_manual(values = mixcol(subtype_colors_ext,rep("black",length(subtype_colors_ext)),0.1),
+  #                  label=c('Mesenchymal'='MES','Proneural'='PN','Classical'='CL','Proneural|Classical'='PN|CL')) +
+  theme_bw()  +
+  theme(
+    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
+    #strip.background = element_rect(colour="white",fill="white"),
+    axis.title = element_text(face = "bold",size = rel(1)),
+    #axis.text.x = element_blank(),
+    legend.position = 'bottom',
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    #axis.ticks.x = element_blank(),
+    panel.border = element_rect(colour = "black", fill=NA, size=1.25)
+  ) +
+  guides(fill=guide_legend(ncol=2))
+
+
+
+### show the transitions
+
+
+plt <- rbind(
+  gsam.rna.metadata |>
+    
+    dplyr::filter(blacklist.pca == F) %>%
+    dplyr::filter(pat.with.IDH == F) %>%
+    dplyr::filter(
+      sid %in% c('BAI2', 'CAO1-replicate', 'FAB2', 'GAS2-replicate') == F
+    ) %>%
+    dplyr::filter(tumour.percentage.dna >= 15) |>
+    
+    dplyr::mutate(is.primary = resection == "r1") |> 
+    dplyr::select(
+      sid,
+      pid,
+      is.primary,
+      `NMF:150:PC1`,
+      `NMF:150:PC2`,
+      ssGSEA.2022.subtype,
+      GITS.150.svm.2022.subtype
+    ) |> 
+    dplyr::mutate(dataset = "G-SAM") |> 
+    dplyr::mutate(GBM.transcriptional.subtype.Synapse.2021 = NA)
+  ,
+  glass.gbm.rnaseq.metadata.all.samples |>
+    dplyr::filter(tumour.percentage.2022 >= 15) |> # avoid NA values
+    dplyr::mutate(is.primary = resection == "TP") |> 
+    dplyr::select(
+      aliquot_barcode,
+      case_barcode,
+      is.primary,
+      `NMF:150:PC1`,
+      `NMF:150:PC2`,
+      ssGSEA.2022.subtype,
+      GITS.150.svm.2022.subtype,
+      GBM.transcriptional.subtype.Synapse.2021
+    ) |>
+    dplyr::rename(sid = aliquot_barcode) |>
+    dplyr::rename(pid = case_barcode) |> 
+    dplyr::mutate(dataset = "GLASS")
+)  |> 
+  dplyr::group_by(pid) |> 
+  dplyr::filter(n() == 2) |> 
+  dplyr::ungroup() |> 
+  dplyr::select(-`NMF:150:PC1`, -`NMF:150:PC2`, -`ssGSEA.2022.subtype`)
+
+plt.paired <- plt |> 
+  tidyr::pivot_wider(id_cols = pid, names_from = is.primary, values_from = c(GITS.150.svm.2022.subtype)) |> 
+  dplyr::left_join(
+    plt |> dplyr::select(pid, dataset, GBM.transcriptional.subtype.Synapse.2021) |> 
+      dplyr::distinct(),
+    by=c('pid'='pid'),suffix=c('','')
+  ) |> 
+  dplyr::rename(subtype_primary = `TRUE`)|> 
+  dplyr::rename(subtype_recurrence = `FALSE`) |> 
+  dplyr::filter(grepl("Mes",subtype_primary)) |> 
+  dplyr::mutate(facet = case_when(
+    dataset == "G-SAM" ~ "G-SAM",
+    dataset != "G-SAM" & !is.na(GBM.transcriptional.subtype.Synapse.2021) ~ "GLASS (old batch)",
+    dataset != "G-SAM" & is.na(GBM.transcriptional.subtype.Synapse.2021) ~ "GLASS (new samples)"
+  ))
+
+
+ggplot(plt.paired, aes(x=subtype_recurrence)) +
+  facet_grid(cols = vars(facet)) +
+  geom_bar(position = "stack") +
+  labs(x = "GITS subtype at recurrence")
+
+
 
 

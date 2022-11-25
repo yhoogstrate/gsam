@@ -16,6 +16,53 @@ plt <- results.out |>
   dplyr::mutate(show.label.chr7 = grepl("EGFR",hugo_symbol)) |> 
   dplyr::mutate(show.label.chr10 = grepl("PTEN|MGMT",hugo_symbol)) # TET1 really interesting
 
+plt |>
+      dplyr::filter(mark.chr7 & !is.na(estimate.gsam.cor.tpc)) |>
+      dplyr::pull(estimate.gsam.cor.tpc) |>
+      median()
+plt |>
+      dplyr::filter(mark.chr10 & !is.na(estimate.gsam.cor.tpc)) |>
+      dplyr::pull(estimate.gsam.cor.tpc) |>
+      median()
+
+
+stat <- data.frame(
+  log2FoldChange.gsam.res = c(-1.5,  1.5,-1.25, 2.2),
+  statistic.gsam.cor.tpc = c(
+    rep(plt |>
+          dplyr::filter(mark.chr7 & !is.na(statistic.gsam.cor.tpc)) |>
+          dplyr::pull(statistic.gsam.cor.tpc) |>
+          median(), 2),
+    rep(plt |>
+          dplyr::filter(mark.chr10 & !is.na(statistic.gsam.cor.tpc)) |>
+          dplyr::pull(statistic.gsam.cor.tpc) |>
+          median(), 2)
+  ),
+  status = c("chr7","chr7", "chr10", "chr10"),
+  chr = c("chr7", "chr7", "chr10","chr10"),
+  panel = c("chr7 genes", "chr7 genes", "chr10 genes","chr10 genes")
+) |>
+  dplyr::mutate(limited = F) |>
+  dplyr::mutate(hugo_symbol = "median")
+
+stat.label <- data.frame(
+  log2FoldChange.gsam.res = c(-1.5 - 0.2, - 1.25 - 0.2),
+  statistic.gsam.cor.tpc = c(
+    rep(plt |>
+          dplyr::filter(mark.chr7 & !is.na(statistic.gsam.cor.tpc)) |>
+          dplyr::pull(statistic.gsam.cor.tpc) |>
+          median(), 1),
+    rep(plt |>
+          dplyr::filter(mark.chr10 & !is.na(statistic.gsam.cor.tpc)) |>
+          dplyr::pull(statistic.gsam.cor.tpc) |>
+          median(), 1)
+  ),
+  status = c("chr7 label", "chr10 label"),
+  chr = c("chr7","chr10"),
+  panel = c("chr7 genes","chr10 genes")
+) |>
+  dplyr::mutate(limited = F) |>
+  dplyr::mutate(hugo_symbol = "median")
 
 
 
@@ -39,12 +86,24 @@ plt.expanded <- rbind(
 
 
 
+
+
 ggplot(plt.expanded, aes(x = log2FoldChange.gsam.res, y = statistic.gsam.cor.tpc, shape=limited,
                          fill = status, col = status, label=hugo_symbol)) +
   facet_grid(cols = vars(panel), scales = "free") +
   geom_point(data = subset(plt.expanded, status == "other"), size=1.8, col="#00000044") +
+  
+  geom_line(data=stat, alpha=1, lwd=1.1, lty="solid", col="black") +
+  geom_line(data=stat, alpha=1, lwd=0.8, lty="solid", col="gray30") +
+  geom_line(data=stat, alpha=1, lwd=0.8, lty=2) +
+  
+  
   geom_point(data = subset(plt.expanded, status %in% c("chr7", "chr10")), size=2.5, col="black") +
   geom_point(data = subset(plt.expanded, grepl("label", status)), size=2.75, fill="red", col="black") +
+  
+  
+  geom_text(data=stat.label,  size=2.5 , show.legend  = FALSE) + 
+  
   ggrepel::geom_text_repel(data=subset(plt.expanded, status == "chr7 label"),  size=2.5 , nudge_x = -3.1, direction = "y", hjust = "right", segment.size=0.35, show.legend  = FALSE) + 
   ggrepel::geom_text_repel(data=subset(plt.expanded, status == "chr10 label"),  size=2.5 ,nudge_x = 3.1, direction = "y", hjust = "left", segment.size=0.35, show.legend  = FALSE) + 
   scale_shape_manual(values = c('TRUE' = 23, 'FALSE' = 21)) +
