@@ -61,7 +61,7 @@ data.per.tile <- data.per.tile |>
       dplyr::select(Image.filename , Image) |> 
       dplyr::distinct(),
     by=c('Image'='Image'),suffix=c('','')
-  )  |> 
+  )  |> # Remove tiles full with eri's
   dplyr::filter(
     (
       (Image == "b3_s5") &
@@ -112,57 +112,8 @@ data.per.cell = tmp |>
   select(!c(Neun_Threshold, GFAP_Threshold))
 
 
-# onderstaande code had ik niet nodig
-# 
-# 
-# tumor_count = prdat |>
-#   mutate(pt        = recode(sample, control1  = "nc1",
-#                             control2  = "nc2",
-#                             control3  = "nc3",
-#                             control4  = "nc4",
-#                             control5  = "nc5",
-#                             control6  = "nc6",
-#                             control7  = "nc7",
-#                             control8  = "nc8",
-#                             control9  = "nc9",
-#                             control10 = "nc10"),
-#          pt        = substr(pt, 1,3),
-#          resection = recode(resection, t = "Normal_control")) |>
-#   group_by(pt, sample, Image, Name, resection, type) |>
-#   summarise(count = n()) |>
-#   mutate(tile = sapply(strsplit(Name, "_"), "[", 3)) |>
-#   pivot_wider(names_from = type, values_from = count) |>
-#   ungroup() |>
-#   mutate(across(7:9, ~replace_na(.x, 0)),
-#          tumref = Tumor) |>
-#   pivot_longer(cols = c("Neg", "Neuron", "Tumor")) |>
-#   group_by(Name) |>
-#   mutate(sum  = sum(value),
-#          frac = tumref/sum)
-# 
-# data_bin = tumor_count |>
-#   pivot_wider(names_from = name, values_from = value) |>
-#   filter(!pt %in% c("nc1", "nc2", "nc4", "nc8", "nc9"))
-# 
-# data_bin$bin = ntile(data_bin$sum, n= 90)
-# data_bin$bin = paste0(0,data_bin$bin)
-# data_bin$bin = substr(data_bin$bin, nchar(data_bin$bin)-1,nchar(data_bin$bin))
-# 
-# quant = tumor_count |>
-#   distinct(Name, .keep_all = T) |>
-#   select(Name, sum, resection) |>
-#   filter(resection != "Normal_control"); quant = quantile(quant$sum)
-# 
-# tumor_count_quant = tumor_count |>
-#   mutate(quartiles = case_when(sum <= quant[[2]] ~ "1",
-#                                sum <= quant[[3]] ~ "2",
-#                                sum <= quant[[4]] ~ "3",
-#                                sum <= quant[[5]] ~ "4"))
-# 
-# 
 
-
-# generic loadings youri ----
+# generic loadings ----
 
 
 tmp <- data.per.cell |>
@@ -356,7 +307,7 @@ ggsave("output/figures/2022_figure_SNeuN_A.pdf", width=8.3 / 2,height=8.3/5, sca
 
 # 2: separate low high tumor regions ----
 
-## split point n.cell ----
+## F] Figure S10B - cut-off tumor low/high ----
 
 plt <- data.per.tile |>
   dplyr::filter(!is.na(n.cells)) |>
@@ -434,29 +385,23 @@ p1 + p2
 
 
 
-ggsave("output/figures/2022_figure_NeuN_cutpoint_cell_dense.pdf", width = 8.3 / 2, height = 8.3 / 4, scale = 2)
+ggsave("output/figures/2022_Figure_S10B.pdf", width = 8.3 / 2, height = 8.3 / 4, scale = 2)
 
 
 
 
-## more neurons in high vs low? ----
+## F] Figure S10C - high vs. low ~ diff neurons ----
 
 
-
-
-
-plt <- data.per.tile |> 
-  dplyr::filter(!is.na(n.cells)) |>  #
+plt <- data.per.tile |>
+  dplyr::filter(!is.na(n.cells)) |> #
   dplyr::mutate(facet_x = grepl("control", sid)) |>
   dplyr::mutate(facet_x = ifelse(facet_x, "control", "tumor")) |>
   dplyr::mutate(facet_x = factor(facet_x, levels = c("tumor", "control")))
 
 
-
-
-
 per.tile.stats <- data.per.tile |>
-  dplyr::filter(resection != "control") |> 
+  dplyr::filter(resection != "control") |>
   dplyr::filter((pid == "CDD" & tumor.low.high == "tumor high") == F) |> # all neurons are in tumor high, cannot estimate median
   dplyr::filter((pid == "AAV" & tumor.low.high == "tumor low") == F) |> # too few data points
   dplyr::filter((pid == "AZG" & tumor.low.high == "tumor low") == F) |> # too few data points
@@ -466,8 +411,7 @@ per.tile.stats <- data.per.tile |>
   dplyr::filter((pid == "JAK" & tumor.low.high == "tumor low") == F) |> # too few data points
   dplyr::group_by(sid, tumor.low.high) |>
   dplyr::summarise(
-    #log.ratio.neurons = median(log.ratio.neurons), # this is wrong
-    
+    # log.ratio.neurons = median(log.ratio.neurons), # this is wrong
     log.ratio.neurons = log2(sum(n.neuron) / (sum(n.tumor) + sum(n.negative))),
     frac.neurons = sum(n.neuron) / sum(n.cells) * 100, # fraction, human intuitive and extremely skewed, for non-parametric tests
     sid = unique(sid),
@@ -476,63 +420,58 @@ per.tile.stats <- data.per.tile |>
     tumor.low.high = unique(tumor.low.high),
   ) |>
   dplyr::ungroup() |>
-  dplyr::mutate(facet_x = 'tumor')
+  dplyr::mutate(facet_x = "tumor")
 
 
-per.pair.stats <- per.tile.stats |> 
-   tidyr::pivot_wider(id_cols = pid, names_from = c(resection, tumor.low.high), values_from = c(log.ratio.neurons, frac.neurons))
- 
+per.pair.stats <- per.tile.stats |>
+  tidyr::pivot_wider(id_cols = pid, names_from = c(resection, tumor.low.high), values_from = c(log.ratio.neurons, frac.neurons))
+
 
 p.tumor.high <- wilcox.test(
-  per.pair.stats |> 
-    dplyr::filter(!is.na(`frac.neurons_primary_tumor high`) & !is.na(`frac.neurons_recurrence_tumor high`)) |> 
+  per.pair.stats |>
+    dplyr::filter(!is.na(`frac.neurons_primary_tumor high`) & !is.na(`frac.neurons_recurrence_tumor high`)) |>
     dplyr::pull(`frac.neurons_primary_tumor high`),
-  
-  per.pair.stats |> 
-    dplyr::filter(!is.na(`frac.neurons_primary_tumor high`) & !is.na(`frac.neurons_recurrence_tumor high`)) |> 
+  per.pair.stats |>
+    dplyr::filter(!is.na(`frac.neurons_primary_tumor high`) & !is.na(`frac.neurons_recurrence_tumor high`)) |>
     dplyr::pull(`frac.neurons_recurrence_tumor high`),
-  paired=T
+  paired = T
 )$p.value
 
 p.tumor.low <- wilcox.test(
-  per.pair.stats |> 
-    dplyr::filter(!is.na(`frac.neurons_primary_tumor low`) & !is.na(`frac.neurons_recurrence_tumor low`)) |> 
+  per.pair.stats |>
+    dplyr::filter(!is.na(`frac.neurons_primary_tumor low`) & !is.na(`frac.neurons_recurrence_tumor low`)) |>
     dplyr::pull(`frac.neurons_primary_tumor high`),
-  
-  per.pair.stats |> 
-    dplyr::filter(!is.na(`frac.neurons_primary_tumor low`) & !is.na(`frac.neurons_recurrence_tumor low`)) |> 
+  per.pair.stats |>
+    dplyr::filter(!is.na(`frac.neurons_primary_tumor low`) & !is.na(`frac.neurons_recurrence_tumor low`)) |>
     dplyr::pull(`frac.neurons_recurrence_tumor high`),
-  paired=T
+  paired = T
 )$p.value
 
 
-
 df.pvals <- data.frame(
-    sid = rep("AAV1",2),  # align above first sample
-    pid = rep("-",2), 
-    facet_x = rep('tumor',2), 
-    frac.neurons = c(65,90), 
-    resection = rep("primary",2), 
-    tumor.low.high = c("tumor high","tumor low"),
-    label = c(
-      paste0("P = ", format.pval(p.tumor.high, digits = 2)),
-      paste0("P = ", format.pval(p.tumor.low, digits = 2))
-    )
+  sid = rep("AAV1", 2), # align above first sample
+  pid = rep("-", 2),
+  facet_x = rep("tumor", 2),
+  frac.neurons = c(65, 90),
+  resection = rep("primary", 2),
+  tumor.low.high = c("tumor high", "tumor low"),
+  label = c(
+    paste0("P = ", format.pval(p.tumor.high, digits = 2)),
+    paste0("P = ", format.pval(p.tumor.low, digits = 2))
   )
+)
 
 
-
-
-ggplot(plt,
-       aes(x=sid, y=frac.neurons, col = resection, group = pid)) +
-  facet_grid(cols=vars(facet_x), rows = vars(tumor.low.high), scales = "free",space = "free_x") +
-  ggbeeswarm::geom_quasirandom(    cex = 0.3) +
+ggplot(
+  plt,
+  aes(x = sid, y = frac.neurons, col = resection, group = pid)
+) +
+  facet_grid(cols = vars(facet_x), rows = vars(tumor.low.high), scales = "free", space = "free_x") +
+  ggbeeswarm::geom_quasirandom(cex = 0.3) +
   geom_line(data = per.tile.stats, col = "black", lwd = 0.5) +
   scale_color_manual(values = c(resection_colors[c("primary", "recurrence")], "control" = "gray40")) +
   theme_bw() +
-  
-  geom_text(data = df.pvals,  aes(label = label), hjust = 0, col = "black") +
-  
+  geom_text(data = df.pvals, aes(label = label), hjust = 0, col = "black") +
   theme(
     axis.title = element_text(face = "bold", size = rel(1)),
     axis.text.x = element_text(angle = 90, vjust = 0.45, hjust = 1),
@@ -550,10 +489,7 @@ ggplot(plt,
   )
 
 
-ggsave("output/figures/2022_figure_SNeuN_B.pdf", width=8.3 / 2,height=8.3/4, scale=2)
-
-
-
+ggsave("output/figures/2022_Figure_S10C.pdf", width=8.3 / 2,height=8.3/4, scale=2)
 
 
 
