@@ -301,7 +301,7 @@ dplyr::left_join(
   dplyr::rename(`Tumor location` = `tumorLocation`)
 
 
-## figure S13a: determine cut-off C0 / fuz ----
+## F] Figure S17A - cut-off C0 / fuz ----
 
 
 d.prim <- tmp.metadata.paired |>
@@ -379,16 +379,14 @@ p2 <- ggplot(plt.2, aes(y=`delta C0/fuzzy at Rec.`, x=x)) +
 p1 / p2
 
 
-
-#ggsave("output/figures/2022_figure_S13a.pdf", width=8.3 / 5,height=8.3/5*1.17, scale=2)
-#ggsave("output/figures/2022_figure_S13a.svg", width=8.3 / 5,height=8.3/5*1.17, scale=2)
+ggsave("output/figures/2022_Figure_S17A.pdf", width=8.3 / 5,height=8.3/5*1.17, scale=2)
 
 
 rm(p1, p2, plt.1, plt.2, d.prim, d.rec)
 
 
 
-## figure S13b: determine cut-off C1 / col ----
+## F] Figure S17B - cut-off C1 / col ----
 
 
 d.prim <- tmp.metadata.paired |>
@@ -470,8 +468,7 @@ p1 / p2
 
 
 
-#ggsave("output/figures/2022_figure_S13b.pdf", width=8.3 / 5,height=8.3/5*1.17, scale=2)
-#ggsave("output/figures/2022_figure_S13b.svg", width=8.3 / 5,height=8.3/5*1.17, scale=2)
+ggsave("output/figures/2022_Figure_S17B.pdf", width=8.3 / 5,height=8.3/5*1.17, scale=2)
 
 
 rm(p1, p2, plt.1, plt.2, k, d.prim, d.rec)
@@ -479,7 +476,7 @@ rm(p1, p2, plt.1, plt.2, k, d.prim, d.rec)
 
 
 
-## figure S13c: determine cut-off C2 / endo ----
+## F] Figure S17C - cut-off C2 / endo ----
 
 
 d.prim <- tmp.metadata.paired |>
@@ -561,8 +558,8 @@ p1 / p2
 
 
 
-#ggsave("output/figures/2022_figure_S13c.pdf", width=8.3 / 5,height=8.3/5*1.17, scale=2)
-#ggsave("output/figures/2022_figure_S13c.svg", width=8.3 / 5,height=8.3/5*1.17, scale=2)
+ggsave("output/figures/2022_Figure_S17C.pdf", width=8.3 / 5,height=8.3/5*1.17, scale=2)
+
 
 
 rm(p1, p2, plt.1, plt.2, d.prim, d.rec)
@@ -570,7 +567,7 @@ rm(p1, p2, plt.1, plt.2, d.prim, d.rec)
 
 
 
-## figure S13d: determine cut-off C3 / olig ----
+## F] Figure S17D - determine cut-off C3 / olig ----
 
 
 d.prim <- tmp.metadata.paired |>
@@ -656,8 +653,7 @@ p1 / p2
 
 
 
-#ggsave("output/figures/2022_figure_S13d.pdf", width=8.3 / 5,height=8.3/5*1.17, scale=2)
-#ggsave("output/figures/2022_figure_S13d.svg", width=8.3 / 5,height=8.3/5*1.17, scale=2)
+ggsave("output/figures/2022_Figure_S17D.pdf", width=8.3 / 5,height=8.3/5*1.17, scale=2)
 
 
 rm(p1, p2, plt.1, plt.2, d.prim, d.rec)
@@ -666,7 +662,7 @@ rm(p1, p2, plt.1, plt.2, d.prim, d.rec)
 
 
 
-## figure S13e: determine cut-off C4 / neur ----
+## F] Figure S17E - cut-off C4 / neur ----
 
 
 d.prim <- tmp.metadata.paired |>
@@ -750,16 +746,14 @@ p1 / p2
 
 
 
-
-#ggsave("output/figures/2022_figure_S13e.pdf", width=8.3 / 5,height=8.3/5*1.17, scale=2)
-#ggsave("output/figures/2022_figure_S13e.svg", width=8.3 / 5,height=8.3/5*1.17, scale=2)
+ggsave("output/figures/2022_Figure_S17E.pdf", width=8.3 / 5,height=8.3/5*1.17, scale=2)
 
 
 rm(p1, p2, plt.1, plt.2, k, d.prim, d.rec)
 
 
 
-## figure S13f: determine cut-off C1 GLASS ----
+## F] Figure S17F - cut-off C1 GLASS ----
 
 
 d.prim <- glass.gbm.rnaseq.metadata.all.samples |> 
@@ -846,8 +840,7 @@ p2 <- ggplot(plt.2, aes(y=`delta C1/col at Rec.`, x=x)) +
 p1 / p2
 
 
-
-#ggsave("output/figures/2022_figure_S13f.pdf", width=8.3 / 5,height=8.3/5*1.17, scale=2)
+ggsave("output/figures/2022_Figure_S17F.pdf", width=8.3 / 5,height=8.3/5*1.17, scale=2)
 
 
 
@@ -1307,8 +1300,7 @@ df
 rm(df)
 
 
-### [F] Figure S18C - OS GLASS ----
-
+### F] Figure S18C - OS GLASS ----
 
 
 svvl <- glass.gbm.rnaseq.metadata.all.samples |> 
@@ -1318,9 +1310,8 @@ svvl <- glass.gbm.rnaseq.metadata.all.samples |>
   #dplyr::arrange(rna.signature.C1.collagen.2022) |>
   #dplyr::pull(rna.signature.C1.collagen.2022)
 
-plot(sort(svvl$rna.signature.C1.collagen.2022))
-#abline(h=5.6)
-abline(h=4.3)
+#plot(sort(svvl$rna.signature.C1.collagen.2022))
+#abline(h=4.3)
 
 
 
@@ -1337,9 +1328,8 @@ p1 <- survminer::ggsurvplot(fit1, data = svvl, pval = TRUE, risk.table=T, tables
                             xlab="Overall survival (months)")
 p1
 
-ggsave("output/figures/2022_figure_S14d.pdf", width=8.3 / 2 * 0.8,height=8.3/3.4, scale=2, plot=p1)
 
-
+ggsave("output/figures/2022_Figure_S18C.pdf", width=8.3 / 2 * 0.8,height=8.3/3.4, scale=2, plot=p1)
 
 
 
@@ -1436,8 +1426,7 @@ sum(is.na(tmp.metadata.paired.breed$`C4/neu signature at Rec.`))
 
 
 
-### [F] Figure S18A - ggforest R2 -> death [MGMT] ----
-
+### F] Figure S18A - ggforest R2 -> death [MGMT] ----
 
 
 tmp.metadata.mgmt <- tmp.metadata.paired.breed |> 
@@ -1473,42 +1462,8 @@ data.frame(pval = summary(fit.cox)$coefficients[,5]) |>
 
 
 
-ggsave("output/figures/2022_figure_S14e.pdf", width=8.3 / 2,height=8.3/3.4, scale=2)
+ggsave("output/figures/2022_Figure_S18A.pdf", width=8.3 / 2,height=8.3/3.4, scale=2)
 
-
-
-
-# # paired
-# 
-# tmp.metadata.paired.mgmt <- tmp.metadata.paired |> 
-#   dplyr::filter(!is.na(`MGMT meth`)) |> 
-#   #dplyr::mutate(`MGMT at Rec.` = as.character(`MGMT at Rec.`)) |> 
-#   dplyr::mutate(`MGMT at Rec.` = ifelse(is.na(`MGMT at Rec.`), "unknown", `MGMT at Rec.`))
-# #dplyr::mutate(`MGMT meth` = ifelse(is.na(`MGMT meth`), "unknown", `MGMT meth`))
-# 
-# 
-# surv_object <- survival::Surv(time = tmp.metadata.paired.mgmt$survivalFromSecondSurgeryDays, 
-#                               event = tmp.metadata.paired.mgmt$event)
-# fit.cox <- survival::coxph(surv_object ~
-#                              `Age above 50` +
-#                              `Sex` +
-#                              `KPS 70 or above` +
-#                              `Treatment: Beva` +
-#                              `Treatment: TMZ` +
-#                              `Tumor location` +
-#                              
-#                              `MGMT meth` +
-#                              
-#                              `C1/col signature at Rec.`
-#                            
-#                            ,
-#                            data = tmp.metadata.paired.mgmt)
-# survminer::ggforest(fit.cox, data = tmp.metadata.paired.mgmt)
-# 
-# 
-# data.frame(pval = summary(fit.cox)$coefficients[,5]) |> 
-#   dplyr::mutate(padj = p.adjust(pval, method="fdr")) |> 
-#   dplyr::mutate(padj.f = format.pval(padj, digits=1))
 
 
 
@@ -1589,7 +1544,7 @@ ggsave("output/figures/2022_figure_6i.pdf", width=8.3 / 2,height=8.3/3.4, scale=
 
 
 
-### [F] Figure S18B - ggforest R1 -> R2 (ttp) [MGMT] ----
+### F] Figure S18B - ggforest R1 -> R2 (ttp) [MGMT] ----
 
 # unpaired
 tmp.metadata.mgmt <- tmp.metadata.paired.breed |> 
@@ -1633,52 +1588,13 @@ sum(is.na( tmp.metadata.mgmt$`MGMT meth`  ))
 sum(is.na( tmp.metadata.mgmt$`C1/col signature at Rec.` ))
 
 
-ggsave("output/figures/2022_figure_S14f.pdf", width=8.3 / 2,height=8.3/3.4, scale=2)
+ggsave("output/figures/2022_Figure_S18B.pdf", width=8.3 / 2,height=8.3/3.4, scale=2)
 
-
-
-
-
-
-
-# paired
-# tmp.metadata.paired.mgmt <- tmp.metadata.paired |> 
-#   dplyr::filter(!is.na(`MGMT meth`)) |> 
-#   #dplyr::mutate(`MGMT at Rec.` = as.character(`MGMT at Rec.`)) |> 
-#   dplyr::mutate(`MGMT at Rec.` = ifelse(is.na(`MGMT at Rec.`), "unknown", `MGMT at Rec.`))
-# #dplyr::mutate(`MGMT meth` = ifelse(is.na(`MGMT meth`), "unknown", `MGMT meth`))
-# 
-# 
-# surv_object <- survival::Surv(time = tmp.metadata.paired.mgmt$daysToProgression, event=tmp.metadata.paired.mgmt$progression.event)
-# fit.cox <- survival::coxph(surv_object ~
-#                              `Age above 50` +
-#                              `Sex` +
-#                              `KPS 70 or above` +
-#                              `Treatment: Beva` +
-#                              `Treatment: TMZ` +
-#                              `Tumor location` +
-#                              
-# 
-#                              `MGMT meth` +
-#                              
-#                              `C1/col signature at Rec.`
-#                            
-#                            ,
-#                            data = tmp.metadata.paired.mgmt)
-# survminer::ggforest(fit.cox, data = tmp.metadata.paired.mgmt)
-# 
-# data.frame(pval = summary(fit.cox)$coefficients[,5]) |> 
-#   dplyr::mutate(padj = p.adjust(pval, method="fdr")) |> 
-#   dplyr::mutate(padj.f = format.pval(padj, digits=1))
-# 
-# 
-# 
-# 
 
 
 
 ## R1 col high ----
-### [F] Figure S18D - (ppt at R1) ----
+### F] Figure S18D - ppt at R1 ----
 
 
 # unpaired
@@ -1697,27 +1613,13 @@ p1 <- survminer::ggsurvplot(fit1, data = tmp.metadata.paired.breed, pval = TRUE,
 p1
 
 
-ggsave("output/figures/2022_figure_14a.pdf", width=8.3 / 2 * 0.8,height=8.3/3.4, scale=2, plot=p1)
+ggsave("output/figures/2022_Figure_S18D.pdf", width=8.3 / 2 * 0.8,height=8.3/3.4, scale=2, plot=p1)
 
 
 
 
-# paired
-# surv_object <- survival::Surv(time = tmp.metadata.paired$survivalFromSecondSurgeryDays, event=tmp.metadata.paired$event)
-# fit1 <- survival::survfit(surv_object ~  `C1.col.signature.prim` , data = tmp.metadata.paired)
-# p1 <- survminer::ggsurvplot(fit1, data = tmp.metadata.paired, pval = TRUE, risk.table=T, tables.y.text = FALSE,
-#                             palette = c(
-#                               'C1/col signature: high'=alpha('#CB75A4',0.7),
-#                               'C1/col signature: low'=alpha('#009E74',0.7)
-#                             ),
-#                             legend.labs=c('C1.col.signature=high'='C1/col signature: high',
-#                                           'C1.col.signature=low'='C1/col signature: low'),
-#                             xlab="Survival time from recurrence")
-# p1
 
-
-
-### [F] Figure S18E - (ttp at R1) ----
+### F] Figure S18E - ttp at R1 ----
 
 
 surv_object <- survival::Surv(time = tmp.metadata.paired.breed$daysToProgression,
@@ -1735,11 +1637,12 @@ p1 <- survminer::ggsurvplot(fit1, data = tmp.metadata.paired.breed, pval = TRUE,
 p1
 
 
-ggsave("output/figures/2022_figure_14b.pdf", width=8.3 / 2 * 0.8,height=8.3/3.4, scale=2, plot=p1)
+ggsave("output/figures/2022_Figure_S18E.pdf", width=8.3 / 2 * 0.8,height=8.3/3.4, scale=2, plot=p1)
 
 
 
-### [F] Figure S18E - (os at R1) ----
+
+### F] Figure S18F - os at R1 ----
 
 
 surv_object <- survival::Surv(time = tmp.metadata.paired.breed$survivalDays,
@@ -1757,17 +1660,13 @@ p1 <- survminer::ggsurvplot(fit1, data = tmp.metadata.paired.breed, pval = TRUE,
 p1
 
 
-
-ggsave("output/figures/2022_figure_14c.pdf", width=8.3 / 2 * 0.8,height=8.3/3.4, scale=2, plot=p1)
-
+ggsave("output/figures/2022_Figure_S18F.pdf", width=8.3 / 2 * 0.8,height=8.3/3.4, scale=2, plot=p1)
 
 
 
 
+# F] Figure S17G - C1 x TMZ ----
 
-
-
-# figure S13g: C1 x TMZ ----
 stopifnot(nrow(tmp.metadata) == 287)
 unique(length(tmp.metadata$pid))
 
@@ -1826,11 +1725,12 @@ ggplot(plt, aes(x = `Treatment: TMZ`, y = rna.signature.C1.collagen.2022)) +
   scale_y_continuous(expand = expansion(mult = .075))
 
 
-ggsave("output/figures/2022_figure_S13g.pdf", width=8.3 / 2,height=8.3/4.5, scale=2)
+ggsave("output/figures/2022_Figure_S17G.pdf", width=8.3 / 2,height=8.3/4.5, scale=2)
 
 
 
-# figure S13h: C1 x Beva ----
+
+# F] Figure S17H - C1 x Beva ----
 
 
 tmp.metadata <- tmp.metadata |> 
@@ -1896,10 +1796,10 @@ ggplot(plt, aes(x = `Treatment: Beva: factor`, y = rna.signature.C1.collagen.202
 
 
 
-ggsave("output/figures/2022_figure_S13h.pdf", width=8.3 / 2,height=8.3/4.5, scale=2)
+ggsave("output/figures/2022_Figure_S17H.pdf", width=8.3 / 2,height=8.3/4.5, scale=2)
 
 
-# figure S13i: C1 x Biopsy~Resection ----
+# F] Figure S17I - C1 x Biopsy~Resection ----
 
 
 
@@ -1960,12 +1860,12 @@ ggplot(plt, aes(x = `Resection or Biopsy`, y = rna.signature.C1.collagen.2022, c
 
 
 
-ggsave("output/figures/2022_figure_S13i.pdf", width=8.3 / 2,height=8.3/4.5, scale=2)
+ggsave("output/figures/2022_Figure_S17I.pdf", width=8.3 / 2,height=8.3/4.5, scale=2)
 
 
 
 
-# figure S13j: C1 x MGMT ----
+# F] Figure S17J - C1 x MGMT ----
 
 
 
@@ -2029,12 +1929,12 @@ ggplot(plt, aes(x = `MGMT`, y = rna.signature.C1.collagen.2022, col=MGMT)) +
 
 
 
-ggsave("output/figures/2022_figure_S13j.pdf", width=8.3 / 2,height=8.3/4.5, scale=2)
+ggsave("output/figures/2022_Figure_S17J.pdf", width=8.3 / 2,height=8.3/4.5, scale=2)
 
 
 
 
-# figure S13k: C1 x TumorLocation ----
+# F] Figure S17K - C1 x TumorLocation ----
 
 
 
@@ -2117,6 +2017,7 @@ ggplot(plt, aes(x = `Tumor location`, y = rna.signature.C1.collagen.2022, col=`T
   scale_y_continuous(expand = expansion(mult = .075))
 
 
-ggsave("output/figures/2022_figure_S13k.pdf", width=8.3 / 1,height=8.3/4.5, scale=2)
+ggsave("output/figures/2022_Figure_S17K.pdf", width=8.3 / 1,height=8.3/4.5, scale=2)
+
 
 
