@@ -227,7 +227,7 @@ DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "se
 object_1 <- FindClusters(object_1, resolution = 0.8, algorithm=1)
 object_1$class <- as.character(object_1$seurat_clusters)
 object_1$class <- ifelse(object_1$seurat_clusters %in% c(21), "NE", object_1$class)
-object_1$class <- ifelse(object_1$seurat_clusters %in% c(5,10,13,14), "TAM/MG", object_1$class)
+object_1$class <- ifelse(object_1$seurat_clusters %in% c(5,10,13,14), "TAM", object_1$class)
 object_1$class <- ifelse(object_1$seurat_clusters %in% c(4,6,12,19), "OD", object_1$class)
 object_1$class <- ifelse(object_1$seurat_clusters %in% c(16), "EN", object_1$class)
 object_1$class <- ifelse(object_1$seurat_clusters %in% c(15), "PE", object_1$class)
@@ -236,7 +236,7 @@ object_1$class <- ifelse(object_1$seurat_clusters %in% c(7), "T", object_1$class
 object_1$class <- ifelse(object_1$seurat_clusters %in% c(17), "T ?", object_1$class) #  Outlier?
 object_1$class <- ifelse(object_1$seurat_clusters %in% c(20), "AC", object_1$class)
 object_1$class <- ifelse(object_1$seurat_clusters %in% c(18), "T ?", object_1$class) # Apoptotic?
-object_1$class <- ifelse(object_1$seurat_clusters %in% c(22), "TAM/MG|OD", object_1$class)
+object_1$class <- ifelse(object_1$seurat_clusters %in% c(22), "TAM|OD", object_1$class)
 object_1$class <- ifelse(object_1@reductions$umap@cell.embeddings[,1] >= 10 &
                            object_1@reductions$umap@cell.embeddings[,1] <= 11 &
                            object_1@reductions$umap@cell.embeddings[,2] >= 1.5 &
@@ -255,8 +255,8 @@ object_1$seurat_clusters <- factor(object_1$seurat_clusters, levels=c(
   "4. OD","6. OD","12. OD","19. OD",
   "16. EN",
   "15. PE",
-  "22. TAM/MG|OD" ,
-  "5. TAM/MG","10. TAM/MG","13. TAM/MG","14. TAM/MG",
+  "22. TAM|OD" ,
+  "5. TAM","10. TAM","13. TAM","14. TAM",
   "14. TC"
 ))
 
@@ -596,19 +596,17 @@ FeaturePlot(object = object_1, features = c("HEYL"))
 FeaturePlot(object = object_1, features = c("CFH"))
 
 
+#### F] Figure S14K ---
 
-DimPlot(object_1, reduction = "umap", 
-        label = TRUE, pt.size = .6, group.by = "seurat_clusters") +
-  guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
-  labs(subtitle=sid)
-ggsave("output/figures/2022_figure_S12k_labels.pdf",width=6.5, height=4,scale=1.2)
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters") +
+  guides(col = guide_legend(ncol = 1, override.aes = list(size = 3))) +
+  labs(subtitle = sid)
+ggsave("output/figures/22022_Figure_S14K_labels.pdf", width = 6.5, height = 4, scale = 1.2) # to export cluster names
 
-FeaturePlot(object = object_1, 
-            features = c("COL1A1","COL1A2", "PDGFRB","PECAM1"),      
-            min.cutoff = 1 ,
-order=T,
-pt.size=0.15)
-ggsave("output/figures/2022_figure_S12k.pdf",width=6.5, height=4,scale=1.2)
+
+FeaturePlot(object = object_1, features = c("COL1A1", "COL1A2", "PDGFRB", "PECAM1"), min.cutoff = 1, order = T, pt.size = 0.15)
+ggsave("output/figures/2022_Figure_S14K.pdf", width = 6.5, height = 4, scale = 1.2)
+
 
 
 
@@ -618,6 +616,24 @@ ggsave("output/figures/2022_figure_S12k.pdf",width=6.5, height=4,scale=1.2)
 
 DotPlot(object = object_1, features = c(C3, C4A, C4B, C5, C6), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+
+
+
+
+DotPlot(object = object_1, features = c("JPH3"), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+DotPlot(object = object_1, features = c("UGT8"), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+DotPlot(object = object_1, features = c("CDKN1C"), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+DotPlot(object = object_1, features = c("SOX10"), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+DotPlot(object = object_1, features = c("ILRAPL1"), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+DotPlot(object = object_1, features = c("GABRB3"), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
 
 
 
