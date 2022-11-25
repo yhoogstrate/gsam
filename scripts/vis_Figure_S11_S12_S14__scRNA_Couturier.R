@@ -3,11 +3,6 @@
 # load libs ----
 
 
-#library(tidyverse)
-#library(Matrix)
-#library(DropletUtils)
-#library(Seurat)
-
 
 # load data ----
 

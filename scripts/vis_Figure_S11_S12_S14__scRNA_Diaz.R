@@ -8,8 +8,6 @@ library(Matrix)
 library(DropletUtils)
 library(Seurat)
 library(infercnv)
-library(AnnotationHub)
-library(ensembldb)
 library(patchwork)
 
 
@@ -308,41 +306,39 @@ FeaturePlot(object = object_1, features = "PLP1")
 
 
 
-##### figure S7l -----
+##### F] Figure S8K - C3/OPC -----
 
 
 tmp.c3 <- results.out |>
-  dplyr::filter(!is.na(.data$C3.2022)) |> 
-  dplyr::filter(.data$C3.2022 == T) |> 
-  dplyr::filter(!is.na(hugo_symbol)) |> 
-  dplyr::pull(hugo_symbol) |> 
+  dplyr::filter(!is.na(.data$C3.2022)) |>
+  dplyr::filter(.data$C3.2022 == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
   unique()
-tmp.opc <- results.out |> 
-  dplyr::filter(!is.na(.data$neftel.meta.modules.OPC)) |> 
-  dplyr::filter(.data$neftel.meta.modules.OPC == T) |> 
-  dplyr::filter(!is.na(hugo_symbol)) |> 
-  dplyr::pull(hugo_symbol) |> 
+tmp.opc <- results.out |>
+  dplyr::filter(!is.na(.data$neftel.meta.modules.OPC)) |>
+  dplyr::filter(.data$neftel.meta.modules.OPC == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
   unique()
 tmp.c3.opc <- intersect(tmp.c3, tmp.opc)
 tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
 tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
 
 
-
-sid_print <- sid |> 
-  stringr::str_replace("snRNA_","(single nucleus RNA-seq) ") |> 
-  stringr::str_replace("scRNA_","(single cell RNA-seq) ") |> 
-  stringr::str_replace("_",": ")
-
-
-DotPlot(object = object_1, features =list('C3'=tmp.c3, 'OPC'=tmp.opc, 'C3+OPC'=tmp.c3.opc), group.by = "seurat_clusters") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
-  labs(x = paste0("Features [C3/OPC] in: ",sid_print, " (Diaz dataset)"))
+sid_print <- sid |>
+  stringr::str_replace("snRNA_", "(single nucleus RNA-seq) ") |>
+  stringr::str_replace("scRNA_", "(single cell RNA-seq) ") |>
+  stringr::str_replace("_", ": ")
 
 
-ggsave(paste0("output/figures/2022_figure_S7l.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC" = tmp.opc, "C3+OPC" = tmp.c3.opc), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
+  labs(x = paste0("Features [C3/OPC] in: ", sid_print, " (Diaz dataset)"))
+
+
+ggsave(paste0("output/figures/2022_Figure_S8K.pdf"), width = 7.5 * 1.8, height = 3.75, scale = 1.2)
 rm(tmp.c3, tmp.opc, tmp.c3.opc, sid_print)
-
 
 
 
@@ -1010,40 +1006,38 @@ FeaturePlot(object = object_1, features = "PLP1")
 
 
 
-##### figure S7m -----
+##### F] Figure S8L - C3/OPC -----
 
 
 tmp.c3 <- results.out |>
-  dplyr::filter(!is.na(.data$C3.2022)) |> 
-  dplyr::filter(.data$C3.2022 == T) |> 
-  dplyr::filter(!is.na(hugo_symbol)) |> 
-  dplyr::pull(hugo_symbol) |> 
+  dplyr::filter(!is.na(.data$C3.2022)) |>
+  dplyr::filter(.data$C3.2022 == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
   unique()
-tmp.opc <- results.out |> 
-  dplyr::filter(!is.na(.data$neftel.meta.modules.OPC)) |> 
-  dplyr::filter(.data$neftel.meta.modules.OPC == T) |> 
-  dplyr::filter(!is.na(hugo_symbol)) |> 
-  dplyr::pull(hugo_symbol) |> 
+tmp.opc <- results.out |>
+  dplyr::filter(!is.na(.data$neftel.meta.modules.OPC)) |>
+  dplyr::filter(.data$neftel.meta.modules.OPC == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
   unique()
 tmp.c3.opc <- intersect(tmp.c3, tmp.opc)
 tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
 tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
 
 
-
-sid_print <- sid |> 
-  stringr::str_replace("snRNA_","(single nucleus RNA-seq) ") |> 
-  stringr::str_replace("scRNA_","(single cell RNA-seq) ") |> 
-  stringr::str_replace("_",": ")
-
-
-DotPlot(object = object_1, features =list('C3'=tmp.c3, 'OPC'=tmp.opc, 'C3+OPC'=tmp.c3.opc), group.by = "seurat_clusters") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
-  labs(x = paste0("Features [C3/OPC] in: ",sid_print, " (Diaz dataset)"))
+sid_print <- sid |>
+  stringr::str_replace("snRNA_", "(single nucleus RNA-seq) ") |>
+  stringr::str_replace("scRNA_", "(single cell RNA-seq) ") |>
+  stringr::str_replace("_", ": ")
 
 
+DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC" = tmp.opc, "C3+OPC" = tmp.c3.opc), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
+  labs(x = paste0("Features [C3/OPC] in: ", sid_print, " (Diaz dataset)"))
 
-ggsave(paste0("output/figures/2022_figure_S7m.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+
+ggsave(paste0("output/figures/2022_Figure_S8L.pdf"), width = 7.5 * 1.8, height = 3.75, scale = 1.2)
 rm(tmp.c3, tmp.opc, tmp.c3.opc, sid_print)
 
 
@@ -1564,7 +1558,7 @@ FeaturePlot(object = object_1, features = "OPALIN")
 
 
 
-##### figure S7n -----
+##### F] Figure S8M - C3/OPC -----
 
 
 tmp.c3 <- results.out |>
@@ -1584,7 +1578,6 @@ tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
 tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
 
 
-
 sid_print <- sid |> 
   stringr::str_replace("snRNA_","(single nucleus RNA-seq) ") |> 
   stringr::str_replace("scRNA_","(single cell RNA-seq) ") |> 
@@ -1596,8 +1589,7 @@ DotPlot(object = object_1, features =list('C3'=tmp.c3, 'OPC'=tmp.opc, 'C3+OPC'=t
   labs(x = paste0("Features [C3/OPC] in: ",sid_print, " (Diaz dataset)"))
 
 
-
-ggsave(paste0("output/figures/2022_figure_S7n.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S8M.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
 rm(tmp.c3, tmp.opc, tmp.c3.opc, sid_print)
 
 
@@ -2006,45 +1998,40 @@ FeaturePlot(object = object_1, features = "OPALIN")
 
 
 
-##### figure S7o -----
+##### F] Figure S8N - C3/OPC -----
 
 
 tmp.c3 <- results.out |>
-  dplyr::filter(!is.na(.data$C3.2022)) |> 
-  dplyr::filter(.data$C3.2022 == T) |> 
-  dplyr::filter(!is.na(hugo_symbol)) |> 
-  dplyr::pull(hugo_symbol) |> 
+  dplyr::filter(!is.na(.data$C3.2022)) |>
+  dplyr::filter(.data$C3.2022 == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
   unique()
-tmp.opc <- results.out |> 
-  dplyr::filter(!is.na(.data$neftel.meta.modules.OPC)) |> 
-  dplyr::filter(.data$neftel.meta.modules.OPC == T) |> 
-  dplyr::filter(!is.na(hugo_symbol)) |> 
-  dplyr::pull(hugo_symbol) |> 
+tmp.opc <- results.out |>
+  dplyr::filter(!is.na(.data$neftel.meta.modules.OPC)) |>
+  dplyr::filter(.data$neftel.meta.modules.OPC == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
   unique()
 tmp.c3.opc <- intersect(tmp.c3, tmp.opc)
 tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
 tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
 
 
-
-sid_print <- sid |> 
-  stringr::str_replace(regex("S$")," (S & R pooled)") |> 
-  stringr::str_replace("snRNA_","(single nucleus RNA-seq) ") |> 
-  stringr::str_replace("scRNA_","(single cell RNA-seq) ") |> 
-  stringr::str_replace("_",": ")
-
-
-DotPlot(object = object_1, features =list('C3'=tmp.c3, 'OPC'=tmp.opc, 'C3+OPC'=tmp.c3.opc), group.by = "seurat_clusters") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
-  labs(x = paste0("Features [C3/OPC] in: ",sid_print, " (Diaz dataset)"))
+sid_print <- sid |>
+  stringr::str_replace(regex("S$"), " (S & R pooled)") |>
+  stringr::str_replace("snRNA_", "(single nucleus RNA-seq) ") |>
+  stringr::str_replace("scRNA_", "(single cell RNA-seq) ") |>
+  stringr::str_replace("_", ": ")
 
 
+DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC" = tmp.opc, "C3+OPC" = tmp.c3.opc), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
+  labs(x = paste0("Features [C3/OPC] in: ", sid_print, " (Diaz dataset)"))
 
-ggsave(paste0("output/figures/2022_figure_S7o.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+
+ggsave(paste0("output/figures/2022_Figure_S8N.pdf"), width = 7.5 * 1.8, height = 3.75, scale = 1.2)
 rm(tmp.c3, tmp.opc, tmp.c3.opc, sid_print)
-
-
-
 
 
 
@@ -3180,45 +3167,39 @@ FeaturePlot(object = object_1, features = "OPALIN")
 
 
 
-##### figure S7k -----
+##### F] Figure S8J - C3/OPC -----
 
 
 tmp.c3 <- results.out |>
-  dplyr::filter(!is.na(.data$C3.2022)) |> 
-  dplyr::filter(.data$C3.2022 == T) |> 
-  dplyr::filter(!is.na(hugo_symbol)) |> 
-  dplyr::pull(hugo_symbol) |> 
+  dplyr::filter(!is.na(.data$C3.2022)) |>
+  dplyr::filter(.data$C3.2022 == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
   unique()
-tmp.opc <- results.out |> 
-  dplyr::filter(!is.na(.data$neftel.meta.modules.OPC)) |> 
-  dplyr::filter(.data$neftel.meta.modules.OPC == T) |> 
-  dplyr::filter(!is.na(hugo_symbol)) |> 
-  dplyr::pull(hugo_symbol) |> 
+tmp.opc <- results.out |>
+  dplyr::filter(!is.na(.data$neftel.meta.modules.OPC)) |>
+  dplyr::filter(.data$neftel.meta.modules.OPC == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
   unique()
 tmp.c3.opc <- intersect(tmp.c3, tmp.opc)
 tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
 tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
 
 
-
-sid_print <- sid |> 
-  stringr::str_replace("snRNA_","(single nucleus RNA-seq) ") |> 
-  stringr::str_replace("scRNA_","(single cell RNA-seq) ") |> 
-  stringr::str_replace("_",": ")
-
-
-DotPlot(object = object_1, features =list('C3'=tmp.c3, 'OPC'=tmp.opc, 'C3+OPC'=tmp.c3.opc), group.by = "seurat_clusters") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
-  labs(x = paste0("Features [C3/OPC] in: ",sid_print, " (Diaz dataset)"))
+sid_print <- sid |>
+  stringr::str_replace("snRNA_", "(single nucleus RNA-seq) ") |>
+  stringr::str_replace("scRNA_", "(single cell RNA-seq) ") |>
+  stringr::str_replace("_", ": ")
 
 
+DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC" = tmp.opc, "C3+OPC" = tmp.c3.opc), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
+  labs(x = paste0("Features [C3/OPC] in: ", sid_print, " (Diaz dataset)"))
 
-ggsave(paste0("output/figures/2022_figure_S7k.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+
+ggsave(paste0("output/figures/2022_Figure_S8J.pdf"), width = 7.5 * 1.8, height = 3.75, scale = 1.2)
 rm(tmp.c3, tmp.opc, tmp.c3.opc, sid_print)
-
-
-
-
 
 
 
