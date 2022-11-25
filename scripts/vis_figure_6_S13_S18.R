@@ -1307,7 +1307,7 @@ df
 rm(df)
 
 
-### figure S14d OS GLASS ----
+### [F] Figure S18C - OS GLASS ----
 
 
 
@@ -1436,7 +1436,7 @@ sum(is.na(tmp.metadata.paired.breed$`C4/neu signature at Rec.`))
 
 
 
-### figure S14e: ggforest R2 -> death [MGMT] ----
+### [F] Figure S18A - ggforest R2 -> death [MGMT] ----
 
 
 
@@ -1589,7 +1589,7 @@ ggsave("output/figures/2022_figure_6i.pdf", width=8.3 / 2,height=8.3/3.4, scale=
 
 
 
-### figure S14f: ggforest R1 -> R2 (ttp) [MGMT] ----
+### [F] Figure S18B - ggforest R1 -> R2 (ttp) [MGMT] ----
 
 # unpaired
 tmp.metadata.mgmt <- tmp.metadata.paired.breed |> 
@@ -1678,7 +1678,7 @@ ggsave("output/figures/2022_figure_S14f.pdf", width=8.3 / 2,height=8.3/3.4, scal
 
 
 ## R1 col high ----
-### figure 14a: KM R2 -> death (ppt) ----
+### [F] Figure S18D - (ppt at R1) ----
 
 
 # unpaired
@@ -1717,7 +1717,7 @@ ggsave("output/figures/2022_figure_14a.pdf", width=8.3 / 2 * 0.8,height=8.3/3.4,
 
 
 
-### figure 14b: KM R1 -> R2 (ttp) ----
+### [F] Figure S18E - (ttp at R1) ----
 
 
 surv_object <- survival::Surv(time = tmp.metadata.paired.breed$daysToProgression,
@@ -1739,7 +1739,7 @@ ggsave("output/figures/2022_figure_14b.pdf", width=8.3 / 2 * 0.8,height=8.3/3.4,
 
 
 
-### figure 14c: KM R1 -> R2 (os) ----
+### [F] Figure S18E - (os at R1) ----
 
 
 surv_object <- survival::Surv(time = tmp.metadata.paired.breed$survivalDays,

@@ -649,6 +649,22 @@ rm(tmp)
 
 
 
+## Add GlioVis/SubtypeME predictors ----
+
+
+tmp <- read.csv("output/tables/analysis_SubtypeME_GlioVis_output_2022.csv", quote = '"') |>
+  dplyr::rename(sid = Sample) |>
+  dplyr::mutate(equal.call = NULL) |>
+  dplyr::rename(subtypeme.gliovis.svm_call.2022 = svm_call) |>
+  dplyr::rename(subtypeme.gliovis.knn_call.2022 = knn_call) |>
+  dplyr::rename(subtypeme.gliovis.gsea_call.2022 = gsea_call) |>
+  dplyr::rename(subtypeme.gliovis.majority.call.2022 = majority.call)
+gsam.rna.metadata <- gsam.rna.metadata |> 
+  dplyr::left_join(tmp, by=c('sid'='sid'), suffix=c('','')) 
+
+rm(tmp)
+
+
 ## Add EPIC scores ----
 
 

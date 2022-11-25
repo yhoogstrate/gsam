@@ -1135,7 +1135,24 @@ glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |
 rm(tmp)
 
 
-## Adds HM status ----
+## Add GlioVis/SubtypeME predictors ----
+
+
+tmp <- read.csv("output/tables/analysis_SubtypeME_GlioVis_output_2022.csv", quote = '"') |>
+  dplyr::rename(sid = Sample) |>
+  dplyr::mutate(equal.call = NULL) |>
+  dplyr::rename(subtypeme.gliovis.svm_call.2022 = svm_call) |>
+  dplyr::rename(subtypeme.gliovis.knn_call.2022 = knn_call) |>
+  dplyr::rename(subtypeme.gliovis.gsea_call.2022 = gsea_call) |>
+  dplyr::rename(subtypeme.gliovis.majority.call.2022 = majority.call)
+glass.gbm.rnaseq.metadata.all.samples <- glass.gbm.rnaseq.metadata.all.samples |> 
+  dplyr::left_join(tmp, by=c('aliquot_barcode'='sid'), suffix=c('','')) 
+
+rm(tmp)
+
+
+
+## Add HM status ----
 
 # Notably, there were a few initial gliomas that demonstrated a mutational frequency above 10 mutations per Mb. However, the ‘hypermutation’ classification was restricted to only patients with this level at recurrence since these likely reflect different evolutionary paths.
 # Hypermutation was defined for all recurrent tumors that had more than 10 mutations per megabase sequenced, as described previously (Barthel et al., 2019)
