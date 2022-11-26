@@ -153,14 +153,17 @@ object_1$seurat_clusters <- factor(object_1$seurat_clusters, levels = c(
 ))
 
 
+
+#### F] Figure S7C - UMAP ----
+
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "seurat_clusters") +
   labs(subtitle = sid) +
   guides(col = guide_legend(ncol = 1, override.aes = list(size = 3)))
 
 
 
-ggsave(paste0("output/figures/scRNA/Glimmunology/", sid, "_UMAP.pdf"), width = 10, height = 8)
-ggsave(paste0("output/figures/scRNA/Glimmunology/", sid, "_UMAP.png"), width = 12, height = 10)
+ggsave(paste0("output/figures/2022_Figure_S7C_", sid, "_UMAP.pdf"), width = 10, height = 8)
+#ggsave(paste0("output/figures/scRNA/Glimmunology/", sid, "_UMAP.png"), width = 12, height = 10)
 
 #od.markers <- FindMarkers(object_1, ident.1 = c(4,6,12,19,22))
 #View(od.markers)
@@ -341,7 +344,7 @@ FeaturePlot(object = object_1, features = "ANPEP") # DCN
 
 
 
-##### figure S6a ----
+##### F] Figure S7A - C4 ----
 
 
 tmp.c4 <- results.out |>
@@ -389,7 +392,7 @@ DotPlot(object = object_1, features = tmp, group.by = "seurat_clusters",
 
 
 
-ggsave(paste0("output/figures/2022_figure_S6a.pdf"),width=7.5*3, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S7A.pdf"),width=7.5*3, height=4,scale=1.2)
 rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
 
 
@@ -430,7 +433,7 @@ FeaturePlot(object = object_1, features = "OLIG2") # OD?
 
 
 
-##### figure S6b ----
+##### F] Figure S7B - C3 ----
 
 
 tmp.c3 <- results.out |>
@@ -450,9 +453,7 @@ tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
 tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
 
 
-
 sid_print <- 'Samply Y (van Hijfte dataset - single nucleus RNA-seq)'
-
 
 
 DotPlot(object = object_1, features =list('C3'=tmp.c3, 'OPC'=tmp.opc, 'C3+OPC'=tmp.c3.opc), group.by = "seurat_clusters") +
@@ -460,8 +461,7 @@ DotPlot(object = object_1, features =list('C3'=tmp.c3, 'OPC'=tmp.opc, 'C3+OPC'=t
   labs(x = paste0("Features [C3/OPC] in: ", sid_print))
 
 
-
-ggsave(paste0("output/figures/2022_figure_S6b.pdf"),width=7.5*2, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S7B.pdf"),width=7.5*2, height=4,scale=1.2)
 rm(tmp.c3, tmp.opc, tmp.c3.opc, sid_print)
 
 
