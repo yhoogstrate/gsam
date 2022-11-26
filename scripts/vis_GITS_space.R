@@ -2185,7 +2185,7 @@ rm(plt, n.glass, n.gsam)
 
 
 
-## fig s3b [all - merged] ----
+## F] Figure S3A - all & merged ----
 
 
 plt <- rbind(
@@ -2358,8 +2358,7 @@ p2 <- ggplot(plt.expanded |> dplyr::filter(type=="b"), aes(x = x , y = reorder(p
 p1 + p2 + patchwork::plot_annotation(caption =  paste0("G-SAM: n=",n.gsam, "  -  GLASS: n=",n.glass," pairs" ))
 
 
-ggsave("output/figures/2022_figure_S3b.pdf", width=8.3 / 2,height=8.3/2.5, scale=2)
-ggsave("output/figures/2022_figure_S3b.svg", width=8.3 / 2,height=8.3/2.5, scale=2)
+ggsave("output/figures/2022_Figure_S3A.pdf", width=8.3 / 2,height=8.3/2.5, scale=2)
 
 
 
@@ -2369,32 +2368,26 @@ rm(n.gsam, n.glass, p1 , p2 , plt.expanded, plt)
 
 
 
-## fig s3c [HM status only] ----
+## F] Figure S3B - HM status samples only ----
 
 
 plt <- rbind(
   gsam.rna.metadata |>
-    
-    dplyr::filter(blacklist.pca == F) |> 
-    dplyr::filter(pat.with.IDH == F) |> 
-    dplyr::filter(
-      sid %in% c('BAI2', 'CAO1-replicate', 'FAB2', 'GAS2-replicate') == F
-    ) %>%
+    dplyr::filter(blacklist.pca == F) |>
+    dplyr::filter(pat.with.IDH == F) |>
+    dplyr::filter(sid %in% c("BAI2", "CAO1-replicate", "FAB2", "GAS2-replicate") == F) |> # replicates
     dplyr::filter(tumour.percentage.dna >= 15) |>
-    dplyr::select(
-      `pid`,
-      `NMF:150:PCA:eucledian.dist`,
-    ) |> 
-    dplyr::left_join(gsam.patient.metadata |> 
-                       dplyr::select(`studyID`, `HM`),
-                     by=c('pid'='studyID'),suffix=c('','')) |> 
+    dplyr::select(`pid`, `NMF:150:PCA:eucledian.dist`, ) |>
+    dplyr::left_join(gsam.patient.metadata |>
+      dplyr::select(`studyID`, `HM`),
+    by = c("pid" = "studyID"), suffix = c("", "")
+    ) |>
     dplyr::mutate(HM = case_when(
       HM == "No" ~ F,
-      HM == "Yes" ~ T, 
+      HM == "Yes" ~ T,
       T ~ as.logical(NA)
-    )) |> 
-    dplyr::mutate(dataset = "G-SAM")
-  ,
+    )) |>
+    dplyr::mutate(dataset = "G-SAM"),
   glass.gbm.rnaseq.metadata.all.samples |>
     dplyr::filter(tumour.percentage.2022 >= 15) |>
     dplyr::select(
@@ -2402,57 +2395,53 @@ plt <- rbind(
       `NMF:150:PCA:eucledian.dist`,
       `HM`
     ) |>
-    dplyr::rename(pid = case_barcode)  |> 
+    dplyr::rename(pid = case_barcode) |>
     dplyr::mutate(dataset = "GLASS")
-) |> 
-  dplyr::filter(!is.na(`NMF:150:PCA:eucledian.dist`)) |> 
-  dplyr::distinct() |> 
-  dplyr::mutate(pid = as.character(pid)) |> 
+) |>
+  dplyr::filter(!is.na(`NMF:150:PCA:eucledian.dist`)) |>
+  dplyr::distinct() |>
+  dplyr::mutate(pid = as.character(pid)) |>
   dplyr::filter(!is.na(HM))
 
 
-n.glass <- table(plt$dataset)['GLASS']
-n.gsam <- table(plt$dataset)['G-SAM']
+n.glass <- table(plt$dataset)["GLASS"]
+n.gsam <- table(plt$dataset)["G-SAM"]
 
 
 
-# load transition segments 
-plt.expanded <- readRDS('tmp/analysis_GITS_space.transition.segments.Rds') |> 
-  dplyr::inner_join(plt, by=c('pid'='pid')) |> 
-  dplyr::mutate(x = pct_transition * `NMF:150:PCA:eucledian.dist` ) |> 
-  dplyr::group_by(pid) |> 
-  dplyr::mutate(d = max(x)) |> 
-  dplyr::mutate(init = x == min(x)) |> 
-  dplyr::mutate(second = order(x) == 2) |> 
-  dplyr::mutate(end = x == max(x)) |> 
-  dplyr::mutate(n = n()) |> 
-  dplyr::ungroup() |> 
+# load transition segments
+plt.expanded <- readRDS("tmp/analysis_GITS_space.transition.segments.Rds") |>
+  dplyr::inner_join(plt, by = c("pid" = "pid")) |>
+  dplyr::mutate(x = pct_transition * `NMF:150:PCA:eucledian.dist`) |>
+  dplyr::group_by(pid) |>
+  dplyr::mutate(d = max(x)) |>
+  dplyr::mutate(init = x == min(x)) |>
+  dplyr::mutate(second = order(x) == 2) |>
+  dplyr::mutate(end = x == max(x)) |>
+  dplyr::mutate(n = n()) |>
+  dplyr::ungroup() |>
   dplyr::rename(subtype = pred)
 
 
 # add initial subtype to each segment, for facetting
-plt.expanded <- plt.expanded |> 
+plt.expanded <- plt.expanded |>
   dplyr::left_join(
-    plt.expanded |> 
-      dplyr::filter(init) |> 
-      dplyr::select(pid, subtype) |> 
+    plt.expanded |>
+      dplyr::filter(init) |>
+      dplyr::select(pid, subtype) |>
       dplyr::rename(subtype.init = subtype),
-    by=c('pid'='pid'), suffix=c('','')
+    by = c("pid" = "pid"), suffix = c("", "")
   )
 
 # add position of second segment, to normalize for right facet
-plt.expanded <- plt.expanded |> 
+plt.expanded <- plt.expanded |>
   dplyr::left_join(
-    plt.expanded |> 
-      dplyr::filter(second) |> 
-      dplyr::select(pid, x) |> 
+    plt.expanded |>
+      dplyr::filter(second) |>
+      dplyr::select(pid, x) |>
       dplyr::rename(x.init = x),
-    by=c('pid'='pid'), suffix=c('','')
+    by = c("pid" = "pid"), suffix = c("", "")
   )
-
-# plt.expanded <- plt.expanded |>
-#  dplyr::filter(pid == 'GLSS-HF-DE05')
-# print(plt.expanded)
 
 
 # add HM status
@@ -2461,16 +2450,15 @@ plt.expanded <- rbind(
   plt.expanded |>
     dplyr::filter(init == T) |>
     dplyr::filter(!is.na(HM) & HM == T) |>
-    dplyr::mutate(x = - 0.025) |>
+    dplyr::mutate(x = -0.025) |>
     dplyr::mutate(subtype = "Hyper-mutant") |>
-    dplyr::mutate(segment = paste0("segment.",pid, ".HM")),
-  
+    dplyr::mutate(segment = paste0("segment.", pid, ".HM")),
   plt.expanded |>
     dplyr::filter(init == T) |>
     dplyr::filter(!is.na(HM) & HM == T) |>
-    dplyr::mutate(x = - 0.05) |>
+    dplyr::mutate(x = -0.05) |>
     dplyr::mutate(subtype = "Hyper-mutant") |>
-    dplyr::mutate(segment = paste0("segment.",pid, ".HM"))
+    dplyr::mutate(segment = paste0("segment.", pid, ".HM"))
 )
 print(plt.expanded)
 
@@ -2479,17 +2467,17 @@ print(plt.expanded)
 # make facettes
 plt.expanded <- rbind(
   plt.expanded |>
-    dplyr::mutate(type ="a")
-  ,
+    dplyr::mutate(type = "a"),
   plt.expanded |>
-    dplyr::mutate(type ="b") |>
+    dplyr::mutate(type = "b") |>
     dplyr::mutate(x = case_when(
       subtype == "Hyper-mutant" & x == -0.025 ~ -2.75,
       subtype == "Hyper-mutant" & x == -0.05 ~ -2.75 - 0.04,
-      T ~ x - x.init)) |>
-    dplyr::mutate(d = ifelse(n == 2, -x.init,d - x.init))
+      T ~ x - x.init
+    )) |>
+    dplyr::mutate(d = ifelse(n == 2, -x.init, d - x.init))
 ) |>
-  dplyr::mutate(dataset = grepl("TCGA|GLSS",pid))
+  dplyr::mutate(dataset = grepl("TCGA|GLSS", pid))
 
 
 
@@ -2555,15 +2543,8 @@ p2 <- ggplot(plt.expanded |> dplyr::filter(type=="b"), aes(x = x , y = reorder(p
 p1 + p2 + patchwork::plot_annotation(caption =  paste0("G-SAM: n=",n.gsam, "  -  GLASS: n=",n.glass," pairs [with HM status]" ))
 
 
-ggsave("output/figures/2022_figure_S3c.pdf", width=8.3 / 2,height=8.3/4.1, scale=2)
-ggsave("output/figures/2022_figure_S3c.svg", width=8.3 / 2,height=8.3/4.1, scale=2)
-
-
-
+ggsave("output/figures/2022_Figure_S3B.pdf", width=8.3 / 2,height=8.3/4.1, scale=2)
 rm(n.gsam, n.glass, p1 , p2 , plt.expanded, plt)
-
-
-
 
 
 
