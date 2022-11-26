@@ -3,13 +3,15 @@
 # load data ----
 
 
-source("scripts/load_G-SAM_metadata.R")
+if(!exists('gsam.rna.metadata')) {
+  source("scripts/load_G-SAM_metadata.R")
+}
 
 
 # overview ----
 
 
-plt.ids <- gsam.rna.metadata %>%
+plt.ids <- gsam.rna.metadata |> 
   dplyr::filter(.data$blacklist.pca == F) |>
   dplyr::filter(.data$pat.with.IDH == F) |>
   dplyr::filter(.data$sid %in% c("BAI2", "CAO1-replicate", "FAB2", "GAS2-replicate") == F) |>
@@ -57,15 +59,15 @@ plt <- plt.single |>
   dplyr::mutate(col = ifelse(vIII.percentage < 1.0, "EGFRvIII percentage < 1.0", "EGFRvIII percentage >= 1.0"))
 
 status <- dplyr::full_join(
-  plt %>% dplyr::filter(resection == "R1") %>% dplyr::select(pid, vIII.percentage) %>% `colnames<-`(paste0(colnames(.), ".R1")),
-  plt %>% dplyr::filter(resection == "R2") %>% dplyr::select(pid, vIII.percentage) %>% `colnames<-`(paste0(colnames(.), ".R2")),
+  plt |>  dplyr::filter(resection == "R1") |>  dplyr::select(pid, vIII.percentage) |> dplyr::rename_with(~ paste0(.x, ".R1")),
+  plt |>  dplyr::filter(resection == "R2") |>  dplyr::select(pid, vIII.percentage) |> dplyr::rename_with(~ paste0(.x, ".R2")),
   by = c("pid.R1" = "pid.R2")
 ) |>
   dplyr::mutate(status.v3 = ifelse(vIII.percentage.R1 > vIII.percentage.R2, "EGFRvIII percentage decreases", "EGFRvIII percentage increases")) |>
   dplyr::rename(pid = pid.R1)
 
 plt <- plt |>
-  dplyr::left_join(status %>% dplyr::select(pid, status.v3), by = c("pid" = "pid"))
+  dplyr::left_join(status |> plyr::select(pid, status.v3), by = c("pid" = "pid"))
 
 
 ggplot(plt, aes(x = vIII.percentage, y = tumour.percentage.dna, group = pid)) +
@@ -111,7 +113,7 @@ ggsave("output/figures/2022_Figure_S6C_S6D.pdf", width = 8.3 / 2, height = 8.3 /
 
 
 
-## vertical plot ----
+## F] Figure S6A, S6B  - vertical plot ----
 
 
 delta.v3.percentage <-
@@ -183,4 +185,6 @@ ggplot(plt, aes(x = reorder(pid, order), y = percentage)) +
   )
 
 
-ggsave("output/figures/2022_figure_S5ab.pdf", width = 8.3 / 2, height = 8.3 / 3.3, scale = 2)
+ggsave("output/figures/2022_Figure_S6A_S6B.pdf", width = 8.3 / 2, height = 8.3 / 3.3, scale = 2)
+
+
