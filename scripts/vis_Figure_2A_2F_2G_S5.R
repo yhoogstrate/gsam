@@ -2,12 +2,6 @@
 
 # load libs ----
 
-
-#library(EPIC)
-#library(patchwork)
-
-
-
 # load data ----
 
 
@@ -730,351 +724,61 @@ ggsave("output/figures/2022_figure_S4ij.pdf", width=8.3 / 2,height=8.3/4, scale=
 
 
 
-
-
-
-## C0 ----
-
-
-plt <- tmp.paired |> 
-  dplyr::filter(!is.na(`rna.signature.C0.fuzzy.2022 delta`))
-
-
-tmp.n.pairs.below.15 <- plt |>
-  dplyr::filter(has.low.purity.sample) |> 
-  dplyr::pull(pid) |> 
-  unique() |> 
-  length()
-tmp.n.pairs.leq.15 <-  plt |>
-  dplyr::filter(!has.low.purity.sample) |> 
-  dplyr::pull(pid) |> 
-  unique() |> 
-  length()
-
-
-
-
-
-
-ggplot(plt , aes(x=`rna.signature.C0.fuzzy.2022 delta` , y=time.to.progression)) +
-  geom_vline(xintercept=0,  color = "gray",lty='dotted') +
-  stat_smooth(method="lm", se=FALSE,lwd=0.25,col="red",lty=1) +
-  geom_point() +
-  #geom_text(data=df,aes(label=label)) +
-  ggpubr::stat_cor(method = "pearson") +
-  scale_y_continuous(breaks=NULL, trans='log2') +
-  ggplot2::theme_bw()  +
-  ggplot2::theme(
-    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
-    #strip.background = element_rect(colour="white",fill="white"),
-    axis.title = element_text(face = "bold",size = rel(1)),
-    legend.position = 'bottom',
-    
-    #axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
-    #axis.text.x = element_blank(),
-    #axis.ticks.x = element_blank(),
-    
-    panel.grid.major.x = element_blank(),
-    panel.grid.minor.x = element_blank(),
-    panel.grid.major.y = element_blank(),
-    panel.grid.minor.y = element_blank(),
-    panel.border = element_rect(colour = "black", fill=NA, size=1.1)
-  ) +
-  labs(y = "Time between resections (log)",
-       x="Increase EPIC Macrophage score between resections",
-       caption = paste0( "G-SAM: pairs = ", (tmp.n.pairs.below.15 + tmp.n.pairs.leq.15), " (", tmp.n.pairs.leq.15, " >= 15%, ", tmp.n.pairs.below.15, " < 15%)")
-  )
-
-
-
-
-
-
-## C1 ----
-
-
-plt <- tmp.paired |> 
-  dplyr::filter(!is.na(`rna.signature.C1.collagen.2022 delta`))
-
-
-tmp.n.pairs.below.15 <- plt |>
-  dplyr::filter(has.low.purity.sample) |> 
-  dplyr::pull(pid) |> 
-  unique() |> 
-  length()
-tmp.n.pairs.leq.15 <-  plt |>
-  dplyr::filter(!has.low.purity.sample) |> 
-  dplyr::pull(pid) |> 
-  unique() |> 
-  length()
-
-
-
-
-
-
-ggplot(plt , aes(x=`rna.signature.C1.collagen.2022 delta` , y=time.to.progression)) +
-  geom_vline(xintercept=0,  color = "gray",lty='dotted') +
-  stat_smooth(method="lm", se=FALSE,lwd=0.25,col="red",lty=1) +
-  geom_point() +
-  #geom_text(data=df,aes(label=label)) +
-  ggpubr::stat_cor(method = "pearson") +
-  scale_y_continuous(breaks=NULL, trans='log2') +
-  ggplot2::theme_bw()  +
-  ggplot2::theme(
-    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
-    #strip.background = element_rect(colour="white",fill="white"),
-    axis.title = element_text(face = "bold",size = rel(1)),
-    legend.position = 'bottom',
-    
-    #axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
-    #axis.text.x = element_blank(),
-    #axis.ticks.x = element_blank(),
-    
-    panel.grid.major.x = element_blank(),
-    panel.grid.minor.x = element_blank(),
-    panel.grid.major.y = element_blank(),
-    panel.grid.minor.y = element_blank(),
-    panel.border = element_rect(colour = "black", fill=NA, size=1.1)
-  ) +
-  labs(y = "Time between resections (log)",
-       x="Increase EPIC Macrophage score between resections",
-       caption = paste0( "G-SAM: pairs = ", (tmp.n.pairs.below.15 + tmp.n.pairs.leq.15), " (", tmp.n.pairs.leq.15, " >= 15%, ", tmp.n.pairs.below.15, " < 15%)")
-  )
-
-
-
-
-
-
-## C2 ----
-
-
-plt <- tmp.paired |> 
-  dplyr::filter(!is.na(`rna.signature.C2.endothelial.2022 delta`))
-
-
-tmp.n.pairs.below.15 <- plt |>
-  dplyr::filter(has.low.purity.sample) |> 
-  dplyr::pull(pid) |> 
-  unique() |> 
-  length()
-tmp.n.pairs.leq.15 <-  plt |>
-  dplyr::filter(!has.low.purity.sample) |> 
-  dplyr::pull(pid) |> 
-  unique() |> 
-  length()
-
-
-
-
-
-
-ggplot(plt , aes(x=`rna.signature.C2.endothelial.2022 delta` , y=time.to.progression)) +
-  geom_vline(xintercept=0,  color = "gray",lty='dotted') +
-  stat_smooth(method="lm", se=FALSE,lwd=0.25,col="red",lty=1) +
-  geom_point() +
-  #geom_text(data=df,aes(label=label)) +
-  ggpubr::stat_cor(method = "pearson") +
-  scale_y_continuous(breaks=NULL, trans='log2') +
-  ggplot2::theme_bw()  +
-  ggplot2::theme(
-    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
-    #strip.background = element_rect(colour="white",fill="white"),
-    axis.title = element_text(face = "bold",size = rel(1)),
-    legend.position = 'bottom',
-    
-    #axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
-    #axis.text.x = element_blank(),
-    #axis.ticks.x = element_blank(),
-    
-    panel.grid.major.x = element_blank(),
-    panel.grid.minor.x = element_blank(),
-    panel.grid.major.y = element_blank(),
-    panel.grid.minor.y = element_blank(),
-    panel.border = element_rect(colour = "black", fill=NA, size=1.1)
-  ) +
-  labs(y = "Time between resections (log)",
-       x="Increase EPIC Macrophage score between resections",
-       caption = paste0( "G-SAM: pairs = ", (tmp.n.pairs.below.15 + tmp.n.pairs.leq.15), " (", tmp.n.pairs.leq.15, " >= 15%, ", tmp.n.pairs.below.15, " < 15%)")
-  )
-
-
-
-
-
-
-## C3 ----
-
-
-plt <- tmp.paired |> 
-  dplyr::filter(!is.na(`rna.signature.C3.oligodendrocyte.2022 delta`))
-
-
-tmp.n.pairs.below.15 <- plt |>
-  dplyr::filter(has.low.purity.sample) |> 
-  dplyr::pull(pid) |> 
-  unique() |> 
-  length()
-tmp.n.pairs.leq.15 <-  plt |>
-  dplyr::filter(!has.low.purity.sample) |> 
-  dplyr::pull(pid) |> 
-  unique() |> 
-  length()
-
-
-
-
-
-
-ggplot(plt , aes(x=`rna.signature.C3.oligodendrocyte.2022 delta`, y=time.to.progression)) +
-  geom_vline(xintercept=0,  color = "gray",lty='dotted') +
-  stat_smooth(method="lm", se=FALSE,lwd=0.25,col="red",lty=1) +
-  geom_point() +
-  #geom_text(data=df,aes(label=label)) +
-  ggpubr::stat_cor(method = "pearson") +
-  scale_y_continuous(breaks=NULL, trans='log2') +
-  ggplot2::theme_bw()  +
-  ggplot2::theme(
-    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
-    #strip.background = element_rect(colour="white",fill="white"),
-    axis.title = element_text(face = "bold",size = rel(1)),
-    legend.position = 'bottom',
-    
-    #axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
-    #axis.text.x = element_blank(),
-    #axis.ticks.x = element_blank(),
-    
-    panel.grid.major.x = element_blank(),
-    panel.grid.minor.x = element_blank(),
-    panel.grid.major.y = element_blank(),
-    panel.grid.minor.y = element_blank(),
-    panel.border = element_rect(colour = "black", fill=NA, size=1.1)
-  ) +
-  labs(y = "Time between resections (log)",
-       x="Increase EPIC Macrophage score between resections",
-       caption = paste0( "G-SAM: pairs = ", (tmp.n.pairs.below.15 + tmp.n.pairs.leq.15), " (", tmp.n.pairs.leq.15, " >= 15%, ", tmp.n.pairs.below.15, " < 15%)")
-  )
-
-
-
-
-
-
-## C4 ----
-
-
-plt <- tmp.paired |> 
-  dplyr::filter(!is.na(`rna.signature.C4.neuron.2022 delta`))
-
-
-tmp.n.pairs.below.15 <- plt |>
-  dplyr::filter(has.low.purity.sample) |> 
-  dplyr::pull(pid) |> 
-  unique() |> 
-  length()
-tmp.n.pairs.leq.15 <-  plt |>
-  dplyr::filter(!has.low.purity.sample) |> 
-  dplyr::pull(pid) |> 
-  unique() |> 
-  length()
-
-
-
-
-
-
-
-ggplot(plt , aes(x=`rna.signature.C4.neuron.2022 delta`, y=time.to.progression)) +
-  geom_vline(xintercept=0,  color = "gray",lty='dotted') +
-  stat_smooth(method="lm", se=FALSE,lwd=0.25,col="red",lty=1) +
-  geom_point() +
-  #geom_text(data=df,aes(label=label)) +
-  ggpubr::stat_cor(method = "pearson") +
-  scale_y_continuous(breaks=NULL, trans='log2') +
-  ggplot2::theme_bw()  +
-  ggplot2::theme(
-    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
-    #strip.background = element_rect(colour="white",fill="white"),
-    axis.title = element_text(face = "bold",size = rel(1)),
-    legend.position = 'bottom',
-    
-    #axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
-    #axis.text.x = element_blank(),
-    #axis.ticks.x = element_blank(),
-    
-    panel.grid.major.x = element_blank(),
-    panel.grid.minor.x = element_blank(),
-    panel.grid.major.y = element_blank(),
-    panel.grid.minor.y = element_blank(),
-    panel.border = element_rect(colour = "black", fill=NA, size=1.1)
-  ) +
-  labs(y = "Time between resections (log)",
-       x="Increase EPIC Macrophage score between resections",
-       caption = paste0( "G-SAM: pairs = ", (tmp.n.pairs.below.15 + tmp.n.pairs.leq.15), " (", tmp.n.pairs.leq.15, " >= 15%, ", tmp.n.pairs.below.15, " < 15%)")
-  )
-
-
-# survival style C0-C4 ----
-
-
-plt <- tmp.paired |> 
-  dplyr::filter(!is.na(`rna.signature.C0.fuzzy.2022 delta`))
-
-plt$ `rna.signature.C0.fuzzy.2022 delta` = scale(plt$`rna.signature.C0.fuzzy.2022 delta`)[,1]
-plt$ `rna.signature.C1.collagen.2022 delta` = scale(plt$`rna.signature.C1.collagen.2022 delta`)[,1]
-plt$ `rna.signature.C2.endothelial.2022 delta` = scale(plt$`rna.signature.C2.endothelial.2022 delta`)[,1]
-plt$ `rna.signature.C3.oligodendrocyte.2022 delta` = scale(plt$`rna.signature.C3.oligodendrocyte.2022 delta`)[,1]
-plt$ `rna.signature.C4.neuron.2022 delta` = scale(plt$`rna.signature.C4.neuron.2022 delta`)[,1]
-
-plt <- plt |> 
-  dplyr::rename( `delta C0 (fuzzy) signature` = `rna.signature.C0.fuzzy.2022 delta` ) |> 
-  dplyr::rename( `delta C1 (collagen) signature` = `rna.signature.C1.collagen.2022 delta` ) |> 
-  dplyr::rename( `delta C2 (endothelial) signature` = `rna.signature.C2.endothelial.2022 delta` ) |> 
-  dplyr::rename( `delta C3 (oligodendrocyte) signature` = `rna.signature.C3.oligodendrocyte.2022 delta` ) |> 
-  dplyr::rename( `delta C4 (neuron) signature` = `rna.signature.C4.neuron.2022 delta` )
-
-
-
-surv_object <- survival::Surv(time = plt$time.to.progression)
-fit.cox <- survival::coxph(surv_object ~
-                           `delta C0 (fuzzy) signature` +
-                           `delta C1 (collagen) signature` +
-                           `delta C2 (endothelial) signature` +
-                           `delta C3 (oligodendrocyte) signature` +
-                           `delta C4 (neuron) signature` 
-                           
-                           
-                           ,
-                           data = plt)
-survminer::ggforest(fit.cox, data = plt)
-
-
-ggsave("output/figures/2022_figure_S15G.pdf", width=8.3 / 1.5,height=8.3/6, scale=2)
-
-
-
-# survival style EPIC ----
+#' # survival style C0-C4 ----
+#' # too much redundancy with regular SVVL analysis
+#' 
+#' plt <- tmp.paired |> 
+#'   dplyr::filter(!is.na(`rna.signature.C0.fuzzy.2022 delta`))
+#' 
+#' plt$ `rna.signature.C0.fuzzy.2022 delta` = scale(plt$`rna.signature.C0.fuzzy.2022 delta`)[,1]
+#' plt$ `rna.signature.C1.collagen.2022 delta` = scale(plt$`rna.signature.C1.collagen.2022 delta`)[,1]
+#' plt$ `rna.signature.C2.endothelial.2022 delta` = scale(plt$`rna.signature.C2.endothelial.2022 delta`)[,1]
+#' plt$ `rna.signature.C3.oligodendrocyte.2022 delta` = scale(plt$`rna.signature.C3.oligodendrocyte.2022 delta`)[,1]
+#' plt$ `rna.signature.C4.neuron.2022 delta` = scale(plt$`rna.signature.C4.neuron.2022 delta`)[,1]
+#' 
+#' plt <- plt |> 
+#'   dplyr::rename( `delta C0 (fuzzy) signature` = `rna.signature.C0.fuzzy.2022 delta` ) |> 
+#'   dplyr::rename( `delta C1 (collagen) signature` = `rna.signature.C1.collagen.2022 delta` ) |> 
+#'   dplyr::rename( `delta C2 (endothelial) signature` = `rna.signature.C2.endothelial.2022 delta` ) |> 
+#'   dplyr::rename( `delta C3 (oligodendrocyte) signature` = `rna.signature.C3.oligodendrocyte.2022 delta` ) |> 
+#'   dplyr::rename( `delta C4 (neuron) signature` = `rna.signature.C4.neuron.2022 delta` )
+#' 
+#' 
+#' surv_object <- survival::Surv(time = plt$time.to.progression)
+#' fit.cox <- survival::coxph(surv_object ~
+#'                            `delta C0 (fuzzy) signature` +
+#'                            `delta C1 (collagen) signature` +
+#'                            `delta C2 (endothelial) signature` +
+#'                            `delta C3 (oligodendrocyte) signature` +
+#'                            `delta C4 (neuron) signature` 
+#'                            ,
+#'                            data = plt)
+#' survminer::ggforest(fit.cox, data = plt)
+#' 
+#' 
+#' ggsave("output/figures/2022_figure_SXXG.pdf", width=8.3 / 1.5,height=8.3/6, scale=2)
+
+
+
+# F] Figure S5 - Svvl ~ EPIC ----
 
 
 plt <- tmp.paired
-plt$ `EPIC: CD4 T-cells delta` = scale(plt$ `EPIC: CD4 T-cells delta`)[,1] 
-plt$ `EPIC: Macrophages delta` = scale(plt$ `EPIC: Macrophages delta`)[,1] 
-plt$`delta.purity` = scale(tmp.paired$ `tumour.percentage.dna.delta`)[,1] 
+plt$ `EPIC: CD4 T-cells delta` <- scale(plt$ `EPIC: CD4 T-cells delta`)[, 1]
+plt$ `EPIC: Macrophages delta` <- scale(plt$ `EPIC: Macrophages delta`)[, 1]
+plt$`delta.purity` <- scale(tmp.paired$ `tumour.percentage.dna.delta`)[, 1]
 
-plt <- plt |> 
-  dplyr::rename(`delta 'EPIC: CD4 T-cells' score` = `EPIC: CD4 T-cells delta`) |> 
+plt <- plt |>
+  dplyr::rename(`delta 'EPIC: CD4 T-cells' score` = `EPIC: CD4 T-cells delta`) |>
   dplyr::rename(`delta 'EPIC: Macrophages' score` = `EPIC: Macrophages delta`)
 
 
 surv_object <- survival::Surv(time = plt$time.to.progression)
 fit.cox <- survival::coxph(surv_object ~
-                             `delta 'EPIC: CD4 T-cells' score` +
-                             `delta 'EPIC: Macrophages' score` 
-                           
-                           ,
-                           data = plt)
+  `delta 'EPIC: CD4 T-cells' score` +
+  `delta 'EPIC: Macrophages' score`,
+data = plt
+)
 survminer::ggforest(fit.cox, data = plt)
-ggsave("output/figures/2022_figure_S5.pdf", width=8.3 / 1.5,height=8.3/8, scale=2)
-
+ggsave("output/figures/2022_Figure_S5.pdf", width = 8.3 / 1.5, height = 8.3 / 8, scale = 2)
 
