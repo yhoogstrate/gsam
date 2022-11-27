@@ -502,6 +502,18 @@ ggsave("output/figures/2022_Figure_S14K.pdf", width = 6.5, height = 4, scale = 1
 
 
 #### C0-2022 ----
+##### F] Figure M5B ----
+
+# two layer approach - post-edit in inkscape / AI to get cluster DimPlot-labels in FeaturePlot
+
+FeaturePlot(object = object_1, features =  "COL1A2" )
+ggsave("output/figures/2022_Figure_M5B.svg", width=10, height=7)
+
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "seurat_clusters") + NoLegend()
+ggsave("output/figures/2022_Figure_M5B_labels.svg", width=10, height=7)
+
+
+
 ##### F] Figure S12J - C0 ----
 
 
