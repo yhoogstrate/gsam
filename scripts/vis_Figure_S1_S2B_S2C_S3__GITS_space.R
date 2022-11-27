@@ -467,7 +467,7 @@ rm(plt, plt.expanded)
 
 
 
-## fig s1a ----
+## F] Figure S1A ----
 
 
 
@@ -578,14 +578,11 @@ ggplot(plt.line.based, aes(x=reorder(sid, order), xend=reorder(sid, order), y =v
 
 
 ggsave("output/figures/2022_figure_S1A.pdf", width=8.3 / 2,height=8.3/4, scale=2)
-
-
 rm(n.gsam, n.glass, plt.line.based, plt)
 
 
 
-
-## fig s1b ----
+## F] Figure S1B ----
 
 
 tmp.pca <- readRDS('tmp/analysis_GITS_space_GITS_PCA_150.Rds')
@@ -618,13 +615,13 @@ ggplot(plt, aes(x=PC,y=var_explained, group=1, label=label)) +
     panel.border = element_rect(colour = "black", fill=NA, size=1.25)
   ) 
 
-ggsave("output/figures/2022_figure_S1B.pdf", width=8.3 / 4,height=8.3/4, scale=2)
+ggsave("output/figures/2022_Figure_S1B.pdf", width=8.3 / 4,height=8.3/4, scale=2)
 
 
 rm(tmp.pca)
 
 
-## fig s1c ----
+## F] Figure S1C ----
 
 
 sel <- rbind(
@@ -717,8 +714,7 @@ rm(n.glass, n.gsam, mult, tmp.pca, data, x, y, datapc, sel)
 
 
 
-## fig s1d ----
-
+## F] Figure S1D ----
 
 
 plt <- rbind(
@@ -788,16 +784,14 @@ ggplot(plt, aes(x=-`NMF:150:PC1`, y=-`NMF:150:PC2`, fill=ssGSEA.2022.subtype)) +
   ) +
   guides(fill=guide_legend(ncol=2))
 
-ggsave("output/figures/2022_figure_S1D.pdf", width=8.3 / 4,height=8.3/4, scale=2)
 
-
+ggsave("output/figures/2022_Figure_S1D.pdf", width=8.3 / 4,height=8.3/4, scale=2)
 rm(n.glass, n.gsam, plt)
 
 
 
 
-## fig s1e ----
-
+## F] Figure S1E ----
 
 
 plt <- rbind(
@@ -883,15 +877,12 @@ ggplot(plt, aes(x=-`NMF:150:PC1`, y=-`NMF:150:PC2`, fill=ssGSEA.2022.subtype, gr
   guides(fill=guide_legend(ncol=2))
 
 
-
 ggsave("output/figures/2022_figure_S1E.pdf", width=8.3 / 4,height=8.3/4, scale=2)
-
 rm(plt, n.glass, n.gsam, plt.contours)
 
 
 
-
-## fig s1f ----
+## F] Figure S1F ----
 
 
 plt <- rbind(
@@ -992,7 +983,7 @@ ggplot(plt, aes(x=-`NMF:150:PC1`, y=-`NMF:150:PC2`, fill=ssGSEA.2022.subtype, gr
   guides(fill="none") #guide_legend(ncol=2)
 
 
-ggsave("output/figures/2022_figure_S1F.pdf", width=8.3 / 4,height=8.3/4, scale=2)
+ggsave("output/figures/2022_Figure_S1F.pdf", width=8.3 / 4,height=8.3/4, scale=2)
 
 
 rm(plt, plt.contours, n.glass, n.gsam)
@@ -1131,7 +1122,7 @@ rm(plt, n.glass, n.gsam)
 
 
 
-## fig s1g equivalent for NMF:7k ----
+## x] Figure S1L, S1J & S1K  equivalent for NMF:7k ----
 
 # 1 = CL, 2 = PN, 4 = MES
 plt <- rbind(
@@ -1485,7 +1476,7 @@ ggsave("output/figures/2022_Figure_S1H.pdf", width=8.3 / 4,height=8.3/4, scale=2
 
 
 
-## Figure S1H 7k PCA equivalent [comment to reviewers] ----
+## x] Figure S1H 7k PCA equivalent [comment to reviewers] ----
 
 
 tmp <- rbind(
