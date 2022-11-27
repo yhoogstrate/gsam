@@ -1379,12 +1379,11 @@ rm(plt, plt.contours, n.glass, n.gsam)
 
 
 
-## fig s1k - ssGSEA PCA ----
+## F] Figure S1H - PCA space on ssGSEA ----
 
 
 tmp <- rbind(
   gsam.rna.metadata |>
-    
     dplyr::filter(blacklist.pca == F) %>%
     dplyr::filter(pat.with.IDH == F) %>%
     dplyr::filter(
@@ -1479,21 +1478,19 @@ ggplot(data, aes(x=PC1, y=PC2, col=varnames)) +
                                 'ssGSEA MES score'='MES')) +
   theme_bw()  +
   theme(
-    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
-    #strip.background = element_rect(colour="white",fill="white"),
     axis.title = element_text(face = "bold",size = rel(1)),
-    #axis.text.x = element_blank(),
     legend.position = 'bottom',
     panel.grid.major.x = element_blank(),
     panel.grid.minor.x = element_blank(),
     panel.grid.major.y = element_blank(),
     panel.grid.minor.y = element_blank(),
-    #axis.ticks.x = element_blank(),
     panel.border = element_rect(colour = "black", fill=NA, size=1.25)
   ) 
 
+ggsave("output/figures/2022_Figure_S1H.pdf", width=8.3 / 4,height=8.3/4, scale=2)
 
-ggsave("output/figures/2022_figure_S1K.pdf", width=8.3 / 4,height=8.3/4, scale=2)
+
+
 
 ## fig s1k - 7k PCA equivalent ----
 
