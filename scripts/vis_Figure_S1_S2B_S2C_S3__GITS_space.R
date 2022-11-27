@@ -181,9 +181,7 @@ rm(plt, plt.expanded)
 
 
 
-### MES ----
-
-
+### test mes
 
 
 plt <- rbind(
@@ -329,7 +327,7 @@ ggplot(plt.expanded, aes(x=-`NMF:150:PC1`,y=-`NMF:150:PC2`, group=pid, col =`bat
 rm(plt, plt.expanded)
 
 
-### 3050 ----
+### test 3050
 
 
 plt <- rbind(
@@ -2368,7 +2366,7 @@ rm(n.gsam, n.glass, p1 , p2 , plt.expanded, plt)
 
 
 
-## NMF 7k 3 x purity ----
+## x] NMF 7k 3 x purity ----
 
 #@comment redudendt fig because of s1g for NMF7k
 
