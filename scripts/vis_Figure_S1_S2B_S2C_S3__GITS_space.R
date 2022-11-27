@@ -1257,7 +1257,7 @@ rm(plt, n.glass, n.gsam)
 
 
 
-## fig s1h ----
+## F] Figure S1G - GITS ~ purity ----
 
 
 plt <- rbind(
@@ -1357,25 +1357,18 @@ ggplot(plt, aes(x=-`NMF:150:PC1`, y=-`NMF:150:PC2`, fill=col, group=pid)) +
        ) +
   theme_bw()  +
   theme(
-    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
-    #strip.background = element_rect(colour="white",fill="white"),
     axis.title = element_text(face = "bold",size = rel(1)),
-    #axis.text.x = element_blank(),
     legend.position = 'bottom',
     panel.grid.major.x = element_blank(),
     panel.grid.minor.x = element_blank(),
     panel.grid.major.y = element_blank(),
     panel.grid.minor.y = element_blank(),
-    #axis.ticks.x = element_blank(),
     panel.border = element_rect(colour = "black", fill=NA, size=1.25)
   )
 
 
-ggsave("output/figures/2022_figure_S1H.pdf", width=8.3 / 4,height=8.3/4, scale=2)
-
-
+ggsave("output/figures/2022_Figure_S1G.pdf", width=8.3 / 4,height=8.3/4, scale=2)
 rm(plt, plt.contours, n.glass, n.gsam)
-
 
 
 
@@ -1492,7 +1485,7 @@ ggsave("output/figures/2022_Figure_S1H.pdf", width=8.3 / 4,height=8.3/4, scale=2
 
 
 
-## fig s1k - 7k PCA equivalent ----
+## Figure S1H 7k PCA equivalent [comment to reviewers] ----
 
 
 tmp <- rbind(
@@ -1620,144 +1613,6 @@ ggplot(data, aes(x = PC1, y = PC2, col = varnames)) +
 
 
 ggsave("output/figures/2022_figure_S1K_NMF-7k_eq.pdf", width=8.3 / 4,height=8.3/4, scale=2)
-
-
-## fig s1l ----
-
-# probs x class & misclass
-
-
-plt <- rbind(
-  gsam.rna.metadata |>
-    
-    dplyr::filter(blacklist.pca == F) %>%
-    dplyr::filter(pat.with.IDH == F) %>%
-    dplyr::filter(
-      sid %in% c('BAI2', 'CAO1-replicate', 'FAB2', 'GAS2-replicate') == F
-    ) %>%
-    dplyr::filter(tumour.percentage.dna >= 15) |>
-    
-    dplyr::select(
-      sid,
-      
-      ssGSEA.2022.Classical_pval,
-      ssGSEA.2022.Mesenchymal_pval,
-      ssGSEA.2022.Proneural_pval,
-
-      ssGSEA.2022.subtype,
-      GITS.150.svm.2022.subtype
-    ) |> 
-    dplyr::mutate(dataset = "G-SAM")
-  ,
-  glass.gbm.rnaseq.metadata.all.samples |>
-    dplyr::mutate(is.primary = resection == "TP") |> 
-    dplyr::select(
-      aliquot_barcode,
-
-      ssGSEA.2022.Classical_pval,
-      ssGSEA.2022.Mesenchymal_pval,
-      ssGSEA.2022.Proneural_pval,
-      
-      ssGSEA.2022.subtype,
-      GITS.150.svm.2022.subtype
-    ) |>
-    dplyr::rename(sid = aliquot_barcode) |>
-    dplyr::mutate(dataset = "GLASS")
-) |> 
-  dplyr::mutate(ssGSEA.err1 = case_when(
-    ssGSEA.2022.subtype == "Classical" ~ ssGSEA.2022.Classical_pval^2 ,
-    ssGSEA.2022.subtype == "Proneural" ~ ssGSEA.2022.Proneural_pval^2 ,
-    ssGSEA.2022.subtype == "Mesenchymal" ~ ssGSEA.2022.Mesenchymal_pval^2,
-    ssGSEA.2022.subtype == "Proneural|Classical" ~ ssGSEA.2022.Classical_pval * ssGSEA.2022.Proneural_pval
-  )) |> 
-  dplyr::mutate(ssGSEA.err2 = case_when(
-    ssGSEA.2022.subtype == "Classical" ~ sqrt((1 - ssGSEA.2022.Proneural_pval)^2 + (1 - ssGSEA.2022.Mesenchymal_pval)^2) ,
-    ssGSEA.2022.subtype == "Proneural" ~ sqrt((1 - ssGSEA.2022.Classical_pval)^2 + (1 - ssGSEA.2022.Mesenchymal_pval)^2) ,
-    ssGSEA.2022.subtype == "Mesenchymal" ~ sqrt((1 - ssGSEA.2022.Classical_pval)^2 + (1 - ssGSEA.2022.Proneural_pval)^2) ,
-    ssGSEA.2022.subtype == "Proneural|Classical" ~ ssGSEA.2022.Mesenchymal_pval
-  )) |> 
-  tidyr::pivot_longer(cols=c( ssGSEA.2022.Classical_pval,
-                              ssGSEA.2022.Mesenchymal_pval,
-                              ssGSEA.2022.Proneural_pval), names_to = "ssGSEA subtype", values_to = "ssGSEA pval") |> 
-  dplyr::mutate(`ssGSEA subtype` = gsub("ssGSEA.2022.","",`ssGSEA subtype`)) |> 
-  dplyr::mutate(`ssGSEA subtype` = gsub("_pval","",`ssGSEA subtype`)) |> 
-  dplyr::mutate(`ssGSEA subtype` = dplyr::recode(`ssGSEA subtype`,
-                                                 'Classical' = 'CL',
-                                                 'Mesenchymal' = 'MES',
-                                                 'Proneural' = 'PN',
-                                                 'Proneural|Classical'='PN|CL'
-  )) |> 
-  dplyr::mutate(`ssGSEA.2022.subtype` = dplyr::recode(`ssGSEA.2022.subtype`,
-                                                 'Classical' = 'CL',
-                                                 'Mesenchymal' = 'MES',
-                                                 'Proneural' = 'PN',
-                                                 'Proneural|Classical'='PN|CL'
-  )) |> 
-  dplyr::mutate(`ssGSEA subtype` = paste0("ssGSEA ", `ssGSEA subtype`, " pval")) |> 
-  dplyr::mutate(`ssGSEA.2022.subtype` = paste0("ssGSEA call: ", `ssGSEA.2022.subtype`, "")) |> 
-  dplyr::mutate(order = order(order(ssGSEA.err1, ssGSEA.err2)))
-
-
-n.glass <- plt |> 
-  dplyr::filter(!is.na(GITS.150.svm.2022.subtype)) |> 
-  dplyr::filter(!duplicated(sid)) |> 
-  dplyr::pull(dataset) |> 
-  table() |> 
-  purrr::pluck('GLASS')
-n.gsam <- plt |> 
-  dplyr::filter(!is.na(GITS.150.svm.2022.subtype)) |> 
-  dplyr::filter(!duplicated(sid)) |> 
-  dplyr::pull(dataset) |> 
-  table() |> 
-  purrr::pluck('G-SAM')
-
-
-plt.line.based <- rbind(
-  plt |>  dplyr::mutate(`ssGSEA pval`=0),
-  plt |>  dplyr::mutate(`ssGSEA pval` = -log(`ssGSEA pval`))
-)
-
-
-
-ggplot(plt.line.based, aes(x=reorder(sid, order), y=`ssGSEA pval`,
-                           group=sid,
-                           col=`GITS.150.svm.2022.subtype`)) +
-  #geom_point(size=3,  col='black', pch=21, alpha=0.85) +
-  geom_line(lwd=0.8) +
-  facet_grid(cols = vars(ssGSEA.2022.subtype), 
-             rows=vars(`ssGSEA subtype`),
-             scale="free_x",
-             space="free_x") +
-  scale_color_manual(values = mixcol(subtype_colors_ext,rep("black",length(subtype_colors_ext)),0.15),
-                    label=c('Mesenchymal'='MES','Proneural'='PN','Classical'='CL','Proneural|Classical'='PN|CL')) +
-  labs(x = "Patients", 
-       y="-log10(ssGSEA pval)", 
-       col="GITS subtype",
-       caption = paste0("G-SAM: n=",n.gsam, "  -  GLASS: n=",n.glass," samples")
-       ) +
-  theme_bw()  +
-  theme(
-    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
-    #strip.background = element_rect(colour="white",fill="white"),
-    axis.title = element_text(face = "bold",size = rel(1)),
-    #axis.text.x = element_blank(),
-    legend.position = 'bottom',
-    panel.grid.major.x = element_blank(),
-    panel.grid.minor.x = element_blank(),
-    panel.grid.major.y = element_blank(),
-    panel.grid.minor.y = element_blank(),
-    
-    axis.ticks.x = element_blank(),
-    axis.text.x=element_blank(),
-    
-    panel.border = element_rect(colour = "black", fill=NA, size=1.25)
-  ) +
-  guides(fill=guide_legend(ncol=2))
-
-
-ggsave("output/figures/2022_figure_S1L.pdf", width=8.3 / 4,height=8.3/4, scale=2)
-
-rm(plt, plt.line.based, n.glass, n.gsam)
 
 
 
