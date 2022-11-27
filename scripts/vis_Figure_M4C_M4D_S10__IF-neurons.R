@@ -197,7 +197,7 @@ data.per.tile <- data.per.tile |>
 
 
 # 1: fraction neurons increases ----
-
+## F] Figure M4C ----
 
 
 plt <- data.per.tile |> 
@@ -253,8 +253,6 @@ summary(fit)
 
 
 
-
-
 # test should be paired
 wilcox.test(stats$frac.neurons_primary, stats$frac.neurons_recurrence, paired=T)
 p = wilcox.test(stats$frac.neurons_primary, stats$frac.neurons_recurrence, paired=T)$p.value
@@ -300,7 +298,7 @@ ggplot(plt, aes(x = sid, y = frac.neurons, col = resection, group = pid)) +
   )
 
 
-ggsave("output/figures/2022_figure_SNeuN_A.pdf", width=8.3 / 2,height=8.3/5, scale=2)
+ggsave("output/figures/2022_Figure_M4C.pdf", width=8.3 / 2,height=8.3/5, scale=2)
 
 
 
@@ -494,7 +492,7 @@ ggsave("output/figures/2022_Figure_S10C.pdf", width=8.3 / 2,height=8.3/4, scale=
 
 
 # 3: per sample tile plots ----
-## aggregate counts.full into ann ----
+## F] Figure M4D -- aggregate counts/tile ann ----
 
 
 ssids <- data.per.tile |> 
@@ -537,8 +535,6 @@ for(ssid in ssids) {
     #dplyr::mutate(col = ifelse(type == "Neuron", "Neuron", "Not neuron"))
   
   ggplot(plt.per.cell, aes(x=`Centroid.X.µm`, y=`Centroid.Y.µm`)) +
-    #geom_point(data = plt.per.cell |> dplyr::filter(col != "Neuron"), cex=0.05,pch=21) +
-    #geom_point(data = plt.per.cell |> dplyr::filter(col == "Neuron"), cex=0.3,pch=21) +
     geom_point(cex=0.005,pch=21, col="gray80") +
     geom_rect(data=plt.per.tile |> dplyr::mutate(fill='proportion neurons (interval)'), aes(xmin=xmin,xmax=xmax,ymin=ymin,ymax=filly,fill=fill), col=NA) +
     geom_rect(data=plt.per.tile, aes(xmin=xmin,xmax=xmax,ymin=ymin,ymax=ymax,col=tumor.low.high), fill=NA,lwd=0.15) +
@@ -573,7 +569,7 @@ for(ssid in ssids) {
     scale_fill_manual(values=c('proportion neurons (interval)'=alpha("darkgreen",0.5)
     ))
   
-  ggsave(paste0("output/figures/2022_figure_Sxx_IF_NeuN_",unique(plt.per.tile$sid),".pdf"), width=8.3 / 2,height=(8.3/ 2) * 1.25, scale=3)
+  ggsave(paste0("output/figures/2022_Figure_M4D__",unique(plt.per.tile$sid),".pdf"), width=8.3 / 2,height=(8.3/ 2) * 1.25, scale=3)
 }
 
 
