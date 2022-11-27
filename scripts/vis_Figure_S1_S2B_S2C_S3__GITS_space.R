@@ -1000,7 +1000,7 @@ rm(plt, plt.contours, n.glass, n.gsam)
 
 
 
-## fig s1g ----
+## F] Figure S1I, S1J & S1K - ssGSEA ~ NMF scores ----
 
 
 plt <- rbind(
@@ -1114,22 +1114,18 @@ ggplot(plt, aes(x=`ssGSEA enrichment score`, y=`NMF contribution`, fill=`ssGSEA.
                      label=c('?'='ssGSEA undecisive','.'='GITS ~ ssGSEA discordant')) +
   theme_bw()  +
   theme(
-    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
-    #strip.background = element_rect(colour="white",fill="white"),
     axis.title = element_text(face = "bold",size = rel(1)),
-    #axis.text.x = element_blank(),
     legend.position = 'bottom',
     panel.grid.major.x = element_blank(),
     panel.grid.minor.x = element_blank(),
     panel.grid.major.y = element_blank(),
     panel.grid.minor.y = element_blank(),
-    #axis.ticks.x = element_blank(),
     panel.border = element_rect(colour = "black", fill=NA, size=1.25)
   ) +
-  guides() #guide_legend(ncol=2)
+  guides()
 
 
-ggsave("output/figures/2022_figure_S1G.pdf", width=8.3 / 2,height=8.3/5, scale=2)
+ggsave("output/figures/2022_Figure_S1I_S1J_S1K.pdf", width=8.3 / 2,height=8.3/5, scale=2)
 
 rm(plt, n.glass, n.gsam)
 
