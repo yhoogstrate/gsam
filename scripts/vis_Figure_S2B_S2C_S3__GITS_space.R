@@ -1768,84 +1768,77 @@ rm(plt, plt.line.based, n.glass, n.gsam)
 
 
 
-## figure S2a ----
+## F] Figure S2C ----
 
 
 plt <- rbind(
   gsam.rna.metadata |>
-    
     dplyr::filter(blacklist.pca == F) %>%
     dplyr::filter(pat.with.IDH == F) %>%
-    dplyr::filter(
-      sid %in% c('BAI2', 'CAO1-replicate', 'FAB2', 'GAS2-replicate') == F
-    ) %>%
+    dplyr::filter(sid %in% c("BAI2", "CAO1-replicate", "FAB2", "GAS2-replicate") == F) %>%
     dplyr::filter(tumour.percentage.dna >= 15) |>
-    dplyr::mutate(is.primary = ifelse(resection == "r1","primary","recurrent")) |> 
-    
+    dplyr::mutate(is.primary = ifelse(resection == "r1", "primary", "recurrent")) |>
     dplyr::select(
       `sid`,
       `pid`,
       `is.primary`,
-      
       `NMF:150:PCA:eucledian.dist`,
-      
       `GITS.150.svm.2022.subtype`
-    ) |> 
-    dplyr::mutate(dataset = "G-SAM")
-  ,
+    ) |>
+    dplyr::mutate(dataset = "G-SAM"),
   glass.gbm.rnaseq.metadata.all.samples |>
-    dplyr::mutate(is.primary = ifelse(resection == "TP","primary","recurrent")) |>
-    dplyr::filter(tumour.percentage.2022 >= 15) |> 
+    dplyr::mutate(is.primary = ifelse(resection == "TP", "primary", "recurrent")) |>
+    dplyr::filter(tumour.percentage.2022 >= 15) |>
     dplyr::select(
       `aliquot_barcode`,
       `case_barcode`,
       `is.primary`,
-      
       `NMF:150:PCA:eucledian.dist`,
-      
       `GITS.150.svm.2022.subtype`
     ) |>
     dplyr::rename(sid = aliquot_barcode) |>
     dplyr::rename(pid = case_barcode) |>
     dplyr::mutate(dataset = "GLASS")
-) |> 
+) |>
   dplyr::group_by(pid) |> # filter for matching pairs
-  dplyr::filter(n() == 2) |> 
+  dplyr::filter(n() == 2) |>
   dplyr::ungroup() |>
   dplyr::mutate(`GITS.150.svm.2022.subtype` = case_when(
     `GITS.150.svm.2022.subtype` == "Proneural" ~ "PN",
     `GITS.150.svm.2022.subtype` == "Classical" ~ "CL",
     `GITS.150.svm.2022.subtype` == "Mesenchymal" ~ "MES"
-  )) |> 
-  tidyr::pivot_wider(id_cols = pid, 
-                     names_from = c(is.primary),
-                     values_from = c(sid,`GITS.150.svm.2022.subtype`, `NMF:150:PCA:eucledian.dist`, `dataset`)) |> 
-  dplyr::mutate(stable = ifelse(`GITS.150.svm.2022.subtype_primary` == `GITS.150.svm.2022.subtype_recurrent`, "stable","transition"))
+  )) |>
+  tidyr::pivot_wider(
+    id_cols = pid,
+    names_from = c(is.primary),
+    values_from = c(sid, `GITS.150.svm.2022.subtype`, `NMF:150:PCA:eucledian.dist`, `dataset`)
+  ) |>
+  dplyr::mutate(stable = ifelse(`GITS.150.svm.2022.subtype_primary` == `GITS.150.svm.2022.subtype_recurrent`, "stable", "transition"))
 
 stopifnot(plt$`NMF:150:PCA:eucledian.dist_primary` == plt$`NMF:150:PCA:eucledian.dist_recurrent`)
 
 
-n.glass <- table(plt$dataset_primary)['GLASS']
-n.gsam <- table(plt$dataset_primary)['G-SAM']
+n.glass <- table(plt$dataset_primary)["GLASS"]
+n.gsam <- table(plt$dataset_primary)["G-SAM"]
 
 
 
 plt <- plt |>
-  dplyr::rename(`NMF:150:PCA:eucledian.dist` = `NMF:150:PCA:eucledian.dist_primary`) |> 
-  dplyr::mutate(`NMF:150:PCA:eucledian.dist_recurrent` = NULL) |> 
-  dplyr::rename(`dataset` = `dataset_primary`) |> 
-  dplyr::mutate(`dataset_recurrent` = NULL) |> 
-  dplyr::mutate(`GITS.150.svm.2022.subtype_primary` = paste0("from: ", `GITS.150.svm.2022.subtype_primary`)) |> 
+  dplyr::rename(`NMF:150:PCA:eucledian.dist` = `NMF:150:PCA:eucledian.dist_primary`) |>
+  dplyr::mutate(`NMF:150:PCA:eucledian.dist_recurrent` = NULL) |>
+  dplyr::rename(`dataset` = `dataset_primary`) |>
+  dplyr::mutate(`dataset_recurrent` = NULL) |>
+  dplyr::mutate(`GITS.150.svm.2022.subtype_primary` = paste0("from: ", `GITS.150.svm.2022.subtype_primary`)) |>
   dplyr::mutate(`GITS.150.svm.2022.subtype_recurrent` = paste0("to: ", `GITS.150.svm.2022.subtype_recurrent`))
 
 
 
 # FDR + geom_signif -> https://github.com/kassambara/ggpubr/issues/65#issuecomment-400918671
 stats <- ggpubr::compare_means(`NMF:150:PCA:eucledian.dist` ~ `GITS.150.svm.2022.subtype_recurrent`,
-                               group.by = "GITS.150.svm.2022.subtype_primary", 
-                               data = plt
-                               ) |>
-  dplyr::mutate(y_pos = 4.25 + ((1:n() %% 3) * 0.4)) |> 
+  group.by = "GITS.150.svm.2022.subtype_primary",
+  data = plt
+) |>
+  dplyr::mutate(y_pos = 4.25 + ((1:n() %% 3) * 0.4)) |>
   dplyr::mutate(p.adj = format.pval(p.adj, digits = 1))
 
 
@@ -1871,29 +1864,22 @@ ggplot(plt, aes(x = GITS.150.svm.2022.subtype_recurrent, y = `NMF:150:PCA:eucled
   scale_y_continuous(limits = c(0, 5.25)) + # for the signif
   theme_bw() +
   theme(
-    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
-    # strip.background = element_rect(colour="white",fill="white"),
     axis.title = element_text(face = "bold", size = rel(1)),
-    # axis.text.x = element_blank(),
     legend.position = "bottom",
     panel.grid.major.x = element_blank(),
     panel.grid.minor.x = element_blank(),
     panel.grid.major.y = element_blank(),
     panel.grid.minor.y = element_blank(),
     axis.ticks.x = element_blank(),
-    # strip.text = element_text(size = 7),
     panel.border = element_rect(colour = "black", fill = NA, size = 1.1)
   ) +
   guides(fill = guide_legend(ncol = 4))
 
 
 
-ggsave("output/figures/2022_figure_S2a.pdf", width=8.3 / ((3/2) * 2),height=8.3/3.2, scale=2)
-ggsave("output/figures/2022_figure_S2a.svg", width=8.3 / ((3/2) * 2),height=8.3/3.2, scale=2)
+ggsave("output/figures/2022_Figure_S2C.pdf", width = 8.3 / ((3 / 2) * 2), height = 8.3 / 3.2, scale = 2)
 
-
-rm(n.glass, n.gsam)
-rm(plt)
+rm(n.glass, n.gsam, plt)
 
 
 

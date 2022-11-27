@@ -147,8 +147,7 @@ rm(plt)
 
 
 
-# figure S2c ----
-
+# F] Figure S2D- subtype ~ purity ----
 
 
 plt <- rbind(
@@ -191,8 +190,6 @@ tmp.n.glass <- plt |>
   nrow()
 
 
-
-
 stats <- ggpubr::compare_means(`purity` ~ `GITS.150.svm.2022.subtype`, 
                                data = plt,
                                method="wilcox.test",
@@ -220,10 +217,7 @@ ggplot(plt, aes(x = GITS.150.svm.2022.subtype, y = purity, fill = GITS.150.svm.2
                          ), name = "Subtype", guide = "none") +
   theme_bw() +
   theme(
-    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
-    # strip.background = element_rect(colour="white",fill="white"),
     axis.title = element_text(face = "bold", size = rel(1)),
-    # axis.text.x = element_blank(),
     legend.position = "bottom",
     panel.grid.major.x = element_blank(),
     panel.grid.minor.x = element_blank(),
@@ -237,6 +231,9 @@ ggplot(plt, aes(x = GITS.150.svm.2022.subtype, y = purity, fill = GITS.150.svm.2
     caption = paste0("G-SAM: n=", tmp.n.gsam, "  -  GLASS: n=", tmp.n.glass)
   )
 
-ggsave("output/figures/2022_figure_S2c.pdf", width=8.3 / ((3/2) * 4),height=1.5, scale=2)
+ggsave("output/figures/2022_Figure_S2D.pdf", width=8.3 / ((3/2) * 4),height=1.5, scale=2)
+rm(plt, tmp.stats, tmp.n.glass, tmp.n.gsam)
+
+
 
 
