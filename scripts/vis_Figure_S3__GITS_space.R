@@ -2020,7 +2020,7 @@ ggsave("output/figures/2022_figure_1d.pdf", width=8.3 / 2,height=8.3/2, scale=2)
 
 
 
-## fig s3a ----
+## F] Figure S2C ----
 
 
 plt <- rbind(
@@ -2157,8 +2157,6 @@ ggplot(plt, aes(x = -`NMF:150:PC1.n`, y= -`NMF:150:PC2.n`, group=pid, col=subtyp
        ) +
   theme_bw()  +
   theme(
-    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
-    #strip.background = element_rect(colour="white",fill="white"),
     axis.title = element_text(face = "bold",size = rel(1)),
     
     axis.text.x = element_blank(),
@@ -2168,20 +2166,17 @@ ggplot(plt, aes(x = -`NMF:150:PC1.n`, y= -`NMF:150:PC2.n`, group=pid, col=subtyp
     axis.ticks.y = element_blank(),
     
     legend.position = 'bottom',
-    #panel.grid.major.x = element_blank(),
     panel.grid.minor.x = element_blank(),
-    #panel.grid.major.y = element_blank(),
     panel.grid.minor.y = element_blank(),
-    #strip.text = element_text(size = 7),
     panel.border = element_rect(colour = "black", fill=NA, size=1.25)
   ) +
   guides(fill=guide_legend(ncol=3))
 
 
-ggsave("output/figures/2022_figure_S3a.pdf", width=8.3 / 2,height=8.3/4, scale=2)
-
+ggsave("output/figures/2022_Figure_S2C.pdf", width=8.3 / 2,height=8.3/4, scale=2)
 
 rm(plt, n.glass, n.gsam)
+
 
 
 
