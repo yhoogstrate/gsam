@@ -16,7 +16,7 @@ source('scripts/R/palette.R')
 
 
 
-# figure 1ef ----
+# F] Figure M1E, M1F - resection ~ purity scatters ----
 
 
 plt <- rbind(
@@ -96,9 +96,7 @@ ggplot(plt |> dplyr::filter(sid != 'median'), aes(x = is.primary, y = purity, fi
   facet_grid(cols = vars(dataset), scales = "free", space = "free_y") +
   geom_hline(yintercept = 15, color = "gray60") +
   geom_violin(draw_quantiles = c(), col = NA, alpha = 0.2) +
-  # geom_jitter( position=position_jitter(0.2), size=2.5, pch=21, col="black") +
   ggbeeswarm::geom_quasirandom(pch = 21, size = 3, col = "black", alpha = 0.85) +
-  #geom_violin(draw_quantiles = c(0.5), col = "black", fill = alpha("white", 0)) +
   ylim(0, 100) +
   ggsignif::geom_signif(
     comparisons = list(c("Primary", "Recurrence")),
@@ -134,15 +132,7 @@ ggplot(plt |> dplyr::filter(sid != 'median'), aes(x = is.primary, y = purity, fi
   ) +
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 1.1))
 
-ggsave("output/figures/2022_figure_1ef_purity_scatter.pdf", width=8.3 / 4,height=8.3/4, scale=2)
-#ggsave("output/figures/2022_figure_1ef_purity_scatter.svg", width=8.3 / 4,height=8.3/4, scale=2)
-
-
-
-
-
-
-
+ggsave("output/figures/2022_Figure_M1E_M1F.pdf", width=8.3 / 4,height=8.3/4, scale=2)
 rm(plt)
 
 
