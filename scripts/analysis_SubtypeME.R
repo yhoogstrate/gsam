@@ -21,11 +21,11 @@ tmp.combined.metadata <- rbind(
     dplyr::filter(blacklist.pca == F) %>%
     dplyr::filter(pat.with.IDH == F) %>%
     dplyr::filter(sid %in% c('BAI2', 'CAO1-replicate', 'FAB2', 'GAS2-replicate') == F ) %>%
-    #dplyr::filter(tumour.percentage.dna >= 15) |>
+    dplyr::filter(tumour.percentage.dna >= 15) |>
     dplyr::select(sid) |>
     dplyr::mutate(dataset = "G-SAM"),
   glass.gbm.rnaseq.metadata.all.samples |>
-    #dplyr::filter(tumour.percentage.2022 >= 15) |>
+    dplyr::filter(tumour.percentage.2022 >= 15) |>
     dplyr::rename(sid = aliquot_barcode) |>
     dplyr::select(sid) |>
     dplyr::mutate(dataset = "GLASS")
@@ -45,8 +45,8 @@ tmp.combined.metadata <- rbind(
 
 
 
-stopifnot(nrow(tmp.combined.metadata) == (322+245))
-#stopifnot(nrow(tmp.combined.metadata) == (287+216))
+#stopifnot(nrow(tmp.combined.metadata) == (322+245))
+stopifnot(nrow(tmp.combined.metadata) == (287+216))
 
 
 # 150 run ----
