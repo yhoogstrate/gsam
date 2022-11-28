@@ -9,7 +9,7 @@ source("scripts/load_G-SAM_metadata.R")
 source("scripts/R/palette.R")
 
 
-# figure 2a ----
+# F] Figure M2A ----
 
 
 tmp.paired <- gsam.rna.metadata |> 
@@ -63,12 +63,6 @@ tmp.paired <- gsam.rna.metadata |>
   dplyr::mutate(`NMF:150:2 delta` = `NMF:150:2_recurrence` - `NMF:150:2_primary`) |> 
   dplyr::mutate(`NMF:150:3 log-odds` = log((`NMF:150:3_recurrence` + 1 ) /  ( `NMF:150:3_primary` + 1 ))) |> 
   dplyr::mutate(`NMF:150:3 delta` = `NMF:150:3_recurrence` - `NMF:150:3_primary`) |> 
-  
-  # dplyr::mutate(`rna.signature.C0.fuzzy.2022 log-odds` = log((`rna.signature.C0.fuzzy.2022_recurrence` + 1 ) /  ( `rna.signature.C0.fuzzy.2022_primary` + 1 ))) |> 
-  # dplyr::mutate(`rna.signature.C1.collagen.2022 log-odds` = log((`rna.signature.C1.collagen.2022_recurrence` + 1 ) /  ( `rna.signature.C1.collagen.2022_primary` + 1 ))) |> 
-  # dplyr::mutate(`rna.signature.C2.endothelial.2022 log-odds` = log((`rna.signature.C2.endothelial.2022_recurrence` + 1 ) /  ( `rna.signature.C2.endothelial.2022_primary` + 1 ))) |> 
-  # dplyr::mutate(`rna.signature.C3.oligodendrocyte.2022 log-odds` = log((`rna.signature.C3.oligodendrocyte.2022_recurrence` + 1 ) /  ( `rna.signature.C3.oligodendrocyte.2022_primary` + 1 ))) |> 
-  # dplyr::mutate(`rna.signature.C4.neuron.2022 log-odds` = log((`rna.signature.C4.neuron.2022_recurrence` + 1 ) /  ( `rna.signature.C4.neuron.2022_primary` + 1 ))) |> 
   
   dplyr::mutate(`rna.signature.C0.fuzzy.2022 delta` = `rna.signature.C0.fuzzy.2022_recurrence` - `rna.signature.C0.fuzzy.2022_primary`) |> 
   dplyr::mutate(`rna.signature.C1.collagen.2022 delta` = `rna.signature.C1.collagen.2022_recurrence` - `rna.signature.C1.collagen.2022_primary`) |> 
@@ -176,8 +170,6 @@ tmp.single <- tmp.paired |>
       "tumour.percentage.dna_primary", "tumour.percentage.dna_recurrence",
       "EPIC: CD4 T-cells_primary", "EPIC: CD4 T-cells_recurrence",
       "EPIC: Macrophages_primary", "EPIC: Macrophages_recurrence",
-      #"NMF:150:1_primary", "NMF:150:1_recurrence", CL
-      #"NMF:150:2_primary", "NMF:150:2_recurrence", PN
       "GITS.150.svm.2022.subtype_primary", "GITS.150.svm.2022.subtype_recurrence", 
       "NMF:150:3_primary", "NMF:150:3_recurrence"
     ),  names_to = c(".value", "resection"), names_pattern = "(.+)_(.+)"
@@ -292,7 +284,6 @@ ggplot(plt, aes(x = reorder(pid, rank), y=y, col=sign, label=label)) +
     panel.grid.minor.y = element_blank(),
     panel.border = element_rect(colour = "black", fill=NA, size=1.1)
   ) 
-#ggsave("output/figures/2022_figure_2a_top.pdf", width=8.3 ,height=8.3/2.5 , scale=2)
 
 
 
@@ -364,11 +355,6 @@ plt <- tmp.paired |>
     T ~ "D"
   )) %>% 
   dplyr::mutate(ypanel = factor(ypanel, levels=c('A','B','C','D','E'))) |> 
-  #       (panel == "Patients with purity < 15% sample(s)"  & variable == "Hyper mut") |
-  #       (panel == "Patients with purity < 15% sample(s)"  & variable == "MGMT meth") |
-  #     
-  #   ) == F
-  # )
   dplyr::filter(
     (
       (panel == "Patients with purity < 15% sample(s)" & (variable) %in% c(
@@ -442,21 +428,9 @@ p2 <- ggplot(plt, aes(x = reorder(pid, rank), y=variable, fill = value)) +
 table(plt$value)
 
 
-
-
 p1 / p2 + patchwork::plot_layout(heights = c(1.8, 1.6))
 
-
-
-
-
-ggsave("output/figures/2022_figure_2a.pdf", width=8.3 ,height=8.3/1.5 , scale=2)
-
-#ggsave("output/figures/epic_tumor_percentage_traversal_vertical.pdf", width = 16 * 1.05, height=11.5 * 1.05)
-#ggsave("output/figures/2022_figure_2a.svg", width=8.3 ,height=8.3/1.5 , scale=2)
-
-
-
+ggsave("output/figures/2022_Figure_M2A.pdf", width=8.3 ,height=8.3/1.5 , scale=2)
 rm(plt, tmp.n.pairs.below.15, tmp.n.pairs.leq.15, p1, p2)
 
 
