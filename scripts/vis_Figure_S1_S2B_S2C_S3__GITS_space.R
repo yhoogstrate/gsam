@@ -14,9 +14,7 @@ source('scripts/R/palette.R')
 
 # plots ----
 
-## fig 1c ----
-
-
+## F] Figure M1A, M1B & M1C - GITS arrows ----
 
 plt <- rbind(
   gsam.rna.metadata |>
@@ -128,14 +126,8 @@ plt.expanded <- rbind(
 )
 
 
-
-
-
-
-
 plt.contours <- readRDS("cache/analysis_GITS_space_GITS_contours.Rds") |> 
   dplyr::mutate(`GITS.150.svm.2022.subtype` = class, `pid` = NA)
-
 
 
 ggplot(plt.expanded, aes(x=-`NMF:150:PC1`,y=-`NMF:150:PC2`, group=pid, col =`GITS.150.svm.2022.subtype`,fill =`GITS.150.svm.2022.subtype`)) +
@@ -172,11 +164,7 @@ ggplot(plt.expanded, aes(x=-`NMF:150:PC1`,y=-`NMF:150:PC2`, group=pid, col =`GIT
   theme(panel.border = element_rect(colour = "black", fill=NA, size=1.1)  )
 
 
-ggsave("output/figures/2022_figure_1c.pdf", width=8.3 / 4,height=8.3/4 * 2.8, scale=2)
-ggsave("output/figures/2022_figure_1c.svg", width=8.3 / 4,height=8.3/4 * 2.8, scale=2)
-
-
-
+ggsave("output/figures/2022_Figure_M1A_M1B_M1C.pdf", width=8.3 / 4,height=8.3/4 * 2.8, scale=2)
 rm(plt, plt.expanded)
 
 
@@ -1720,7 +1708,7 @@ rm(n.glass, n.gsam, plt)
 
 
 
-## figure 1d ----
+## F] Figure M1D ----
 
 
 
@@ -1838,8 +1826,8 @@ ggplot(plt.dots, aes(x=x,y=y,label=label,fill=label)) +
                       mixcol(c('MES' = as.character(subtype_colors['Mesenchymal']), 'PN' = as.character(subtype_colors['Proneural']), 'CL' = as.character(subtype_colors['Classical'])),rep("white",3),0.0)
     )
 
+ggsave("output/figures/2022_Figure_M1D.pdf", width=8.3 / 2,height=8.3/2, scale=2)
 
-ggsave("output/figures/2022_figure_1d.pdf", width=8.3 / 2,height=8.3/2, scale=2)
 
 
 
