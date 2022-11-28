@@ -462,16 +462,7 @@ rm(plt, tmp.n.pairs.below.15, tmp.n.pairs.leq.15, p1, p2)
 
 
 
-# figure 2fg ----
-
-# plt <- out.sample %>%
-#   dplyr::filter(pid %in%  out.patient$pid) %>%
-#   dplyr::arrange(pid, resection, sid) %>%
-#   dplyr::left_join(out.patient %>% dplyr::select(c(pid, tumour.percentage.dna.log.odds,
-#                                                    EPIC.Macrophages.log.odds,
-#                                                    EPIC.CD4_Tcells.log.odds
-#                                                    )), by=c('pid'='pid')) %>%
-#   dplyr::mutate(tumour.percentage.status = ifelse(tumour.percentage.dna.log.odds > 0, "increase", "decrease"))
+# F] Figure M2G, M2H - EPIC ~ purity ----
 
 
 plt <- tmp.single |> 
@@ -535,23 +526,15 @@ tmp.n.pairs.leq.15 <-  tmp.paired |>
 
 ggplot(plt, aes(x=tumour.percentage.dna, y=value, group=pid, col= tumour.percentage.status, label=label)) + 
   facet_wrap(~variable, scales = "free") +
-  #facet_grid(cols = vars(variable), scales = "free",space="free") +
   geom_point(data = subset(plt, resection == "r1"), pch=19, cex=1.2 * 1.5, alpha=0.5) +
   geom_text(data = tmp.labels, col="black",fontface = "italic",hjust = 0, vjust=0.5) + 
   geom_path(  arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.125, "inches")) , alpha = 0.75 ) + 
   scale_color_manual(values = c("increase"="#bb5f6c", "decrease"="#79b1b1"),name="") +
   xlim(0, 100) +
-  #ylim(0, 0.5) +
   ggplot2::theme_bw()  +
   ggplot2::theme(
-    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
-    #strip.background = element_rect(colour="white",fill="white"),
     axis.title = element_text(face = "bold",size = rel(1)),
     legend.position = 'bottom',
-    
-    #axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
-    #axis.text.x = element_blank(),
-    #axis.ticks.x = element_blank(),
     
     panel.grid.major.x = element_blank(),
     panel.grid.minor.x = element_blank(),
@@ -562,36 +545,10 @@ ggplot(plt, aes(x=tumour.percentage.dna, y=value, group=pid, col= tumour.percent
   labs(x = "Tumor purity (%)", 
        y = 'EPIC deconvolution score',
        caption = paste0( "Pairs = ", (tmp.n.pairs.below.15 + tmp.n.pairs.leq.15), " (", tmp.n.pairs.leq.15, " >= 15%, ", tmp.n.pairs.below.15, " < 15%)"))
-ggsave("output/figures/2022_figure_2fg.pdf", width=8.3 * 2/3,height=8.3/3.5 , scale=2)
+ggsave("output/figures/2022_Figure_M2G_M2H.pdf", width=8.3 * 2/3,height=8.3/3.5 , scale=2)
 
 
 
-
-# p1 <- ggplot(plt, aes(x=tumour.percentage.dna, y=EPIC.Macrophages, group=pid, col= tumour.percentage.status)) + 
-#   geom_point(data = subset(plt, resection == "r1"), pch=19, cex=1.2 * 1.5, alpha=0.5) +
-#   geom_path(  arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.125, "inches")) , alpha = 0.75 ) + 
-#   labs(x = "Tumor cell percentage (DNA-seq estimate)",y="EPIC Macrophages score") +
-#   scale_color_manual(values = c("increase"="#bb5f6c", "decrease"="#79b1b1" )) +
-#   xlim(0, 100) +
-#   ylim(0, 0.5) +
-#   youri_gg_theme
-# 
-# p2 <- ggplot(plt, aes(x=tumour.percentage.dna, y=EPIC.CD4_Tcells, group=pid, col= tumour.percentage.status)) + 
-#   geom_point(data = subset(plt, resection == "r1"), pch=19, cex=1.2 * 1.5, alpha=0.5) +
-#   geom_path(  arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.125, "inches")) , alpha = 0.75 ) + 
-#   labs(x = "Tumor cell percentage (DNA-seq estimate)",y="EPIC CD4 T-cells score") +
-#   scale_color_manual(values = c("increase"="#bb5f6c", "decrease"="#79b1b1" )) +
-#   xlim(0, 100) +
-#   ylim(0, 0.5) +
-#   youri_gg_theme
-# 
-# 
-# p1 + p2
-# 
-
-
-# ggsave("output/figures/epic_tumor_percentage_traversal.pdf", width = 12, height=4.8)
-# ggsave("output/figures/epic_tumor_percentage_traversal_4.2.pdf", width = 12, height=4.2)
 
 
 # figure 2ij ----
