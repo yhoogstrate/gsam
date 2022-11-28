@@ -43,6 +43,12 @@ Dr. Youri Hoogstrate, 2019 - 2022
 Directory structure:
 
 ```
-./scripts/load_*.R    [loading of data]
+./scripts/load_*.R     [loading of data]
+               - data is typically structured in 3 levels:
+                  * per gene
+                  * per patient
+                  * per resection/sample
+./scripts/analysis_*.R [analysis of data, typically exporting cached results to ./cache ]
+./scripts/vis_*.R      [visualisation of data]
 
 ```
