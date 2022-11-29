@@ -45,7 +45,6 @@ tmp.combined.metadata <- rbind(
 
 
 
-#stopifnot(nrow(tmp.combined.metadata) == (322+245))
 stopifnot(nrow(tmp.combined.metadata) == (287+216))
 
 
