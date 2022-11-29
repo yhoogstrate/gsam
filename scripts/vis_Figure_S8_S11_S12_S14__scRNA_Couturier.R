@@ -3,11 +3,6 @@
 # load libs ----
 
 
-#library(tidyverse)
-#library(Matrix)
-#library(DropletUtils)
-#library(Seurat)
-
 
 # load data ----
 
@@ -1073,49 +1068,38 @@ DotPlot(object = object_1, features = c("MOG","PLP1","TMEM144"),group.by = "seur
 
 
 
-##### figure S7b ----
+##### F] Figure S8A - C3/OPC ----
 
 
 tmp.c3 <- results.out |>
-  dplyr::filter(!is.na(.data$C3.2022)) |> 
-  dplyr::filter(.data$C3.2022 == T) |> 
-  dplyr::filter(!is.na(hugo_symbol)) |> 
-  dplyr::pull(hugo_symbol) |> 
+  dplyr::filter(!is.na(.data$C3.2022)) |>
+  dplyr::filter(.data$C3.2022 == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
   unique()
-tmp.opc <- results.out |> 
-  dplyr::filter(!is.na(.data$neftel.meta.modules.OPC)) |> 
-  dplyr::filter(.data$neftel.meta.modules.OPC == T) |> 
-  dplyr::filter(!is.na(hugo_symbol)) |> 
-  dplyr::pull(hugo_symbol) |> 
+tmp.opc <- results.out |>
+  dplyr::filter(!is.na(.data$neftel.meta.modules.OPC)) |>
+  dplyr::filter(.data$neftel.meta.modules.OPC == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
   unique()
 tmp.c3.opc <- intersect(tmp.c3, tmp.opc)
 tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
 tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
 
 
-sid_print <- sid |> 
-  stringr::str_replace(".filtered_gene_matrices","") |> 
-  stringr::str_replace("_2of2"," (1 & 2 of 2)")
+sid_print <- sid |>
+  stringr::str_replace(".filtered_gene_matrices", "") |>
+  stringr::str_replace("_2of2", " (1 & 2 of 2)")
 
 
-DotPlot(object = object_1, features =list('C3'=tmp.c3, 'OPC'=tmp.opc, 'C3+OPC'=tmp.c3.opc), group.by = "seurat_clusters") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
-  labs(x = paste0("Features [C3/OPC] in: ",sid_print, " (Couturier dataset)"))
+DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC" = tmp.opc, "C3+OPC" = tmp.c3.opc), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
+  labs(x = paste0("Features [C3/OPC] in: ", sid_print, " (Couturier dataset)"))
 
 
-
-ggsave(paste0("output/figures/2022_figure_S7b.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S8A.pdf"), width = 7.5 * 1.8, height = 3.75, scale = 1.2)
 rm(tmp.c3, tmp.opc, tmp.c3.opc, sid_print)
-
-
-
-
-#DotPlot(object = object_1, features =list('C2'=oligodendrocyte.genes , 'OPC'=OPC ), group.by = "seurat_clusters") +
-#  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
-#  labs(x = paste0("Features [C2/OPC] in: ",sid))
-
-#ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C2_OPC.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
-#ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C2_OPC.png"),width=7.5*1.8, height=3.75,scale=1.2)
 
 
 
@@ -1163,31 +1147,29 @@ ggsave("output/figures/2022_Figure_S14L.pdf", width = 6.5, height = 4, scale = 1
 
 
 #### C0-2022 ----
-##### figure S10a ----
+##### F] Figure S12A - C0 ----
 
 
 tmp.c0 <- results.out |>
-  dplyr::filter(!is.na(.data$C0.2022)) |> 
-  dplyr::filter(.data$C0.2022 == T) |> 
-  dplyr::filter(!is.na(hugo_symbol)) |> 
-  dplyr::pull(hugo_symbol) |> 
+  dplyr::filter(!is.na(.data$C0.2022)) |>
+  dplyr::filter(.data$C0.2022 == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
   unique()
 
 
-sid_print <- sid |> 
-  stringr::str_replace(".filtered_gene_matrices","") |> 
-  stringr::str_replace("_2of2"," (1 & 2 of 2)")
+sid_print <- sid |>
+  stringr::str_replace(".filtered_gene_matrices", "") |>
+  stringr::str_replace("_2of2", " (1 & 2 of 2)")
 
 
-DotPlot(object = object_1, features =list('C0'=tmp.c0), group.by = "seurat_clusters") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
-  labs(x = paste0("Features [C0] in: ",sid_print, " (Couturier dataset)"))
+DotPlot(object = object_1, features = list("C0" = tmp.c0), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
+  labs(x = paste0("Features [C0] in: ", sid_print, " (Couturier dataset)"))
 
 
-
-ggsave(paste0("output/figures/2022_figure_S10a.pdf"),width=6.5, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S12A.pdf"), width = 6.5, height = 4, scale = 1.2)
 rm(tmp.c0, sid_print)
-
 
 
 
@@ -2058,40 +2040,38 @@ FeaturePlot(object = object_1, features = "TMEM144")
 
 
 
-##### figure S7c ----
+##### F] Figure S8B - C3/OPC ----
 
 
 tmp.c3 <- results.out |>
-  dplyr::filter(!is.na(.data$C3.2022)) |> 
-  dplyr::filter(.data$C3.2022 == T) |> 
-  dplyr::filter(!is.na(hugo_symbol)) |> 
-  dplyr::pull(hugo_symbol) |> 
+  dplyr::filter(!is.na(.data$C3.2022)) |>
+  dplyr::filter(.data$C3.2022 == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
   unique()
-tmp.opc <- results.out |> 
-  dplyr::filter(!is.na(.data$neftel.meta.modules.OPC)) |> 
-  dplyr::filter(.data$neftel.meta.modules.OPC == T) |> 
-  dplyr::filter(!is.na(hugo_symbol)) |> 
-  dplyr::pull(hugo_symbol) |> 
+tmp.opc <- results.out |>
+  dplyr::filter(!is.na(.data$neftel.meta.modules.OPC)) |>
+  dplyr::filter(.data$neftel.meta.modules.OPC == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
   unique()
 tmp.c3.opc <- intersect(tmp.c3, tmp.opc)
 tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
 tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
 
 
-sid_print <- sid |> 
-  stringr::str_replace(".filtered_gene_matrices","") |> 
-  stringr::str_replace("_2of2"," (1 & 2 of 2)")
+sid_print <- sid |>
+  stringr::str_replace(".filtered_gene_matrices", "") |>
+  stringr::str_replace("_2of2", " (1 & 2 of 2)")
 
 
-DotPlot(object = object_1, features =list('C3'=tmp.c3, 'OPC'=tmp.opc, 'C3+OPC'=tmp.c3.opc), group.by = "seurat_clusters") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
-  labs(x = paste0("Features [C3/OPC] in: ",sid_print, " (Couturier dataset)"))
+DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC" = tmp.opc, "C3+OPC" = tmp.c3.opc), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
+  labs(x = paste0("Features [C3/OPC] in: ", sid_print, " (Couturier dataset)"))
 
 
-
-ggsave(paste0("output/figures/2022_figure_S7c.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S8B.pdf"), width = 7.5 * 1.8, height = 3.75, scale = 1.2)
 rm(tmp.c3, tmp.opc, tmp.c3.opc, sid_print)
-
 
 
 
@@ -2113,29 +2093,28 @@ FeaturePlot(object = object_1, features = "CD248",pt.size=0.04)
 
 
 #### C0-2022 ----
-##### figure S10b ----
+##### F] Figure S12B - C0 ----
 
 
 tmp.c0 <- results.out |>
-  dplyr::filter(!is.na(.data$C0.2022)) |> 
-  dplyr::filter(.data$C0.2022 == T) |> 
-  dplyr::filter(!is.na(hugo_symbol)) |> 
-  dplyr::pull(hugo_symbol) |> 
+  dplyr::filter(!is.na(.data$C0.2022)) |>
+  dplyr::filter(.data$C0.2022 == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
   unique()
 
 
-sid_print <- sid |> 
-  stringr::str_replace(".filtered_gene_matrices","") |> 
-  stringr::str_replace("_2of2"," (1 & 2 of 2)")
+sid_print <- sid |>
+  stringr::str_replace(".filtered_gene_matrices", "") |>
+  stringr::str_replace("_2of2", " (1 & 2 of 2)")
 
 
-DotPlot(object = object_1, features =list('C0'=tmp.c0), group.by = "seurat_clusters") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
-  labs(x = paste0("Features [C0] in: ",sid_print, " (Couturier dataset)"))
+DotPlot(object = object_1, features = list("C0" = tmp.c0), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
+  labs(x = paste0("Features [C0] in: ", sid_print, " (Couturier dataset)"))
 
 
-
-ggsave(paste0("output/figures/2022_figure_S10b.pdf"),width=6.5, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S12B.pdf"), width = 6.5, height = 4, scale = 1.2)
 rm(tmp.c0, sid_print)
 
 
@@ -2169,36 +2148,35 @@ rm(tmp.c1, sid_print)
 
 
 #### C2-2022 (Endo) (down) ----
-##### figure S9b ----
+##### F] Figure S11B - C2 ----
 
 
 tmp.c2 <- results.out |>
-  dplyr::filter(.data$C2.2022 == T) |> 
-  dplyr::filter(!is.na(hugo_symbol)) |> 
-  dplyr::pull(hugo_symbol) |> 
+  dplyr::filter(.data$C2.2022 == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
   unique()
 
-tmp.endo <- read_xlsx("data/McKenzie et al. Gene expression different cell types.xlsx", sheet='top_human_specificity') |>
-  dplyr::select(c('grand_mean', 'gene', 'Celltype')) |>
-  dplyr::filter(Celltype == 'end') |> 
+tmp.endo <- read_xlsx("data/McKenzie et al. Gene expression different cell types.xlsx", sheet = "top_human_specificity") |>
+  dplyr::select(c("grand_mean", "gene", "Celltype")) |>
+  dplyr::filter(Celltype == "end") |>
   dplyr::arrange(desc(grand_mean)) |>
-  dplyr::filter(gene %in% all.genes ) |>
-  dplyr::slice_head(n=25) |>
-  dplyr::mutate(grand_mean = NULL) |> 
+  dplyr::filter(gene %in% all.genes) |>
+  dplyr::slice_head(n = 25) |>
+  dplyr::mutate(grand_mean = NULL) |>
   dplyr::pull(gene)
 
-tmp.peri <- c('PDGFRB','CD248','RGS5')
-
+tmp.peri <- c("PDGFRB", "CD248", "RGS5")
 
 
 tmp.c2 <- setdiff(tmp.c2, c(tmp.peri))
-tmp.endo <- setdiff(tmp.endo, c(tmp.peri,tmp.c2))
+tmp.endo <- setdiff(tmp.endo, c(tmp.peri, tmp.c2))
 tmp.peri <- setdiff(tmp.peri, c(tmp.c2, tmp.endo))
 
 
-sid_print <- sid |> 
-  stringr::str_replace(".filtered_gene_matrices","") |> 
-  stringr::str_replace("_2of2"," (1 & 2 of 2)")
+sid_print <- sid |>
+  stringr::str_replace(".filtered_gene_matrices", "") |>
+  stringr::str_replace("_2of2", " (1 & 2 of 2)")
 
 
 DotPlot(object = object_1, features = list('C2 (Endothelial)'=tmp.c2,
@@ -2208,8 +2186,7 @@ DotPlot(object = object_1, features = list('C2 (Endothelial)'=tmp.c2,
   labs(x = paste0("Features [C2 & top25 McKenzie endothelial markers] in: ",sid_print, " (Couturier dataset)"))
 
 
-
-ggsave(paste0("output/figures/2022_figure_S9b.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S11B.pdf"), width = 7.5 * 1.8, height = 3.75, scale = 1.2)
 rm(tmp.c2, tmp.peri, tmp.endo, sid_print)
 
 
@@ -2585,41 +2562,38 @@ ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C2_OPC.png"),width=7.5*1.8
 
 
 
-##### figure S7d ----
+##### F] Figure S8C - C3/OPC ----
 
 
 tmp.c3 <- results.out |>
-  dplyr::filter(!is.na(.data$C3.2022)) |> 
-  dplyr::filter(.data$C3.2022 == T) |> 
-  dplyr::filter(!is.na(hugo_symbol)) |> 
-  dplyr::pull(hugo_symbol) |> 
+  dplyr::filter(!is.na(.data$C3.2022)) |>
+  dplyr::filter(.data$C3.2022 == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
   unique()
-tmp.opc <- results.out |> 
-  dplyr::filter(!is.na(.data$neftel.meta.modules.OPC)) |> 
-  dplyr::filter(.data$neftel.meta.modules.OPC == T) |> 
-  dplyr::filter(!is.na(hugo_symbol)) |> 
-  dplyr::pull(hugo_symbol) |> 
+tmp.opc <- results.out |>
+  dplyr::filter(!is.na(.data$neftel.meta.modules.OPC)) |>
+  dplyr::filter(.data$neftel.meta.modules.OPC == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
   unique()
 tmp.c3.opc <- intersect(tmp.c3, tmp.opc)
 tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
 tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
 
 
-sid_print <- sid |> 
-  stringr::str_replace(".filtered_gene_matrices","") |> 
-  stringr::str_replace("_2of2"," (1 & 2 of 2)")
+sid_print <- sid |>
+  stringr::str_replace(".filtered_gene_matrices", "") |>
+  stringr::str_replace("_2of2", " (1 & 2 of 2)")
 
 
-DotPlot(object = object_1, features =list('C3'=tmp.c3, 'OPC'=tmp.opc, 'C3+OPC'=tmp.c3.opc), group.by = "seurat_clusters") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
-  labs(x = paste0("Features [C3/OPC] in: ",sid_print, " (Couturier dataset)"))
+DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC" = tmp.opc, "C3+OPC" = tmp.c3.opc), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
+  labs(x = paste0("Features [C3/OPC] in: ", sid_print, " (Couturier dataset)"))
 
 
-
-ggsave(paste0("output/figures/2022_figure_S7d.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S8C.pdf"), width = 7.5 * 1.8, height = 3.75, scale = 1.2)
 rm(tmp.c3, tmp.opc, tmp.c3.opc, sid_print)
-
-
 
 
 
@@ -2642,32 +2616,29 @@ FeaturePlot(object = object_1, features = "CD248")
 
 
 #### C0-2022 ----
-##### figure S10c ----
+##### F] Figure S12C - C0 ----
 
 
 tmp.c0 <- results.out |>
-  dplyr::filter(!is.na(.data$C0.2022)) |> 
-  dplyr::filter(.data$C0.2022 == T) |> 
-  dplyr::filter(!is.na(hugo_symbol)) |> 
-  dplyr::pull(hugo_symbol) |> 
+  dplyr::filter(!is.na(.data$C0.2022)) |>
+  dplyr::filter(.data$C0.2022 == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
   unique()
 
 
-sid_print <- sid |> 
-  stringr::str_replace(".filtered_gene_matrices","") |> 
-  stringr::str_replace("_2of2"," (1 & 2 of 2)")
+sid_print <- sid |>
+  stringr::str_replace(".filtered_gene_matrices", "") |>
+  stringr::str_replace("_2of2", " (1 & 2 of 2)")
 
 
-DotPlot(object = object_1, features =list('C0'=tmp.c0), group.by = "seurat_clusters") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
-  labs(x = paste0("Features [C0] in: ",sid_print, " (Couturier dataset)"))
+DotPlot(object = object_1, features = list("C0" = tmp.c0), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
+  labs(x = paste0("Features [C0] in: ", sid_print, " (Couturier dataset)"))
 
 
-
-ggsave(paste0("output/figures/2022_figure_S10c.pdf"),width=6.5, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S12C.pdf"), width = 6.5, height = 4, scale = 1.2)
 rm(tmp.c0, sid_print)
-
-
 
 
 
@@ -3424,40 +3395,37 @@ FeaturePlot(object = object_1, features = "PLP1")
 
 
 
-##### figure S7e ----
+##### F] Figure S8D - C3/OPC ----
 
 
 tmp.c3 <- results.out |>
-  dplyr::filter(!is.na(.data$C3.2022)) |> 
-  dplyr::filter(.data$C3.2022 == T) |> 
-  dplyr::filter(!is.na(hugo_symbol)) |> 
-  dplyr::pull(hugo_symbol) |> 
+  dplyr::filter(!is.na(.data$C3.2022)) |>
+  dplyr::filter(.data$C3.2022 == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
   unique()
-tmp.opc <- results.out |> 
-  dplyr::filter(!is.na(.data$neftel.meta.modules.OPC)) |> 
-  dplyr::filter(.data$neftel.meta.modules.OPC == T) |> 
-  dplyr::filter(!is.na(hugo_symbol)) |> 
-  dplyr::pull(hugo_symbol) |> 
+tmp.opc <- results.out |>
+  dplyr::filter(!is.na(.data$neftel.meta.modules.OPC)) |>
+  dplyr::filter(.data$neftel.meta.modules.OPC == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
   unique()
 tmp.c3.opc <- intersect(tmp.c3, tmp.opc)
 tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
 tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
 
 
-sid_print <- sid |> 
-  stringr::str_replace(".filtered_gene_matrices","")
+sid_print <- sid |>
+  stringr::str_replace(".filtered_gene_matrices", "")
 
 
-DotPlot(object = object_1, features =list('C3'=tmp.c3, 'OPC'=tmp.opc, 'C3+OPC'=tmp.c3.opc), group.by = "seurat_clusters") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
-  labs(x = paste0("Features [C3/OPC] in: ",sid_print, " (Couturier dataset)"))
+DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC" = tmp.opc, "C3+OPC" = tmp.c3.opc), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
+  labs(x = paste0("Features [C3/OPC] in: ", sid_print, " (Couturier dataset)"))
 
 
-
-ggsave(paste0("output/figures/2022_figure_S7e.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S8D.pdf"), width = 7.5 * 1.8, height = 3.75, scale = 1.2)
 rm(tmp.c3, tmp.opc, tmp.c3.opc, sid_print)
-
-
 
 
 
@@ -3825,38 +3793,37 @@ FeaturePlot(object = object_1, features = "PLP1")
 
 
 
-##### figure S7f ----
+##### F] Figure S8E - C3/OPC ----
 
 
 tmp.c3 <- results.out |>
-  dplyr::filter(!is.na(.data$C3.2022)) |> 
-  dplyr::filter(.data$C3.2022 == T) |> 
-  dplyr::filter(!is.na(hugo_symbol)) |> 
-  dplyr::pull(hugo_symbol) |> 
+  dplyr::filter(!is.na(.data$C3.2022)) |>
+  dplyr::filter(.data$C3.2022 == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
   unique()
-tmp.opc <- results.out |> 
-  dplyr::filter(!is.na(.data$neftel.meta.modules.OPC)) |> 
-  dplyr::filter(.data$neftel.meta.modules.OPC == T) |> 
-  dplyr::filter(!is.na(hugo_symbol)) |> 
-  dplyr::pull(hugo_symbol) |> 
+tmp.opc <- results.out |>
+  dplyr::filter(!is.na(.data$neftel.meta.modules.OPC)) |>
+  dplyr::filter(.data$neftel.meta.modules.OPC == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
   unique()
 tmp.c3.opc <- intersect(tmp.c3, tmp.opc)
 tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
 tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
 
 
-sid_print <- sid |> 
-  stringr::str_replace(".filtered_gene_matrices","") |> 
-  stringr::str_replace("_2of2"," (1 & 2 of 2)")
+sid_print <- sid |>
+  stringr::str_replace(".filtered_gene_matrices", "") |>
+  stringr::str_replace("_2of2", " (1 & 2 of 2)")
 
 
-DotPlot(object = object_1, features =list('C3'=tmp.c3, 'OPC'=tmp.opc, 'C3+OPC'=tmp.c3.opc), group.by = "seurat_clusters") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
-  labs(x = paste0("Features [C3/OPC] in: ",sid_print, " (Couturier dataset)"))
+DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC" = tmp.opc, "C3+OPC" = tmp.c3.opc), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
+  labs(x = paste0("Features [C3/OPC] in: ", sid_print, " (Couturier dataset)"))
 
 
-
-ggsave(paste0("output/figures/2022_figure_S7f.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S8E.pdf"), width = 7.5 * 1.8, height = 3.75, scale = 1.2)
 rm(tmp.c3, tmp.opc, tmp.c3.opc, sid_print)
 
 
@@ -3880,29 +3847,28 @@ FeaturePlot(object = object_1, features = "CD248")
 
 
 #### C0-2022 ----
-##### figure S10d ----
+##### F] Figure S12D - C0 ----
 
 
 tmp.c0 <- results.out |>
-  dplyr::filter(!is.na(.data$C0.2022)) |> 
-  dplyr::filter(.data$C0.2022 == T) |> 
-  dplyr::filter(!is.na(hugo_symbol)) |> 
-  dplyr::pull(hugo_symbol) |> 
+  dplyr::filter(!is.na(.data$C0.2022)) |>
+  dplyr::filter(.data$C0.2022 == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
   unique()
 
 
-sid_print <- sid |> 
-  stringr::str_replace(".filtered_gene_matrices","") |> 
-  stringr::str_replace("_2of2"," (1 & 2 of 2)")
+sid_print <- sid |>
+  stringr::str_replace(".filtered_gene_matrices", "") |>
+  stringr::str_replace("_2of2", " (1 & 2 of 2)")
 
 
-DotPlot(object = object_1, features =list('C0'=tmp.c0), group.by = "seurat_clusters") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
-  labs(x = paste0("Features [C0] in: ",sid_print, " (Couturier dataset)"))
+DotPlot(object = object_1, features = list("C0" = tmp.c0), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
+  labs(x = paste0("Features [C0] in: ", sid_print, " (Couturier dataset)"))
 
 
-
-ggsave(paste0("output/figures/2022_figure_S10d.pdf"),width=6.5, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S12D.pdf"), width = 6.5, height = 4, scale = 1.2)
 rm(tmp.c0, sid_print)
 
 
@@ -3936,36 +3902,35 @@ rm(tmp.c1, sid_print)
 
 
 #### C2-2022 (Endo) (down) ----
-##### figure S9a ----
+##### F] Figure S11A - C2 ----
 
 
 tmp.c2 <- results.out |>
-  dplyr::filter(.data$C2.2022 == T) |> 
-  dplyr::filter(!is.na(hugo_symbol)) |> 
-  dplyr::pull(hugo_symbol) |> 
+  dplyr::filter(.data$C2.2022 == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
   unique()
 
-tmp.endo <- read_xlsx("data/McKenzie et al. Gene expression different cell types.xlsx", sheet='top_human_specificity') |>
-  dplyr::select(c('grand_mean', 'gene', 'Celltype')) |>
-  dplyr::filter(Celltype == 'end') |> 
+tmp.endo <- read_xlsx("data/McKenzie et al. Gene expression different cell types.xlsx", sheet = "top_human_specificity") |>
+  dplyr::select(c("grand_mean", "gene", "Celltype")) |>
+  dplyr::filter(Celltype == "end") |>
   dplyr::arrange(desc(grand_mean)) |>
-  dplyr::filter(gene %in% all.genes ) |>
-  dplyr::slice_head(n=25) |>
-  dplyr::mutate(grand_mean = NULL) |> 
+  dplyr::filter(gene %in% all.genes) |>
+  dplyr::slice_head(n = 25) |>
+  dplyr::mutate(grand_mean = NULL) |>
   dplyr::pull(gene)
 
-tmp.peri <- c('PDGFRB','CD248','RGS5')
-
+tmp.peri <- c("PDGFRB", "CD248", "RGS5")
 
 
 tmp.c2 <- setdiff(tmp.c2, c(tmp.peri))
-tmp.endo <- setdiff(tmp.endo, c(tmp.peri,tmp.c2))
+tmp.endo <- setdiff(tmp.endo, c(tmp.peri, tmp.c2))
 tmp.peri <- setdiff(tmp.peri, c(tmp.c2, tmp.endo))
 
 
-sid_print <- sid |> 
-  stringr::str_replace(".filtered_gene_matrices","") |> 
-  stringr::str_replace("_2of2"," (1 & 2 of 2)")
+sid_print <- sid |>
+  stringr::str_replace(".filtered_gene_matrices", "") |>
+  stringr::str_replace("_2of2", " (1 & 2 of 2)")
 
 
 DotPlot(object = object_1, features = list('C2 (Endothelial)'=tmp.c2,
@@ -3975,12 +3940,8 @@ DotPlot(object = object_1, features = list('C2 (Endothelial)'=tmp.c2,
   labs(x = paste0("Features [C2 & top25 McKenzie endothelial markers] in: ",sid_print, " (Couturier dataset)"))
 
 
-
-ggsave(paste0("output/figures/2022_figure_S9a.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S11A.pdf"), width = 7.5 * 1.8, height = 3.75, scale = 1.2)
 rm(tmp.c2, tmp.peri, tmp.endo, sid_print)
-
-
-
 
 
 

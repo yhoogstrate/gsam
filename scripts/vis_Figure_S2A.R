@@ -5,11 +5,15 @@
 source('scripts/load_G-SAM_metadata.R')
 source('scripts/load_GLASS_data.R')
 
+
+
+# cached shuffled distances
 v2 <- readRDS('tmp/PCA.eucledian.distances.shuffled.Rds') |>
   dplyr::pull(.data$`NMF:150:PCA:eucledian.dist`)
 
-# plot ----
 
+
+# F] Figure S2A - Distance real vs shuffled ----
 
 v1.gsam <- gsam.rna.metadata |> 
   dplyr::filter(.data$blacklist.pca == F) |> 
@@ -46,8 +50,8 @@ plt <- rbind(
 
 ggplot(plt, aes(x=dataset, y=dist, size=dataset)) +
   ggbeeswarm::geom_quasirandom(width=0.29) +
-  geom_boxplot(outlier.shape = NA, col=alpha("red",1),fill=NA,lwd=0.7, width=0.70,coef=0) +
-  ggsignif::geom_signif(comparisons = list(c("Actual pairs" ,  "Shuffled pairs")), test="wilcox.test", col="black" ) +
+  geom_boxplot(outlier.shape = NA, col=alpha("red",1),fill=NA,lwd=0.4, width=0.70,coef=0) +
+  ggsignif::geom_signif(comparisons = list(c("Actual pairs" ,  "Shuffled pairs")), test="wilcox.test", col="black", tip_length = 0,y_position=5.4) +
   scale_size_manual(values=c("Actual pairs"=1,"Shuffled pairs"=0.4 ), guide="none") +
   theme_bw() +
   theme(
@@ -64,12 +68,15 @@ ggplot(plt, aes(x=dataset, y=dist, size=dataset)) +
     panel.border = element_rect(colour = "black", fill=NA, size=1.25),
     strip.text = element_text(size = 8) # facet size
   ) +
-  labs(y = "Distance GITS prim. - rec.", x=NULL, caption=paste0("pairs: n=",k," (",length(v1.gsam)," G-SAM - ",length(v1.glass)," GLASS)\nshuffled: n * (n-1) = ",l)) +
-  scale_y_continuous(expand = expansion(mult = .1))
+  labs(y = "Distance GITS", 
+       x=NULL, caption=paste0("G-SAM: n=",length(v1.gsam),"  -  GLASS: n=",length(v1.glass)," pairs\nshuffled: n * (n-1) = ",l)) +
+  scale_y_continuous(expand = expansion(mult = c(0.05,.15)))
 
-ggsave("output/figures/2022_figure_S2b.pdf", width=8.3 / 4,height=8.3/6, scale=2)
-ggsave("output/figures/2022_figure_S2b.png", width=8.3 / 4,height=8.3/6, scale=2)
+ggsave("output/figures/2022_Figure_S2A.pdf", width=8.3 / ((3/2) * 4),height=8.3 / ((3/2) * 4), scale=2)
+ggsave("output/figures/2022_Figure_S2A.png", width=8.3 / ((3/2) * 4),height=1, scale=2)
+
 
 print(wilcox.test(v1, v2))
+
 
 

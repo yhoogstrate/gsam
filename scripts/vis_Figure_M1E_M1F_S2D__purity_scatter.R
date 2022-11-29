@@ -16,7 +16,7 @@ source('scripts/R/palette.R')
 
 
 
-# figure 1ef ----
+# F] Figure M1E, M1F - resection ~ purity scatters ----
 
 
 plt <- rbind(
@@ -96,9 +96,7 @@ ggplot(plt |> dplyr::filter(sid != 'median'), aes(x = is.primary, y = purity, fi
   facet_grid(cols = vars(dataset), scales = "free", space = "free_y") +
   geom_hline(yintercept = 15, color = "gray60") +
   geom_violin(draw_quantiles = c(), col = NA, alpha = 0.2) +
-  # geom_jitter( position=position_jitter(0.2), size=2.5, pch=21, col="black") +
   ggbeeswarm::geom_quasirandom(pch = 21, size = 3, col = "black", alpha = 0.85) +
-  #geom_violin(draw_quantiles = c(0.5), col = "black", fill = alpha("white", 0)) +
   ylim(0, 100) +
   ggsignif::geom_signif(
     comparisons = list(c("Primary", "Recurrence")),
@@ -134,21 +132,12 @@ ggplot(plt |> dplyr::filter(sid != 'median'), aes(x = is.primary, y = purity, fi
   ) +
   theme(panel.border = element_rect(colour = "black", fill = NA, size = 1.1))
 
-ggsave("output/figures/2022_figure_1ef_purity_scatter.pdf", width=8.3 / 4,height=8.3/4, scale=2)
-#ggsave("output/figures/2022_figure_1ef_purity_scatter.svg", width=8.3 / 4,height=8.3/4, scale=2)
-
-
-
-
-
-
-
+ggsave("output/figures/2022_Figure_M1E_M1F.pdf", width=8.3 / 4,height=8.3/4, scale=2)
 rm(plt)
 
 
 
-# figure S2c ----
-
+# F] Figure S2D- subtype ~ purity ----
 
 
 plt <- rbind(
@@ -191,8 +180,6 @@ tmp.n.glass <- plt |>
   nrow()
 
 
-
-
 stats <- ggpubr::compare_means(`purity` ~ `GITS.150.svm.2022.subtype`, 
                                data = plt,
                                method="wilcox.test",
@@ -206,11 +193,12 @@ ggplot(plt, aes(x = GITS.150.svm.2022.subtype, y = purity, fill = GITS.150.svm.2
   ggplot2::geom_violin(draw_quantiles = c(), col = NA, alpha = 0.2) +
   ggbeeswarm::geom_quasirandom(pch = 21, size = 3, col = "black", alpha = 0.85) +
   ggplot2::geom_violin(draw_quantiles = c(0.5), col = "black", fill = alpha("white", 0)) +
-  ggplot2::scale_y_continuous(limits = c(0, 110)) +
+  ggplot2::scale_y_continuous(limits = c(2, 111),breaks=c(0,25,50,75,100)) +
   ggsignif::geom_signif(
     data = stats,
     aes(xmin = group1, xmax = group2, annotations = p.adj, y_position = y_pos),
-    manual = TRUE
+    manual = TRUE,
+    tip_length = 0
   ) +
   scale_fill_manual(values = c(
     "MES" = as.character(subtype_colors['Mesenchymal']),
@@ -219,10 +207,7 @@ ggplot(plt, aes(x = GITS.150.svm.2022.subtype, y = purity, fill = GITS.150.svm.2
                          ), name = "Subtype", guide = "none") +
   theme_bw() +
   theme(
-    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
-    # strip.background = element_rect(colour="white",fill="white"),
     axis.title = element_text(face = "bold", size = rel(1)),
-    # axis.text.x = element_blank(),
     legend.position = "bottom",
     panel.grid.major.x = element_blank(),
     panel.grid.minor.x = element_blank(),
@@ -236,7 +221,9 @@ ggplot(plt, aes(x = GITS.150.svm.2022.subtype, y = purity, fill = GITS.150.svm.2
     caption = paste0("G-SAM: n=", tmp.n.gsam, "  -  GLASS: n=", tmp.n.glass)
   )
 
+ggsave("output/figures/2022_Figure_S2D.pdf", width=8.3 / ((3/2) * 4),height=1.5, scale=2)
+rm(plt, tmp.stats, tmp.n.glass, tmp.n.gsam)
 
-ggsave("output/figures/2022_figure_S2c.pdf", width=8.3 / 6,height=8.3/4, scale=2)
+
 
 

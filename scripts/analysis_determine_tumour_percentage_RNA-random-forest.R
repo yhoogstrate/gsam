@@ -788,8 +788,8 @@ for(i in 1:10) {
 
 
 
-write.table(test.out.all |> 
-              dplyr::select(tumour.percentage.dna.imputed.rf.2022.all.patients.B), file="output/tables/GLASS.tumour.percentage.dna.imputed.rf.A.2022.all.patients.B.txt")
+#write.table(test.out.all |> 
+#              dplyr::select(tumour.percentage.dna.imputed.rf.2022.all.patients.B), file="output/tables/GLASS.tumour.percentage.dna.imputed.rf.A.2022.all.patients.B.txt")
 
 
 ## C: ~ g-sam + glass purities only [10xCV*] ----

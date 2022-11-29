@@ -92,7 +92,7 @@ stopifnot(colnames(tmp.expression.paired) == tmp.metadata.paired$sid)
 
 
 
-## select data ----
+## F] Figure M5A ----
 
 
 plt <- tmp.labels |>
@@ -178,11 +178,11 @@ tmp.labels <- tmp.labels |>
   dplyr::mutate_all(function(arg) { return (ifelse(arg, as.logical(NA), arg)) }) # gray labels
 
 
-# plot & export ----
+### plot & export ----
 
 
 recursiveCorPlot::recursiveCorPlot(plt, tmp.labels, 6 * 0.8, 1 , caption=paste0("G-SAM: n=",ncol(plt)," pairs"))
-ggsave("output/figures/2022_figure_4c___logFc_gene_per_pair.pdf",width=8.3 / 2,height=8.3/2, scale=2.1)
+ggsave("output/figures/2022_Figure_M5A___logFc_gene_per_pair.pdf",width=8.3 / 2,height=8.3/2, scale=2.1)
 
 
 

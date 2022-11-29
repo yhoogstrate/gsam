@@ -25,6 +25,7 @@ tmp.combined.metadata <- rbind(
     dplyr::select(sid) |>
     dplyr::mutate(dataset = "G-SAM"),
   glass.gbm.rnaseq.metadata.all.samples |>
+    dplyr::filter(tumour.percentage.2022 >= 15) |>
     dplyr::rename(sid = aliquot_barcode) |>
     dplyr::select(sid) |>
     dplyr::mutate(dataset = "GLASS")
@@ -43,7 +44,8 @@ tmp.combined.metadata <- rbind(
   dplyr::mutate(batch = as.factor(batch))
 
 
-stopifnot(nrow(tmp.combined.metadata) == (287+245))
+
+stopifnot(nrow(tmp.combined.metadata) == (287+216))
 
 
 # 150 run ----
@@ -139,4 +141,5 @@ export[] <- lapply(export, as.character) # quotes..
 write.csv(export,"output/tables/analysis_SubtypeME_export_2022.csv", row.names=F, quote=T)
 
 # web results saved to: output/tables/analysis_SubtypeME_GlioVis_output_2022.csv
+
 

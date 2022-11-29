@@ -14,9 +14,7 @@ source('scripts/R/palette.R')
 
 # plots ----
 
-## fig 1c ----
-
-
+## F] Figure M1A, M1B & M1C - GITS arrows ----
 
 plt <- rbind(
   gsam.rna.metadata |>
@@ -128,14 +126,8 @@ plt.expanded <- rbind(
 )
 
 
-
-
-
-
-
 plt.contours <- readRDS("cache/analysis_GITS_space_GITS_contours.Rds") |> 
   dplyr::mutate(`GITS.150.svm.2022.subtype` = class, `pid` = NA)
-
 
 
 ggplot(plt.expanded, aes(x=-`NMF:150:PC1`,y=-`NMF:150:PC2`, group=pid, col =`GITS.150.svm.2022.subtype`,fill =`GITS.150.svm.2022.subtype`)) +
@@ -172,18 +164,12 @@ ggplot(plt.expanded, aes(x=-`NMF:150:PC1`,y=-`NMF:150:PC2`, group=pid, col =`GIT
   theme(panel.border = element_rect(colour = "black", fill=NA, size=1.1)  )
 
 
-ggsave("output/figures/2022_figure_1c.pdf", width=8.3 / 4,height=8.3/4 * 2.8, scale=2)
-ggsave("output/figures/2022_figure_1c.svg", width=8.3 / 4,height=8.3/4 * 2.8, scale=2)
-
-
-
+ggsave("output/figures/2022_Figure_M1A_M1B_M1C.pdf", width=8.3 / 4,height=8.3/4 * 2.8, scale=2)
 rm(plt, plt.expanded)
 
 
 
-### MES ----
-
-
+### test mes
 
 
 plt <- rbind(
@@ -329,7 +315,7 @@ ggplot(plt.expanded, aes(x=-`NMF:150:PC1`,y=-`NMF:150:PC2`, group=pid, col =`bat
 rm(plt, plt.expanded)
 
 
-### 3050 ----
+### test 3050
 
 
 plt <- rbind(
@@ -467,7 +453,7 @@ rm(plt, plt.expanded)
 
 
 
-## fig s1a ----
+## F] Figure S1A ----
 
 
 
@@ -578,14 +564,11 @@ ggplot(plt.line.based, aes(x=reorder(sid, order), xend=reorder(sid, order), y =v
 
 
 ggsave("output/figures/2022_figure_S1A.pdf", width=8.3 / 2,height=8.3/4, scale=2)
-
-
 rm(n.gsam, n.glass, plt.line.based, plt)
 
 
 
-
-## fig s1b ----
+## F] Figure S1B ----
 
 
 tmp.pca <- readRDS('tmp/analysis_GITS_space_GITS_PCA_150.Rds')
@@ -618,13 +601,13 @@ ggplot(plt, aes(x=PC,y=var_explained, group=1, label=label)) +
     panel.border = element_rect(colour = "black", fill=NA, size=1.25)
   ) 
 
-ggsave("output/figures/2022_figure_S1B.pdf", width=8.3 / 4,height=8.3/4, scale=2)
+ggsave("output/figures/2022_Figure_S1B.pdf", width=8.3 / 4,height=8.3/4, scale=2)
 
 
 rm(tmp.pca)
 
 
-## fig s1c ----
+## F] Figure S1C ----
 
 
 sel <- rbind(
@@ -717,20 +700,16 @@ rm(n.glass, n.gsam, mult, tmp.pca, data, x, y, datapc, sel)
 
 
 
-## fig s1d ----
-
+## F] Figure S1D ----
 
 
 plt <- rbind(
   gsam.rna.metadata |>
 
-    dplyr::filter(blacklist.pca == F) %>%
-    dplyr::filter(pat.with.IDH == F) %>%
-    dplyr::filter(
-      sid %in% c('BAI2', 'CAO1-replicate', 'FAB2', 'GAS2-replicate') == F
-    ) %>%
+    dplyr::filter(blacklist.pca == F) |> 
+    dplyr::filter(pat.with.IDH == F) |> 
+    dplyr::filter(sid %in% c('BAI2', 'CAO1-replicate', 'FAB2', 'GAS2-replicate') == F) |> 
     dplyr::filter(tumour.percentage.dna >= 15) |> # avoid NA values
-    
     dplyr::mutate(is.primary = resection == "r1") |> 
     dplyr::select(
       sid,
@@ -791,16 +770,14 @@ ggplot(plt, aes(x=-`NMF:150:PC1`, y=-`NMF:150:PC2`, fill=ssGSEA.2022.subtype)) +
   ) +
   guides(fill=guide_legend(ncol=2))
 
-ggsave("output/figures/2022_figure_S1D.pdf", width=8.3 / 4,height=8.3/4, scale=2)
 
-
+ggsave("output/figures/2022_Figure_S1D.pdf", width=8.3 / 4,height=8.3/4, scale=2)
 rm(n.glass, n.gsam, plt)
 
 
 
 
-## fig s1e ----
-
+## F] Figure S1E ----
 
 
 plt <- rbind(
@@ -886,15 +863,12 @@ ggplot(plt, aes(x=-`NMF:150:PC1`, y=-`NMF:150:PC2`, fill=ssGSEA.2022.subtype, gr
   guides(fill=guide_legend(ncol=2))
 
 
-
 ggsave("output/figures/2022_figure_S1E.pdf", width=8.3 / 4,height=8.3/4, scale=2)
-
 rm(plt, n.glass, n.gsam, plt.contours)
 
 
 
-
-## fig s1f ----
+## F] Figure S1F ----
 
 
 plt <- rbind(
@@ -995,7 +969,7 @@ ggplot(plt, aes(x=-`NMF:150:PC1`, y=-`NMF:150:PC2`, fill=ssGSEA.2022.subtype, gr
   guides(fill="none") #guide_legend(ncol=2)
 
 
-ggsave("output/figures/2022_figure_S1F.pdf", width=8.3 / 4,height=8.3/4, scale=2)
+ggsave("output/figures/2022_Figure_S1F.pdf", width=8.3 / 4,height=8.3/4, scale=2)
 
 
 rm(plt, plt.contours, n.glass, n.gsam)
@@ -1003,7 +977,7 @@ rm(plt, plt.contours, n.glass, n.gsam)
 
 
 
-## fig s1g ----
+## F] Figure S1I, S1J & S1K - ssGSEA ~ NMF scores ----
 
 
 plt <- rbind(
@@ -1117,28 +1091,24 @@ ggplot(plt, aes(x=`ssGSEA enrichment score`, y=`NMF contribution`, fill=`ssGSEA.
                      label=c('?'='ssGSEA undecisive','.'='GITS ~ ssGSEA discordant')) +
   theme_bw()  +
   theme(
-    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
-    #strip.background = element_rect(colour="white",fill="white"),
     axis.title = element_text(face = "bold",size = rel(1)),
-    #axis.text.x = element_blank(),
     legend.position = 'bottom',
     panel.grid.major.x = element_blank(),
     panel.grid.minor.x = element_blank(),
     panel.grid.major.y = element_blank(),
     panel.grid.minor.y = element_blank(),
-    #axis.ticks.x = element_blank(),
     panel.border = element_rect(colour = "black", fill=NA, size=1.25)
   ) +
-  guides() #guide_legend(ncol=2)
+  guides()
 
 
-ggsave("output/figures/2022_figure_S1G.pdf", width=8.3 / 2,height=8.3/5, scale=2)
+ggsave("output/figures/2022_Figure_S1I_S1J_S1K.pdf", width=8.3 / 2,height=8.3/5, scale=2)
 
 rm(plt, n.glass, n.gsam)
 
 
 
-## fig s1g equivalent for NMF:7k ----
+## x] Figure S1L, S1J & S1K  equivalent for NMF:7k ----
 
 # 1 = CL, 2 = PN, 4 = MES
 plt <- rbind(
@@ -1264,7 +1234,7 @@ rm(plt, n.glass, n.gsam)
 
 
 
-## fig s1h ----
+## F] Figure S1G - GITS ~ purity ----
 
 
 plt <- rbind(
@@ -1364,34 +1334,26 @@ ggplot(plt, aes(x=-`NMF:150:PC1`, y=-`NMF:150:PC2`, fill=col, group=pid)) +
        ) +
   theme_bw()  +
   theme(
-    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
-    #strip.background = element_rect(colour="white",fill="white"),
     axis.title = element_text(face = "bold",size = rel(1)),
-    #axis.text.x = element_blank(),
     legend.position = 'bottom',
     panel.grid.major.x = element_blank(),
     panel.grid.minor.x = element_blank(),
     panel.grid.major.y = element_blank(),
     panel.grid.minor.y = element_blank(),
-    #axis.ticks.x = element_blank(),
     panel.border = element_rect(colour = "black", fill=NA, size=1.25)
   )
 
 
-ggsave("output/figures/2022_figure_S1H.pdf", width=8.3 / 4,height=8.3/4, scale=2)
-
-
+ggsave("output/figures/2022_Figure_S1G.pdf", width=8.3 / 4,height=8.3/4, scale=2)
 rm(plt, plt.contours, n.glass, n.gsam)
 
 
 
-
-## fig s1k - ssGSEA PCA ----
+## F] Figure S1H - PCA space on ssGSEA ----
 
 
 tmp <- rbind(
   gsam.rna.metadata |>
-    
     dplyr::filter(blacklist.pca == F) %>%
     dplyr::filter(pat.with.IDH == F) %>%
     dplyr::filter(
@@ -1486,23 +1448,21 @@ ggplot(data, aes(x=PC1, y=PC2, col=varnames)) +
                                 'ssGSEA MES score'='MES')) +
   theme_bw()  +
   theme(
-    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
-    #strip.background = element_rect(colour="white",fill="white"),
     axis.title = element_text(face = "bold",size = rel(1)),
-    #axis.text.x = element_blank(),
     legend.position = 'bottom',
     panel.grid.major.x = element_blank(),
     panel.grid.minor.x = element_blank(),
     panel.grid.major.y = element_blank(),
     panel.grid.minor.y = element_blank(),
-    #axis.ticks.x = element_blank(),
     panel.border = element_rect(colour = "black", fill=NA, size=1.25)
   ) 
 
+ggsave("output/figures/2022_Figure_S1H.pdf", width=8.3 / 4,height=8.3/4, scale=2)
 
-ggsave("output/figures/2022_figure_S1K.pdf", width=8.3 / 4,height=8.3/4, scale=2)
 
-## fig s1k - 7k PCA equivalent ----
+
+
+## x] Figure S1H 7k PCA equivalent [comment to reviewers] ----
 
 
 tmp <- rbind(
@@ -1632,220 +1592,79 @@ ggplot(data, aes(x = PC1, y = PC2, col = varnames)) +
 ggsave("output/figures/2022_figure_S1K_NMF-7k_eq.pdf", width=8.3 / 4,height=8.3/4, scale=2)
 
 
-## fig s1l ----
 
-# probs x class & misclass
-
-
-plt <- rbind(
-  gsam.rna.metadata |>
-    
-    dplyr::filter(blacklist.pca == F) %>%
-    dplyr::filter(pat.with.IDH == F) %>%
-    dplyr::filter(
-      sid %in% c('BAI2', 'CAO1-replicate', 'FAB2', 'GAS2-replicate') == F
-    ) %>%
-    dplyr::filter(tumour.percentage.dna >= 15) |>
-    
-    dplyr::select(
-      sid,
-      
-      ssGSEA.2022.Classical_pval,
-      ssGSEA.2022.Mesenchymal_pval,
-      ssGSEA.2022.Proneural_pval,
-
-      ssGSEA.2022.subtype,
-      GITS.150.svm.2022.subtype
-    ) |> 
-    dplyr::mutate(dataset = "G-SAM")
-  ,
-  glass.gbm.rnaseq.metadata.all.samples |>
-    dplyr::mutate(is.primary = resection == "TP") |> 
-    dplyr::select(
-      aliquot_barcode,
-
-      ssGSEA.2022.Classical_pval,
-      ssGSEA.2022.Mesenchymal_pval,
-      ssGSEA.2022.Proneural_pval,
-      
-      ssGSEA.2022.subtype,
-      GITS.150.svm.2022.subtype
-    ) |>
-    dplyr::rename(sid = aliquot_barcode) |>
-    dplyr::mutate(dataset = "GLASS")
-) |> 
-  dplyr::mutate(ssGSEA.err1 = case_when(
-    ssGSEA.2022.subtype == "Classical" ~ ssGSEA.2022.Classical_pval^2 ,
-    ssGSEA.2022.subtype == "Proneural" ~ ssGSEA.2022.Proneural_pval^2 ,
-    ssGSEA.2022.subtype == "Mesenchymal" ~ ssGSEA.2022.Mesenchymal_pval^2,
-    ssGSEA.2022.subtype == "Proneural|Classical" ~ ssGSEA.2022.Classical_pval * ssGSEA.2022.Proneural_pval
-  )) |> 
-  dplyr::mutate(ssGSEA.err2 = case_when(
-    ssGSEA.2022.subtype == "Classical" ~ sqrt((1 - ssGSEA.2022.Proneural_pval)^2 + (1 - ssGSEA.2022.Mesenchymal_pval)^2) ,
-    ssGSEA.2022.subtype == "Proneural" ~ sqrt((1 - ssGSEA.2022.Classical_pval)^2 + (1 - ssGSEA.2022.Mesenchymal_pval)^2) ,
-    ssGSEA.2022.subtype == "Mesenchymal" ~ sqrt((1 - ssGSEA.2022.Classical_pval)^2 + (1 - ssGSEA.2022.Proneural_pval)^2) ,
-    ssGSEA.2022.subtype == "Proneural|Classical" ~ ssGSEA.2022.Mesenchymal_pval
-  )) |> 
-  tidyr::pivot_longer(cols=c( ssGSEA.2022.Classical_pval,
-                              ssGSEA.2022.Mesenchymal_pval,
-                              ssGSEA.2022.Proneural_pval), names_to = "ssGSEA subtype", values_to = "ssGSEA pval") |> 
-  dplyr::mutate(`ssGSEA subtype` = gsub("ssGSEA.2022.","",`ssGSEA subtype`)) |> 
-  dplyr::mutate(`ssGSEA subtype` = gsub("_pval","",`ssGSEA subtype`)) |> 
-  dplyr::mutate(`ssGSEA subtype` = dplyr::recode(`ssGSEA subtype`,
-                                                 'Classical' = 'CL',
-                                                 'Mesenchymal' = 'MES',
-                                                 'Proneural' = 'PN',
-                                                 'Proneural|Classical'='PN|CL'
-  )) |> 
-  dplyr::mutate(`ssGSEA.2022.subtype` = dplyr::recode(`ssGSEA.2022.subtype`,
-                                                 'Classical' = 'CL',
-                                                 'Mesenchymal' = 'MES',
-                                                 'Proneural' = 'PN',
-                                                 'Proneural|Classical'='PN|CL'
-  )) |> 
-  dplyr::mutate(`ssGSEA subtype` = paste0("ssGSEA ", `ssGSEA subtype`, " pval")) |> 
-  dplyr::mutate(`ssGSEA.2022.subtype` = paste0("ssGSEA call: ", `ssGSEA.2022.subtype`, "")) |> 
-  dplyr::mutate(order = order(order(ssGSEA.err1, ssGSEA.err2)))
-
-
-n.glass <- plt |> 
-  dplyr::filter(!is.na(GITS.150.svm.2022.subtype)) |> 
-  dplyr::filter(!duplicated(sid)) |> 
-  dplyr::pull(dataset) |> 
-  table() |> 
-  purrr::pluck('GLASS')
-n.gsam <- plt |> 
-  dplyr::filter(!is.na(GITS.150.svm.2022.subtype)) |> 
-  dplyr::filter(!duplicated(sid)) |> 
-  dplyr::pull(dataset) |> 
-  table() |> 
-  purrr::pluck('G-SAM')
-
-
-plt.line.based <- rbind(
-  plt |>  dplyr::mutate(`ssGSEA pval`=0),
-  plt |>  dplyr::mutate(`ssGSEA pval` = -log(`ssGSEA pval`))
-)
-
-
-
-ggplot(plt.line.based, aes(x=reorder(sid, order), y=`ssGSEA pval`,
-                           group=sid,
-                           col=`GITS.150.svm.2022.subtype`)) +
-  #geom_point(size=3,  col='black', pch=21, alpha=0.85) +
-  geom_line(lwd=0.8) +
-  facet_grid(cols = vars(ssGSEA.2022.subtype), 
-             rows=vars(`ssGSEA subtype`),
-             scale="free_x",
-             space="free_x") +
-  scale_color_manual(values = mixcol(subtype_colors_ext,rep("black",length(subtype_colors_ext)),0.15),
-                    label=c('Mesenchymal'='MES','Proneural'='PN','Classical'='CL','Proneural|Classical'='PN|CL')) +
-  labs(x = "Patients", 
-       y="-log10(ssGSEA pval)", 
-       col="GITS subtype",
-       caption = paste0("G-SAM: n=",n.gsam, "  -  GLASS: n=",n.glass," samples")
-       ) +
-  theme_bw()  +
-  theme(
-    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
-    #strip.background = element_rect(colour="white",fill="white"),
-    axis.title = element_text(face = "bold",size = rel(1)),
-    #axis.text.x = element_blank(),
-    legend.position = 'bottom',
-    panel.grid.major.x = element_blank(),
-    panel.grid.minor.x = element_blank(),
-    panel.grid.major.y = element_blank(),
-    panel.grid.minor.y = element_blank(),
-    
-    axis.ticks.x = element_blank(),
-    axis.text.x=element_blank(),
-    
-    panel.border = element_rect(colour = "black", fill=NA, size=1.25)
-  ) +
-  guides(fill=guide_legend(ncol=2))
-
-
-ggsave("output/figures/2022_figure_S1L.pdf", width=8.3 / 4,height=8.3/4, scale=2)
-
-rm(plt, plt.line.based, n.glass, n.gsam)
-
-
-
-## figure S2a ----
+## F] Figure S2C ----
 
 
 plt <- rbind(
   gsam.rna.metadata |>
-    
     dplyr::filter(blacklist.pca == F) %>%
     dplyr::filter(pat.with.IDH == F) %>%
-    dplyr::filter(
-      sid %in% c('BAI2', 'CAO1-replicate', 'FAB2', 'GAS2-replicate') == F
-    ) %>%
+    dplyr::filter(sid %in% c("BAI2", "CAO1-replicate", "FAB2", "GAS2-replicate") == F) %>%
     dplyr::filter(tumour.percentage.dna >= 15) |>
-    dplyr::mutate(is.primary = ifelse(resection == "r1","primary","recurrent")) |> 
-    
+    dplyr::mutate(is.primary = ifelse(resection == "r1", "primary", "recurrent")) |>
     dplyr::select(
       `sid`,
       `pid`,
       `is.primary`,
-      
       `NMF:150:PCA:eucledian.dist`,
-      
       `GITS.150.svm.2022.subtype`
-    ) |> 
-    dplyr::mutate(dataset = "G-SAM")
-  ,
+    ) |>
+    dplyr::mutate(dataset = "G-SAM"),
   glass.gbm.rnaseq.metadata.all.samples |>
-    dplyr::mutate(is.primary = ifelse(resection == "TP","primary","recurrent")) |>
-    dplyr::filter(tumour.percentage.2022 >= 15) |> 
+    dplyr::mutate(is.primary = ifelse(resection == "TP", "primary", "recurrent")) |>
+    dplyr::filter(tumour.percentage.2022 >= 15) |>
     dplyr::select(
       `aliquot_barcode`,
       `case_barcode`,
       `is.primary`,
-      
       `NMF:150:PCA:eucledian.dist`,
-      
       `GITS.150.svm.2022.subtype`
     ) |>
     dplyr::rename(sid = aliquot_barcode) |>
     dplyr::rename(pid = case_barcode) |>
     dplyr::mutate(dataset = "GLASS")
-) |> 
+) |>
   dplyr::group_by(pid) |> # filter for matching pairs
-  dplyr::filter(n() == 2) |> 
+  dplyr::filter(n() == 2) |>
   dplyr::ungroup() |>
   dplyr::mutate(`GITS.150.svm.2022.subtype` = case_when(
     `GITS.150.svm.2022.subtype` == "Proneural" ~ "PN",
     `GITS.150.svm.2022.subtype` == "Classical" ~ "CL",
     `GITS.150.svm.2022.subtype` == "Mesenchymal" ~ "MES"
-  )) |> 
-  tidyr::pivot_wider(id_cols = pid, 
-                     names_from = c(is.primary),
-                     values_from = c(sid,`GITS.150.svm.2022.subtype`, `NMF:150:PCA:eucledian.dist`, `dataset`)) |> 
-  dplyr::mutate(stable = ifelse(`GITS.150.svm.2022.subtype_primary` == `GITS.150.svm.2022.subtype_recurrent`, "stable","transition"))
+  )) |>
+  tidyr::pivot_wider(
+    id_cols = pid,
+    names_from = c(is.primary),
+    values_from = c(sid, `GITS.150.svm.2022.subtype`, `NMF:150:PCA:eucledian.dist`, `dataset`)
+  ) |>
+  dplyr::mutate(stable = ifelse(`GITS.150.svm.2022.subtype_primary` == `GITS.150.svm.2022.subtype_recurrent`, "stable", "transition"))
 
 stopifnot(plt$`NMF:150:PCA:eucledian.dist_primary` == plt$`NMF:150:PCA:eucledian.dist_recurrent`)
 
 
-n.glass <- table(plt$dataset_primary)['GLASS']
-n.gsam <- table(plt$dataset_primary)['G-SAM']
+n.glass <- table(plt$dataset_primary)["GLASS"]
+n.gsam <- table(plt$dataset_primary)["G-SAM"]
 
 
 
 plt <- plt |>
-  dplyr::rename(`NMF:150:PCA:eucledian.dist` = `NMF:150:PCA:eucledian.dist_primary`) |> 
-  dplyr::mutate(`NMF:150:PCA:eucledian.dist_recurrent` = NULL) |> 
-  dplyr::rename(`dataset` = `dataset_primary`) |> 
-  dplyr::mutate(`dataset_recurrent` = NULL) |> 
-  dplyr::mutate(`GITS.150.svm.2022.subtype_primary` = paste0("from: ", `GITS.150.svm.2022.subtype_primary`)) |> 
+  dplyr::rename(`NMF:150:PCA:eucledian.dist` = `NMF:150:PCA:eucledian.dist_primary`) |>
+  dplyr::mutate(`NMF:150:PCA:eucledian.dist_recurrent` = NULL) |>
+  dplyr::rename(`dataset` = `dataset_primary`) |>
+  dplyr::mutate(`dataset_recurrent` = NULL) |>
+  dplyr::mutate(`GITS.150.svm.2022.subtype_primary` = paste0("from: ", `GITS.150.svm.2022.subtype_primary`)) |>
   dplyr::mutate(`GITS.150.svm.2022.subtype_recurrent` = paste0("to: ", `GITS.150.svm.2022.subtype_recurrent`))
 
 
 
 # FDR + geom_signif -> https://github.com/kassambara/ggpubr/issues/65#issuecomment-400918671
-stats <- compare_means(`NMF:150:PCA:eucledian.dist` ~ `GITS.150.svm.2022.subtype_recurrent`, group.by = "GITS.150.svm.2022.subtype_primary", data = plt) |>
-  mutate(y_pos = 4.25 + ((1:n() %% 3) * 0.4), p.adj = format.pval(p.adj, digits = 1))
+stats <- ggpubr::compare_means(`NMF:150:PCA:eucledian.dist` ~ `GITS.150.svm.2022.subtype_recurrent`,
+  group.by = "GITS.150.svm.2022.subtype_primary",
+  data = plt
+) |>
+  dplyr::mutate(y_pos = 4.25 + ((1:n() %% 3) * 0.4)) |>
+  dplyr::mutate(p.adj = format.pval(p.adj, digits = 1))
 
 
 ggplot(plt, aes(x = GITS.150.svm.2022.subtype_recurrent, y = `NMF:150:PCA:eucledian.dist`)) +
@@ -1870,33 +1689,26 @@ ggplot(plt, aes(x = GITS.150.svm.2022.subtype_recurrent, y = `NMF:150:PCA:eucled
   scale_y_continuous(limits = c(0, 5.25)) + # for the signif
   theme_bw() +
   theme(
-    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
-    # strip.background = element_rect(colour="white",fill="white"),
     axis.title = element_text(face = "bold", size = rel(1)),
-    # axis.text.x = element_blank(),
     legend.position = "bottom",
     panel.grid.major.x = element_blank(),
     panel.grid.minor.x = element_blank(),
     panel.grid.major.y = element_blank(),
     panel.grid.minor.y = element_blank(),
     axis.ticks.x = element_blank(),
-    # strip.text = element_text(size = 7),
     panel.border = element_rect(colour = "black", fill = NA, size = 1.1)
   ) +
   guides(fill = guide_legend(ncol = 4))
 
 
 
-ggsave("output/figures/2022_figure_S2a.pdf", width=8.3 / 4,height=8.3/3.2, scale=2)
-ggsave("output/figures/2022_figure_S2a.svg", width=8.3 / 4,height=8.3/3.2, scale=2)
+ggsave("output/figures/2022_Figure_S2C.pdf", width = 8.3 / ((3 / 2) * 2), height = 8.3 / 3.2, scale = 2)
 
-
-rm(n.glass, n.gsam)
-rm(plt)
+rm(n.glass, n.gsam, plt)
 
 
 
-## figure 1d ----
+## F] Figure M1D ----
 
 
 
@@ -2014,12 +1826,12 @@ ggplot(plt.dots, aes(x=x,y=y,label=label,fill=label)) +
                       mixcol(c('MES' = as.character(subtype_colors['Mesenchymal']), 'PN' = as.character(subtype_colors['Proneural']), 'CL' = as.character(subtype_colors['Classical'])),rep("white",3),0.0)
     )
 
-
-ggsave("output/figures/2022_figure_1d.pdf", width=8.3 / 2,height=8.3/2, scale=2)
-
+ggsave("output/figures/2022_Figure_M1D.pdf", width=8.3 / 2,height=8.3/2, scale=2)
 
 
-## fig s3a ----
+
+
+## F] Figure S2C ----
 
 
 plt <- rbind(
@@ -2156,8 +1968,6 @@ ggplot(plt, aes(x = -`NMF:150:PC1.n`, y= -`NMF:150:PC2.n`, group=pid, col=subtyp
        ) +
   theme_bw()  +
   theme(
-    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
-    #strip.background = element_rect(colour="white",fill="white"),
     axis.title = element_text(face = "bold",size = rel(1)),
     
     axis.text.x = element_blank(),
@@ -2167,24 +1977,21 @@ ggplot(plt, aes(x = -`NMF:150:PC1.n`, y= -`NMF:150:PC2.n`, group=pid, col=subtyp
     axis.ticks.y = element_blank(),
     
     legend.position = 'bottom',
-    #panel.grid.major.x = element_blank(),
     panel.grid.minor.x = element_blank(),
-    #panel.grid.major.y = element_blank(),
     panel.grid.minor.y = element_blank(),
-    #strip.text = element_text(size = 7),
     panel.border = element_rect(colour = "black", fill=NA, size=1.25)
   ) +
   guides(fill=guide_legend(ncol=3))
 
 
-ggsave("output/figures/2022_figure_S3a.pdf", width=8.3 / 2,height=8.3/4, scale=2)
-
+ggsave("output/figures/2022_Figure_S2C.pdf", width=8.3 / 2,height=8.3/4, scale=2)
 
 rm(plt, n.glass, n.gsam)
 
 
 
-## fig s3b [all - merged] ----
+
+## F] Figure S3A - all & merged ----
 
 
 plt <- rbind(
@@ -2357,8 +2164,7 @@ p2 <- ggplot(plt.expanded |> dplyr::filter(type=="b"), aes(x = x , y = reorder(p
 p1 + p2 + patchwork::plot_annotation(caption =  paste0("G-SAM: n=",n.gsam, "  -  GLASS: n=",n.glass," pairs" ))
 
 
-ggsave("output/figures/2022_figure_S3b.pdf", width=8.3 / 2,height=8.3/2.5, scale=2)
-ggsave("output/figures/2022_figure_S3b.svg", width=8.3 / 2,height=8.3/2.5, scale=2)
+ggsave("output/figures/2022_Figure_S3A.pdf", width=8.3 / 2,height=8.3/2.5, scale=2)
 
 
 
@@ -2368,32 +2174,26 @@ rm(n.gsam, n.glass, p1 , p2 , plt.expanded, plt)
 
 
 
-## fig s3c [HM status only] ----
+## F] Figure S3B - HM status samples only ----
 
 
 plt <- rbind(
   gsam.rna.metadata |>
-    
-    dplyr::filter(blacklist.pca == F) |> 
-    dplyr::filter(pat.with.IDH == F) |> 
-    dplyr::filter(
-      sid %in% c('BAI2', 'CAO1-replicate', 'FAB2', 'GAS2-replicate') == F
-    ) %>%
+    dplyr::filter(blacklist.pca == F) |>
+    dplyr::filter(pat.with.IDH == F) |>
+    dplyr::filter(sid %in% c("BAI2", "CAO1-replicate", "FAB2", "GAS2-replicate") == F) |> # replicates
     dplyr::filter(tumour.percentage.dna >= 15) |>
-    dplyr::select(
-      `pid`,
-      `NMF:150:PCA:eucledian.dist`,
-    ) |> 
-    dplyr::left_join(gsam.patient.metadata |> 
-                       dplyr::select(`studyID`, `HM`),
-                     by=c('pid'='studyID'),suffix=c('','')) |> 
+    dplyr::select(`pid`, `NMF:150:PCA:eucledian.dist`, ) |>
+    dplyr::left_join(gsam.patient.metadata |>
+      dplyr::select(`studyID`, `HM`),
+    by = c("pid" = "studyID"), suffix = c("", "")
+    ) |>
     dplyr::mutate(HM = case_when(
       HM == "No" ~ F,
-      HM == "Yes" ~ T, 
+      HM == "Yes" ~ T,
       T ~ as.logical(NA)
-    )) |> 
-    dplyr::mutate(dataset = "G-SAM")
-  ,
+    )) |>
+    dplyr::mutate(dataset = "G-SAM"),
   glass.gbm.rnaseq.metadata.all.samples |>
     dplyr::filter(tumour.percentage.2022 >= 15) |>
     dplyr::select(
@@ -2401,57 +2201,53 @@ plt <- rbind(
       `NMF:150:PCA:eucledian.dist`,
       `HM`
     ) |>
-    dplyr::rename(pid = case_barcode)  |> 
+    dplyr::rename(pid = case_barcode) |>
     dplyr::mutate(dataset = "GLASS")
-) |> 
-  dplyr::filter(!is.na(`NMF:150:PCA:eucledian.dist`)) |> 
-  dplyr::distinct() |> 
-  dplyr::mutate(pid = as.character(pid)) |> 
+) |>
+  dplyr::filter(!is.na(`NMF:150:PCA:eucledian.dist`)) |>
+  dplyr::distinct() |>
+  dplyr::mutate(pid = as.character(pid)) |>
   dplyr::filter(!is.na(HM))
 
 
-n.glass <- table(plt$dataset)['GLASS']
-n.gsam <- table(plt$dataset)['G-SAM']
+n.glass <- table(plt$dataset)["GLASS"]
+n.gsam <- table(plt$dataset)["G-SAM"]
 
 
 
-# load transition segments 
-plt.expanded <- readRDS('tmp/analysis_GITS_space.transition.segments.Rds') |> 
-  dplyr::inner_join(plt, by=c('pid'='pid')) |> 
-  dplyr::mutate(x = pct_transition * `NMF:150:PCA:eucledian.dist` ) |> 
-  dplyr::group_by(pid) |> 
-  dplyr::mutate(d = max(x)) |> 
-  dplyr::mutate(init = x == min(x)) |> 
-  dplyr::mutate(second = order(x) == 2) |> 
-  dplyr::mutate(end = x == max(x)) |> 
-  dplyr::mutate(n = n()) |> 
-  dplyr::ungroup() |> 
+# load transition segments
+plt.expanded <- readRDS("tmp/analysis_GITS_space.transition.segments.Rds") |>
+  dplyr::inner_join(plt, by = c("pid" = "pid")) |>
+  dplyr::mutate(x = pct_transition * `NMF:150:PCA:eucledian.dist`) |>
+  dplyr::group_by(pid) |>
+  dplyr::mutate(d = max(x)) |>
+  dplyr::mutate(init = x == min(x)) |>
+  dplyr::mutate(second = order(x) == 2) |>
+  dplyr::mutate(end = x == max(x)) |>
+  dplyr::mutate(n = n()) |>
+  dplyr::ungroup() |>
   dplyr::rename(subtype = pred)
 
 
 # add initial subtype to each segment, for facetting
-plt.expanded <- plt.expanded |> 
+plt.expanded <- plt.expanded |>
   dplyr::left_join(
-    plt.expanded |> 
-      dplyr::filter(init) |> 
-      dplyr::select(pid, subtype) |> 
+    plt.expanded |>
+      dplyr::filter(init) |>
+      dplyr::select(pid, subtype) |>
       dplyr::rename(subtype.init = subtype),
-    by=c('pid'='pid'), suffix=c('','')
+    by = c("pid" = "pid"), suffix = c("", "")
   )
 
 # add position of second segment, to normalize for right facet
-plt.expanded <- plt.expanded |> 
+plt.expanded <- plt.expanded |>
   dplyr::left_join(
-    plt.expanded |> 
-      dplyr::filter(second) |> 
-      dplyr::select(pid, x) |> 
+    plt.expanded |>
+      dplyr::filter(second) |>
+      dplyr::select(pid, x) |>
       dplyr::rename(x.init = x),
-    by=c('pid'='pid'), suffix=c('','')
+    by = c("pid" = "pid"), suffix = c("", "")
   )
-
-# plt.expanded <- plt.expanded |>
-#  dplyr::filter(pid == 'GLSS-HF-DE05')
-# print(plt.expanded)
 
 
 # add HM status
@@ -2460,16 +2256,15 @@ plt.expanded <- rbind(
   plt.expanded |>
     dplyr::filter(init == T) |>
     dplyr::filter(!is.na(HM) & HM == T) |>
-    dplyr::mutate(x = - 0.025) |>
+    dplyr::mutate(x = -0.025) |>
     dplyr::mutate(subtype = "Hyper-mutant") |>
-    dplyr::mutate(segment = paste0("segment.",pid, ".HM")),
-  
+    dplyr::mutate(segment = paste0("segment.", pid, ".HM")),
   plt.expanded |>
     dplyr::filter(init == T) |>
     dplyr::filter(!is.na(HM) & HM == T) |>
-    dplyr::mutate(x = - 0.05) |>
+    dplyr::mutate(x = -0.05) |>
     dplyr::mutate(subtype = "Hyper-mutant") |>
-    dplyr::mutate(segment = paste0("segment.",pid, ".HM"))
+    dplyr::mutate(segment = paste0("segment.", pid, ".HM"))
 )
 print(plt.expanded)
 
@@ -2478,17 +2273,17 @@ print(plt.expanded)
 # make facettes
 plt.expanded <- rbind(
   plt.expanded |>
-    dplyr::mutate(type ="a")
-  ,
+    dplyr::mutate(type = "a"),
   plt.expanded |>
-    dplyr::mutate(type ="b") |>
+    dplyr::mutate(type = "b") |>
     dplyr::mutate(x = case_when(
       subtype == "Hyper-mutant" & x == -0.025 ~ -2.75,
       subtype == "Hyper-mutant" & x == -0.05 ~ -2.75 - 0.04,
-      T ~ x - x.init)) |>
-    dplyr::mutate(d = ifelse(n == 2, -x.init,d - x.init))
+      T ~ x - x.init
+    )) |>
+    dplyr::mutate(d = ifelse(n == 2, -x.init, d - x.init))
 ) |>
-  dplyr::mutate(dataset = grepl("TCGA|GLSS",pid))
+  dplyr::mutate(dataset = grepl("TCGA|GLSS", pid))
 
 
 
@@ -2554,19 +2349,12 @@ p2 <- ggplot(plt.expanded |> dplyr::filter(type=="b"), aes(x = x , y = reorder(p
 p1 + p2 + patchwork::plot_annotation(caption =  paste0("G-SAM: n=",n.gsam, "  -  GLASS: n=",n.glass," pairs [with HM status]" ))
 
 
-ggsave("output/figures/2022_figure_S3c.pdf", width=8.3 / 2,height=8.3/4.1, scale=2)
-ggsave("output/figures/2022_figure_S3c.svg", width=8.3 / 2,height=8.3/4.1, scale=2)
-
-
-
+ggsave("output/figures/2022_Figure_S3B.pdf", width=8.3 / 2,height=8.3/4.1, scale=2)
 rm(n.gsam, n.glass, p1 , p2 , plt.expanded, plt)
 
 
 
-
-
-
-## NMF 7k 3 x purity ----
+## x] NMF 7k 3 x purity ----
 
 #@comment redudendt fig because of s1g for NMF7k
 

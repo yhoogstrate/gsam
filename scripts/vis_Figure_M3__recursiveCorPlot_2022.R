@@ -58,7 +58,7 @@ print(paste0("Genes part of recursive clustering: ", k.genes))
 
 
 
-# plot ----
+# F] Figure M3 ----
 
 
 plt.labels <- metadata.genes %>%
@@ -113,7 +113,7 @@ exp.ts2 <- plt.labels |>
 stopifnot(nrow(tmp.order) == 484)
 
 
-
+## Table S2 ----
 openxlsx::createWorkbook(
   creator = "Dr. Youri Hoogstrate",
   title = "Gene cluster information G-SAM study",
@@ -125,10 +125,7 @@ openxlsx::writeDataTable(wb, sheet = "Sheet1 - Gene clusters G-SAM", x = exp.ts2
 
 openxlsx::saveWorkbook(wb, file = "output/tables/tab_S2_DGE_gene_clusters.xlsx", overwrite = T)
 
-
-
-
-# :: ::: 
+## Actual Fig export ----
 
 
 
@@ -164,8 +161,8 @@ recursiveCorPlot::recursiveCorPlot(plt.data, plt.labels |>
 
 
 
-ggsave("output/figures/2022_figure_3_recursiveCorPlot.pdf", height=30, width=30) # then average, then ward.D1?
-ggsave("output/figures/2022_figure_3_recursiveCorPlot.svg", height=30, width=30) # then average, then ward.D1?
+ggsave("output/figures/2022_Figure_M3__recursiveCorPlot.pdf", height=30, width=30) # then average, then ward.D1?
+ggsave("output/figures/2022_Figure_M3__recursiveCorPlot.svg", height=30, width=30) # then average, then ward.D1?
 
 
 
@@ -197,7 +194,7 @@ h <- recursiveCorPlot(plt.data, plt.labels |>
 
 
 
-### COL1A2 ----
+### COL1A2
 
 
 plt <- glass.gbm.rnaseq.expression.all.samples.vst |> 
@@ -217,12 +214,6 @@ ggplot(plt, aes(x= ifelse(is.primary,"prim","recur"), y=ENSG00000164692, group=c
   geom_line() +
   geom_point() +
   ggrepel::geom_text_repel()
-
-
-
-## obtain h-clust ----
-
-
 
 
 

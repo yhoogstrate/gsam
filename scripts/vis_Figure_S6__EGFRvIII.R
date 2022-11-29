@@ -3,68 +3,44 @@
 # load data ----
 
 
-source("scripts/load_G-SAM_metadata.R")
+if(!exists('gsam.rna.metadata')) {
+  source("scripts/load_G-SAM_metadata.R")
+}
 
-# source("scripts/") # expression data?
-# source('scripts/R/youri_gg_theme.R')
-
-
-# create pairs ----
-
-# data <- gsam.rna.metadata %>%
-#  dplyr::filter(blacklist.pca == F)
 
 # overview ----
 
 
-plt.ids <- gsam.rna.metadata %>%
+plt.ids <- gsam.rna.metadata |> 
   dplyr::filter(.data$blacklist.pca == F) |>
   dplyr::filter(.data$pat.with.IDH == F) |>
   dplyr::filter(.data$sid %in% c("BAI2", "CAO1-replicate", "FAB2", "GAS2-replicate") == F) |>
   dplyr::filter(.data$batch != "old") |>
   dplyr::filter(.data$tumour.percentage.dna >= 15) |>
-  dplyr::select(c("pid", "sid", "blacklist.pca")) %>%
-  dplyr::mutate(resection = gsub("^...(.).*$", "R\\1", sid)) %>%
+  dplyr::select(c("pid", "sid", "blacklist.pca")) |>
+  dplyr::mutate(resection = gsub("^...(.).*$", "R\\1", sid)) |>
   dplyr::mutate(pid = as.factor(as.character(pid))) # refactor
 
 
-
-# plt.expanded <- data.frame(pid = unique(plt.ids$pid) ) %>%
-#   dplyr::left_join(plt.ids %>% dplyr::filter(resection == 'R1') %>%  dplyr::rename(R1 = sid) %>% dplyr::select(pid, R1) , by = c('pid'='pid')) %>%
-#   dplyr::left_join(plt.ids %>% dplyr::filter(resection == 'R2') %>% dplyr::rename(R2 = sid) %>% dplyr::select(pid, R2) , by = c('pid'='pid')) %>%
-#
-#   dplyr::left_join(gsam.rna.metadata %>%
-#                      dplyr::select(c('sid','tumour.percentage.dna','wt.reads.v3','vIII.reads.v3','vIII.percentage')) %>%
-#                      `colnames<-`(paste0(colnames(.),'.R1'))
-#                    , by = c('R1' = 'sid.R1')) %>%
-#
-#   dplyr::left_join(gsam.rna.metadata %>%
-#                    dplyr::select(c('sid','tumour.percentage.dna','wt.reads.v3','vIII.reads.v3','vIII.percentage')) %>%
-#                    `colnames<-`(paste0(colnames(.),'.R2'))
-#                  , by = c('R2' = 'sid.R2'))
-
-
-
-plt.single <- plt.ids %>%
+plt.single <- plt.ids |>
   dplyr::left_join(
-    gsam.rna.metadata %>%
+    gsam.rna.metadata |>
       dplyr::select(c("sid", "tumour.percentage.dna", "wt.reads.v3", "vIII.reads.v3", "vIII.percentage")),
     by = c("sid" = "sid")
-  ) %>%
-  dplyr::filter(!is.na(vIII.percentage)) %>%
+  ) |>
+  dplyr::filter(!is.na(vIII.percentage)) |>
   dplyr::filter(!is.na(tumour.percentage.dna))
 
 
-
-# alleen complete paren
-filter1 <- plt.single %>%
-  dplyr::group_by(pid) %>%
-  dplyr::filter(n() == 2) %>%
+# only complete pairs
+filter1 <- plt.single |>
+  dplyr::group_by(pid) |>
+  dplyr::filter(n() == 2) |>
   dplyr::pull(pid)
 
-# waarvan ten minste 1 met percentage >= 1.0
-filter2 <- plt.single %>%
-  dplyr::filter(vIII.percentage >= 1.0) %>%
+# of which EGFRvIII percentage >= 1.0
+filter2 <- plt.single |>
+  dplyr::filter(vIII.percentage >= 1.0) |>
   dplyr::pull(pid)
 
 filter <- intersect(filter1, filter2)
@@ -73,37 +49,42 @@ filter <- intersect(filter1, filter2)
 n.paired.v3 <- length(filter)
 
 
-## arrow plot ----
 
-plt <- plt.single %>%
-  dplyr::filter(pid %in% filter) %>%
-  dplyr::arrange(pid, sid) %>%
+## F] Figure S6C, S6D - arrow plot ----
+
+
+plt <- plt.single |>
+  dplyr::filter(pid %in% filter) |>
+  dplyr::arrange(pid, sid) |>
   dplyr::mutate(col = ifelse(vIII.percentage < 1.0, "EGFRvIII percentage < 1.0", "EGFRvIII percentage >= 1.0"))
 
 status <- dplyr::full_join(
-  plt %>% dplyr::filter(resection == "R1") %>% dplyr::select(pid, vIII.percentage) %>% `colnames<-`(paste0(colnames(.), ".R1")),
-  plt %>% dplyr::filter(resection == "R2") %>% dplyr::select(pid, vIII.percentage) %>% `colnames<-`(paste0(colnames(.), ".R2")),
+  plt |>  dplyr::filter(resection == "R1") |>  dplyr::select(pid, vIII.percentage) |> dplyr::rename_with(~ paste0(.x, ".R1")),
+  plt |>  dplyr::filter(resection == "R2") |>  dplyr::select(pid, vIII.percentage) |> dplyr::rename_with(~ paste0(.x, ".R2")),
   by = c("pid.R1" = "pid.R2")
-) %>%
-  dplyr::mutate(status.v3 = ifelse(vIII.percentage.R1 > vIII.percentage.R2, "EGFRvIII percentage decreases", "EGFRvIII percentage increases")) %>%
+) |>
+  dplyr::mutate(status.v3 = ifelse(vIII.percentage.R1 > vIII.percentage.R2, "EGFRvIII percentage decreases", "EGFRvIII percentage increases")) |>
   dplyr::rename(pid = pid.R1)
 
-plt <- plt %>%
-  dplyr::left_join(status %>% dplyr::select(pid, status.v3), by = c("pid" = "pid"))
+plt <- plt |>
+  dplyr::left_join(status |> plyr::select(pid, status.v3), by = c("pid" = "pid"))
 
 
 ggplot(plt, aes(x = vIII.percentage, y = tumour.percentage.dna, group = pid)) +
   facet_grid(cols = vars(status.v3), scales = "free") +
-  geom_point(data = subset(plt, resection == "R2"), pch=22, cex=3,  aes(fill=col)) +
+  geom_point(data = subset(plt, resection == "R2"), pch = 22, cex = 3, aes(fill = col)) +
   geom_point(data = subset(plt, resection == "R2"), pch = 19, cex = 0.5, col = "black") +
   geom_path(
     lineend = "butt",
     linejoin = "mitre",
-    arrow = arrow(ends = "last", 
-                  type = "closed",
-                  angle = 15,
-                  length = unit(0.15, "inches")),
-                  alpha = 0.7) +
+    arrow = arrow(
+      ends = "last",
+      type = "closed",
+      angle = 15,
+      length = unit(0.15, "inches")
+    ),
+    alpha = 0.7
+  ) +
   geom_point(data = subset(plt, resection == "R1"), pch = 21, cex = 3, aes(fill = col)) +
   geom_point(data = subset(plt, resection == "R1"), pch = 19, cex = 0.5, col = "black") +
   theme_bw() +
@@ -128,13 +109,11 @@ ggplot(plt, aes(x = vIII.percentage, y = tumour.percentage.dna, group = pid)) +
   )
 
 
-
-
-ggsave("output/figures/2022_figure_S5cd.pdf", width = 8.3 / 2, height = 8.3 / 3.4, scale = 2)
+ggsave("output/figures/2022_Figure_S6C_S6D.pdf", width = 8.3 / 2, height = 8.3 / 3.4, scale = 2)
 
 
 
-## vertical plot ----
+## F] Figure S6A, S6B  - vertical plot ----
 
 
 delta.v3.percentage <-
@@ -206,4 +185,6 @@ ggplot(plt, aes(x = reorder(pid, order), y = percentage)) +
   )
 
 
-ggsave("output/figures/2022_figure_S5ab.pdf", width = 8.3 / 2, height = 8.3 / 3.3, scale = 2)
+ggsave("output/figures/2022_Figure_S6A_S6B.pdf", width = 8.3 / 2, height = 8.3 / 3.3, scale = 2)
+
+

@@ -15,7 +15,7 @@ options(warnPartialMatchDollar = TRUE) # https://stackoverflow.com/questions/328
 source('scripts/load_results.out.R')
 
 
-## figure S8a (NE / NPC) ----
+## F] Figure S9A - NE / NPC ----
 # a. eerst losse PCA bepaling, dan correlatie daar tussen?
 
 
@@ -80,26 +80,24 @@ factoextra::fviz_pca_var(res.pca, col.var = labels$col, repel = TRUE,geom=c('arr
   labs(caption = paste0("G-SAM: n=", ncol(plt), " samples"))
 
 
-ggsave("output/figures/2022_figure_S8a.pdf", width = 8.3 / 4, height = 8.3 / 4, scale = 2)
+ggsave("output/figures/2022_Figure_S9A.pdf", width = 8.3 / 4, height = 8.3 / 4, scale = 2)
 
 
 
-
-## figure S8b (OD / OPC) ----
-
+## F] Figure S9B - OD / OPC ----
 
 
-labels <- results.out |> 
-  dplyr::filter(!is.na(gid)) |> 
+labels <- results.out |>
+  dplyr::filter(!is.na(gid)) |>
   dplyr::filter(.data$C3.2022 | .data$neftel.meta.modules.OPC) |>
   dplyr::select(gid, ensembl_id, hugo_symbol, `C3.2022`, neftel.meta.module.OPC) |>
   dplyr::mutate(col = case_when(
     `C3.2022` & !`neftel.meta.module.OPC` ~ "C3 (Oligodendrocyte)",
-    !`C3.2022` &  `neftel.meta.module.OPC` ~ "OPC",
+    !`C3.2022` & `neftel.meta.module.OPC` ~ "OPC",
     T ~ "ambiguous"
   )) |>
   dplyr::filter(col != "ambiguous") |>
-  dplyr::mutate(C3.2022 = NULL) |> 
+  dplyr::mutate(C3.2022 = NULL) |>
   dplyr::mutate(neftel.meta.modules.OPC = NULL)
 
 
@@ -111,7 +109,6 @@ labels <- labels |>
 labels |>
   dplyr::pull(col) |>
   unique()
-
 
 
 plt <- labels |>
@@ -144,6 +141,7 @@ factoextra::fviz_pca_var(res.pca, col.var = labels$col, repel = T,geom=c('arrow'
   labs(caption = paste0("G-SAM: n=", ncol(plt), " samples"))
 
 
-ggsave("output/figures/2022_figure_S8b.pdf", width = 8.3 / 4, height = 8.3 / 4, scale = 2)
+ggsave("output/figures/2022_Figure_S9B.pdf", width = 8.3 / 4, height = 8.3 / 4, scale = 2)
+
 
 

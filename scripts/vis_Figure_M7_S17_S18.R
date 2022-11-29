@@ -847,7 +847,7 @@ ggsave("output/figures/2022_Figure_S17F.pdf", width=8.3 / 5,height=8.3/5*1.17, s
 
 ## plot(s) ----
 
-### figure 6a: svvl ----
+### F] Figure M7A - svvl ----
 
 
 plt <- tmp.metadata.paired |> 
@@ -877,13 +877,13 @@ p1 <- ggplot(plt, aes(x=reorder(pid, rank),y=value, group=pid)) +
   labs(x = NULL, y="Survival")
 
 
-#ggsave("output/figures/2022_figure_6a.pdf", width=8.3 / 2,height=8.3/4 * 0.5, scale=2)
+#ggsave("output/figures/2022_Figure_M7A.pdf", width=8.3 / 2,height=8.3/4 * 0.5, scale=2)
 
 
 
 
 
-### figure 6b: signature arrows ----
+### F] Figure M7B - signature arrows ----
 
 
 plt <- tmp.metadata |>  # only resections from complete pairs
@@ -928,7 +928,7 @@ rm(plt)
 
 
 
-### figure 6c: squares ----
+### F] Figure M7C - squares ----
 
 #'@todo x-check @ fig2 fgh -- mgmt
 
@@ -987,12 +987,12 @@ p3 <- ggplot(plt, aes(x = reorder(pid, rank), y = variable, fill = value)) +
 
 
 
-#### export ----
+#### export patchwork ----
 
 p1 / p2 / p3 + patchwork::plot_layout(heights = c(0.7,0.7,1.95))
 
 
-ggsave("output/figures/2022_figure_6abc.pdf", width=8.3 / 2,height=8.3/2 * 0.75 * 0.93, scale=2.2)
+ggsave("output/figures/2022_Figure_M7A_M7B_M7C.pdf", width=8.3 / 2,height=8.3/2 * 0.75 * 0.93, scale=2.2)
 
 
 
@@ -1115,61 +1115,8 @@ wilcox.test(
 
 
 
-# figure 6d: signature x svvl ----
-
-
-plt <- tmp.metadata.paired |> 
-  dplyr::filter(event == 1) |> 
-  dplyr::select(pid, `C1/col signature at Rec.`,
-                rna.signature.C1.collagen.2022_primary, rna.signature.C1.collagen.2022_recurrence,
-                survivalDays, survivalFromSecondSurgeryDays) |> 
-  dplyr::rename(survivalDays_primary = survivalDays) |> 
-  dplyr::rename(survivalDays_recurrence = survivalFromSecondSurgeryDays) |> 
-  #dplyr::mutate(survival.from.first.surgery = ifelse(survivalDays > 365* 2.5, "> 2.5yr", "<= 2.5yr") ) %>%
-  #dplyr::mutate(survival.from.second.surgery = factor(survival.from.second.surgery, levels=c("> 1yr", "<= 1yr")))
-  tidyr::pivot_longer(cols=-c(pid, `C1/col signature at Rec.`),  names_to = c(".value", "resection"), names_pattern = "(.+)_(.+)")
-
-
-#ggplot(plt, aes(y = extracellular.matrix.component , x=tts, group=pid, fill=em.status.res2 )) 
-
-ggplot(plt, aes(y = rna.signature.C1.collagen.2022 , x=survivalDays, group=pid, fill=`C1/col signature at Rec.`)) +
-  geom_path(arrow = arrow(ends = "last", type = "closed", angle=15, length = unit(0.125, "inches")) , alpha = 0.3, col="gray50" )  + 
-  geom_point(data = subset(plt, resection == "primary"), pch=21, cex=1.2, alpha=0.7, fill="gray50", col="gray50") +
-  geom_point(data = subset(plt, resection == "recurrence"), pch=19, cex=4.5, alpha=0.25, col="white") +
-  geom_point(data = subset(plt, resection == "recurrence"), pch=21, cex=2.0, alpha=0.7) +
-  labs(y = "C0 / col signature", x = "Survival") +
-  geom_hline(yintercept = c1.em.cutoff.p, lty=1, lwd=3.5, col="#FFFFFFBB") +
-  geom_hline(yintercept = c1.em.cutoff.p, lty=2, col="red", lwd=0.25) +
-  geom_vline(xintercept = 0, lty=1, col="black", lwd=0.35) +
-  geom_vline(xintercept = -6, lty=1, col="black", lwd=0.35) +
-  scale_x_reverse(breaks = (0:15) * 365) +
-  scale_fill_manual(values = c('high'='#009E74', 'low'='#CB75A4') ) +
-  theme_bw()  +
-  theme(
-    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
-    #strip.background = element_rect(colour="white",fill="white"),
-    axis.title = element_text(face = "bold",size = rel(1)),
-    #axis.text.x = element_blank(),
-    legend.position = 'bottom',
-    #panel.grid.major.x = element_blank(),
-    #panel.grid.minor.x = element_blank(),
-    panel.grid.major.y = element_blank(),
-    panel.grid.minor.y = element_blank(),
-    #axis.ticks.x = element_blank(),
-    panel.border = element_rect(colour = "black", fill=NA, size=1.25)
-  )
-
-
-ggsave("output/figures/2022_figure_6d.pdf", width=8.3 / 2 * 0.65,height=8.3/5 *0.85, scale=2.2)
-
-
-
-
-
 ## R2 col high ----
-### figure 6e: KM R2 -> death (ppt) ----
-# unpaired 
-
+### F] Figure M7D - KM R2 -> death (ppt) ----
 
 
 surv_object <- survival::Surv(time = tmp.metadata.paired.breed$survivalFromSecondSurgeryDays, event=tmp.metadata.paired.breed$event)
@@ -1186,29 +1133,13 @@ p1 <- survminer::ggsurvplot(fit1, data = tmp.metadata.paired.breed, pval = TRUE,
 p1
 
 
-ggsave("output/figures/2022_figure_6e.pdf", width=8.3 / 2 * 0.8,height=8.3/3.4, scale=2, plot=p1)
+ggsave("output/figures/2022_Figure_M7D.pdf", width=8.3 / 2 * 0.8,height=8.3/3.4, scale=2, plot=p1)
 
 
 
 
 
-# paired
-# surv_object <- survival::Surv(time = tmp.metadata.paired$survivalFromSecondSurgeryDays, event=tmp.metadata.paired$event)
-# fit1 <- survival::survfit(surv_object ~  `C1.col.signature.rec` , data = tmp.metadata.paired)
-# p1 <- survminer::ggsurvplot(fit1, data = tmp.metadata.paired, pval = TRUE, risk.table=T, tables.y.text = FALSE,
-#                             palette = c(
-#                               'C1/col signature: high'=alpha('#CB75A4',0.7),
-#                               'C1/col signature: low'=alpha('#009E74',0.7)
-#                             ),
-#                             legend.labs=c('C1.col.signature=high'='C1/col signature: high',
-#                                           'C1.col.signature=low'='C1/col signature: low'),
-#                             xlab="Survival time from recurrence")
-# p1
-
-
-
-### figure 6f: KM R1 -> R2 (ttp) ----
-# unpaired 
+### F] Figure M7E - KM R1 -> R2 (ttp) ----
 
 surv_object <- survival::Surv(time = tmp.metadata.paired.breed$daysToProgression, 
                               event= tmp.metadata.paired.breed$progression.event)
@@ -1225,30 +1156,12 @@ p1 <- survminer::ggsurvplot(fit1, data = tmp.metadata.paired.breed, pval = TRUE,
 p1
 
 
-ggsave("output/figures/2022_figure_6f.pdf", width=8.3 / 2 * 0.8,height=8.3/3.4, scale=2, plot=p1)
-
-
-
-# ## paired
-# 
-# surv_object <- survival::Surv(time = tmp.metadata.paired$daysToProgression, event=tmp.metadata.paired$progression.event)
-# fit1 <- survival::survfit(surv_object ~  `C1.col.signature.rec` , data = tmp.metadata.paired)
-# p1 <- survminer::ggsurvplot(fit1, data = tmp.metadata.paired, pval = TRUE, risk.table=T, tables.y.text = FALSE,
-#                             palette = c(
-#                               'C1/col signature: high'=alpha('#CB75A4',0.7),
-#                               'C1/col signature: low'=alpha('#009E74',0.7)
-#                             ),
-#                             legend.labs=c('C1.col.signature=high'='C1/col signature: high',
-#                                           'C1.col.signature=low'='C1/col signature: low'),
-#                             xlab="Time to progression")
-# p1
-# 
+ggsave("output/figures/2022_Figure_M7E.pdf", width=8.3 / 2 * 0.8,height=8.3/3.4, scale=2, plot=p1)
 
 
 
 
-### figure 6g: KM R1 -> R2 (os) ----
-# unpaired 
+### F] Figure M7F - KM R1 -> R2 (os) ----
 
 surv_object <- survival::Surv(time = tmp.metadata.paired.breed$survivalDays, event=tmp.metadata.paired.breed$event)
 fit1 <- survival::survfit(surv_object ~  `C1.col.signature.rec` , data = tmp.metadata.paired.breed)
@@ -1263,27 +1176,12 @@ p1 <- survminer::ggsurvplot(fit1, data = tmp.metadata.paired.breed, pval = TRUE,
                             xlab="Overall survival (days)")
 p1
 
-ggsave("output/figures/2022_figure_6g.pdf", width=8.3 / 2 * 0.8,height=8.3/3.4, scale=2, plot=p1)
-
-
-
-# paired ---
-# surv_object <- survival::Surv(time = tmp.metadata.paired$survivalDays, event=tmp.metadata.paired$event)
-# fit1 <- survival::survfit(surv_object ~  `C1.col.signature.rec` , data = tmp.metadata.paired)
-# p1 <- survminer::ggsurvplot(fit1, data = tmp.metadata.paired, pval = TRUE, risk.table=T, tables.y.text = FALSE,
-#                             palette = c(
-#                               'C1/col signature: high'=alpha('#CB75A4',0.7),
-#                               'C1/col signature: low'=alpha('#009E74',0.7)
-#                             ),
-#                             legend.labs=c('C1.col.signature=high'='C1/col signature: high',
-#                                           'C1.col.signature=low'='C1/col signature: low'),
-#                             xlab="Overall survival")
-# p1
+ggsave("output/figures/2022_Figure_M7F.pdf", width=8.3 / 2 * 0.8,height=8.3/3.4, scale=2, plot=p1)
 
 
 
 
-### figure 6efg+S14abc padj stats ----
+### stats: Figure M7D, M7E, M7F, S18D, S18E, S18F padj ----
 
 df = data.frame(pval = c(pval.ppt.r2,
                          pval.ttp.r2,
@@ -1335,14 +1233,12 @@ ggsave("output/figures/2022_Figure_S18C.pdf", width=8.3 / 2 * 0.8,height=8.3/3.4
 
 
 
-### figure 6h: ggforest R2 -> death ----
-# unpaired
+### F] Figure M7G - ggforest R2 -> death ----
 
 
 svvl <- tmp.metadata.paired.breed |> 
   dplyr::filter(!is.na(`C1/col signature at Rec.`)) |> 
   dplyr::filter(!is.na(`Tumor location`))
-
 
 
 surv_object <- survival::Surv(time = svvl$survivalFromSecondSurgeryDays,
@@ -1367,16 +1263,16 @@ fit.cox <- survival::coxph(surv_object ~
 survminer::ggforest(fit.cox, data = svvl)
 
 
-
 data.frame(pval = summary(fit.cox)$coefficients[,5]) |>
   dplyr::mutate(padj = p.adjust(pval, method="fdr")) |>
   dplyr::mutate(padj.f = format.pval(padj, digits=2))
 
 
+ggsave("output/figures/2022_Figure_M7G.pdf", width=8.3 / 2,height=8.3/3.4, scale=2)
 
-ggsave("output/figures/2022_figure_6h.pdf", width=8.3 / 2,height=8.3/3.4, scale=2)
 
 
+# some checks to find a N/A-value
 sum(is.na(tmp.metadata.paired.breed$`Age above 50` ))
 sum(is.na(tmp.metadata.paired.breed$`Sex` ))
 sum(is.na(tmp.metadata.paired.breed$`KPS 70 or above` ))
@@ -1388,36 +1284,6 @@ sum(is.na(tmp.metadata.paired.breed$`C1/col signature at Rec.` ))
 sum(is.na(tmp.metadata.paired.breed$`C2/endo signature at Rec.` ))
 sum(is.na(tmp.metadata.paired.breed$`C3/olig signature at Rec.` ))
 sum(is.na(tmp.metadata.paired.breed$`C4/neu signature at Rec.`))
-
-
-
-# paired samples only
-# 
-# surv_object <- survival::Surv(time = tmp.metadata.paired$survivalFromSecondSurgeryDays, event=tmp.metadata.paired$event)
-# fit.cox <- survival::coxph(surv_object ~
-#                              `Age above 50` +
-#                              `Sex` +
-#                              `KPS 70 or above` +
-#                              `Treatment: Beva` +
-#                              `Treatment: TMZ` +
-#                              `Tumor location` +
-#                              
-#                              #`MGMT meth` + # incomplete data
-#                              
-#                              #`C0/fuzzy signature at Rec.` +
-#                              `C1/col signature at Rec.` +
-#                              `C2/endo signature at Rec.` +
-#                              `C3/olig signature at Rec.` +
-#                              `C4/neu signature at Rec.`
-#                            ,
-#                            data = tmp.metadata.paired)
-# survminer::ggforest(fit.cox, data = tmp.metadata.paired)
-# 
-# 
-# 
-# data.frame(pval = summary(fit.cox)$coefficients[,5]) |> 
-#   dplyr::mutate(padj = p.adjust(pval, method="fdr")) |> 
-#   dplyr::mutate(padj.f = format.pval(padj, digits=2))
 
 
 
@@ -1467,15 +1333,12 @@ ggsave("output/figures/2022_Figure_S18A.pdf", width=8.3 / 2,height=8.3/3.4, scal
 
 
 
-### figure 6i: ggforest R1 -> R2 (ttp) ----
-# unpaired
+### F] Figure M7H - ggforest R1 -> R2 (ttp) ----
 
 
 svvl <- tmp.metadata.paired.breed |> 
   dplyr::filter(!is.na(`C1/col signature at Rec.`)) |> 
   dplyr::filter(!is.na(`Tumor location`))
-
-
 
 surv_object <- survival::Surv(time = svvl$daysToProgression, 
                               event= svvl$progression.event)
@@ -1486,10 +1349,7 @@ fit.cox <- survival::coxph(surv_object ~
                              `Treatment: Beva` +
                              `Treatment: TMZ` +
                              `Tumor location` +
-                             
-                             
-                             #`MGMT meth` + # incomplete data
-                             
+
                              `C0/fuzzy signature at Rec.` +
                              `C1/col signature at Rec.` +
                              `C2/endo signature at Rec.` +
@@ -1505,41 +1365,7 @@ data.frame(pval = summary(fit.cox)$coefficients[,5]) |>
   dplyr::mutate(padj.f = format.pval(padj, digits=1))
 
 
-
-ggsave("output/figures/2022_figure_6i.pdf", width=8.3 / 2,height=8.3/3.4, scale=2)
-
-
-# paired
-# surv_object <- survival::Surv(time = tmp.metadata.paired$daysToProgression, event=tmp.metadata.paired$progression.event)
-# fit.cox <- survival::coxph(surv_object ~
-#                              `Age above 50` +
-#                              `Sex` +
-#                              `KPS 70 or above` +
-#                              `Treatment: Beva` +
-#                              `Treatment: TMZ` +
-#                              `Tumor location` +
-#                              
-# 
-#                              #`MGMT meth` + # incomplete data
-#                              
-#                              `C0/fuzzy signature at Rec.` +
-#                              `C1/col signature at Rec.` +
-#                              `C2/endo signature at Rec.` +
-#                              `C3/olig signature at Rec.` +
-#                              `C4/neu signature at Rec.`
-#                            ,
-#                            data = tmp.metadata.paired)
-# survminer::ggforest(fit.cox, data = tmp.metadata.paired)
-# 
-# 
-# 
-# data.frame(pval = summary(fit.cox)$coefficients[,5]) |> 
-#   dplyr::mutate(padj = p.adjust(pval, method="fdr")) |> 
-#   dplyr::mutate(padj.f = format.pval(padj, digits=1))
-# 
-
-
-
+ggsave("output/figures/2022_Figure_M7H.pdf", width=8.3 / 2,height=8.3/3.4, scale=2)
 
 
 
