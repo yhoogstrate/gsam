@@ -50,9 +50,11 @@ Directory structure:
                           * per gene
                           * per patient
                           * per resection/sample
-./scripts/analysis_*.R [analysis of data, typically exporting cached results to ./cache ]
+./scripts/analysis_*.R [analysis of data, typically exporting cached results to ./cache]
 ./scripts/vis_*.R      [visualisation of data]
 
 
 ./if/*.ijm             [ImageJ IF analysis scripts]
+
+LICENSE                [copy of MIT license]
 ```
