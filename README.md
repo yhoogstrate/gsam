@@ -53,4 +53,6 @@ Directory structure:
 ./scripts/analysis_*.R [analysis of data, typically exporting cached results to ./cache ]
 ./scripts/vis_*.R      [visualisation of data]
 
+
+./if/*.ijm             [ImageJ IF analysis scripts]
 ```

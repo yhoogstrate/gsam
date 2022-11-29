@@ -43,3 +43,4 @@ output/tables/gliovis-subtype-input-table.csv
 infercnv
 /host
 *.copy
+*.Zone.Identifier
