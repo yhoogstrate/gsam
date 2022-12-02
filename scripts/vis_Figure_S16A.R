@@ -5,8 +5,6 @@
 
 # load data ----
 
-data <- readRDS('data/gsam/IF/Experiments revisions/COL1A1_PDGFRB_CD31_GFAP/rerun analysis/measurement_CD31_Collagen_PDGFRB.RDS')
-
 
 parse_csv <- function (fn) {
   dat <- read.csv(fn) |> 
@@ -97,7 +95,6 @@ df <- rbind(
 
 
 ggplot(df, aes(x=sid, y=R, group=sid)) +
-  #facet_grid(cols = vars( resection), scales = "free", space="free") +
   geom_hline(yintercept = m, lwd = 0.6, lty = "dotted", col = "red") +
   annotate(geom="text", x="AAY2", y=0.99, label=paste0("Median: ",round(m,2)),hjust=0)  +
   geom_line() +
@@ -120,4 +117,28 @@ ggplot(df, aes(x=sid, y=R, group=sid)) +
 ggsave("output/figures/2022_Figure_S16A.pdf", width=8.3 / 4,height=8.3/4, scale=2)
 
 
+
+## sandbox ----
+
+
+ggplot(df, aes(x=sid, y=R, group=sid)) +
+  facet_grid(cols = vars( resection), scales = "free", space="free") +
+  #geom_hline(yintercept = m, lwd = 0.6, lty = "dotted", col = "red") +
+  #annotate(geom="text", x="AAY2", y=0.99, label=paste0("Median: ",round(m,2)),hjust=0)  +
+  geom_line() +
+  geom_point(data = df |>  dplyr::filter(type == "data")) +
+  labs(x=NULL, y = "Correlation PDGFRB vs. CD31") +
+  scale_y_continuous(breaks=c(-1,0,1), limits=c(-1,1)) +
+  theme_bw()  +
+  theme(
+    axis.title = element_text(face = "bold",size = rel(1)),
+    axis.text.x = element_text(angle = 90, vjust = 0.45,hjust=1) ,
+    legend.position = 'bottom',
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    #panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    #axis.ticks.x = element_blank(),
+    panel.border = element_rect(colour = "black", fill=NA, size=1.25)
+  )
 
