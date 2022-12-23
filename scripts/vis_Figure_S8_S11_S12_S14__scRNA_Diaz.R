@@ -1489,6 +1489,48 @@ DotPlot(object = object_1, features =list('C2'=oligodendrocyte.genes , 'OPC'=OPC
 
 
 
+
+
+##### Figure xxx - C4/NPC -----
+
+
+tmp.c4 <- results.out |>
+  dplyr::filter(!is.na(.data$C4.2022)) |> 
+  dplyr::filter(.data$C4.2022 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+tmp.npc <- results.out |> 
+  dplyr::filter(!is.na(.data$neftel.meta.modules.NPC1) | !is.na(.data$neftel.meta.modules.NPC2)) |> 
+  dplyr::filter(.data$neftel.meta.modules.NPC1 == T | .data$neftel.meta.modules.NPC2 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+tmp.c4.npc <- intersect(tmp.c4, tmp.npc)
+tmp.c4 <- setdiff(tmp.c4, tmp.c4.npc)
+tmp.npc <- setdiff(tmp.npc, tmp.c4.npc)
+
+sid_print <- sid |> 
+  stringr::str_replace("snRNA_","(single nucleus RNA-seq) ") |> 
+  stringr::str_replace("scRNA_","(single cell RNA-seq) ") |> 
+  stringr::str_replace("_",": ")
+
+
+DotPlot(object = object_1, features =list('C4'=tmp.c4
+                                          #, 'NPC'=tmp.npc, 'C4+NPC'=tmp.c4.npc
+                                          ), 
+        group.by = "seurat_clusters",
+        scale.max=80,
+        col.min = -1,
+        col.max = 1.5
+) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
+  labs(x = paste0("Features [C4/NPC] in: ",sid_print, " (Diaz dataset)"))
+
+
+
+
+
 #### 5. Oligodendrocytes + OPC (+) ----
 
 
