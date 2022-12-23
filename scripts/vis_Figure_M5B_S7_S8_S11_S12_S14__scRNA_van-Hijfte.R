@@ -263,6 +263,19 @@ FeaturePlot(object = object_1, features = "NODAL")
 
 #### 2. Astrocyte (+) ----
 
+FeaturePlot(object = object_1, features = "GJA1")
+FeaturePlot(object = object_1, features = "SLC14A1")
+FeaturePlot(object = object_1, features = "AQP4") # ook lichtelijk in tumor
+FeaturePlot(object = object_1, features = "KCNN3") # ook lichtelijk in tumor
+FeaturePlot(object = object_1, features = "FAM107A")
+
+
+FeaturePlot(object = object_1, features = "TIMP3")
+FeaturePlot(object = object_1, features = "NTRK2") # vrij veel gliale cellen
+FeaturePlot(object = object_1, features = "MT1E")
+FeaturePlot(object = object_1, features = "ADCYAP1R1")
+FeaturePlot(object = object_1, features = "MGST1")
+
 FeaturePlot(object = object_1, features = "STMN2") # Tumor
 FeaturePlot(object = object_1, features = "ETNPPL") # Tumor
 
