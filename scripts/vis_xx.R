@@ -264,7 +264,7 @@ rm(tmp.c3, tmp.opc, tmp.c3.opc, sid_print)
 
 
 
-#### 6A. Endothelial (?) ----
+#### 6A. Endothelial ----
 
 FeaturePlot(object = object_1, features = "ABCB1")
 FeaturePlot(object = object_1, features = "CD34")
@@ -633,7 +633,7 @@ rm(tmp.c3, tmp.opc, tmp.c3.opc, sid_print)
 
 
 
-#### 6A. Endothelial (?) ----
+#### 6A. Endothelial ----
 
 FeaturePlot(object = object_1, features = "ABCB1")
 FeaturePlot(object = object_1, features = "CD34")
@@ -655,7 +655,7 @@ DotPlot(object = object_1, features = c("SSTR2", "SST", "LHX1", "LHX6","NHLH1","
 
 
 
-#### 6B. Pericytes (12) ----
+#### 6B. Pericytes ----
 
 FeaturePlot(object = object_1, features = "RGS5")
 FeaturePlot(object = object_1, features = "PDGFRB")
@@ -1707,6 +1707,42 @@ FeaturePlot(object = object_1, features = "MOG")
 FeaturePlot(object = object_1, features = "PLP1")
 
 
+#### 6A. Endothelial ----
+
+FeaturePlot(object = object_1, features = "ABCB1")
+FeaturePlot(object = object_1, features = "CD34")
+FeaturePlot(object = object_1, features = "FLT4")
+FeaturePlot(object = object_1, features = "TIE1") # meh
+FeaturePlot(object = object_1, features = "ITGA1") # endo + peri?
+
+
+FeaturePlot(object = object_1, features = c("ABCB1", "CD34", "FLT4", "TIE1", "ITGA1",
+                                            "RGS5", "PDGFRB", "CD248"))
+
+
+DotPlot(object = object_1, features = c("ABCB1", "CD34", "FLT4", "TIE1", "ITGA1",
+                                        "RGS5", "PDGFRB", "CD248"), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+
+FeaturePlot(object = object_1, features = c("SSTR2", "SST", "LHX1", "LHX6","NHLH1","NHLH2")) # other type of endothelial cells?
+DotPlot(object = object_1, features = c("SSTR2", "SST", "LHX1", "LHX6","NHLH1","NHLH2"), group.by = "seurat_clusters") # other type of endothelial cells?
+
+
+
+#### 6B. Pericytes ----
+
+FeaturePlot(object = object_1, features = "RGS5")
+FeaturePlot(object = object_1, features = "PDGFRB")
+FeaturePlot(object = object_1, features = "CD248")
+
+FeaturePlot(object = object_1, features = c("PEAR1"))
+FeaturePlot(object = object_1, features = c("HEYL"))
+FeaturePlot(object = object_1, features = c("CFH"))
+
+FeaturePlot(object = object_1, features = "ITGA1") # endo + peri?
+
+
+
 # CPTAC-3 - D_CPT0205570014 ----
 
 
@@ -2044,7 +2080,7 @@ FeaturePlot(object = object_1, features = "PLP1")
 
 
 # CPTAC-3 - E_CPT0206000015 [nice sample, no neurons] ----
-
+# infer CNV moet op deze worden gedaan
 
 rhdf5::h5closeAll()
 rm(object_1, lfile)
@@ -2414,8 +2450,45 @@ FeaturePlot(object = object_1, features = "MOG")
 FeaturePlot(object = object_1, features = "PLP1")
 
 
+#### 6A. Endothelial ----
 
-# CPTAC-3 - CPT0206770002 - F - no neurons ----
+FeaturePlot(object = object_1, features = "ABCB1")
+FeaturePlot(object = object_1, features = "CD34")
+FeaturePlot(object = object_1, features = "FLT4")
+FeaturePlot(object = object_1, features = "TIE1") # meh
+FeaturePlot(object = object_1, features = "ITGA1") # endo + peri?
+
+
+FeaturePlot(object = object_1, features = c("ABCB1", "CD34", "FLT4", "TIE1", "ITGA1",
+                                            "RGS5", "PDGFRB", "CD248"))
+
+
+DotPlot(object = object_1, features = c("ABCB1", "CD34", "FLT4", "TIE1", "ITGA1",
+                                        "RGS5", "PDGFRB", "CD248"), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+
+FeaturePlot(object = object_1, features = c("SSTR2", "SST", "LHX1", "LHX6","NHLH1","NHLH2")) # other type of endothelial cells?
+DotPlot(object = object_1, features = c("SSTR2", "SST", "LHX1", "LHX6","NHLH1","NHLH2"), group.by = "seurat_clusters") # other type of endothelial cells?
+
+
+
+#### 6B. Pericytes ----
+
+
+FeaturePlot(object = object_1, features = "RGS5")
+FeaturePlot(object = object_1, features = "PDGFRB")
+FeaturePlot(object = object_1, features = "CD248")
+
+FeaturePlot(object = object_1, features = c("PEAR1"))
+FeaturePlot(object = object_1, features = c("HEYL"))
+FeaturePlot(object = object_1, features = c("CFH"))
+
+FeaturePlot(object = object_1, features = "ITGA1") # endo + peri?
+
+
+
+# CPTAC-3 - F_CPT0206770002 - no neurons ----
+
 
 
 rhdf5::h5closeAll()
@@ -2423,8 +2496,8 @@ rm(object_1, lfile)
 gc()
 
 
-sid <- 'CPT0206770002'
-origin_file <-  "data/CPTAC-3/CPT0206770002/1ef4a07d-2a1a-42b4-9d5f-fdf45c2345a0/seurat.loom"
+sid <- 'F_CPT0206770002'
+origin_file <-  "data/CPTAC-3/F_CPT0206770002/1ef4a07d-2a1a-42b4-9d5f-fdf45c2345a0/seurat.loom"
 target_file <- paste0("tmp/CPTAC-3_",sid,"_seurat.loom")
 if(!file.exists(target_file)) {
   print("Copying loom file to rw cache")
@@ -2433,7 +2506,6 @@ if(!file.exists(target_file)) {
 }
 
 lfile <- loomR::connect(filename = target_file, mode = "r+", skip.validate = TRUE)# skip.validate is needed because the provided loom file is in some old specification/version
-
 
 
 mat <- t(lfile[['matrix']][,])
@@ -2472,34 +2544,10 @@ object_1 <- CreateSeuratObject(counts = mat, min.cells = 3, min.features = 200, 
 rm(mat)
 
 
-
-
-
-
-
-
 mito.features_object1 <- grep(pattern = "^MT-", x=rownames(x=object_1), value=T)
 percent.mito_object1 <- Matrix::colSums(x = GetAssayData(object = object_1, slot="counts")[mito.features_object1,]) / Matrix::colSums(x = GetAssayData(object = object_1, slot = "counts"))
 object_1[["percent.mito"]] <- percent.mito_object1
 VlnPlot(object = object_1, features = c("nFeature_RNA", "nCount_RNA", "percent.mito"), ncol = 3, pt.size = 0.01, group.by = "orig.ident") 
-
-
-# ggplot(object_1@meta.data, aes(y=`nFeature_RNA`, x=orig.ident)) +
-#   geom_jitter(cex=0.01) +
-#   geom_hline(yintercept = 500,col="red") +
-#   geom_hline(yintercept = 6000,col="red")
-# 
-# ggplot(object_1@meta.data, aes(y=`nCount_RNA`, x=orig.ident)) +
-#   geom_jitter(cex=0.01)  +
-#   geom_hline(yintercept = 1000,col="red") +
-#   geom_hline(yintercept = 22500,col="red") # + scale_y_log10()
-# 
-# object_1 <- subset(x = object_1, subset =
-#                      nFeature_RNA > 500 &
-#                      nFeature_RNA < 6000 &
-#                      nCount_RNA > 1000 &
-#                      nCount_RNA < 22500 &
-#                      percent.mito < 0.2)
 
 
 
@@ -2530,55 +2578,44 @@ print(object_1[["pca"]], dims = 1:5, nfeatures = 5)
 VizDimLoadings(object_1, dims = 1:2, reduction = "pca")
 DimPlot(object_1, reduction = "pca")
 
+
 #### estimation of the number of principle components in your dataset
+
 
 ElbowPlot(object_1, ndims = 45)
 
 d <- 35
 object_1 <- FindNeighbors(object_1, dims = 1:d)
-object_1 <- FindClusters(object_1, resolution = 1, algorithm=1)
-head(Idents(object_1), 20)
-
-
-
 object_1 <- RunUMAP(object_1, dims = 1:d)
 
 
 ## clustering & annotation ----
 
 
-# 1 = healthy AC
-# 2,11 = OD
-# 4,5,6 = TAM
-# 7,10,9,0,3 = Tum
-# 8 = T/T-cell
-# 
-# 
-# levels(object_1$seurat_clusters) <- gsub("^(0|1|2|3|4|5|7|8|9|10|11|17|18|21|15)$",paste0("\\1. T"),levels(object_1$seurat_clusters)) # EGFR
-# levels(object_1$seurat_clusters) <- gsub("^(11)$",paste0("\\1. NE"),levels(object_1$seurat_clusters)) # EGFR
-# levels(object_1$seurat_clusters) <- gsub("^(12)$",paste0("\\1. OD"),levels(object_1$seurat_clusters))
-# levels(object_1$seurat_clusters) <- gsub("^(6)$",paste0("\\1. T|AC"),levels(object_1$seurat_clusters))
-# levels(object_1$seurat_clusters) <- gsub("^(12|14)$",paste0("\\1. TAM"),levels(object_1$seurat_clusters))
-# levels(object_1$seurat_clusters) <- gsub("^(22)$",paste0("\\1. GABRG1+"),levels(object_1$seurat_clusters)) # also PLA2G5+
-# 
-# 
-# object_1$seurat_clusters <- factor(object_1$seurat_clusters, levels=c(
-#   "0. T" , "1. T" , "2. T" , "3. T" , "4. T" ,
-#   "5. T" , "7. T" , "8. T" , "9. T" ,
-#   "10. T" , "11. T" , "15. T" , "17. T" , "18. T" , "21. T",
-#   "6. T|AC" ,
-#   "22. GABRG1+",
-#   "13. OD" ,
-#   "16. NE", "19. NE", "20. NE" ,
-#   "12. TAM", "14. TAM" 
-# ))
-# 
+object_1 <- FindClusters(object_1, resolution = 1, algorithm = 1)
+
+
+object_1$cell_type = ""
+#object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(13,16,1,9,15), "T", object_1$cell_type)
+#object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(4,8,0,3,12,2,14,11), "TAM", object_1$cell_type)
+#object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(5,6,20), "OD", object_1$cell_type)
+#object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(11), "NE", object_1$cell_type)
+#object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(23), "EN", object_1$cell_type)
+#object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(21), "PE", object_1$cell_type)
+#object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(19,7,10,18), "TC", object_1$cell_type)
+#object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(22), "BC", object_1$cell_type)
+#object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(17), "NRXN1+", object_1$cell_type)
+object_1$annotated_clusters = paste0(object_1$seurat_clusters,". ",object_1$cell_type)
 
 
 
-DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters") +
+object_1 <- reorder_levels(object_1, c("", "EN","PE", "BC", "TC", "TAM", "NE", "NRXN1+", "OD", "AC", "T"))
+
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "annotated_clusters") +
   guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
   labs(subtitle=sid)
+
+
 
 
 #### 4. Neurons ----
@@ -2588,16 +2625,16 @@ FeaturePlot(object = object_1, features = "RBFOX3", label=T)
 FeaturePlot(object = object_1, features = "RBFOX3", label=F)
 
 
-# CPTAC-3 - CPT0206880004 - G ----
-
+# CPTAC-3 - G_CPT0206880004 ----
+# infercnv nodig
 
 rhdf5::h5closeAll()
 rm(object_1, lfile)
 gc()
 
 
-sid <- 'CPT0206880004'
-origin_file <-  "data/CPTAC-3/CPT0206880004/71494916-46c2-4235-9225-ffe218bbdf07/seurat.loom"
+sid <- 'G_CPT0206770002'
+origin_file <-  "data/CPTAC-3/G_CPT0206880004/71494916-46c2-4235-9225-ffe218bbdf07/seurat.loom"
 target_file <- paste0("tmp/CPTAC-3_",sid,"_seurat.loom")
 if(!file.exists(target_file)) {
   print("Copying loom file to rw cache")
@@ -2606,7 +2643,6 @@ if(!file.exists(target_file)) {
 }
 
 lfile <- loomR::connect(filename = target_file, mode = "r+", skip.validate = TRUE)# skip.validate is needed because the provided loom file is in some old specification/version
-
 
 
 mat <- t(lfile[['matrix']][,])
@@ -2645,34 +2681,10 @@ object_1 <- CreateSeuratObject(counts = mat, min.cells = 3, min.features = 200, 
 rm(mat)
 
 
-
-
-
-
-
-
 mito.features_object1 <- grep(pattern = "^MT-", x=rownames(x=object_1), value=T)
 percent.mito_object1 <- Matrix::colSums(x = GetAssayData(object = object_1, slot="counts")[mito.features_object1,]) / Matrix::colSums(x = GetAssayData(object = object_1, slot = "counts"))
 object_1[["percent.mito"]] <- percent.mito_object1
 VlnPlot(object = object_1, features = c("nFeature_RNA", "nCount_RNA", "percent.mito"), ncol = 3, pt.size = 0.01, group.by = "orig.ident") 
-
-
-# ggplot(object_1@meta.data, aes(y=`nFeature_RNA`, x=orig.ident)) +
-#   geom_jitter(cex=0.01) +
-#   geom_hline(yintercept = 500,col="red") +
-#   geom_hline(yintercept = 6000,col="red")
-# 
-# ggplot(object_1@meta.data, aes(y=`nCount_RNA`, x=orig.ident)) +
-#   geom_jitter(cex=0.01)  +
-#   geom_hline(yintercept = 1000,col="red") +
-#   geom_hline(yintercept = 22500,col="red") # + scale_y_log10()
-# 
-# object_1 <- subset(x = object_1, subset =
-#                      nFeature_RNA > 500 &
-#                      nFeature_RNA < 6000 &
-#                      nCount_RNA > 1000 &
-#                      nCount_RNA < 22500 &
-#                      percent.mito < 0.2)
 
 
 
@@ -2703,67 +2715,77 @@ print(object_1[["pca"]], dims = 1:5, nfeatures = 5)
 VizDimLoadings(object_1, dims = 1:2, reduction = "pca")
 DimPlot(object_1, reduction = "pca")
 
+
 #### estimation of the number of principle components in your dataset
+
 
 ElbowPlot(object_1, ndims = 45)
 
 d <- 35
 object_1 <- FindNeighbors(object_1, dims = 1:d)
-object_1 <- FindClusters(object_1, resolution = 1, algorithm=1)
-head(Idents(object_1), 20)
-
-
-
 object_1 <- RunUMAP(object_1, dims = 1:d)
 
 
 ## clustering & annotation ----
 
 
-# 1 = healthy AC
-# 2,11 = OD
-# 4,5,6 = TAM
-# 7,10,9,0,3 = Tum
-# 8 = T/T-cell
-# 
-# 
-# levels(object_1$seurat_clusters) <- gsub("^(0|1|2|3|4|5|7|8|9|10|11|17|18|21|15)$",paste0("\\1. T"),levels(object_1$seurat_clusters)) # EGFR
-levels(object_1$seurat_clusters) <- gsub("^(14|9|16|15|12|6)$",paste0("\\1. NE"),levels(object_1$seurat_clusters)) # EGFR
-# levels(object_1$seurat_clusters) <- gsub("^(12)$",paste0("\\1. OD"),levels(object_1$seurat_clusters))
-# levels(object_1$seurat_clusters) <- gsub("^(6)$",paste0("\\1. T|AC"),levels(object_1$seurat_clusters))
-# levels(object_1$seurat_clusters) <- gsub("^(12|14)$",paste0("\\1. TAM"),levels(object_1$seurat_clusters))
-# levels(object_1$seurat_clusters) <- gsub("^(22)$",paste0("\\1. GABRG1+"),levels(object_1$seurat_clusters)) # also PLA2G5+
-# 
-# 
-# object_1$seurat_clusters <- factor(object_1$seurat_clusters, levels=c(
-#   "0. T" , "1. T" , "2. T" , "3. T" , "4. T" ,
-#   "5. T" , "7. T" , "8. T" , "9. T" ,
-#   "10. T" , "11. T" , "15. T" , "17. T" , "18. T" , "21. T",
-#   "6. T|AC" ,
-#   "22. GABRG1+",
-#   "13. OD" ,
-#   "16. NE", "19. NE", "20. NE" ,
-#   "12. TAM", "14. TAM" 
-# ))
-# 
+object_1 <- FindClusters(object_1, resolution = 1, algorithm = 1)
 
 
+object_1$cell_type = ""
+object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(0,3,8,1,13), "T", object_1$cell_type)
+object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(4,5,7), "TAM", object_1$cell_type)
+object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(11,2), "OD", object_1$cell_type)
+object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(14,9,6,15,16,12), "NE", object_1$cell_type)
+object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(18), "EN", object_1$cell_type)
+object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(19), "PE", object_1$cell_type)
+object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(10), "TC", object_1$cell_type)
+#object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(22), "BC", object_1$cell_type)
+#object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(17), "NRXN1+", object_1$cell_type)
+object_1$annotated_clusters = paste0(object_1$seurat_clusters,". ",object_1$cell_type)
 
-DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters") +
+
+object_1 <- reorder_levels(object_1, c("", "EN","PE", "BC", "TC", "TAM", "NE", "NRXN1+", "OD", "AC", "T"))
+
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "annotated_clusters") +
   guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
   labs(subtitle=sid)
 
 
+m.17 <- FindMarkers(object_1, ident.1 = c(17))
+m.20 <- FindMarkers(object_1, ident.1 = c(20))
+m.21 <- FindMarkers(object_1, ident.1 = c(21))
 
-DimPlot(object_1, reduction = "pca", label = TRUE, pt.size = .6, group.by = "seurat_clusters") +
-  guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
-  labs(subtitle=sid)
+
+#### 0. Find Doublets ----
 
 
-# 
-# m.22 <- FindMarkers(object_1, ident.1 = c(22))
-# m.21 <- FindMarkers(object_1, ident.1 = c(21))
-# 
+dbl <- Seurat::as.SingleCellExperiment(object_1)
+# dbl.out <- scDblFinder::findDoubletClusters(dbl, clusters=dbl$seurat_clusters)
+# dbl.out[1,]
+
+
+set.seed(123456)
+top.mam <- scran::getTopHVGs(dbl, prop=0.1)
+dbl.dens <- scDblFinder::computeDoubletDensity(dbl,
+                                               subset.row=top.mam, 
+                                               d=ncol(reducedDim(dbl)))
+
+dbl$DoubletScore <- dbl.dens
+scater::plotUMAP(dbl, colour_by="DoubletScore")
+
+stopifnot(colnames(dbl) == colnames(object_1))
+object_1$DoubletScore <- dbl$DoubletScore
+rm(dbl, dbl.out, dbl.dens, top.man)
+gc()
+
+DotPlot(object = object_1, features = "DoubletScore")
+FeaturePlot(object = object_1, features = "DoubletScore", label=T)
+FeaturePlot(object = object_1, features = "DoubletScore", label=F)
+
+
+
+
 
 #### 0. Infer CNV ----
 
@@ -2860,22 +2882,6 @@ FeaturePlot(object = object_1, features = "SLC14A1", label=T)
 
 
 
-
-
-
-
-
-FeaturePlot(object = object_1, features = "ETNPPL") # Tumor
-FeaturePlot(object = object_1, features = "GPR98")
-FeaturePlot(object = object_1, features = "BMPR1B")
-FeaturePlot(object = object_1, features = "ETNPPL")
-FeaturePlot(object = object_1, features = "GJB6")
-FeaturePlot(object = object_1, features = "FGFR3")
-FeaturePlot(object = object_1, features = "SLC25A18")
-FeaturePlot(object = object_1, features = "SLC1A2")
-FeaturePlot(object = object_1, features = "SDC4")
-
-
 #### 3A. TAM ----
 
 
@@ -2888,6 +2894,7 @@ FeaturePlot(object = object_1, features = c("C1QC"))
 
 #### 3B. Til/T-cell ----
 
+
 FeaturePlot(object = object_1, features = "CD2")
 FeaturePlot(object = object_1, features = "CD3D")
 FeaturePlot(object = object_1, features = "TRBC2")
@@ -2896,30 +2903,25 @@ FeaturePlot(object = object_1, features = "ICOS")
 FeaturePlot(object = object_1, features = "GZMA")
 
 
+#### 3C. B-cells ----
+
+
+FeaturePlot(object = object_1, features = c("IGLC3"), order=T)
+FeaturePlot(object = object_1, features = c("CD19"), order=T)
+FeaturePlot(object = object_1, features = c("CD79B"), order=T)
+
+
 #### 4. Neurons ----
 
-FeaturePlot(object = object_1, features = "RBFOX3", label=T)
-FeaturePlot(object = object_1, features = "RBFOX3", label=F)
-FeaturePlot(object = object_1, features = "RBFOX1")
-FeaturePlot(object = object_1, features = "RBFOX2") # NPC2 ~ Neftel
 
+FeaturePlot(object = object_1, features = "RBFOX3", label=T, order=T)
+FeaturePlot(object = object_1, features = "RBFOX3", label=F, order=T)
 
-
-
-
-
-
-
-DotPlot(object = object_1, features = c("RBFOX3",
-                                        "CNR1","SYT1","SYNPR","GABRA1","RELN,","VIP",
-                                        "CCT2","RUFY2","UBN2","ATP6V1H","HSPA4L","NASP","GNAO1","RAB6B","HLF","SLC25A36"
-),group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-
-
-
+FeaturePlot(object = object_1, features = c("RBFOX3","DoubletScore"), label=F)
 
 
 ##### Figure Sxx - C4 ----
+
 
 tmp.c4 <- results.out |>
   dplyr::filter(!is.na(.data$C4.2022)) |> 
@@ -2957,24 +2959,67 @@ tmp <- list('C4'=tmp.c4,
             'NPC2 + C4' = tmp.c4.npc2)
 
 
-DotPlot(object = object_1, features = tmp, group.by = "seurat_clusters",
+DotPlot(object = object_1, features = tmp, group.by = "annotated_clusters",
         cols = c("lightgrey", "purple")) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
-  labs(x = paste0("Features [C4/NPC] in: ",sid_print))
+  labs(x = paste0("Features [C4/NPC] in: ", gsub("^.+_","",sid_print), " (CPTAC-3 dataset)"))
 
 
+
+ggsave(paste0("output/figures/2022_Figure_S7_ext_CPTAC-3_",sid,".pdf"),width=7.5*3, height=4,scale=1.2)
+rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
 
 
 
 #### 5. Oligodendrocytes ----
 
 
-FeaturePlot(object = object_1, features = "TMEM144")
+FeaturePlot(object = object_1, features = "TMEM144", order=T, label=F)
+FeaturePlot(object = object_1, features = "TMEM144", order=T, label=T)
 FeaturePlot(object = object_1, features = "TMEM125")
 FeaturePlot(object = object_1, features = "MOG")
 FeaturePlot(object = object_1, features = "PLP1")
 
 
+
+#### 6A. Endothelial ----
+
+
+FeaturePlot(object = object_1, features = "ABCB1")
+FeaturePlot(object = object_1, features = "CD34")
+FeaturePlot(object = object_1, features = "FLT4")
+FeaturePlot(object = object_1, features = "TIE1") # meh
+FeaturePlot(object = object_1, features = "ITGA1") # endo + peri?
+
+
+FeaturePlot(object = object_1, features = c("ABCB1", "CD34", "FLT4", "TIE1", "ITGA1",
+                                            "RGS5", "PDGFRB", "CD248"))
+
+
+DotPlot(object = object_1, features = c("ABCB1", "CD34", "FLT4", "TIE1", "ITGA1",
+                                        "RGS5", "PDGFRB", "CD248"), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+
+FeaturePlot(object = object_1, features = c("SSTR2", "SST", "LHX1", "LHX6","NHLH1","NHLH2")) # other type of endothelial cells?
+DotPlot(object = object_1, features = c("SSTR2", "SST", "LHX1", "LHX6","NHLH1","NHLH2"), group.by = "seurat_clusters") # other type of endothelial cells?
+
+
+
+#### 6B. Pericytes ----
+
+
+FeaturePlot(object = object_1, features = "RGS5")
+FeaturePlot(object = object_1, features = "PDGFRB")
+FeaturePlot(object = object_1, features = "CD248")
+
+FeaturePlot(object = object_1, features = c("PEAR1"))
+FeaturePlot(object = object_1, features = c("HEYL"))
+FeaturePlot(object = object_1, features = c("CFH"))
+
+FeaturePlot(object = object_1, features = "ITGA1") # endo + peri?
+
+DotPlot(object = object_1, features = c("ABCB1", "CD34", "FLT4", "TIE1", "ITGA1",
+                                        "RGS5", "PDGFRB", "CD248"), group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
 
 
@@ -6577,7 +6622,6 @@ FeaturePlot(object = object_1, features = "TMEM144", label=T)
 FeaturePlot(object = object_1, features = "TMEM125")
 FeaturePlot(object = object_1, features = "MOG")
 FeaturePlot(object = object_1, features = "PLP1")
-
 
 
 
