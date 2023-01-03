@@ -517,11 +517,6 @@ FeaturePlot(object = object_1, features = "RBFOX2") # NPC2 ~ Neftel
 
 
 
-
-
-
-
-
 DotPlot(object = object_1, features = c("RBFOX3",
                                         "CNR1","SYT1","SYNPR","GABRA1","RELN,","VIP",
                                         "CCT2","RUFY2","UBN2","ATP6V1H","HSPA4L","NASP","GNAO1","RAB6B","HLF","SLC25A36"
@@ -1947,7 +1942,7 @@ FeaturePlot(object = object_1, features = "CDH10")
 
 #### 2. Astrocyte ----
 
-m.ac <- FindMarkers(object_1, ident.1 = c(1))
+# m.ac <- FindMarkers(object_1, ident.1 = c(1))
 
 
 FeaturePlot(object = object_1, features = "GJA1", label=T)
@@ -2048,7 +2043,7 @@ FeaturePlot(object = object_1, features = "MOG")
 FeaturePlot(object = object_1, features = "PLP1")
 
 
-# CPTAC-3 - E_CPT0206000015 ----
+# CPTAC-3 - E_CPT0206000015 [nice sample, no neurons] ----
 
 
 rhdf5::h5closeAll()
@@ -2156,26 +2151,32 @@ object_1 <- FindClusters(object_1, resolution = 1, algorithm = 1)
 
 
 object_1$cell_type = ""
-object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(13,16,1,9), "T", object_1$cell_type)
-#object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(8,4), "TAM", object_1$cell_type)
+object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(13,16,1,9,15), "T", object_1$cell_type)
+object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(4,8,0,3,12,2,14,11), "TAM", object_1$cell_type)
 object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(5,6,20), "OD", object_1$cell_type)
 #object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(11), "NE", object_1$cell_type)
 object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(23), "EN", object_1$cell_type)
 object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(21), "PE", object_1$cell_type)
 object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(19,7,10,18), "TC", object_1$cell_type)
-#object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(22), "GABRG1+, non-T", object_1$cell_type) # some sort of strange RBFOX3 negative neuron?
+object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(22), "BC", object_1$cell_type)
+object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(17), "NRXN1+", object_1$cell_type)
 object_1$annotated_clusters = paste0(object_1$seurat_clusters,". ",object_1$cell_type)
 
 
 
-object_1 <- reorder_levels(object_1, c("", "EN","PE", "TC", "TAM", "NE", "GABRG1+, non-T", "OD", "AC", "T"))
+object_1 <- reorder_levels(object_1, c("", "EN","PE", "BC", "TC", "TAM", "NE", "NRXN1+", "OD", "AC", "T"))
 
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "annotated_clusters") +
   guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
   labs(subtitle=sid)
 
 
-#m.13 <- FindMarkers(object_1, ident.1 = c(13)) # en and pe genes
+
+#m.15 <- FindMarkers(object_1, ident.1 = c(15))  # T-cell CD7+
+#m.17 <- FindMarkers(object_1, ident.1 = c(17)) 
+#FeaturePlot(object = object_1, features = "BCAN")
+#FeaturePlot(object = object_1, features = "TNR")
+#FeaturePlot(object = object_1, features = "NRXN1")
 
 
 #### 0. Find Doublets ----
@@ -2305,7 +2306,6 @@ FeaturePlot(object = object_1, features = "SLC14A1", label=T)
 
 
 
-
 FeaturePlot(object = object_1, features = "ETNPPL") # Tumor
 FeaturePlot(object = object_1, features = "GPR98")
 FeaturePlot(object = object_1, features = "BMPR1B")
@@ -2338,11 +2338,19 @@ FeaturePlot(object = object_1, features = "ICOS")
 FeaturePlot(object = object_1, features = "GZMA")
 
 
+#### 3C. B-cells ----
+
+
+FeaturePlot(object = object_1, features = c("IGLC3"), order=T)
+FeaturePlot(object = object_1, features = c("CD19"), order=T)
+FeaturePlot(object = object_1, features = c("CD79B"), order=T)
+
+
 #### 4. Neurons ----
 
 
-FeaturePlot(object = object_1, features = "RBFOX3", label=T)
-FeaturePlot(object = object_1, features = "RBFOX3", label=F)
+FeaturePlot(object = object_1, features = "RBFOX3", label=T, order=T)
+FeaturePlot(object = object_1, features = "RBFOX3", label=F, order=T)
 
 FeaturePlot(object = object_1, features = c("RBFOX3","DoubletScore"), label=F)
 

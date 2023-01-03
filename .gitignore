@@ -44,3 +44,4 @@ infercnv
 /host
 *.copy
 *.Zone.Identifier
+*.loom
