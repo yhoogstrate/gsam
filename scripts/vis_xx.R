@@ -2955,9 +2955,9 @@ DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "an
 # m.20 <- FindMarkers(object_1, ident.1 = c(20)) # AC? - ZNF98, MRVI1, AL137139.1, PRODH, SLC7A10, RNF219-AS1, AC018618.1, AC073941.1, SLC14A1, CD38, ETNPPL, LINC00499, RGS20, APLNR, AC012405.1, SLC39A12, FAM189A2, HPSE2, AC104574.2, RANBP3L, TPD52L1, FAM107A, AC097518.2, LINC00299, AC087482.1
 # m.21 <- FindMarkers(object_1, ident.1 = c(21)) # ? TACSTD2, UGT2B7, PKHD1, ENSG00000272398, AOC1, LCN2, FXYD4, MMP7, AQP2, KRT18, KRT19, SLPI, WFDC2, CLDN8, FOLR1, SLC14A2, DEFB1, S100A11, PAX8, CDH16, EPCAM, AGR2, AC023421.1, TFPI2, KRT7
 
-head(m.17, n=25)
-head(m.20, n=25)
-head(m.21, n=25)
+# head(m.17, n=25)
+# head(m.20, n=25)
+# head(m.21, n=25)
 
 
 
@@ -3184,7 +3184,6 @@ DotPlot(object = object_1, features = tmp, group.by = "annotated_clusters",
   labs(x = paste0("Features [C4/NPC] in: ", gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
 
 
-
 ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C4.pdf"),width=7.5*3, height=4,scale=1.2)
 rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
 
@@ -3218,8 +3217,6 @@ tmp.opc <- results.out |>
 tmp.c3.opc <- intersect(tmp.c3, tmp.opc)
 tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
 tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
-
-
 
 
 DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc, "C3 + OPC-like" = tmp.c3.opc), group.by = "annotated_clusters") +
@@ -3603,10 +3600,8 @@ DotPlot(object = object_1, features = tmp, group.by = "annotated_clusters",
   labs(x = paste0("Features [C4/NPC] in: ", gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
 
 
-
 ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C4.pdf"),width=7.5*3, height=4,scale=1.2)
 rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
-
 
 
 
@@ -3638,8 +3633,6 @@ tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
 tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
 
 
-
-
 DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc, "C3 + OPC-like" = tmp.c3.opc), group.by = "annotated_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
   labs(x = paste0("Features [C3/OPC-like] in: ", gsub("^.+_","",sid), " (CPTAC-3)"))
@@ -3647,8 +3640,6 @@ DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc, 
 
 ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C3.pdf"),width=7.5*3, height=4,scale=1.2)
 rm(tmp.c3, tmp.opc, tmp.c3.opc)
-
-
 
 
 
@@ -4137,7 +4128,6 @@ DotPlot(object = object_1, features = tmp, group.by = "annotated_clusters",
   labs(x = paste0("Features [C4/NPC] in: ", gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
 
 
-
 ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C4.pdf"),width=7.5*3, height=4,scale=1.2)
 rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
 
@@ -4173,8 +4163,6 @@ tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
 tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
 
 
-
-
 DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc, "C3 + OPC-like" = tmp.c3.opc), group.by = "annotated_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
   labs(x = paste0("Features [C3/OPC-like] in: ", gsub("^.+_","",sid), " (CPTAC-3)"))
@@ -4182,7 +4170,6 @@ DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc, 
 
 ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C3.pdf"),width=7.5*3, height=4,scale=1.2)
 rm(tmp.c3, tmp.opc, tmp.c3.opc)
-
 
 
 
@@ -4314,11 +4301,11 @@ object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(7, 12), "NE", object
 #object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(19), "PE", object_1$cell_type)
 object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(11), "TC", object_1$cell_type)
 #object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(20), "AC", object_1$cell_type)# indeed CNV neutral
-object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(15), "CX", object_1$cell_type)
+object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(15), "OPC", object_1$cell_type)
 object_1$annotated_clusters = paste0(object_1$seurat_clusters,". ",object_1$cell_type)
 
 
-object_1 <- reorder_levels(object_1, c("", "CX", "EN","PE", "BC", "TC", "TAM", "NE", "OD", "AC", "T"))
+object_1 <- reorder_levels(object_1, c("", "EN","PE", "BC", "TC", "TAM", "NE", "OPC", "OD", "AC", "T"))
 
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "annotated_clusters") +
   guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
@@ -4527,7 +4514,6 @@ DotPlot(object = object_1, features = tmp, group.by = "annotated_clusters",
   labs(x = paste0("Features [C4/NPC] in: ", gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
 
 
-
 ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C4.pdf"),width=7.5*3, height=4,scale=1.2)
 rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
 
@@ -4562,8 +4548,6 @@ tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
 tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
 
 
-
-
 DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc, "C3 + OPC-like" = tmp.c3.opc), group.by = "annotated_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
   labs(x = paste0("Features [C3/OPC-like] in: ", gsub("^.+_","",sid), " (CPTAC-3)"))
@@ -4574,15 +4558,12 @@ rm(tmp.c3, tmp.opc, tmp.c3.opc)
 
 
 
-
 #### 5B. OPC ----
 
 
 DotPlot(object_1, features = cell_type_opc , group.by = "annotated_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=9)) +
   labs(x = paste0("Features [CTX] in: ", gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
-
-
 
 
 #### 6A. Endothelial ----
