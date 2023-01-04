@@ -267,37 +267,6 @@ FeaturePlot(object = object_1, features = "PLP1")
 
 
 
-##### C3/OPC -----
-
-
-tmp.c3 <- results.out |>
-  dplyr::filter(!is.na(.data$C3.2022)) |>
-  dplyr::filter(.data$C3.2022 == T) |>
-  dplyr::filter(!is.na(hugo_symbol)) |>
-  dplyr::pull(hugo_symbol) |>
-  unique()
-tmp.opc <- results.out |>
-  dplyr::filter(!is.na(.data$neftel.meta.modules.OPC)) |>
-  dplyr::filter(.data$neftel.meta.modules.OPC == T) |>
-  dplyr::filter(!is.na(hugo_symbol)) |>
-  dplyr::pull(hugo_symbol) |>
-  unique()
-tmp.c3.opc <- intersect(tmp.c3, tmp.opc)
-tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
-tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
-
-
-sid_print <- sid |>
-  stringr::str_replace("_", " / ")
-
-
-DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC" = tmp.opc, "C3+OPC" = tmp.c3.opc), group.by = "seurat_clusters") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
-  labs(x = paste0("Features [C3/OPC] in: ", sid_print, " (Regev dataset)"))
-
-
-#ggsave(paste0("output/figures/2022_Figure_S8K.pdf"), width = 7.5 * 1.8, height = 3.75, scale = 1.2)
-rm(tmp.c3, tmp.opc, tmp.c3.opc, sid_print)
 
 
 
@@ -397,24 +366,6 @@ object_1 <- RunUMAP(object_1, dims = 1:d)
 
 
 ## clustering & annotation ----
-
-
-# 1 = healthy AC
-# 2,11 = OD
-# 4,5,6 = TAM
-# 7,10,9,0,3 = Tum
-# 8 = T/T-cell
-
-
-# levels(object_1$seurat_clusters) <- gsub("^()$",paste0("\\1. T"),levels(object_1$seurat_clusters)) # EGFR
-# levels(object_1$seurat_clusters) <- gsub("^(20)$",paste0("\\1. T&OD doublets"),levels(object_1$seurat_clusters)) # EGFR
-# levels(object_1$seurat_clusters) <- gsub("^(9)$",paste0("\\1. T"),levels(object_1$seurat_clusters)) # OPC - no EGFR or doublets with NE
-# levels(object_1$seurat_clusters) <- gsub("^(11)$",paste0("\\1. TAM"),levels(object_1$seurat_clusters))
-# levels(object_1$seurat_clusters) <- gsub("^(13|12|4|5|19|10|7|17|16|8|18|22|21)$",paste0("\\1. NE"),levels(object_1$seurat_clusters))
-# levels(object_1$seurat_clusters) <- gsub("^(15)$",paste0("\\1. AC"),levels(object_1$seurat_clusters))
-# levels(object_1$seurat_clusters) <- gsub("^(24)$",paste0("\\1. EN"),levels(object_1$seurat_clusters))
-# levels(object_1$seurat_clusters) <- gsub("^(0|1)$",paste0("\\1. OD"),levels(object_1$seurat_clusters))
-
 
 
 object_1 <- FindClusters(object_1, resolution = 1, algorithm = 1)
@@ -566,71 +517,8 @@ DotPlot(object = object_1, features = tmp, group.by = "annotated_clusters",
 
 
 
-ggsave(paste0("output/figures/2022_Figure_S7_ext_Bolleboom_",sid,".pdf"),width=7.5*3, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S8_ext_Bolleboom_",sid,"_C4.pdf"),width=7.5*3, height=4,scale=1.2)
 rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
-
-
-
-##### Figure Sxx - C4 ----
-
-
-tmp.c4 <- results.out |>
-  dplyr::filter(!is.na(.data$C4.2022)) |> 
-  dplyr::filter(.data$C4.2022 == T) |> 
-  dplyr::filter(!is.na(hugo_symbol)) |> 
-  dplyr::pull(hugo_symbol) |> 
-  unique()
-tmp.npc1 <- results.out |> 
-  dplyr::filter(!is.na(.data$neftel.meta.modules.NPC1)) |> 
-  dplyr::filter(.data$neftel.meta.modules.NPC1 == T) |> 
-  dplyr::filter(!is.na(hugo_symbol)) |> 
-  dplyr::pull(hugo_symbol) |> 
-  unique()
-tmp.npc2 <- results.out |> 
-  dplyr::filter(!is.na(.data$neftel.meta.modules.NPC2)) |> 
-  dplyr::filter(.data$neftel.meta.modules.NPC2 == T) |> 
-  dplyr::filter(!is.na(hugo_symbol)) |> 
-  dplyr::pull(hugo_symbol) |> 
-  unique()
-tmp.npc1.2 <- intersect(tmp.npc1, tmp.npc2)
-tmp.npc1 <- setdiff(tmp.npc1, tmp.npc1.2)
-tmp.npc2 <- setdiff(tmp.npc2, tmp.npc1.2)
-
-tmp.c4.npc2 <- intersect(tmp.c4, tmp.npc2)
-tmp.c4  <- setdiff(tmp.c4, tmp.c4.npc2)
-tmp.npc2 <- setdiff(tmp.npc2, tmp.c4.npc2)
-
-
-sid_print <- paste0("Bolleboom & Gao dataset - ", sid)
-
-tmp <- list('C4'=tmp.c4,
-            'NPC1'=tmp.npc1,
-            'NPC1+2'=tmp.npc1.2,
-            'NPC2'=tmp.npc2,
-            'NPC2 + C4' = tmp.c4.npc2)
-
-
-DotPlot(object = object_1, features = tmp, group.by = "seurat_clusters",
-        cols = c("lightgrey", "purple")) +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
-  labs(x = paste0("Features [C4/NPC] in: ",sid_print))
-
-
-
-ggsave(paste0("output/figures/2022_Figure_S7Z.pdf"),width=7.5*3, height=4,scale=1.2)
-rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
-
-
-
-
-object_1 <- RunPCA(object_1, features = tmp.c4, reduction.name = 'pca.c4', reduction.key = 'C4',rev.pca=T)
-object_1 <- RunPCA(object_1, features = tmp.npc, reduction.name = 'pca.npc', reduction.key = 'NPC')
-
-DotPlot(object = object_1, features =c('C4_1','NPC_1'), group.by = "seurat_clusters") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-  labs(x = paste0("Features [C4/NPC] in: ",sid_print, " (CPTAC-3 dataset)"))
-
-
 
 
 
@@ -645,7 +533,7 @@ FeaturePlot(object = object_1, features = "PLP1")
 
 
 
-##### C3/OPC -----
+##### Figure Sxx - C3/OD & OPC-L -----
 
 
 tmp.c3 <- results.out |>
@@ -665,17 +553,15 @@ tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
 tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
 
 
-sid_print <- paste0("Bolleboom & Gao dataset - ", sid)
 
 
-
-DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC" = tmp.opc, "C3+OPC" = tmp.c3.opc), group.by = "seurat_clusters") +
+DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc, "C3 + OPC-like" = tmp.c3.opc), group.by = "annotated_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
-  labs(x = paste0("Features [C3/OPC] in: ", sid_print, " (Diaz dataset)"))
+  labs(x = paste0("Features [C3/OPC-like] in: ", gsub("_","-",sid), " (Bolleboom & Gao dataset)"))
 
 
-#ggsave(paste0("output/figures/2022_Figure_S8K.pdf"), width = 7.5 * 1.8, height = 3.75, scale = 1.2)
-rm(tmp.c3, tmp.opc, tmp.c3.opc, sid_print)
+ggsave(paste0("output/figures/2022_Figure_S8_ext_Bolleboom_",sid,"_C3.pdf"),width=7.5*3, height=4,scale=1.2)
+rm(tmp.c3, tmp.opc, tmp.c3.opc)
 
 
 
@@ -1071,7 +957,7 @@ DotPlot(object = object_1, features = tmp, group.by = "annotated_clusters",
 
 
 
-ggsave(paste0("output/figures/2022_Figure_S7_ext_CPTAC-3_",sid,".pdf"),width=7.5*3, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C4.pdf"),width=7.5*3, height=4,scale=1.2)
 rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
 
 
@@ -1083,6 +969,42 @@ FeaturePlot(object = object_1, features = "TMEM144", label=T)
 FeaturePlot(object = object_1, features = "TMEM125", label=T)
 FeaturePlot(object = object_1, features = "MOG", label=T)
 FeaturePlot(object = object_1, features = "PLP1", label=T)
+
+
+
+
+##### Figure Sxx - C3/OD & OPC-L -----
+
+
+tmp.c3 <- results.out |>
+  dplyr::filter(!is.na(.data$C3.2022)) |>
+  dplyr::filter(.data$C3.2022 == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
+  unique()
+tmp.opc <- results.out |>
+  dplyr::filter(!is.na(.data$neftel.meta.modules.OPC)) |>
+  dplyr::filter(.data$neftel.meta.modules.OPC == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
+  unique()
+tmp.c3.opc <- intersect(tmp.c3, tmp.opc)
+tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
+tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
+
+
+
+
+DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc, "C3 + OPC-like" = tmp.c3.opc), group.by = "annotated_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
+  labs(x = paste0("Features [C3/OPC-like] in: ", gsub("^.+_","",sid), " (CPTAC-3)"))
+
+
+ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C3.pdf"),width=7.5*3, height=4,scale=1.2)
+rm(tmp.c3, tmp.opc, tmp.c3.opc)
+
+
+
 
 
 # B_CPT0167860015 - C3N-01814 ----
@@ -1435,7 +1357,7 @@ DotPlot(object = object_1, features = tmp, group.by = "annotated_clusters",
 
 
 
-ggsave(paste0("output/figures/2022_Figure_S7_ext_CPTAC-3_",sid,".pdf"),width=7.5*3, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C4.pdf"),width=7.5*3, height=4,scale=1.2)
 rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
 
 
@@ -1455,6 +1377,38 @@ FeaturePlot(object = object_1, features = "PLP1")
 DotPlot(object_1, features = cell_type_opc , group.by = "annotated_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=9)) +
   labs(x = paste0("Features [CTX] in: ", gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
+
+
+##### Figure Sxx - C3/OD & OPC-L -----
+
+
+tmp.c3 <- results.out |>
+  dplyr::filter(!is.na(.data$C3.2022)) |>
+  dplyr::filter(.data$C3.2022 == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
+  unique()
+tmp.opc <- results.out |>
+  dplyr::filter(!is.na(.data$neftel.meta.modules.OPC)) |>
+  dplyr::filter(.data$neftel.meta.modules.OPC == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
+  unique()
+tmp.c3.opc <- intersect(tmp.c3, tmp.opc)
+tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
+tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
+
+
+
+
+DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc, "C3 + OPC-like" = tmp.c3.opc), group.by = "annotated_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
+  labs(x = paste0("Features [C3/OPC-like] in: ", gsub("^.+_","",sid), " (CPTAC-3)"))
+
+
+ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C3.pdf"),width=7.5*3, height=4,scale=1.2)
+rm(tmp.c3, tmp.opc, tmp.c3.opc)
+
 
 
 # C_CPT0205450015 - C3N-02190 - [clean] ----
@@ -1804,7 +1758,7 @@ DotPlot(object = object_1, features = tmp, group.by = "annotated_clusters",
 
 
 
-ggsave(paste0("output/figures/2022_Figure_S7_ext_CPTAC-3_",sid,".pdf"),width=7.5*3, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C4.pdf"),width=7.5*3, height=4,scale=1.2)
 rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
 
 
@@ -1816,6 +1770,36 @@ FeaturePlot(object = object_1, features = "TMEM144")
 FeaturePlot(object = object_1, features = "TMEM125")
 FeaturePlot(object = object_1, features = "MOG")
 FeaturePlot(object = object_1, features = "PLP1")
+
+
+##### Figure Sxx - C3/OD & OPC-L -----
+
+
+tmp.c3 <- results.out |>
+  dplyr::filter(!is.na(.data$C3.2022)) |>
+  dplyr::filter(.data$C3.2022 == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
+  unique()
+tmp.opc <- results.out |>
+  dplyr::filter(!is.na(.data$neftel.meta.modules.OPC)) |>
+  dplyr::filter(.data$neftel.meta.modules.OPC == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
+  unique()
+tmp.c3.opc <- intersect(tmp.c3, tmp.opc)
+tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
+tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
+
+
+DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc, "C3 + OPC-like" = tmp.c3.opc), group.by = "annotated_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
+  labs(x = paste0("Features [C3/OPC-like] in: ", gsub("^.+_","",sid), " (CPTAC-3)"))
+
+
+ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C3.pdf"),width=7.5*3, height=4,scale=1.2)
+rm(tmp.c3, tmp.opc, tmp.c3.opc)
+
 
 
 #### 6A. Endothelial ----
@@ -2200,8 +2184,7 @@ DotPlot(object = object_1, features = tmp, group.by = "annotated_clusters",
   labs(x = paste0("Features [C4/NPC] in: ", gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
 
 
-
-ggsave(paste0("output/figures/2022_Figure_S7_ext_CPTAC-3_",sid,".pdf"),width=7.5*3, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C4.pdf"),width=7.5*3, height=4,scale=1.2)
 rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
 
 
@@ -2213,6 +2196,36 @@ FeaturePlot(object = object_1, features = "TMEM144")
 FeaturePlot(object = object_1, features = "TMEM125")
 FeaturePlot(object = object_1, features = "MOG")
 FeaturePlot(object = object_1, features = "PLP1")
+
+
+##### Figure Sxx - C3/OD & OPC-L -----
+
+
+tmp.c3 <- results.out |>
+  dplyr::filter(!is.na(.data$C3.2022)) |>
+  dplyr::filter(.data$C3.2022 == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
+  unique()
+tmp.opc <- results.out |>
+  dplyr::filter(!is.na(.data$neftel.meta.modules.OPC)) |>
+  dplyr::filter(.data$neftel.meta.modules.OPC == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
+  unique()
+tmp.c3.opc <- intersect(tmp.c3, tmp.opc)
+tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
+tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
+
+
+DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc, "C3 + OPC-like" = tmp.c3.opc), group.by = "annotated_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
+  labs(x = paste0("Features [C3/OPC-like] in: ", gsub("^.+_","",sid), " (CPTAC-3)"))
+
+
+ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C3.pdf"),width=7.5*3, height=4,scale=1.2)
+rm(tmp.c3, tmp.opc, tmp.c3.opc)
+
 
 
 # E_CPT0206000015 - C3N-02784 - nice, no neurons ----
@@ -2338,17 +2351,16 @@ object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(23), "EN", object_1$
 object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(21), "PE", object_1$cell_type)
 object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(19,7,10,18), "TC", object_1$cell_type)
 object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(22), "BC", object_1$cell_type)
-object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(17), "NRXN1+", object_1$cell_type)
+object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(17), "OPC", object_1$cell_type)
 object_1$annotated_clusters = paste0(object_1$seurat_clusters,". ",object_1$cell_type)
 
 
 
-object_1 <- reorder_levels(object_1, c("", "EN","PE", "BC", "TC", "TAM", "NE", "NRXN1+", "OD", "AC", "T"))
+object_1 <- reorder_levels(object_1, c("", "EN","PE", "BC", "TC", "TAM", "NE", "OPC", "OD", "AC", "T"))
 
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "annotated_clusters") +
   guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
   labs(subtitle=sid)
-
 
 
 #m.15 <- FindMarkers(object_1, ident.1 = c(15))  # T-cell CD7+
@@ -2581,9 +2593,9 @@ DotPlot(object = object_1, features = tmp, group.by = "annotated_clusters",
   labs(x = paste0("Features [C4/NPC] in: ", gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
 
 
-
-ggsave(paste0("output/figures/2022_Figure_S7_ext_CPTAC-3_",sid,".pdf"),width=7.5*3, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C4.pdf"),width=7.5*3, height=4,scale=1.2)
 rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
+
 
 
 #### 5A. Oligodendrocytes ----
@@ -2593,6 +2605,44 @@ FeaturePlot(object = object_1, features = "TMEM144")
 FeaturePlot(object = object_1, features = "TMEM125")
 FeaturePlot(object = object_1, features = "MOG")
 FeaturePlot(object = object_1, features = "PLP1")
+
+
+##### Figure Sxx - C3/OD & OPC-L -----
+
+
+tmp.c3 <- results.out |>
+  dplyr::filter(!is.na(.data$C3.2022)) |>
+  dplyr::filter(.data$C3.2022 == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
+  unique()
+tmp.opc <- results.out |>
+  dplyr::filter(!is.na(.data$neftel.meta.modules.OPC)) |>
+  dplyr::filter(.data$neftel.meta.modules.OPC == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
+  unique()
+tmp.c3.opc <- intersect(tmp.c3, tmp.opc)
+tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
+tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
+
+
+DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc, "C3 + OPC-like" = tmp.c3.opc), group.by = "annotated_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
+  labs(x = paste0("Features [C3/OPC-like] in: ", gsub("^.+_","",sid), " (CPTAC-3)"))
+
+
+ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C3.pdf"),width=7.5*3, height=4,scale=1.2)
+rm(tmp.c3, tmp.opc, tmp.c3.opc)
+
+
+
+#### 5B. OPC ----
+
+
+DotPlot(object_1, features = cell_type_opc , group.by = "annotated_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=9)) +
+  labs(x = paste0("Features [CTX] in: ", gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
 
 
 #### 6A. Endothelial ----
@@ -3135,7 +3185,7 @@ DotPlot(object = object_1, features = tmp, group.by = "annotated_clusters",
 
 
 
-ggsave(paste0("output/figures/2022_Figure_S7_ext_CPTAC-3_",sid,".pdf"),width=7.5*3, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C4.pdf"),width=7.5*3, height=4,scale=1.2)
 rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
 
 
@@ -3148,6 +3198,38 @@ FeaturePlot(object = object_1, features = "TMEM144", order=T, label=T)
 FeaturePlot(object = object_1, features = "TMEM125")
 FeaturePlot(object = object_1, features = "MOG")
 FeaturePlot(object = object_1, features = "PLP1")
+
+
+##### Figure Sxx - C3/OD & OPC-L -----
+
+
+tmp.c3 <- results.out |>
+  dplyr::filter(!is.na(.data$C3.2022)) |>
+  dplyr::filter(.data$C3.2022 == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
+  unique()
+tmp.opc <- results.out |>
+  dplyr::filter(!is.na(.data$neftel.meta.modules.OPC)) |>
+  dplyr::filter(.data$neftel.meta.modules.OPC == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
+  unique()
+tmp.c3.opc <- intersect(tmp.c3, tmp.opc)
+tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
+tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
+
+
+
+
+DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc, "C3 + OPC-like" = tmp.c3.opc), group.by = "annotated_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
+  labs(x = paste0("Features [C3/OPC-like] in: ", gsub("^.+_","",sid), " (CPTAC-3)"))
+
+
+ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C3.pdf"),width=7.5*3, height=4,scale=1.2)
+rm(tmp.c3, tmp.opc, tmp.c3.opc)
+
 
 
 #### 5B. OPC ----
@@ -3522,7 +3604,7 @@ DotPlot(object = object_1, features = tmp, group.by = "annotated_clusters",
 
 
 
-ggsave(paste0("output/figures/2022_Figure_S7_ext_CPTAC-3_",sid,".pdf"),width=7.5*3, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C4.pdf"),width=7.5*3, height=4,scale=1.2)
 rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
 
 
@@ -3535,6 +3617,36 @@ FeaturePlot(object = object_1, features = "TMEM144")
 FeaturePlot(object = object_1, features = "TMEM125")
 FeaturePlot(object = object_1, features = "MOG")
 FeaturePlot(object = object_1, features = "PLP1",label=T)
+
+##### Figure Sxx - C3/OD & OPC-L -----
+
+
+tmp.c3 <- results.out |>
+  dplyr::filter(!is.na(.data$C3.2022)) |>
+  dplyr::filter(.data$C3.2022 == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
+  unique()
+tmp.opc <- results.out |>
+  dplyr::filter(!is.na(.data$neftel.meta.modules.OPC)) |>
+  dplyr::filter(.data$neftel.meta.modules.OPC == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
+  unique()
+tmp.c3.opc <- intersect(tmp.c3, tmp.opc)
+tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
+tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
+
+
+
+
+DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc, "C3 + OPC-like" = tmp.c3.opc), group.by = "annotated_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
+  labs(x = paste0("Features [C3/OPC-like] in: ", gsub("^.+_","",sid), " (CPTAC-3)"))
+
+
+ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C3.pdf"),width=7.5*3, height=4,scale=1.2)
+rm(tmp.c3, tmp.opc, tmp.c3.opc)
 
 
 
@@ -4026,7 +4138,7 @@ DotPlot(object = object_1, features = tmp, group.by = "annotated_clusters",
 
 
 
-ggsave(paste0("output/figures/2022_Figure_S7_ext_CPTAC-3_",sid,".pdf"),width=7.5*3, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C4.pdf"),width=7.5*3, height=4,scale=1.2)
 rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
 
 
@@ -4039,6 +4151,39 @@ FeaturePlot(object = object_1, features = "TMEM144", label=F,order=T)
 FeaturePlot(object = object_1, features = "TMEM125")
 FeaturePlot(object = object_1, features = "MOG")
 FeaturePlot(object = object_1, features = "PLP1")
+
+
+##### Figure Sxx - C3/OD & OPC-L -----
+
+
+tmp.c3 <- results.out |>
+  dplyr::filter(!is.na(.data$C3.2022)) |>
+  dplyr::filter(.data$C3.2022 == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
+  unique()
+tmp.opc <- results.out |>
+  dplyr::filter(!is.na(.data$neftel.meta.modules.OPC)) |>
+  dplyr::filter(.data$neftel.meta.modules.OPC == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
+  unique()
+tmp.c3.opc <- intersect(tmp.c3, tmp.opc)
+tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
+tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
+
+
+
+
+DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc, "C3 + OPC-like" = tmp.c3.opc), group.by = "annotated_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
+  labs(x = paste0("Features [C3/OPC-like] in: ", gsub("^.+_","",sid), " (CPTAC-3)"))
+
+
+ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C3.pdf"),width=7.5*3, height=4,scale=1.2)
+rm(tmp.c3, tmp.opc, tmp.c3.opc)
+
+
 
 
 #### 5B. OPC ----
@@ -4383,7 +4528,7 @@ DotPlot(object = object_1, features = tmp, group.by = "annotated_clusters",
 
 
 
-ggsave(paste0("output/figures/2022_Figure_S7_ext_CPTAC-3_",sid,".pdf"),width=7.5*3, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C4.pdf"),width=7.5*3, height=4,scale=1.2)
 rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
 
 
@@ -4397,12 +4542,47 @@ FeaturePlot(object = object_1, features = "MOG")
 FeaturePlot(object = object_1, features = "PLP1")
 
 
+##### Figure Sxx - C3/OD & OPC-L -----
+
+
+tmp.c3 <- results.out |>
+  dplyr::filter(!is.na(.data$C3.2022)) |>
+  dplyr::filter(.data$C3.2022 == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
+  unique()
+tmp.opc <- results.out |>
+  dplyr::filter(!is.na(.data$neftel.meta.modules.OPC)) |>
+  dplyr::filter(.data$neftel.meta.modules.OPC == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
+  unique()
+tmp.c3.opc <- intersect(tmp.c3, tmp.opc)
+tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
+tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
+
+
+
+
+DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc, "C3 + OPC-like" = tmp.c3.opc), group.by = "annotated_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
+  labs(x = paste0("Features [C3/OPC-like] in: ", gsub("^.+_","",sid), " (CPTAC-3)"))
+
+
+ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C3.pdf"),width=7.5*3, height=4,scale=1.2)
+rm(tmp.c3, tmp.opc, tmp.c3.opc)
+
+
+
+
 #### 5B. OPC ----
 
 
 DotPlot(object_1, features = cell_type_opc , group.by = "annotated_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=9)) +
   labs(x = paste0("Features [CTX] in: ", gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
+
+
 
 
 #### 6A. Endothelial ----
@@ -4834,7 +5014,7 @@ DotPlot(object = object_1, features = tmp, group.by = "annotated_clusters",
 
 
 # do not export - suspect IDH-mut - at least no common GBM
-# ggsave(paste0("output/figures/2022_Figure_S7_ext_CPTAC-3_",sid,".pdf"),width=7.5*3, height=4,scale=1.2)
+# ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C4.pdf"),width=7.5*3, height=4,scale=1.2)
 # rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
 
 
@@ -4846,6 +5026,38 @@ FeaturePlot(object = object_1, features = "TMEM144", label=T, order=T)
 FeaturePlot(object = object_1, features = "TMEM125", label=T, order=T)
 FeaturePlot(object = object_1, features = "MOG", label=T, order=T)
 FeaturePlot(object = object_1, features = "PLP1", label=T, order=T)
+
+
+##### Figure Sxx - C3/OD & OPC-L -----
+
+
+tmp.c3 <- results.out |>
+  dplyr::filter(!is.na(.data$C3.2022)) |>
+  dplyr::filter(.data$C3.2022 == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
+  unique()
+tmp.opc <- results.out |>
+  dplyr::filter(!is.na(.data$neftel.meta.modules.OPC)) |>
+  dplyr::filter(.data$neftel.meta.modules.OPC == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
+  unique()
+tmp.c3.opc <- intersect(tmp.c3, tmp.opc)
+tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
+tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
+
+
+
+
+DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc, "C3 + OPC-like" = tmp.c3.opc), group.by = "annotated_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
+  labs(x = paste0("Features [C3/OPC-like] in: ", gsub("^.+_","",sid), " (CPTAC-3)"))
+
+
+ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C3.pdf"),width=7.5*3, height=4,scale=1.2)
+rm(tmp.c3, tmp.opc, tmp.c3.opc)
+
 
 
 
@@ -5601,6 +5813,39 @@ FeaturePlot(object = object_1, features = "TMEM125")
 FeaturePlot(object = object_1, features = "MOG")
 FeaturePlot(object = object_1, features = "PLP1")
 
+
+##### Figure Sxx - C3/OD & OPC-L -----
+
+
+tmp.c3 <- results.out |>
+  dplyr::filter(!is.na(.data$C3.2022)) |>
+  dplyr::filter(.data$C3.2022 == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
+  unique()
+tmp.opc <- results.out |>
+  dplyr::filter(!is.na(.data$neftel.meta.modules.OPC)) |>
+  dplyr::filter(.data$neftel.meta.modules.OPC == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
+  unique()
+tmp.c3.opc <- intersect(tmp.c3, tmp.opc)
+tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
+tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
+
+
+
+
+DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc, "C3 + OPC-like" = tmp.c3.opc), group.by = "annotated_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
+  labs(x = paste0("Features [C3/OPC-like] in: ", gsub("^.+_","",sid), " (CPTAC-3)"))
+
+
+ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C3.pdf"),width=7.5*3, height=4,scale=1.2)
+rm(tmp.c3, tmp.opc, tmp.c3.opc)
+
+
+
 # Q_CPT0087680014 - C3N-00662 ----
 # https://portal.gdc.cancer.gov/files/299b7069-9be9-40ae-99a5-dc9d801cca0d
 # https://portal.gdc.cancer.gov/cases/1827eb4b-38f3-45b5-a833-156ba748c784?bioId=1fa72225-cc94-418e-82b8-99fb0ba19671
@@ -5983,7 +6228,7 @@ DotPlot(object = object_1, features = tmp, group.by = "annotated_clusters",
 
 
 
-ggsave(paste0("output/figures/2022_Figure_S7_ext_CPTAC-3_",sid,".pdf"),width=7.5*3, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C4.pdf"),width=7.5*3, height=4,scale=1.2)
 rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
 
 
@@ -5996,6 +6241,36 @@ FeaturePlot(object = object_1, features = "TMEM125")
 FeaturePlot(object = object_1, features = "MOG")
 FeaturePlot(object = object_1, features = "PLP1")
 
+
+##### Figure Sxx - C3/OD & OPC-L -----
+
+
+tmp.c3 <- results.out |>
+  dplyr::filter(!is.na(.data$C3.2022)) |>
+  dplyr::filter(.data$C3.2022 == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
+  unique()
+tmp.opc <- results.out |>
+  dplyr::filter(!is.na(.data$neftel.meta.modules.OPC)) |>
+  dplyr::filter(.data$neftel.meta.modules.OPC == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
+  unique()
+tmp.c3.opc <- intersect(tmp.c3, tmp.opc)
+tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
+tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
+
+
+
+
+DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc, "C3 + OPC-like" = tmp.c3.opc), group.by = "annotated_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
+  labs(x = paste0("Features [C3/OPC-like] in: ", gsub("^.+_","",sid), " (CPTAC-3)"))
+
+
+ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C3.pdf"),width=7.5*3, height=4,scale=1.2)
+rm(tmp.c3, tmp.opc, tmp.c3.opc)
 
 
 
@@ -6426,6 +6701,36 @@ FeaturePlot(object = object_1, features = "TMEM125")
 FeaturePlot(object = object_1, features = "MOG")
 FeaturePlot(object = object_1, features = "PLP1")
 
+
+##### Figure Sxx - C3/OD & OPC-L -----
+
+
+tmp.c3 <- results.out |>
+  dplyr::filter(!is.na(.data$C3.2022)) |>
+  dplyr::filter(.data$C3.2022 == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
+  unique()
+tmp.opc <- results.out |>
+  dplyr::filter(!is.na(.data$neftel.meta.modules.OPC)) |>
+  dplyr::filter(.data$neftel.meta.modules.OPC == T) |>
+  dplyr::filter(!is.na(hugo_symbol)) |>
+  dplyr::pull(hugo_symbol) |>
+  unique()
+tmp.c3.opc <- intersect(tmp.c3, tmp.opc)
+tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
+tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
+
+
+
+
+DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc, "C3 + OPC-like" = tmp.c3.opc), group.by = "annotated_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
+  labs(x = paste0("Features [C3/OPC-like] in: ", gsub("^.+_","",sid), " (CPTAC-3)"))
+
+
+ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C3.pdf"),width=7.5*3, height=4,scale=1.2)
+rm(tmp.c3, tmp.opc, tmp.c3.opc)
 
 
 
