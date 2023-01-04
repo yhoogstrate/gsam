@@ -1,13 +1,12 @@
 
-# CX ----
+# CX - OPC ----
 
-# OPC
 ctx_G_CPT0206880004 = c("AC124254.1", "GALR1", "COL9A1", "SMOC1", "CA10", "AL450345.2", "PCDH15", "PDGFRA", "PLPP4", "BX284613.2", "MEGF11", "CHST9", "FERMT1", "TNR", "AC023282.1", "ITGA8", "ADARB2", "SCN9A", "AFAP1L2", "CRISPLD2", "XYLT1", "HIF3A", "AL512308.1", "MYRFL", "LINC02283")
 ctx_K_CPT0125220004 = c("COL9A1", "PDGFRA", "GPR17", "ALDH1A3", "SMOC1", "PRKG2", "CA10", "PCDH15", "COL11A1", "CACNG5", "LINC02283", "AL512308.1", "TTLL6", "LUZP2", "LINC02223", "AC022034.3", "AC020584.1", "NOS1", "ADARB2", "NEU4", "SCN9A", "AC062021.1", "KCNJ16", "ATP2C2", "ADAMTS17")
 all <- c(ctx_G_CPT0206880004, ctx_K_CPT0125220004)
 dup <- all[duplicated(all)]
 
-cell_type_x <- list(
+cell_type_opc <- list(
   'shared' = all[duplicated(all)],
   'G_CPT0206880004' = ctx_G_CPT0206880004[ctx_G_CPT0206880004 %in% dup == F][1:15],
   'K_CPT0125220004' = ctx_K_CPT0125220004[ctx_K_CPT0125220004 %in% dup == F][1:15]
@@ -257,7 +256,7 @@ DotPlot(object = object_1, features = c("RBFOX3",
 ),group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
 
-#### 5. Oligodendrocytes ----
+#### 5A. Oligodendrocytes ----
 
 
 FeaturePlot(object = object_1, features = "TMEM144")
@@ -328,7 +327,7 @@ DotPlot(object = object_1, features = c("SSTR2", "SST", "LHX1", "LHX6","NHLH1","
 
 
 
-# sample dataset C ----
+# Bolleboom H243 ----
 
 
 sid <- 'H243_GBM'
@@ -394,11 +393,6 @@ ElbowPlot(object_1, ndims = 45)
 
 d <- 30
 object_1 <- FindNeighbors(object_1, dims = 1:d)
-object_1 <- FindClusters(object_1, resolution = 1, algorithm=1)
-head(Idents(object_1), 20)
-
-
-
 object_1 <- RunUMAP(object_1, dims = 1:d)
 
 
@@ -412,76 +406,38 @@ object_1 <- RunUMAP(object_1, dims = 1:d)
 # 8 = T/T-cell
 
 
-levels(object_1$seurat_clusters) <- gsub("^(2|3|6|14|23)$",paste0("\\1. T"),levels(object_1$seurat_clusters)) # EGFR
-levels(object_1$seurat_clusters) <- gsub("^(20)$",paste0("\\1. T&OD doublets"),levels(object_1$seurat_clusters)) # EGFR
-levels(object_1$seurat_clusters) <- gsub("^(9)$",paste0("\\1. T"),levels(object_1$seurat_clusters)) # OPC - no EGFR or doublets with NE
-levels(object_1$seurat_clusters) <- gsub("^(11)$",paste0("\\1. TAM"),levels(object_1$seurat_clusters))
-levels(object_1$seurat_clusters) <- gsub("^(13|12|4|5|19|10|7|17|16|8|18|22|21)$",paste0("\\1. NE"),levels(object_1$seurat_clusters))
-levels(object_1$seurat_clusters) <- gsub("^(15)$",paste0("\\1. AC"),levels(object_1$seurat_clusters))
-levels(object_1$seurat_clusters) <- gsub("^(24)$",paste0("\\1. EN"),levels(object_1$seurat_clusters))
-levels(object_1$seurat_clusters) <- gsub("^(0|1)$",paste0("\\1. OD"),levels(object_1$seurat_clusters))
-
-
-object_1$seurat_clusters <- factor(object_1$seurat_clusters, levels=c(
-"0. OD",
-"1. OD",
-
-"15. AC",
-
-"24. EN",
-
-"4. NE",
-"5. NE",
-"7. NE",
-"8. NE",
-"10. NE",
-"12. NE",
-"13. NE",
-"16. NE",
-"17. NE",
-"18. NE",
-"19. NE",
-"21. NE",
-"22. NE",
-
-"2. T"   ,
-"3. T",
-"6. T",
-"14. T",
-"20. T",
-"23. T",
-
-"9. T" ,
-
-"20. T&OD doublets",
-
-"11. TAM"
- ))
+# levels(object_1$seurat_clusters) <- gsub("^()$",paste0("\\1. T"),levels(object_1$seurat_clusters)) # EGFR
+# levels(object_1$seurat_clusters) <- gsub("^(20)$",paste0("\\1. T&OD doublets"),levels(object_1$seurat_clusters)) # EGFR
+# levels(object_1$seurat_clusters) <- gsub("^(9)$",paste0("\\1. T"),levels(object_1$seurat_clusters)) # OPC - no EGFR or doublets with NE
+# levels(object_1$seurat_clusters) <- gsub("^(11)$",paste0("\\1. TAM"),levels(object_1$seurat_clusters))
+# levels(object_1$seurat_clusters) <- gsub("^(13|12|4|5|19|10|7|17|16|8|18|22|21)$",paste0("\\1. NE"),levels(object_1$seurat_clusters))
+# levels(object_1$seurat_clusters) <- gsub("^(15)$",paste0("\\1. AC"),levels(object_1$seurat_clusters))
+# levels(object_1$seurat_clusters) <- gsub("^(24)$",paste0("\\1. EN"),levels(object_1$seurat_clusters))
+# levels(object_1$seurat_clusters) <- gsub("^(0|1)$",paste0("\\1. OD"),levels(object_1$seurat_clusters))
 
 
 
+object_1 <- FindClusters(object_1, resolution = 1, algorithm = 1)
 
-DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters") +
+
+object_1$cell_type = ""
+object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(2,3,6,14,23), "T", object_1$cell_type)
+object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(9), "T", object_1$cell_type)
+object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(20), "Doublets", object_1$cell_type)
+object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(11), "TAM", object_1$cell_type)
+object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(0,1), "OD", object_1$cell_type)
+object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(13,12,4,5,19,10,7,17,16,8,18,22,21), "NE", object_1$cell_type)
+object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(15), "AC", object_1$cell_type)
+object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(24), "EN", object_1$cell_type)
+object_1$annotated_clusters = paste0(object_1$seurat_clusters,". ",object_1$cell_type)
+
+
+
+object_1 <- reorder_levels(object_1, c("", "Doublets" , "EN", "TC", "TAM", "NE",  "OD", "AC", "T"))
+
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "annotated_clusters") +
   guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
   labs(subtitle=sid)
-
-
-DimPlot(object_1, reduction = "pca", label = TRUE, pt.size = .6, group.by = "seurat_clusters",
-        dims=c(1,4),
-        ) +
-  guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
-  labs(subtitle=sid)
-
-
-#m.0.1 <- FindMarkers(object_1, ident.1 = c(0,1))
-#m.9 <- FindMarkers(object_1, ident.1 = c(9))
-
-
-#ggplot(object_1@meta.data, aes(y=`nFeature_RNA`, x=seurat_clusters)) +
-#  geom_jitter() +
-#  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=9))
-
-
 
 
 
@@ -525,6 +481,15 @@ FeaturePlot(object = object_1, features = "KCNN3", label=T)
 FeaturePlot(object = object_1, features = "SLC14A1", label=T)
 
 
+DotPlot(object = object_1, features = list('canonical'= c("GJA1","AQP4","TIMP3","NTRK2","KCNN3","SLC14A1"),
+                                           'GABGRG1'= as.character(unlist(cell_type_y)))
+        , group.by = "annotated_clusters",
+        #cols = c("lightgrey", "purple")
+) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=9)) +
+  labs(x = paste0("Features [C4/NPC] in: ", gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
+
+
 #### 3A. TAM ----
 
 
@@ -550,16 +515,59 @@ FeaturePlot(object = object_1, features = "GZMA")
 
 
 FeaturePlot(object = object_1, features = "RBFOX3", label=T)
-FeaturePlot(object = object_1, features = "RBFOX1")
-FeaturePlot(object = object_1, features = "RBFOX2") # NPC2 ~ Neftel
+FeaturePlot(object = object_1, features = "RBFOX3", label=F)
+
+FeaturePlot(object = object_1, features = c("RBFOX3","DoubletScore"), label=F)
+
+
+##### Figure Sxx - C4 ----
+
+
+tmp.c4 <- results.out |>
+  dplyr::filter(!is.na(.data$C4.2022)) |> 
+  dplyr::filter(.data$C4.2022 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+tmp.npc1 <- results.out |> 
+  dplyr::filter(!is.na(.data$neftel.meta.modules.NPC1)) |> 
+  dplyr::filter(.data$neftel.meta.modules.NPC1 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+tmp.npc2 <- results.out |> 
+  dplyr::filter(!is.na(.data$neftel.meta.modules.NPC2)) |> 
+  dplyr::filter(.data$neftel.meta.modules.NPC2 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+tmp.npc1.2 <- intersect(tmp.npc1, tmp.npc2)
+tmp.npc1 <- setdiff(tmp.npc1, tmp.npc1.2)
+tmp.npc2 <- setdiff(tmp.npc2, tmp.npc1.2)
+
+tmp.c4.npc2 <- intersect(tmp.c4, tmp.npc2)
+tmp.c4  <- setdiff(tmp.c4, tmp.c4.npc2)
+tmp.npc2 <- setdiff(tmp.npc2, tmp.c4.npc2)
+
+
+sid_print <- paste0("CPTAC-3 - ", sid)
+
+tmp <- list('C4'=tmp.c4,
+            'NPC1'=tmp.npc1,
+            'NPC1+2'=tmp.npc1.2,
+            'NPC2'=tmp.npc2,
+            'NPC2 + C4' = tmp.c4.npc2)
+
+
+DotPlot(object = object_1, features = tmp, group.by = "annotated_clusters",
+        cols = c("lightgrey", "purple")) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
+  labs(x = paste0("Features [C4/NPC] in: ", gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
 
 
 
-DotPlot(object = object_1, features = c("RBFOX3",
-                                        "CNR1","SYT1","SYNPR","GABRA1","RELN,","VIP",
-                                        "CCT2","RUFY2","UBN2","ATP6V1H","HSPA4L","NASP","GNAO1","RAB6B","HLF","SLC25A36"
-),group.by = "seurat_clusters") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-
+ggsave(paste0("output/figures/2022_Figure_S7_ext_Bolleboom_",sid,".pdf"),width=7.5*3, height=4,scale=1.2)
+rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
 
 
 
@@ -626,7 +634,7 @@ DotPlot(object = object_1, features =c('C4_1','NPC_1'), group.by = "seurat_clust
 
 
 
-#### 5. Oligodendrocytes ----
+#### 5A. Oligodendrocytes ----
 
 
 FeaturePlot(object = object_1, features = "TMEM144")
@@ -826,20 +834,20 @@ object_1 <- RunUMAP(object_1, dims = 1:d)
 ## clustering & annotation ----
 
 
-object_1 <- FindClusters(object_1, resolution = 1, algorithm = 1)
+object_1 <- FindClusters(object_1, resolution = 0.5, algorithm = 1)
 
 
 object_1$cell_type = ""
-object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(12,0,2,6,11,14,10,5,4,3,20), "T", object_1$cell_type)
-object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(13,1,16,24,21,22), "TAM", object_1$cell_type)
-object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(15,8), "OD", object_1$cell_type)
-object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(17), "NE", object_1$cell_type)
-object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(7,9,19,18,23), "TC", object_1$cell_type)
+object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(11,0,8,9,10,5,6,3,4), "T", object_1$cell_type)
+object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(1,13,16), "TAM", object_1$cell_type)
+object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(7), "OD", object_1$cell_type)
+object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(14), "NE", object_1$cell_type)
+object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(15,2,12), "TC", object_1$cell_type)
 object_1$annotated_clusters = paste0(object_1$seurat_clusters,". ",object_1$cell_type)
 
 
 
-object_1 <- reorder_levels(object_1, c("TC", "TAM", "NE",  "OD", "AC", "T"))
+object_1 <- reorder_levels(object_1, c("","TC", "TAM", "NE",  "OD", "AC", "T"))
 
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "annotated_clusters") +
   guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
@@ -933,6 +941,7 @@ if(!file.exists(path1)) {
 }
 
 
+system(paste0("rm ",path1,"/*.txt"))
 system(paste0("rm ",path1,"/*.dat"))
 system(paste0("rm ",path1,"/*_obj"))
 
@@ -976,6 +985,14 @@ FeaturePlot(object = object_1, features = "NTRK2", label=T)
 FeaturePlot(object = object_1, features = "KCNN3", label=T)
 FeaturePlot(object = object_1, features = "SLC14A1", label=T)
 
+
+DotPlot(object = object_1, features = list('canonical'= c("GJA1","AQP4","TIMP3","NTRK2","KCNN3","SLC14A1"),
+                                           'GABGRG1'= as.character(unlist(cell_type_y)))
+        , group.by = "annotated_clusters",
+        #cols = c("lightgrey", "purple")
+) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=9)) +
+  labs(x = paste0("Features [C4/NPC] in: ", gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
 
 
 #### 3A. TAM ----
@@ -1059,13 +1076,13 @@ rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
 
 
 
-#### 5. Oligodendrocytes ----
+#### 5A. Oligodendrocytes ----
 
 
-FeaturePlot(object = object_1, features = "TMEM144")
-FeaturePlot(object = object_1, features = "TMEM125")
-FeaturePlot(object = object_1, features = "MOG")
-FeaturePlot(object = object_1, features = "PLP1")
+FeaturePlot(object = object_1, features = "TMEM144", label=T)
+FeaturePlot(object = object_1, features = "TMEM125", label=T)
+FeaturePlot(object = object_1, features = "MOG", label=T)
+FeaturePlot(object = object_1, features = "PLP1", label=T)
 
 
 # B_CPT0167860015 - C3N-01814 ----
@@ -1186,13 +1203,13 @@ object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(14,12), "TAM", objec
 object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(13), "OD", object_1$cell_type)
 object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(20,19,16), "NE", object_1$cell_type)
 # object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(7,9,19,18,23), "TC", object_1$cell_type)
-object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(21), "TLL1+, non-T", object_1$cell_type) # some sort of strange RBFOX3 negative neuron?
-object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(22), "GABRG1+, non-T", object_1$cell_type) # some sort of strange RBFOX3 negative neuron?
+object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(21), "OPC", object_1$cell_type) # some sort of strange RBFOX3 negative neuron?
+object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(22), "AC", object_1$cell_type) # GABRG1+
 object_1$annotated_clusters = paste0(object_1$seurat_clusters,". ",object_1$cell_type)
 
 
 
-object_1 <- reorder_levels(object_1, c("", "TC", "TAM", "NE", "GABRG1+, non-T", "TLL1+, non-T", "OD", "AC", "T"))
+object_1 <- reorder_levels(object_1, c("", "TC", "TAM", "NE", "GABRG1+, non-T", "OD", "OPC", "AC", "T"))
 
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "annotated_clusters") +
   guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
@@ -1324,8 +1341,6 @@ FeaturePlot(object = object_1, features = "CDH10")
 
 #### 2. Astrocyte ----
 
-m.ac <- FindMarkers(object_1, ident.1 = c(1))
-
 
 FeaturePlot(object = object_1, features = "GJA1", label=T)
 FeaturePlot(object = object_1, features = "AQP4", label=T)
@@ -1333,6 +1348,15 @@ FeaturePlot(object = object_1, features = "TIMP3", label=T)
 FeaturePlot(object = object_1, features = "NTRK2", label=T)
 FeaturePlot(object = object_1, features = "KCNN3", label=T)
 FeaturePlot(object = object_1, features = "SLC14A1", label=T)
+
+
+DotPlot(object = object_1, features = list('canonical'= c("GJA1","AQP4","TIMP3","NTRK2","KCNN3","SLC14A1"),
+                                           'GABGRG1'= as.character(unlist(cell_type_y)))
+        , group.by = "annotated_clusters",
+        #cols = c("lightgrey", "purple")
+) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=9)) +
+  labs(x = paste0("Features [C4/NPC] in: ", gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
 
 
 #### 3A. TAM ----
@@ -1416,7 +1440,7 @@ rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
 
 
 
-#### 5. Oligodendrocytes ----
+#### 5A. Oligodendrocytes ----
 
 
 FeaturePlot(object = object_1, features = "TMEM144")
@@ -1424,6 +1448,13 @@ FeaturePlot(object = object_1, features = "TMEM125")
 FeaturePlot(object = object_1, features = "MOG")
 FeaturePlot(object = object_1, features = "PLP1")
 
+
+#### 5B. OPC ----
+
+
+DotPlot(object_1, features = cell_type_opc , group.by = "annotated_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=9)) +
+  labs(x = paste0("Features [CTX] in: ", gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
 
 
 # C_CPT0205450015 - C3N-02190 - [clean] ----
@@ -1679,8 +1710,6 @@ FeaturePlot(object = object_1, features = "CDH10")
 
 #### 2. Astrocyte ----
 
-m.ac <- FindMarkers(object_1, ident.1 = c(1))
-
 
 FeaturePlot(object = object_1, features = "GJA1", label=T)
 FeaturePlot(object = object_1, features = "AQP4", label=T)
@@ -1689,6 +1718,14 @@ FeaturePlot(object = object_1, features = "NTRK2", label=T)
 FeaturePlot(object = object_1, features = "KCNN3", label=T)
 FeaturePlot(object = object_1, features = "SLC14A1", label=T)
 
+
+DotPlot(object = object_1, features = list('canonical'= c("GJA1","AQP4","TIMP3","NTRK2","KCNN3","SLC14A1"),
+                                           'GABGRG1'= as.character(unlist(cell_type_y)))
+        , group.by = "annotated_clusters",
+        #cols = c("lightgrey", "purple")
+) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=9)) +
+  labs(x = paste0("Features [C4/NPC] in: ", gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
 
 
 #### 3A. TAM ----
@@ -1772,7 +1809,7 @@ rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
 
 
 
-#### 5. Oligodendrocytes ----
+#### 5A. Oligodendrocytes ----
 
 
 FeaturePlot(object = object_1, features = "TMEM144")
@@ -2070,8 +2107,6 @@ FeaturePlot(object = object_1, features = "CDH10")
 
 #### 2. Astrocyte ----
 
-# m.ac <- FindMarkers(object_1, ident.1 = c(1))
-
 
 FeaturePlot(object = object_1, features = "GJA1", label=T)
 FeaturePlot(object = object_1, features = "AQP4", label=T)
@@ -2079,6 +2114,15 @@ FeaturePlot(object = object_1, features = "TIMP3", label=T)
 FeaturePlot(object = object_1, features = "NTRK2", label=T)
 FeaturePlot(object = object_1, features = "KCNN3", label=T)
 FeaturePlot(object = object_1, features = "SLC14A1", label=T)
+
+
+DotPlot(object = object_1, features = list('canonical'= c("GJA1","AQP4","TIMP3","NTRK2","KCNN3","SLC14A1"),
+                                           'GABGRG1'= as.character(unlist(cell_type_y)))
+        , group.by = "annotated_clusters",
+        #cols = c("lightgrey", "purple")
+) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=9)) +
+  labs(x = paste0("Features [C4/NPC] in: ", gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
 
 
 #### 3A. TAM ----
@@ -2162,7 +2206,7 @@ rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
 
 
 
-#### 5. Oligodendrocytes ----
+#### 5A. Oligodendrocytes ----
 
 
 FeaturePlot(object = object_1, features = "TMEM144")
@@ -2436,8 +2480,6 @@ FeaturePlot(object = object_1, features = "CDH10")
 
 #### 2. Astrocyte ----
 
-m.ac <- FindMarkers(object_1, ident.1 = c(1))
-
 
 FeaturePlot(object = object_1, features = "GJA1", label=T)
 FeaturePlot(object = object_1, features = "AQP4", label=T)
@@ -2447,21 +2489,13 @@ FeaturePlot(object = object_1, features = "KCNN3", label=T)
 FeaturePlot(object = object_1, features = "SLC14A1", label=T)
 
 
-
-
-
-
-
-
-FeaturePlot(object = object_1, features = "ETNPPL") # Tumor
-FeaturePlot(object = object_1, features = "GPR98")
-FeaturePlot(object = object_1, features = "BMPR1B")
-FeaturePlot(object = object_1, features = "ETNPPL")
-FeaturePlot(object = object_1, features = "GJB6")
-FeaturePlot(object = object_1, features = "FGFR3")
-FeaturePlot(object = object_1, features = "SLC25A18")
-FeaturePlot(object = object_1, features = "SLC1A2")
-FeaturePlot(object = object_1, features = "SDC4")
+DotPlot(object = object_1, features = list('canonical'= c("GJA1","AQP4","TIMP3","NTRK2","KCNN3","SLC14A1"),
+                                           'GABGRG1'= as.character(unlist(cell_type_y)))
+        , group.by = "annotated_clusters",
+        #cols = c("lightgrey", "purple")
+) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=9)) +
+  labs(x = paste0("Features [C4/NPC] in: ", gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
 
 
 #### 3A. TAM ----
@@ -2552,7 +2586,7 @@ ggsave(paste0("output/figures/2022_Figure_S7_ext_CPTAC-3_",sid,".pdf"),width=7.5
 rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
 
 
-#### 5. Oligodendrocytes ----
+#### 5A. Oligodendrocytes ----
 
 
 FeaturePlot(object = object_1, features = "TMEM144")
@@ -2855,12 +2889,12 @@ object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(18), "EN", object_1$
 object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(19), "PE", object_1$cell_type)
 object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(10), "TC", object_1$cell_type)
 object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(20), "AC", object_1$cell_type)# indeed CNV neutral
-object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(17), "TNR+, non-T", object_1$cell_type)
+object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(17), "OPC", object_1$cell_type)
 object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(21), "TACSTD2+, non-T", object_1$cell_type)
 object_1$annotated_clusters = paste0(object_1$seurat_clusters,". ",object_1$cell_type)
 
 
-object_1 <- reorder_levels(object_1, c("", "EN","PE", "BC", "TC", "TAM", "NE", "TNR+, non-T", "TACSTD2+, non-T", "OD", "AC", "T"))
+object_1 <- reorder_levels(object_1, c("", "EN","PE", "BC", "TC", "TAM", "NE", "TACSTD2+, non-T", "OPC", "OD", "AC", "T"))
 
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "annotated_clusters") +
   guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
@@ -3000,17 +3034,21 @@ FeaturePlot(object = object_1, features = "CDH10")
 
 #### 2. Astrocyte ----
 
-m.ac <- FindMarkers(object_1, ident.1 = c(1))
+FeaturePlot(object = object_1, features = "GJA1", label=T)
+FeaturePlot(object = object_1, features = "AQP4", label=T)
+FeaturePlot(object = object_1, features = "TIMP3", label=T)
+FeaturePlot(object = object_1, features = "NTRK2", label=T)
+FeaturePlot(object = object_1, features = "KCNN3", label=T)
+FeaturePlot(object = object_1, features = "SLC14A1", label=T)
 
 
-FeaturePlot(object = object_1, features = "GJA1", label=F, order=T)
-FeaturePlot(object = object_1, features = "AQP4", label=F, order=T)
-FeaturePlot(object = object_1, features = "TIMP3", label=F, order=T)
-FeaturePlot(object = object_1, features = "NTRK2", label=F, order=T)
-FeaturePlot(object = object_1, features = "KCNN3", label=F, order=T)
-FeaturePlot(object = object_1, features = "SLC14A1", label=F, order=T)
-
-
+DotPlot(object = object_1, features = list('canonical'= c("GJA1","AQP4","TIMP3","NTRK2","KCNN3","SLC14A1"),
+                                           'GABGRG1'= as.character(unlist(cell_type_y)))
+        , group.by = "annotated_clusters",
+        #cols = c("lightgrey", "purple")
+) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=9)) +
+  labs(x = paste0("Features [C4/NPC] in: ", gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
 
 
 #### 3A. TAM ----
@@ -3102,7 +3140,7 @@ rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
 
 
 
-#### 5. Oligodendrocytes ----
+#### 5A. Oligodendrocytes ----
 
 
 FeaturePlot(object = object_1, features = "TMEM144", order=T, label=F)
@@ -3111,6 +3149,13 @@ FeaturePlot(object = object_1, features = "TMEM125")
 FeaturePlot(object = object_1, features = "MOG")
 FeaturePlot(object = object_1, features = "PLP1")
 
+
+#### 5B. OPC ----
+
+
+DotPlot(object_1, features = cell_type_opc , group.by = "annotated_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=9)) +
+  labs(x = paste0("Features [CTX] in: ", gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
 
 
 #### 6A. Endothelial ----
@@ -3384,6 +3429,14 @@ FeaturePlot(object = object_1, features = "KCNN3", label=T)
 FeaturePlot(object = object_1, features = "SLC14A1", label=T)
 
 
+DotPlot(object = object_1, features = list('canonical'= c("GJA1","AQP4","TIMP3","NTRK2","KCNN3","SLC14A1"),
+                                           'GABGRG1'= as.character(unlist(cell_type_y)))
+        , group.by = "annotated_clusters",
+        #cols = c("lightgrey", "purple")
+) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=9)) +
+  labs(x = paste0("Features [C4/NPC] in: ", gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
+
 
 #### 3A. TAM ----
 
@@ -3475,7 +3528,7 @@ rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
 
 
 
-#### 5. Oligodendrocytes ----
+#### 5A. Oligodendrocytes ----
 
 
 FeaturePlot(object = object_1, features = "TMEM144")
@@ -3736,11 +3789,11 @@ object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(14, 15), "NE", objec
 #object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(19), "PE", object_1$cell_type)
 #object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(10), "TC", object_1$cell_type)
 #object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(20), "AC", object_1$cell_type)# indeed CNV neutral
-object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(16), "GABRG1+", object_1$cell_type)
+object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(16), "AC", object_1$cell_type) # GABRG1+ type
 object_1$annotated_clusters = paste0(object_1$seurat_clusters,". ",object_1$cell_type)
 
 
-object_1 <- reorder_levels(object_1, c("", "EN","PE", "BC", "TC", "TAM", "NE", "GABRG1+", "OD", "AC", "T"))
+object_1 <- reorder_levels(object_1, c("", "EN","PE", "BC", "TC", "TAM", "NE", "OD", "AC", "T"))
 
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "annotated_clusters") +
   guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
@@ -3871,8 +3924,6 @@ FeaturePlot(object = object_1, features = "CDH10")
 
 #### 2. Astrocyte ----
 
-m.ac <- FindMarkers(object_1, ident.1 = c(1))
-
 
 FeaturePlot(object = object_1, features = "GJA1", label=T)
 FeaturePlot(object = object_1, features = "AQP4", label=T)
@@ -3882,22 +3933,13 @@ FeaturePlot(object = object_1, features = "KCNN3", label=T)
 FeaturePlot(object = object_1, features = "SLC14A1", label=T)
 
 
-
-
-
-
-
-
-
-FeaturePlot(object = object_1, features = "ETNPPL") # Tumor
-FeaturePlot(object = object_1, features = "GPR98")
-FeaturePlot(object = object_1, features = "BMPR1B")
-FeaturePlot(object = object_1, features = "ETNPPL")
-FeaturePlot(object = object_1, features = "GJB6")
-FeaturePlot(object = object_1, features = "FGFR3")
-FeaturePlot(object = object_1, features = "SLC25A18")
-FeaturePlot(object = object_1, features = "SLC1A2")
-FeaturePlot(object = object_1, features = "SDC4")
+DotPlot(object = object_1, features = list('canonical'= c("GJA1","AQP4","TIMP3","NTRK2","KCNN3","SLC14A1"),
+                                           'GABGRG1'= as.character(unlist(cell_type_y)))
+        , group.by = "annotated_clusters",
+        #cols = c("lightgrey", "purple")
+) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=9)) +
+  labs(x = paste0("Features [C4/NPC] in: ", gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
 
 
 #### 3A. TAM ----
@@ -3989,7 +4031,7 @@ rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
 
 
 
-#### 5. Oligodendrocytes ----
+#### 5A. Oligodendrocytes ----
 
 
 FeaturePlot(object = object_1, features = "TMEM144", label=T)
@@ -3997,6 +4039,14 @@ FeaturePlot(object = object_1, features = "TMEM144", label=F,order=T)
 FeaturePlot(object = object_1, features = "TMEM125")
 FeaturePlot(object = object_1, features = "MOG")
 FeaturePlot(object = object_1, features = "PLP1")
+
+
+#### 5B. OPC ----
+
+
+DotPlot(object_1, features = cell_type_opc , group.by = "annotated_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=9)) +
+  labs(x = paste0("Features [CTX] in: ", gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
 
 
 
@@ -4240,6 +4290,15 @@ FeaturePlot(object = object_1, features = "KCNN3", label=T)
 FeaturePlot(object = object_1, features = "SLC14A1", label=T)
 
 
+DotPlot(object = object_1, features = list('canonical'= c("GJA1","AQP4","TIMP3","NTRK2","KCNN3","SLC14A1"),
+                                           'GABGRG1'= as.character(unlist(cell_type_y)))
+        , group.by = "annotated_clusters",
+        #cols = c("lightgrey", "purple")
+) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=9)) +
+  labs(x = paste0("Features [C4/NPC] in: ", gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
+
+
 #### 3A. TAM ----
 
 
@@ -4329,7 +4388,7 @@ rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
 
 
 
-#### 5. Oligodendrocytes ----
+#### 5A. Oligodendrocytes ----
 
 
 FeaturePlot(object = object_1, features = "TMEM144")
@@ -4338,6 +4397,12 @@ FeaturePlot(object = object_1, features = "MOG")
 FeaturePlot(object = object_1, features = "PLP1")
 
 
+#### 5B. OPC ----
+
+
+DotPlot(object_1, features = cell_type_opc , group.by = "annotated_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=9)) +
+  labs(x = paste0("Features [CTX] in: ", gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
 
 
 #### 6A. Endothelial ----
@@ -4375,14 +4440,6 @@ FeaturePlot(object = object_1, features = c("HEYL"))
 FeaturePlot(object = object_1, features = c("CFH"))
 
 FeaturePlot(object = object_1, features = "ITGA1") # endo + peri?
-
-
-#### X. Cell Type X ----
-
-
-DotPlot(object_1, features = cell_type_x , group.by = "annotated_clusters") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=9)) +
-  labs(x = paste0("Features [CTX] in: ", gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
 
 
 #### Y. Cell Type Y ----
@@ -4683,12 +4740,13 @@ FeaturePlot(object = object_1, features = "KCNN3", label=T)
 FeaturePlot(object = object_1, features = "SLC14A1", label=T)
 
 
-DotPlot(object = object_1, features = c("GJA1","AQP4","TIMP3","NTRK2","KCNN3","SLC14A1") , group.by = "annotated_clusters",
-  #cols = c("lightgrey", "purple")
-  ) +
+DotPlot(object = object_1, features = list('canonical'= c("GJA1","AQP4","TIMP3","NTRK2","KCNN3","SLC14A1"),
+                                           'GABGRG1'= as.character(unlist(cell_type_y)))
+        , group.by = "annotated_clusters",
+        #cols = c("lightgrey", "purple")
+) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=9)) +
   labs(x = paste0("Features [C4/NPC] in: ", gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
-
 
 
 #### 3A. TAM ----
@@ -4775,12 +4833,13 @@ DotPlot(object = object_1, features = tmp, group.by = "annotated_clusters",
   labs(x = paste0("Features [C4/NPC] in: ", gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S7_ext_CPTAC-3_",sid,".pdf"),width=7.5*3, height=4,scale=1.2)
-rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
+# do not export - suspect IDH-mut - at least no common GBM
+# ggsave(paste0("output/figures/2022_Figure_S7_ext_CPTAC-3_",sid,".pdf"),width=7.5*3, height=4,scale=1.2)
+# rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
 
 
 
-#### 5. Oligodendrocytes ----
+#### 5A. Oligodendrocytes ----
 
 
 FeaturePlot(object = object_1, features = "TMEM144", label=T, order=T)
@@ -4790,10 +4849,10 @@ FeaturePlot(object = object_1, features = "PLP1", label=T, order=T)
 
 
 
-#### X. Cell Type X ----
+#### 5B. OPC ----
 
 
-DotPlot(object_1, features = cell_type_x , group.by = "annotated_clusters") +
+DotPlot(object_1, features = cell_type_opc , group.by = "annotated_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=9)) +
   labs(x = paste0("Features [CTX] in: ", gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
 
@@ -5451,6 +5510,15 @@ FeaturePlot(object = object_1, features = "KCNN3", label=T)
 FeaturePlot(object = object_1, features = "SLC14A1", label=T)
 
 
+DotPlot(object = object_1, features = list('canonical'= c("GJA1","AQP4","TIMP3","NTRK2","KCNN3","SLC14A1"),
+                                           'GABGRG1'= as.character(unlist(cell_type_y)))
+        , group.by = "annotated_clusters",
+        #cols = c("lightgrey", "purple")
+) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=9)) +
+  labs(x = paste0("Features [C4/NPC] in: ", gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
+
+
 #### 3A. TAM ----
 
 
@@ -5525,7 +5593,7 @@ DotPlot(object = object_1, features = tmp, group.by = "seurat_clusters",
 
 
 
-#### 5. Oligodendrocytes ----
+#### 5A. Oligodendrocytes ----
 
 
 FeaturePlot(object = object_1, features = "TMEM144", label=T)
@@ -5804,6 +5872,15 @@ FeaturePlot(object = object_1, features = "KCNN3", label=T)
 FeaturePlot(object = object_1, features = "SLC14A1", label=T)
 
 
+DotPlot(object = object_1, features = list('canonical'= c("GJA1","AQP4","TIMP3","NTRK2","KCNN3","SLC14A1"),
+                                           'GABGRG1'= as.character(unlist(cell_type_y)))
+        , group.by = "annotated_clusters",
+        #cols = c("lightgrey", "purple")
+) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=9)) +
+  labs(x = paste0("Features [C4/NPC] in: ", gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
+
+
 #### 3A. TAM ----
 
 
@@ -5911,7 +5988,7 @@ rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
 
 
 
-#### 5. Oligodendrocytes ----
+#### 5A. Oligodendrocytes ----
 
 
 FeaturePlot(object = object_1, features = "TMEM144", label=T)
@@ -5959,10 +6036,10 @@ FeaturePlot(object = object_1, features = c("CFH"))
 FeaturePlot(object = object_1, features = "ITGA1") # endo + peri?
 
 
-#### X. Cell Type X ----
+#### 5B. OPC ----
 
 
-DotPlot(object_1, features = cell_type_x , group.by = "annotated_clusters") +
+DotPlot(object_1, features = cell_type_opc , group.by = "annotated_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=9)) +
   labs(x = paste0("Features [CTX] in: ", gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
 
@@ -6257,6 +6334,15 @@ FeaturePlot(object = object_1, features = "KCNN3", label=T)
 FeaturePlot(object = object_1, features = "SLC14A1", label=T)
 
 
+DotPlot(object = object_1, features = list('canonical'= c("GJA1","AQP4","TIMP3","NTRK2","KCNN3","SLC14A1"),
+                                           'GABGRG1'= as.character(unlist(cell_type_y)))
+        , group.by = "annotated_clusters",
+        #cols = c("lightgrey", "purple")
+) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=9)) +
+  labs(x = paste0("Features [C4/NPC] in: ", gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
+
+
 #### 3A. TAM ----
 
 
@@ -6332,7 +6418,7 @@ tmp <- list('C4'=tmp.c4,
 
 
 
-#### 5. Oligodendrocytes ----
+#### 5A. Oligodendrocytes ----
 
 
 FeaturePlot(object = object_1, features = "TMEM144", label=T)
