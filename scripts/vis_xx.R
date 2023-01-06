@@ -464,16 +464,24 @@ FeaturePlot(object = object_1, features = "GZMA")
 
 #### 4. Neurons ----
 
-
-Idents(object_1) <- "annotated_clusters"
-FeaturePlot(object = object_1, features = c("RBFOX3","SNAP25"), label=T)
-Idents(object_1) <- "seurat_clusters"
+FeaturePlot(object = object_1, features = c("RBFOX3"), label=T)
 FeaturePlot(object = object_1, features = "RBFOX3", label=F)
-
 FeaturePlot(object = object_1, features = c("RBFOX3","DoubletScore"), label=F)
 
 
-##### Figure Sxx - C4 ----
+##### Figure Sxx - C4 [FeaturePlot] ----
+
+Idents(object_1) <- "annotated_clusters"
+FeaturePlot(object = object_1, features = c("RBFOX3"), label=T) +
+  labs(subtitle=paste0(sid, "(Bolleboom & Gao dataset)"))
+Idents(object_1) <- "seurat_clusters"
+
+ggsave("output/figures/2022_Figure_S9B_ext_Bolleboom_H243_GBM_C4_FP.pdf", width = 8.3 / 3, height = 8.3 / 3.4,scale=2)
+
+
+
+
+##### Figure Sxx - C4 [DotPlot] ----
 
 
 tmp.c4 <- results.out |>
@@ -515,11 +523,10 @@ tmp <- list('C4'=tmp.c4,
 DotPlot(object = object_1, features = tmp, group.by = "annotated_clusters",
         cols = c("lightgrey", "purple")) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
-  labs(x = paste0("Features [C4/NPC] in: ", gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
+  labs(x = paste0("Features [C4/NPC] in: ", gsub("_","-",sid), " (Bolleboom & Gao dataset)"))
 
 
-
-ggsave(paste0("output/figures/2022_Figure_S8_ext_Bolleboom_",sid,"_C4.pdf"),width=7.5*3, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S9D_ext_Bolleboom_",sid,"_C4.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
 rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
 
 
@@ -911,7 +918,18 @@ FeaturePlot(object = object_1, features = "RBFOX3", label=F)
 FeaturePlot(object = object_1, features = c("RBFOX3","DoubletScore"), label=F)
 
 
-##### Figure Sxx - C4 ----
+##### Figure Sxx - C4 [FeaturePlot] ----
+
+Idents(object_1) <- "annotated_clusters"
+FeaturePlot(object = object_1, features = c("RBFOX3"), label=T) +
+  labs(subtitle=paste0(gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
+Idents(object_1) <- "seurat_clusters"
+
+
+ggsave(paste0("output/figures/2022_Figure_S9_ext_CPTAC-3_",sid,"_C4_FP.pdf"), width = 8.3 / 3, height = 8.3 / 3.4,scale=2)
+
+
+##### Figure Sxx - C4 [DotPlot] ----
 
 
 tmp.c4 <- results.out |>
@@ -957,7 +975,7 @@ DotPlot(object = object_1, features = tmp, group.by = "annotated_clusters",
 
 
 
-ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C4.pdf"),width=7.5*3, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S9_ext_CPTAC-3_",sid,"_C4_DP.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
 rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
 
 
@@ -1310,7 +1328,20 @@ FeaturePlot(object = object_1, features = "RBFOX3", label=F)
 FeaturePlot(object = object_1, features = c("RBFOX3","DoubletScore"), label=F)
 
 
-##### Figure Sxx - C4 ----
+
+##### Figure Sxx - C4 [FeaturePlot] ----
+
+Idents(object_1) <- "annotated_clusters"
+FeaturePlot(object = object_1, features = c("RBFOX3"), label=T) +
+  labs(subtitle=paste0(gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
+Idents(object_1) <- "seurat_clusters"
+
+
+ggsave(paste0("output/figures/2022_Figure_S9_ext_CPTAC-3_",sid,"_C4_FP.pdf"), width = 8.3 / 3, height = 8.3 / 3.4,scale=2)
+
+
+
+##### Figure Sxx - C4 [DotPlot] ----
 
 
 tmp.c4 <- results.out |>
@@ -1356,7 +1387,7 @@ DotPlot(object = object_1, features = tmp, group.by = "annotated_clusters",
 
 
 
-ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C4.pdf"),width=7.5*3, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S9_ext_CPTAC-3_",sid,"_C4_DP.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
 rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
 
 
@@ -1710,8 +1741,19 @@ FeaturePlot(object = object_1, features = "RBFOX3", label=F)
 
 FeaturePlot(object = object_1, features = c("RBFOX3","DoubletScore"), label=F)
 
+##### Figure Sxx - C4 [FeaturePlot] ----
 
-##### Figure Sxx - C4 ----
+Idents(object_1) <- "annotated_clusters"
+FeaturePlot(object = object_1, features = c("RBFOX3"), label=T) +
+  labs(subtitle=paste0(gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
+Idents(object_1) <- "seurat_clusters"
+
+
+ggsave(paste0("output/figures/2022_Figure_S9_ext_CPTAC-3_",sid,"_C4_FP.pdf"), width = 8.3 / 3, height = 8.3 / 3.4,scale=2)
+
+
+
+##### Figure Sxx - C4 [DotPlot] ----
 
 
 tmp.c4 <- results.out |>
@@ -1757,7 +1799,7 @@ DotPlot(object = object_1, features = tmp, group.by = "annotated_clusters",
 
 
 
-ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C4.pdf"),width=7.5*3, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S9_ext_CPTAC-3_",sid,"_C4_DP.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
 rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
 
 
@@ -2138,7 +2180,19 @@ FeaturePlot(object = object_1, features = "RBFOX3", label=F)
 FeaturePlot(object = object_1, features = c("RBFOX3","DoubletScore"), label=F)
 
 
-##### Figure Sxx - C4 ----
+##### Figure Sxx - C4 [FeaturePlot] ----
+
+Idents(object_1) <- "annotated_clusters"
+FeaturePlot(object = object_1, features = c("RBFOX3"), label=T) +
+  labs(subtitle=paste0(gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
+Idents(object_1) <- "seurat_clusters"
+
+
+ggsave(paste0("output/figures/2022_Figure_S9_ext_CPTAC-3_",sid,"_C4_FP.pdf"), width = 8.3 / 3, height = 8.3 / 3.4,scale=2)
+
+
+
+##### Figure Sxx - C4 [DotPlot] ----
 
 
 tmp.c4 <- results.out |>
@@ -2183,7 +2237,7 @@ DotPlot(object = object_1, features = tmp, group.by = "annotated_clusters",
   labs(x = paste0("Features [C4/NPC] in: ", gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C4.pdf"),width=7.5*3, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S9_ext_CPTAC-3_",sid,"_C4_DP.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
 rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
 
 
@@ -2547,7 +2601,20 @@ FeaturePlot(object = object_1, features = "RBFOX3", label=F, order=T)
 FeaturePlot(object = object_1, features = c("RBFOX3","DoubletScore"), label=F)
 
 
-##### Figure Sxx - C4 ----
+
+##### Figure Sxx - C4 [FeaturePlot] ----
+
+Idents(object_1) <- "annotated_clusters"
+FeaturePlot(object = object_1, features = c("RBFOX3"), label=T) +
+  labs(subtitle=paste0(gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
+Idents(object_1) <- "seurat_clusters"
+
+
+ggsave(paste0("output/figures/2022_Figure_S9_ext_CPTAC-3_",sid,"_C4_FP.pdf"), width = 8.3 / 3, height = 8.3 / 3.4,scale=2)
+
+
+
+##### Figure Sxx - C4 [DotPlot] ----
 
 
 tmp.c4 <- results.out |>
@@ -2592,7 +2659,7 @@ DotPlot(object = object_1, features = tmp, group.by = "annotated_clusters",
   labs(x = paste0("Features [C4/NPC] in: ", gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C4.pdf"),width=7.5*3, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S9_ext_CPTAC-3_",sid,"_C4_DP.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
 rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
 
 
@@ -3138,7 +3205,19 @@ FeaturePlot(object = object_1, features = "RBFOX3", label=F, order=T)
 FeaturePlot(object = object_1, features = c("RBFOX3","DoubletScore"), label=F)
 
 
-##### Figure Sxx - C4 ----
+##### Figure Sxx - C4 [FeaturePlot] ----
+
+
+Idents(object_1) <- "annotated_clusters"
+FeaturePlot(object = object_1, features = c("RBFOX3"), label=T) +
+  labs(subtitle=paste0(gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
+Idents(object_1) <- "seurat_clusters"
+
+
+ggsave(paste0("output/figures/2022_Figure_S9_ext_CPTAC-3_",sid,"_C4_FP.pdf"), width = 8.3 / 3, height = 8.3 / 3.4,scale=2)
+
+
+##### Figure Sxx - C4 [DotPlot] ----
 
 
 tmp.c4 <- results.out |>
@@ -3183,7 +3262,7 @@ DotPlot(object = object_1, features = tmp, group.by = "annotated_clusters",
   labs(x = paste0("Features [C4/NPC] in: ", gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C4.pdf"),width=7.5*3, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S9_ext_CPTAC-3_",sid,"_C4_DP.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
 rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
 
 
@@ -3554,7 +3633,21 @@ FeaturePlot(object = object_1, features = "RBFOX3", label=F, order=T)
 FeaturePlot(object = object_1, features = c("RBFOX3","DoubletScore"), label=F)
 
 
-##### Figure Sxx - C4 ----
+
+##### Figure Sxx - C4 [FeaturePlot] ----
+
+
+Idents(object_1) <- "annotated_clusters"
+FeaturePlot(object = object_1, features = c("RBFOX3"), label=T) +
+  labs(subtitle=paste0(gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
+Idents(object_1) <- "seurat_clusters"
+
+
+ggsave(paste0("output/figures/2022_Figure_S9_ext_CPTAC-3_",sid,"_C4_FP.pdf"), width = 8.3 / 3, height = 8.3 / 3.4,scale=2)
+
+
+
+##### Figure Sxx - C4 [DotPlot] ----
 
 
 tmp.c4 <- results.out |>
@@ -3599,7 +3692,7 @@ DotPlot(object = object_1, features = tmp, group.by = "annotated_clusters",
   labs(x = paste0("Features [C4/NPC] in: ", gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C4.pdf"),width=7.5*3, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S9_ext_CPTAC-3_",sid,"_C4_DP.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
 rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
 
 
@@ -4074,6 +4167,18 @@ FeaturePlot(object = object_1, features = c("CD19"), order=T)
 FeaturePlot(object = object_1, features = c("CD79B"), order=T)
 
 
+##### Figure Sxx - C4 [FeaturePlot] ----
+
+
+Idents(object_1) <- "annotated_clusters"
+FeaturePlot(object = object_1, features = c("RBFOX3"), label=T) +
+  labs(subtitle=paste0(gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
+Idents(object_1) <- "seurat_clusters"
+
+
+ggsave(paste0("output/figures/2022_Figure_S9_ext_CPTAC-3_",sid,"_C4_FP.pdf"), width = 8.3 / 3, height = 8.3 / 3.4,scale=2)
+
+
 #### 4. Neurons ----
 
 
@@ -4083,7 +4188,20 @@ FeaturePlot(object = object_1, features = "RBFOX3", label=F, order=T)
 FeaturePlot(object = object_1, features = c("RBFOX3","DoubletScore"), label=F)
 
 
-##### Figure Sxx - C4 ----
+
+##### Figure Sxx - C4 [FeaturePlot] ----
+
+
+Idents(object_1) <- "annotated_clusters"
+FeaturePlot(object = object_1, features = c("RBFOX3"), label=T) +
+  labs(subtitle=paste0(gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
+Idents(object_1) <- "seurat_clusters"
+
+
+ggsave(paste0("output/figures/2022_Figure_S9_ext_CPTAC-3_",sid,"_C4_FP.pdf"), width = 8.3 / 3, height = 8.3 / 3.4,scale=2)
+
+
+##### Figure Sxx - C4 [DotPlot] ----
 
 
 tmp.c4 <- results.out |>
@@ -4128,7 +4246,7 @@ DotPlot(object = object_1, features = tmp, group.by = "annotated_clusters",
   labs(x = paste0("Features [C4/NPC] in: ", gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C4.pdf"),width=7.5*3, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S9_ext_CPTAC-3_",sid,"_C4_DP.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
 rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
 
 
@@ -4469,7 +4587,20 @@ FeaturePlot(object = object_1, features = "RBFOX3", label=F, order=T)
 FeaturePlot(object = object_1, features = c("RBFOX3","DoubletScore"), label=F)
 
 
-##### Figure Sxx - C4 ----
+
+##### Figure Sxx - C4 [FeaturePlot] ----
+
+
+Idents(object_1) <- "annotated_clusters"
+FeaturePlot(object = object_1, features = c("RBFOX3"), label=T) +
+  labs(subtitle=paste0(gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
+Idents(object_1) <- "seurat_clusters"
+
+
+ggsave(paste0("output/figures/2022_Figure_S9_ext_CPTAC-3_",sid,"_C4_FP.pdf"), width = 8.3 / 3, height = 8.3 / 3.4,scale=2)
+
+
+##### Figure Sxx - C4 [DotPlot] ----
 
 
 tmp.c4 <- results.out |>
@@ -4514,7 +4645,7 @@ DotPlot(object = object_1, features = tmp, group.by = "annotated_clusters",
   labs(x = paste0("Features [C4/NPC] in: ", gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C4.pdf"),width=7.5*3, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S9_ext_CPTAC-3_",sid,"_C4_DP.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
 rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
 
 
@@ -4950,7 +5081,7 @@ FeaturePlot(object = object_1, features = "RBFOX3", label=F, order=T)
 FeaturePlot(object = object_1, features = c("RBFOX3","DoubletScore"), label=F)
 
 
-##### Figure Sxx - C4 ----
+##### Figure Sxx - C4 [DotPlot] ----
 
 
 tmp.c4 <- results.out |>
@@ -4996,7 +5127,7 @@ DotPlot(object = object_1, features = tmp, group.by = "annotated_clusters",
 
 
 # do not export - suspect IDH-mut - at least no common GBM
-# ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C4.pdf"),width=7.5*3, height=4,scale=1.2)
+# ggsave(paste0("output/figures/2022_Figure_S9_ext_CPTAC-3_",sid,"_C4_DP.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
 # rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
 
 
@@ -5739,7 +5870,7 @@ FeaturePlot(object = object_1, features = "RBFOX3", label=F)
 
 
 
-##### Figure Sxx - C4 ----
+##### Figure Sxx - C4 [DotPlot] ----
 
 
 tmp.c4 <- results.out |>
@@ -6167,7 +6298,19 @@ FeaturePlot(object = object_1, features = "RBFOX3", label=F, order=T)
 FeaturePlot(object = object_1, features = c("RBFOX3","DoubletScore"), label=F)
 
 
-##### Figure Sxx - C4 ----
+##### Figure Sxx - C4 [FeaturePlot] ----
+
+
+Idents(object_1) <- "annotated_clusters"
+FeaturePlot(object = object_1, features = c("RBFOX3"), label=T) +
+  labs(subtitle=paste0(gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
+Idents(object_1) <- "seurat_clusters"
+
+
+ggsave(paste0("output/figures/2022_Figure_S9_ext_CPTAC-3_",sid,"_C4_FP.pdf"), width = 8.3 / 3, height = 8.3 / 3.4,scale=2)
+
+
+##### Figure Sxx - C4 [DotPlot] ----
 
 
 tmp.c4 <- results.out |>
@@ -6212,7 +6355,7 @@ DotPlot(object = object_1, features = tmp, group.by = "annotated_clusters",
   labs(x = paste0("Features [C4/NPC] in: ", gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C4.pdf"),width=7.5*3, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S9_ext_CPTAC-3_",sid,"_C4_DP.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
 rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
 
 
@@ -6315,7 +6458,7 @@ DotPlot(object_1, features = cell_type_y , group.by = "annotated_clusters") +
 # R_CPT0168080014 - C3N-01816 - noisy nascent RNA sample, odd expression of VIM etc. ----
 # https://portal.gdc.cancer.gov/files/9427ea4c-ac09-48b6-93ac-fcf628d0da71
 # https://portal.gdc.cancer.gov/cases/37d2352d-e15e-4eb7-b3dc-c7c3801d5433?bioId=1215857f-64f8-47fd-b7c2-9de7ad1b9425
-# very odd sample, same cluster expresses TAM and OD markers..
+# unreliable sample, same cluster expresses TAM and OD markers..
 
 
 rhdf5::h5closeAll()
@@ -6628,7 +6771,7 @@ FeaturePlot(object = object_1, features = "RBFOX3", label=F)
 
 
 
-##### Figure Sxx - C4 ----
+##### Figure Sxx - C4 [DotPlot] ----
 
 
 tmp.c4 <- results.out |>
