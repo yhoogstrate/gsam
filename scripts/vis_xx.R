@@ -297,7 +297,7 @@ DotPlot(object = object_1, features = c("SSTR2", "SST", "LHX1", "LHX6","NHLH1","
 
 
 # Bolleboom H243 ----
-
+# chr7 gain, chr10 loss, chr9.q loss, chr13.p loss (InferCNV)
 
 sid <- 'H243_GBM'
 object_1 <- Read10X(data.dir = paste0("data/",sid,"/H243_filtered_feature_bc_matrix/"))
@@ -373,7 +373,7 @@ object_1 <- FindClusters(object_1, resolution = 1, algorithm = 1)
 
 object_1$cell_type = ""
 object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(2,3,6,14,23), "T", object_1$cell_type)
-object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(9), "T", object_1$cell_type)
+object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(9), "OPC", object_1$cell_type)
 object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(20), "Doublets", object_1$cell_type)
 object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(11), "TAM", object_1$cell_type)
 object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(0,1), "OD", object_1$cell_type)
@@ -384,11 +384,75 @@ object_1$annotated_clusters = paste0(object_1$seurat_clusters,". ",object_1$cell
 
 
 
-object_1 <- reorder_levels(object_1, c("", "Doublets" , "EN", "TC", "TAM", "NE",  "OD", "AC", "T"))
+object_1 <- reorder_levels(object_1, c("", "Doublets" , "EN", "TC", "TAM", "NE", "OPC", "OD", "AC", "T"))
 
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "annotated_clusters") +
   guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
   labs(subtitle=sid)
+
+
+
+
+#### 0. Infer CNV ----
+
+
+rm(infercnv_obj)
+
+path1 <- paste0("cache/infercnv_",sid,"_out_pdf")
+path2 <- paste0("cache/infercnv_",sid,"_processed.Rds")
+path3 <- paste0("cache/infercnv_",sid,".Rds")
+
+if(!file.exists(path1)) {
+  if(!file.exists(path2)) {
+    if(!file.exists(path3)) {
+      rcm <- object_1@assays$RNA@counts
+      af <- data.frame(
+        V1 = colnames(rcm)) |>
+        dplyr::left_join(data.frame(V2 = object_1$annotated_clusters) |>
+                           tibble::rownames_to_column("V1"), by=c('V1'='V1')) |> 
+        tibble::column_to_rownames('V1') |> 
+        dplyr::mutate(V2 = as.character(V2)) 
+      stopifnot(colnames(rcm) == rownames(af))
+      
+      refgroups = data.frame(annotated_clusters = as.character(object_1$annotated_clusters),
+                             cell_type = as.character(object_1$cell_type)) |> 
+        dplyr::filter(cell_type %in% c("TAM","NE","TC","BC", "PE","EN","OD", "OPC")) |> 
+        dplyr::pull(annotated_clusters) |> 
+        unique()
+      
+      infercnv_obj = infercnv::CreateInfercnvObject(
+        raw_counts_matrix= round(rcm),
+        annotations_file = af ,
+        gene_order_file=gene.order |> dplyr::filter(!duplicated(gene)) |> tibble::column_to_rownames('gene'),
+        ref_group_names=refgroups # group names for only the non-malignants
+      )
+      
+      saveRDS(infercnv_obj, file=path3)
+      rm(rcm, af, infercnv_obj)
+      gc()
+      
+    } else {
+      print(paste0("File: ", path3, " already present - skipping re-generation"))
+    }
+    
+    infercnv_obj <- readRDS(file=path3)
+    infercnv_obj <- infercnv::run(infercnv_obj,
+                                  cutoff=0.1,
+                                  out_dir = path1,
+                                  cluster_by_groups=TRUE,
+                                  denoise=T,
+                                  HMM=T,
+                                  output_format="pdf")
+    saveRDS(infercnv_obj, file=path2)
+    rm(infercnv_obj)
+    gc()
+  }
+}
+
+
+system(paste0("rm ",path1,"/*.txt"))
+system(paste0("rm ",path1,"/*.dat"))
+system(paste0("rm ",path1,"/*_obj"))
 
 
 
@@ -469,15 +533,6 @@ FeaturePlot(object = object_1, features = "RBFOX3", label=F)
 FeaturePlot(object = object_1, features = c("RBFOX3","DoubletScore"), label=F)
 
 
-##### Figure Sxx - C4 [FeaturePlot] ----
-
-Idents(object_1) <- "annotated_clusters"
-FeaturePlot(object = object_1, features = c("RBFOX3"), label=T) +
-  labs(subtitle=paste0(sid, "(Bolleboom & Gao dataset)"))
-Idents(object_1) <- "seurat_clusters"
-
-ggsave("output/figures/2022_Figure_S9B_ext_Bolleboom_H243_GBM_C4_FP.pdf", width = 8.3 / 3, height = 8.3 / 3.4,scale=2)
-
 
 
 
@@ -538,6 +593,14 @@ FeaturePlot(object = object_1, features = "TMEM144")
 FeaturePlot(object = object_1, features = "TMEM125")
 FeaturePlot(object = object_1, features = "MOG")
 FeaturePlot(object = object_1, features = "PLP1")
+
+
+#### 5B. OPC ----
+
+
+DotPlot(object_1, features = cell_type_opc , group.by = "annotated_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=9)) +
+  labs(x = paste0("Features [CTX] in: ", gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
 
 
 
