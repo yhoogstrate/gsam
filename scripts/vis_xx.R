@@ -465,7 +465,9 @@ FeaturePlot(object = object_1, features = "GZMA")
 #### 4. Neurons ----
 
 
-FeaturePlot(object = object_1, features = "RBFOX3", label=T)
+Idents(object_1) <- "annotated_clusters"
+FeaturePlot(object = object_1, features = c("RBFOX3","SNAP25"), label=T)
+Idents(object_1) <- "seurat_clusters"
 FeaturePlot(object = object_1, features = "RBFOX3", label=F)
 
 FeaturePlot(object = object_1, features = c("RBFOX3","DoubletScore"), label=F)
@@ -553,14 +555,12 @@ tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
 tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
 
 
-
-
 DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc, "C3 + OPC-like" = tmp.c3.opc), group.by = "annotated_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
   labs(x = paste0("Features [C3/OPC-like] in: ", gsub("_","-",sid), " (Bolleboom & Gao dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S8_ext_Bolleboom_",sid,"_C3.pdf"),width=7.5*3, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S8_ext_Bolleboom_",sid,"_C3.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
 rm(tmp.c3, tmp.opc, tmp.c3.opc)
 
 
@@ -793,7 +793,7 @@ if(!file.exists(path1)) {
       
       refgroups = data.frame(annotated_clusters = as.character(object_1$annotated_clusters),
                              cell_type = as.character(object_1$cell_type)) |> 
-        dplyr::filter(cell_type %in% c("TAM","NE","TC","BC", "PE","EN","OD")) |> 
+        dplyr::filter(cell_type %in% c("TAM","NE","TC","BC", "PE","EN","OD", "OPC")) |> 
         dplyr::pull(annotated_clusters) |> 
         unique()
       
@@ -1000,7 +1000,7 @@ DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc, 
   labs(x = paste0("Features [C3/OPC-like] in: ", gsub("^.+_","",sid), " (CPTAC-3)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C3.pdf"),width=7.5*3, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C3.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
 rm(tmp.c3, tmp.opc, tmp.c3.opc)
 
 
@@ -1030,7 +1030,6 @@ if(!file.exists(target_file)) {
 }
 
 lfile <- loomR::connect(filename = target_file, mode = "r+", skip.validate = TRUE)# skip.validate is needed because the provided loom file is in some old specification/version
-
 
 
 mat <- t(lfile[['matrix']][,])
@@ -1131,7 +1130,7 @@ object_1$annotated_clusters = paste0(object_1$seurat_clusters,". ",object_1$cell
 
 
 
-object_1 <- reorder_levels(object_1, c("", "TC", "TAM", "NE", "GABRG1+, non-T", "OD", "OPC", "AC", "T"))
+object_1 <- reorder_levels(object_1, c("", "TC", "TAM", "NE", "OD", "OPC", "AC", "T"))
 
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "annotated_clusters") +
   guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
@@ -1194,7 +1193,7 @@ if(!file.exists(path1)) {
       
       refgroups = data.frame(annotated_clusters = as.character(object_1$annotated_clusters),
                              cell_type = as.character(object_1$cell_type)) |> 
-        dplyr::filter(cell_type %in% c("TAM","NE","TC","BC", "PE","EN","OD")) |> 
+        dplyr::filter(cell_type %in% c("TAM","NE","TC","BC", "PE","EN","OD", "OPC")) |> 
         dplyr::pull(annotated_clusters) |> 
         unique()
       
@@ -1370,6 +1369,8 @@ FeaturePlot(object = object_1, features = "TMEM125")
 FeaturePlot(object = object_1, features = "MOG")
 FeaturePlot(object = object_1, features = "PLP1")
 
+DotPlot(object = object_1, features = c("TMEM144","TMEM125","MOG","PLP1"),group.by="annotated_clusters")
+
 
 #### 5B. OPC ----
 
@@ -1399,14 +1400,12 @@ tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
 tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
 
 
-
-
 DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc, "C3 + OPC-like" = tmp.c3.opc), group.by = "annotated_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
   labs(x = paste0("Features [C3/OPC-like] in: ", gsub("^.+_","",sid), " (CPTAC-3)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C3.pdf"),width=7.5*3, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C3.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
 rm(tmp.c3, tmp.opc, tmp.c3.opc)
 
 
@@ -1595,7 +1594,7 @@ if(!file.exists(path1)) {
       
       refgroups = data.frame(annotated_clusters = as.character(object_1$annotated_clusters),
                              cell_type = as.character(object_1$cell_type)) |> 
-        dplyr::filter(cell_type %in% c("TAM","NE","TC","BC", "PE","EN","OD")) |> 
+        dplyr::filter(cell_type %in% c("TAM","NE","TC","BC", "PE","EN","OD", "OPC")) |> 
         dplyr::pull(annotated_clusters) |> 
         unique()
       
@@ -1797,7 +1796,7 @@ DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc, 
   labs(x = paste0("Features [C3/OPC-like] in: ", gsub("^.+_","",sid), " (CPTAC-3)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C3.pdf"),width=7.5*3, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C3.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
 rm(tmp.c3, tmp.opc, tmp.c3.opc)
 
 
@@ -2021,7 +2020,7 @@ if(!file.exists(path1)) {
       
       refgroups = data.frame(annotated_clusters = as.character(object_1$annotated_clusters),
                              cell_type = as.character(object_1$cell_type)) |> 
-        dplyr::filter(cell_type %in% c("TAM","NE","TC","BC", "PE","EN","OD")) |> 
+        dplyr::filter(cell_type %in% c("TAM","NE","TC","BC", "PE","EN","OD", "OPC")) |> 
         dplyr::pull(annotated_clusters) |> 
         unique()
       
@@ -2223,7 +2222,7 @@ DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc, 
   labs(x = paste0("Features [C3/OPC-like] in: ", gsub("^.+_","",sid), " (CPTAC-3)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C3.pdf"),width=7.5*3, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C3.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
 rm(tmp.c3, tmp.opc, tmp.c3.opc)
 
 
@@ -2421,7 +2420,7 @@ if(!file.exists(path1)) {
       
       refgroups = data.frame(annotated_clusters = as.character(object_1$annotated_clusters),
                              cell_type = as.character(object_1$cell_type)) |> 
-        dplyr::filter(cell_type %in% c("TAM","NE","TC","BC", "PE","EN","OD")) |> 
+        dplyr::filter(cell_type %in% c("TAM","NE","TC","BC", "PE","EN","OD", "OPC")) |> 
         dplyr::pull(annotated_clusters) |> 
         unique()
       
@@ -2632,7 +2631,7 @@ DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc, 
   labs(x = paste0("Features [C3/OPC-like] in: ", gsub("^.+_","",sid), " (CPTAC-3)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C3.pdf"),width=7.5*3, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C3.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
 rm(tmp.c3, tmp.opc, tmp.c3.opc)
 
 
@@ -3014,7 +3013,7 @@ if(!file.exists(path1)) {
       
       refgroups = data.frame(annotated_clusters = as.character(object_1$annotated_clusters),
                              cell_type = as.character(object_1$cell_type)) |> 
-        dplyr::filter(cell_type %in% c("TAM","NE","TC","BC", "PE","EN","OD")) |> 
+        dplyr::filter(cell_type %in% c("TAM","NE","TC","BC", "PE","EN","OD", "OPC")) |> 
         dplyr::pull(annotated_clusters) |> 
         unique()
       
@@ -3224,7 +3223,7 @@ DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc, 
   labs(x = paste0("Features [C3/OPC-like] in: ", gsub("^.+_","",sid), " (CPTAC-3)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C3.pdf"),width=7.5*3, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C3.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
 rm(tmp.c3, tmp.opc, tmp.c3.opc)
 
 
@@ -3430,7 +3429,7 @@ if(!file.exists(path1)) {
       
       refgroups = data.frame(annotated_clusters = as.character(object_1$annotated_clusters),
                              cell_type = as.character(object_1$cell_type)) |> 
-        dplyr::filter(cell_type %in% c("TAM","NE","TC","BC", "PE","EN","OD")) |> 
+        dplyr::filter(cell_type %in% c("TAM","NE","TC","BC", "PE","EN","OD", "OPC")) |> 
         dplyr::pull(annotated_clusters) |> 
         unique()
       
@@ -3613,6 +3612,7 @@ FeaturePlot(object = object_1, features = "TMEM125")
 FeaturePlot(object = object_1, features = "MOG")
 FeaturePlot(object = object_1, features = "PLP1",label=T)
 
+
 ##### Figure Sxx - C3/OD & OPC-L -----
 
 
@@ -3638,7 +3638,7 @@ DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc, 
   labs(x = paste0("Features [C3/OPC-like] in: ", gsub("^.+_","",sid), " (CPTAC-3)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C3.pdf"),width=7.5*3, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C3.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
 rm(tmp.c3, tmp.opc, tmp.c3.opc)
 
 
@@ -3957,7 +3957,7 @@ if(!file.exists(path1)) {
       
       refgroups = data.frame(annotated_clusters = as.character(object_1$annotated_clusters),
                              cell_type = as.character(object_1$cell_type)) |> 
-        dplyr::filter(cell_type %in% c("TAM","NE","TC","BC", "PE","EN","OD")) |> 
+        dplyr::filter(cell_type %in% c("TAM","NE","TC","BC", "PE","EN","OD", "OPC")) |> 
         dplyr::pull(annotated_clusters) |> 
         unique()
       
@@ -4168,7 +4168,7 @@ DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc, 
   labs(x = paste0("Features [C3/OPC-like] in: ", gsub("^.+_","",sid), " (CPTAC-3)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C3.pdf"),width=7.5*3, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C3.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
 rm(tmp.c3, tmp.opc, tmp.c3.opc)
 
 
@@ -4343,7 +4343,7 @@ if(!file.exists(path1)) {
       
       refgroups = data.frame(annotated_clusters = as.character(object_1$annotated_clusters),
                              cell_type = as.character(object_1$cell_type)) |> 
-        dplyr::filter(cell_type %in% c("TAM","NE","TC","BC", "PE","EN","OD")) |> 
+        dplyr::filter(cell_type %in% c("TAM","NE","TC","BC", "PE","EN","OD", "OPC")) |> 
         dplyr::pull(annotated_clusters) |> 
         unique()
       
@@ -4553,7 +4553,7 @@ DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc, 
   labs(x = paste0("Features [C3/OPC-like] in: ", gsub("^.+_","",sid), " (CPTAC-3)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C3.pdf"),width=7.5*3, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C3.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
 rm(tmp.c3, tmp.opc, tmp.c3.opc)
 
 
@@ -4736,12 +4736,12 @@ object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(15, 21, 23,19), "NE"
 object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(11, 26), "TC", object_1$cell_type)
 object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(24), "BC", object_1$cell_type)
 #object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(20), "AC", object_1$cell_type)# indeed CNV neutral
-object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(27), "CX?", object_1$cell_type)
+object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(27), "OPC", object_1$cell_type)
 object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(18, 20, 22), "Doublets", object_1$cell_type)
 object_1$annotated_clusters = paste0(object_1$seurat_clusters,". ",object_1$cell_type)
 
 
-object_1 <- reorder_levels(object_1, c("", "Doublets", "CX?", "EN","PE", "BC", "TC", "TAM", "NE", "OD", "AC", "T"))
+object_1 <- reorder_levels(object_1, c("", "Doublets", "OPC", "EN","PE", "BC", "TC", "TAM", "NE", "OD", "AC", "T"))
 
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "annotated_clusters") +
   guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
@@ -4821,7 +4821,7 @@ if(!file.exists(path1)) {
       
       refgroups = data.frame(annotated_clusters = as.character(object_1$annotated_clusters),
                              cell_type = as.character(object_1$cell_type)) |> 
-        dplyr::filter(cell_type %in% c("TAM","NE","TC","BC", "PE","EN","OD")) |> 
+        dplyr::filter(cell_type %in% c("TAM","NE","TC","BC", "PE","EN","OD", "OPC")) |> 
         dplyr::pull(annotated_clusters) |> 
         unique()
       
@@ -4874,6 +4874,7 @@ FeaturePlot(object = object_1, features = "OLIG1") # Tumor/OPC+NPC1
 FeaturePlot(object = object_1, features = "VIM") # Tumor/MES
 
 FeaturePlot(object = object_1, features = c("HSPA1A","HSPA1B","VEGFA")) # Apoptotic Tumor?
+FeaturePlot(object = object_1, features = c("TOP2A")) # cycling
 FeaturePlot(object = object_1, features = c("RRM2","PCNA","KIAA0101")) # G1/S
 FeaturePlot(object = object_1, features = c("CCNB1","CDC20","CCNB2")) # G2/M
 FeaturePlot(object = object_1, features = c("TMPO")) # G2/M
@@ -5029,16 +5030,14 @@ tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
 tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
 
 
-
-
 DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc, "C3 + OPC-like" = tmp.c3.opc), group.by = "annotated_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
   labs(x = paste0("Features [C3/OPC-like] in: ", gsub("^.+_","",sid), " (CPTAC-3)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C3.pdf"),width=7.5*3, height=4,scale=1.2)
-rm(tmp.c3, tmp.opc, tmp.c3.opc)
-
+# do not export - suspect IDH-mut - at least no common GBM
+#ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C3.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+#rm(tmp.c3, tmp.opc, tmp.c3.opc)
 
 
 
@@ -5623,7 +5622,7 @@ if(!file.exists(path1)) {
       
       refgroups = data.frame(annotated_clusters = as.character(object_1$annotated_clusters),
                              cell_type = as.character(object_1$cell_type)) |> 
-        dplyr::filter(cell_type %in% c("TAM","NE","TC","BC", "PE","EN","OD")) |> 
+        dplyr::filter(cell_type %in% c("TAM","NE","TC","BC", "PE","EN","OD", "OPC")) |> 
         dplyr::pull(annotated_clusters) |> 
         unique()
       
@@ -5822,7 +5821,7 @@ DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc, 
   labs(x = paste0("Features [C3/OPC-like] in: ", gsub("^.+_","",sid), " (CPTAC-3)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C3.pdf"),width=7.5*3, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C3.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
 rm(tmp.c3, tmp.opc, tmp.c3.opc)
 
 
@@ -5952,7 +5951,7 @@ object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(20), "PERP+, non-T",
 object_1$annotated_clusters = paste0(object_1$seurat_clusters,". ",object_1$cell_type)
 
 
-object_1 <- reorder_levels(object_1, c("", "PERP+, non-T", "EL", "CX", "EN","PE", "BC", "TC", "TAM", "NE", "OD", "AC", "T"))
+object_1 <- reorder_levels(object_1, c("", "PERP+, non-T", "EL", "EN","PE", "BC", "TC", "TAM", "NE", "OD", "AC", "T"))
 
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "annotated_clusters") +
   guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
@@ -6018,7 +6017,7 @@ if(!file.exists(path1)) {
       
       refgroups = data.frame(annotated_clusters = as.character(object_1$annotated_clusters),
                              cell_type = as.character(object_1$cell_type)) |> 
-        dplyr::filter(cell_type %in% c("TAM","NE","TC","BC", "PE","EN","OD")) |> 
+        dplyr::filter(cell_type %in% c("TAM","NE","TC","BC", "PE","EN","OD", "OPC")) |> 
         dplyr::pull(annotated_clusters) |> 
         unique()
       
@@ -6052,6 +6051,7 @@ if(!file.exists(path1)) {
 }
 
 
+system(paste0("rm ",path1,"/*.txt"))
 system(paste0("rm ",path1,"/*.dat"))
 system(paste0("rm ",path1,"/*_obj"))
 
@@ -6115,6 +6115,10 @@ FeaturePlot(object = object_1, features = c("P2RY12")) # specifiek MG, niet Mac?
 FeaturePlot(object = object_1, features = "CD14") # TAM/mg
 FeaturePlot(object = object_1, features = c("ITGB2"))
 FeaturePlot(object = object_1, features = c("C1QC"))
+
+DotPlot(object = object_1, features = c("CD163","P2RY12","CD14","ITGB2","C1QC"), group.by = "annotated_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
+  labs(x = paste0("Features [C3/OPC-like] in: ", gsub("^.+_","",sid), " (CPTAC-3)"))
 
 
 #### 3B. Til/T-cell ----
@@ -6208,7 +6212,6 @@ DotPlot(object = object_1, features = tmp, group.by = "annotated_clusters",
   labs(x = paste0("Features [C4/NPC] in: ", gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
 
 
-
 ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C4.pdf"),width=7.5*3, height=4,scale=1.2)
 rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
 
@@ -6243,16 +6246,22 @@ tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
 tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
 
 
-
-
 DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc, "C3 + OPC-like" = tmp.c3.opc), group.by = "annotated_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
   labs(x = paste0("Features [C3/OPC-like] in: ", gsub("^.+_","",sid), " (CPTAC-3)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C3.pdf"),width=7.5*3, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C3.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
 rm(tmp.c3, tmp.opc, tmp.c3.opc)
 
+
+
+#### 5B. OPC ----
+
+
+DotPlot(object_1, features = cell_type_opc , group.by = "annotated_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=9)) +
+  labs(x = paste0("Features [CTX] in: ", gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
 
 
 #### 6A. Endothelial ----
@@ -6292,13 +6301,6 @@ FeaturePlot(object = object_1, features = c("CFH"))
 FeaturePlot(object = object_1, features = "ITGA1") # endo + peri?
 
 
-#### 5B. OPC ----
-
-
-DotPlot(object_1, features = cell_type_opc , group.by = "annotated_clusters") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=9)) +
-  labs(x = paste0("Features [CTX] in: ", gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
-
 
 #### Y. Cell Type Y ----
 
@@ -6314,7 +6316,6 @@ DotPlot(object_1, features = cell_type_y , group.by = "annotated_clusters") +
 # https://portal.gdc.cancer.gov/files/9427ea4c-ac09-48b6-93ac-fcf628d0da71
 # https://portal.gdc.cancer.gov/cases/37d2352d-e15e-4eb7-b3dc-c7c3801d5433?bioId=1215857f-64f8-47fd-b7c2-9de7ad1b9425
 # very odd sample, same cluster expresses TAM and OD markers..
-
 
 
 rhdf5::h5closeAll()
@@ -6437,7 +6438,7 @@ object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(18,22,24,25), "Doubl
 object_1$annotated_clusters = paste0(object_1$seurat_clusters,". ",object_1$cell_type)
 
 
-object_1 <- reorder_levels(object_1, c("", "EL", "CX", "EN","PE", "BC", "TC", "TAM", "NE", "OD", "AC", "T"))
+object_1 <- reorder_levels(object_1, c("", "EL", "EN","PE", "BC", "TC", "TAM", "NE", "OD", "AC", "T"))
 
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "annotated_clusters") +
   guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
@@ -6509,7 +6510,7 @@ if(!file.exists(path1)) {
       
       refgroups = data.frame(annotated_clusters = as.character(object_1$annotated_clusters),
                              cell_type = as.character(object_1$cell_type)) |> 
-        dplyr::filter(cell_type %in% c("TAM","NE","TC","BC", "PE","EN","OD")) |> 
+        dplyr::filter(cell_type %in% c("TAM","NE","TC","BC", "PE","EN","OD", "OPC")) |> 
         dplyr::pull(annotated_clusters) |> 
         unique()
       
@@ -6704,14 +6705,13 @@ tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
 
 
 
-
-DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc, "C3 + OPC-like" = tmp.c3.opc), group.by = "annotated_clusters") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
-  labs(x = paste0("Features [C3/OPC-like] in: ", gsub("^.+_","",sid), " (CPTAC-3)"))
-
-
-ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C3.pdf"),width=7.5*3, height=4,scale=1.2)
-rm(tmp.c3, tmp.opc, tmp.c3.opc)
+# sample cannot be trusted based on marker expression
+# DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc, "C3 + OPC-like" = tmp.c3.opc), group.by = "annotated_clusters") +
+#   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
+#   labs(x = paste0("Features [C3/OPC-like] in: ", gsub("^.+_","",sid), " (CPTAC-3)"))
+#
+# ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C3.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+# rm(tmp.c3, tmp.opc, tmp.c3.opc)
 
 
 
