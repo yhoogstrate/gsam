@@ -3003,7 +3003,7 @@ rm(object_1, lfile)
 gc()
 
 
-sid <- 'G_CPT0206770002'
+sid <- 'G_CPT0206770004'
 origin_file <-  "data/CPTAC-3/G_CPT0206880004/71494916-46c2-4235-9225-ffe218bbdf07/seurat.loom"
 target_file <- paste0("tmp/CPTAC-3_",sid,"_seurat.loom")
 if(!file.exists(target_file)) {
