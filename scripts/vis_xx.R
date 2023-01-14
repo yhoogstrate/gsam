@@ -296,7 +296,7 @@ DotPlot(object = object_1, features = c("SSTR2", "SST", "LHX1", "LHX6","NHLH1","
 
 
 
-# Bolleboom H243 ----
+# Bolleboom-GAO  H243-GBM ----
 # chr7 gain, chr10 loss, chr9.q loss, chr13.p loss (InferCNV)
 
 sid <- 'H243_GBM'
@@ -366,7 +366,7 @@ object_1 <- RunUMAP(object_1, dims = 1:d)
 
 
 ## clustering & annotation ----
-
+### round 1 with doublets ----
 
 object_1 <- FindClusters(object_1, resolution = 1, algorithm = 1)
 
@@ -386,10 +386,51 @@ object_1$annotated_clusters = paste0(object_1$seurat_clusters,". ",object_1$cell
 
 object_1 <- reorder_levels(object_1, c("", "Doublets" , "EN", "TC", "TAM", "NE", "OPC", "OD", "AC", "T"))
 
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "cell_type") +
+  guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
+  labs(subtitle=sid)
+
+
+
+### round 2 after doublet removal ----
+
+
+object_1 <- object_1[,object_1[['cell_type']] != "Doublets"]
+
+
+object_1 <- FindNeighbors(object_1, dims = 1:d)
+object_1 <- RunUMAP(object_1, dims = 1:d)
+object_1 <- FindClusters(object_1, resolution = 1, algorithm = 1)
+
+
+object_1$cell_type = ""
+object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(0,1), "OD", object_1$cell_type)
+object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(12,13,21,22,17,18,8,16,10,7,5,19,4), "NE", object_1$cell_type)
+object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(9), "OPC", object_1$cell_type)
+object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(15), "AC", object_1$cell_type)
+
+object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(3,14,23,6,2), "T", object_1$cell_type)
+# object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(20), "Doublets", object_1$cell_type)
+object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(11), "TAM", object_1$cell_type)
+object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(24), "EN", object_1$cell_type)
+object_1$annotated_clusters = paste0(object_1$seurat_clusters,". ",object_1$cell_type)
+
+
+object_1 <- reorder_levels(object_1, c("", "EN", "TC", "TAM", "NE", "OPC", "OD", "AC", "T"))
+
+
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "annotated_clusters") +
   guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
   labs(subtitle=sid)
 
+
+
+
+DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "cell_type") +
+  guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
+  labs(subtitle=sid)
+
+ggsave(paste0("output/figures/2022_Figure_S8C_", sid, "_UMAP_Bolleboom-Gao.pdf"), width = 10, height = 8)
 
 
 
@@ -576,12 +617,14 @@ tmp <- list('C4'=tmp.c4,
 
 
 DotPlot(object = object_1, features = tmp, group.by = "annotated_clusters",
-        cols = c("lightgrey", "purple")) +
+        #cols = c("lightgrey", "purple")
+        ) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
-  labs(x = paste0("Features [C4/NPC] in: ", gsub("_","-",sid), " (Bolleboom & Gao dataset)"))
+  labs(x = paste0("Features [C4/NPC] in: ", gsub("_","-",sid), " (Bolleboom-Gao dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S9D_ext_Bolleboom_",sid,"_C4.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+
+ggsave(paste0("output/figures/2022_Figure_S8A_ext_Bolleboom-Gao_",sid,"_C4.pdf"),width=7.5*3, height=4,scale=1.2)
 rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
 
 
@@ -630,7 +673,7 @@ DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc, 
   labs(x = paste0("Features [C3/OPC-like] in: ", gsub("_","-",sid), " (Bolleboom & Gao dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S8_ext_Bolleboom_",sid,"_C3.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S8B_ext_Bolleboom-Gao_",sid,"_C3.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
 rm(tmp.c3, tmp.opc, tmp.c3.opc)
 
 
@@ -6919,5 +6962,127 @@ tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
 # ggsave(paste0("output/figures/2022_Figure_S8_ext_CPTAC-3_",sid,"_C3.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
 # rm(tmp.c3, tmp.opc, tmp.c3.opc)
 
+# S - stem-like ----
 
+mat <- readxl::read_xlsx("data/1-s2.0-S0092867422005360-mmc3.xlsx",skip=1) |> 
+  tibble::column_to_rownames("NAME")
+mat <- log(mat) + 0.0001
+
+object_1 <- CreateSeuratObject(counts = mat, min.cells = 0, min.features = 0, project="test")
+object_1[["seurat_clusters"]] = " "
+object_1[["cell_type"]] = colnames(object_1)
+object_1[["annotated_clusters"]] = colnames(object_1)
+
+# change into more logical order
+object_1 <- reorder_levels(object_1, rev(c("stemcell_tumor",
+                                       "differentiated_tumor",
+                                       "prolif_stemcell_tumor",
+                                       "oligodendrocyte",
+                                       "endothelial",
+                                       "pericyte",
+                                       "myeloid",
+                                       "t_cell",
+                                       "dendritic_cell",
+                                       "b_cell",
+                                       "fibroblast",
+                                       "granulocyte")))
+
+
+
+## C4 ----
+
+
+tmp.c4 <- results.out |>
+  dplyr::filter(!is.na(.data$C4.2022)) |> 
+  dplyr::filter(.data$C4.2022 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+tmp.npc1 <- results.out |> 
+  dplyr::filter(!is.na(.data$neftel.meta.modules.NPC1)) |> 
+  dplyr::filter(.data$neftel.meta.modules.NPC1 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+tmp.npc2 <- results.out |> 
+  dplyr::filter(!is.na(.data$neftel.meta.modules.NPC2)) |> 
+  dplyr::filter(.data$neftel.meta.modules.NPC2 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+tmp.npc1.2 <- intersect(tmp.npc1, tmp.npc2)
+tmp.npc1 <- setdiff(tmp.npc1, tmp.npc1.2)
+tmp.npc2 <- setdiff(tmp.npc2, tmp.npc1.2)
+
+tmp.c4.npc2 <- intersect(tmp.c4, tmp.npc2)
+tmp.c4  <- setdiff(tmp.c4, tmp.c4.npc2)
+tmp.npc2 <- setdiff(tmp.npc2, tmp.c4.npc2)
+
+
+plt <- readxl::read_xlsx("data/1-s2.0-S0092867422005360-mmc3.xlsx",skip=1) |> 
+  dplyr::rename(gene_symbol = NAME) |> 
+  tidyr::pivot_longer(cols = -gene_symbol) |> 
+  dplyr::filter(gene_symbol %in% c(tmp.c4, tmp.npc1, tmp.npc1.2, tmp.npc2, tmp.c4.npc2)) |> 
+  #dplyr::filter(gene_symbol %in% c( tmp.c4.npc2)) |> 
+  dplyr::mutate(facet = factor(case_when(
+    gene_symbol %in% tmp.c4 ~ "C4",
+    gene_symbol %in% tmp.npc1 ~ "NPC1",
+    gene_symbol %in% tmp.npc1.2 ~ "NPC1+2",
+    gene_symbol %in% tmp.npc2 ~ "NPC2",
+    gene_symbol %in% tmp.c4.npc2 ~ "C4 + NPC2"
+  ), levels=c("C4","NPC1","NPC1+2","NPC2", "C4 + NPC2"))) |> 
+  dplyr::mutate(facet_y = factor(ifelse(grepl("tumor", name), "tumor","non-tumor"), levels=c("tumor","non-tumor"))) |> 
+  dplyr::mutate(value = log(value))
+
+
+ggplot(plt, aes(x = gene_symbol, y=name, size=value, col=value)) +
+  facet_grid(cols = vars(facet),rows=vars(facet_y), scales = "free", space = "free") +
+  geom_point() +
+  scale_colour_gradient(low="gray", high="purple") +
+  theme(line = element_blank()) +
+  cowplot::theme_cowplot()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
+  labs(x = paste0("Features [C4/NPC] in: log GLASS CYBERSORTx signatures")) +
+  theme(axis.title.x = element_blank(), axis.title.y = element_blank()) +
+  theme(
+    panel.spacing = unit(x = 1, units = "lines"),
+    strip.background = element_blank()
+  )
+
+
+ggsave(paste0("output/figures/2022_Figure_S10B.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+
+
+##### Figure Sxx - C3/OD & OPC-L -----
+
+
+
+plt <- readxl::read_xlsx("data/1-s2.0-S0092867422005360-mmc3.xlsx",skip=1) |> 
+  dplyr::rename(gene_symbol = NAME) |> 
+  tidyr::pivot_longer(cols = -gene_symbol) |> 
+  dplyr::filter(gene_symbol %in% c(tmp.c3, tmp.opc, tmp.c3.opc)) |> 
+  dplyr::mutate(facet = factor(case_when(
+    gene_symbol %in% tmp.c3 ~ "C3",
+    gene_symbol %in% tmp.opc ~ "OPC-like",
+    gene_symbol %in% tmp.c3.opc ~ "C3 + OPC-like"
+  ), levels=c("C3","OPC-like","C3 + OPC-like"))) |> 
+  dplyr::mutate(facet_y = factor(ifelse(grepl("tumor", name), "tumor","non-tumor"), levels=c("tumor","non-tumor"))) |> 
+  dplyr::mutate(value = log(value))
+
+
+ggplot(plt, aes(x = gene_symbol, y=name, size=value, col=value)) +
+  facet_grid(cols = vars(facet),rows=vars(facet_y), scales = "free", space = "free") +
+  geom_point() +
+  scale_colour_gradient(low="gray", high="blue") +
+  theme(line = element_blank()) +
+  cowplot::theme_cowplot()+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
+  labs(x = paste0("Features [C3/OPC-like] in: log GLASS CYBERSORTx signatures")) +
+  theme(axis.title.x = element_blank(), axis.title.y = element_blank()) +
+  theme(
+    panel.spacing = unit(x = 1, units = "lines"),
+    strip.background = element_blank()
+  )
+
+ggsave(paste0("output/figures/2022_Figure_S10A.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
 
