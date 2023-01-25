@@ -368,7 +368,7 @@ object_1 <- RunUMAP(object_1, dims = 1:d)
 ## clustering & annotation ----
 ### round 1 with doublets ----
 
-object_1 <- FindClusters(object_1, resolution = 1, algorithm = 1)
+object_1 <- FindClusters(object_1, resolution = 1, algorithm = 1,random.seed=123456)
 
 
 object_1$cell_type = ""
@@ -397,26 +397,26 @@ DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "ce
 
 object_1 <- object_1[,object_1[['cell_type']] != "Doublets"]
 
-
+# object_1$seurat_clusters <- NULL
+# object_1$cell_type <- NULL
+# object_1$annotated_clusters <- NULL
 object_1 <- FindNeighbors(object_1, dims = 1:d)
 object_1 <- RunUMAP(object_1, dims = 1:d)
-object_1 <- FindClusters(object_1, resolution = 1, algorithm = 1)
+object_1 <- FindClusters(object_1, resolution = 1, algorithm = 1, random.seed=123456)
 
 
-object_1$cell_type = ""
-object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(0,1), "OD", object_1$cell_type)
-object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(12,13,21,22,17,18,8,16,10,7,5,19,4), "NE", object_1$cell_type)
-object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(9), "OPC", object_1$cell_type)
-object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(15), "AC", object_1$cell_type)
+#object_1$cell_type = ""
+#object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(0,1), "OD", object_1$cell_type)
+#object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(12,13,21,22,17,18,8,16,10,7,5,19,4), "NE", object_1$cell_type)
+#object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(9), "OPC", object_1$cell_type)
+#object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(15), "AC", object_1$cell_type)
 
-object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(3,14,23,6,2), "T", object_1$cell_type)
+#object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(3,14,23,6,2), "T", object_1$cell_type)
 # object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(20), "Doublets", object_1$cell_type)
-object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(11), "TAM", object_1$cell_type)
-object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(24), "EN", object_1$cell_type)
-object_1$annotated_clusters = paste0(object_1$seurat_clusters,". ",object_1$cell_type)
-
-
-object_1 <- reorder_levels(object_1, c("", "EN", "TC", "TAM", "NE", "OPC", "OD", "AC", "T"))
+#object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(11), "TAM", object_1$cell_type)
+#object_1$cell_type = ifelse(object_1$seurat_clusters %in% c(24), "EN", object_1$cell_type)
+#object_1$annotated_clusters = paste0(object_1$seurat_clusters,". ",object_1$cell_type)
+#object_1 <- reorder_levels(object_1, c("", "EN", "TC", "TAM", "NE", "OPC", "OD", "AC", "T"))
 
 
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "annotated_clusters") +
@@ -617,14 +617,13 @@ tmp <- list('C4'=tmp.c4,
 
 
 DotPlot(object = object_1, features = tmp, group.by = "annotated_clusters",
-        #cols = c("lightgrey", "purple")
+        cols = c("lightgrey", "purple")
         ) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
   labs(x = paste0("Features [C4/NPC] in: ", gsub("_","-",sid), " (Bolleboom-Gao dataset)"))
 
 
-
-ggsave(paste0("output/figures/2022_Figure_S8A_ext_Bolleboom-Gao_",sid,"_C4.pdf"),width=7.5*3, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S8A_ext_Bolleboom-Gao_",sid,"_C4.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
 rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
 
 
@@ -636,14 +635,6 @@ FeaturePlot(object = object_1, features = "TMEM144")
 FeaturePlot(object = object_1, features = "TMEM125")
 FeaturePlot(object = object_1, features = "MOG")
 FeaturePlot(object = object_1, features = "PLP1")
-
-
-#### 5B. OPC ----
-
-
-DotPlot(object_1, features = cell_type_opc , group.by = "annotated_clusters") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=9)) +
-  labs(x = paste0("Features [CTX] in: ", gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
 
 
 
@@ -668,13 +659,25 @@ tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
 tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
 
 
+
+
 DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc, "C3 + OPC-like" = tmp.c3.opc), group.by = "annotated_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
-  labs(x = paste0("Features [C3/OPC-like] in: ", gsub("_","-",sid), " (Bolleboom & Gao dataset)"))
+  labs(x = paste0("Features [C3/OPC-like] in: ", gsub("^.+_","",sid), " (Bolleboom-Gao dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S8B_ext_Bolleboom-Gao_",sid,"_C3.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S8_ext_Bolleboom-Gao_",sid,"_C3.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
 rm(tmp.c3, tmp.opc, tmp.c3.opc)
+
+
+
+#### 5B. OPC ----
+
+
+DotPlot(object_1, features = cell_type_opc , group.by = "annotated_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=9)) +
+  labs(x = paste0("Features [CTX] in: ", gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
+
 
 
 
@@ -2999,12 +3002,14 @@ FeaturePlot(object = object_1, features = "RBFOX3", label=F)
 # Glioblastoma
 
 rhdf5::h5closeAll()
-rm(object_1, lfile)
+rm(object_1)
+rm(lfile)
+rm(mat)
 gc()
 
 
 sid <- 'G_CPT0206770004'
-origin_file <-  "data/CPTAC-3/G_CPT0206880004/71494916-46c2-4235-9225-ffe218bbdf07/seurat.loom"
+origin_file <- paste0("data/CPTAC-3/",sid,"/71494916-46c2-4235-9225-ffe218bbdf07/seurat.loom")
 target_file <- paste0("tmp/CPTAC-3_",sid,"_seurat.loom")
 if(!file.exists(target_file)) {
   print("Copying loom file to rw cache")

@@ -45,3 +45,9 @@ infercnv
 *.copy
 *.Zone.Identifier
 *.loom
+ega/
+
+output/tables/analysis_SubtypeME_GlioVis_output_2022.csv
+output/tables/analysis_SubtypeME_export_2022.csv
+output/tables/export_gliovis_2022.csv
+

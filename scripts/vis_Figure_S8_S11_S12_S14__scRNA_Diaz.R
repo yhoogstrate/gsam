@@ -995,6 +995,66 @@ DotPlot(object = object_1, features = c("RBFOX3",
                                         "CCT2","RUFY2","UBN2","ATP6V1H","HSPA4L","NASP","GNAO1","RAB6B","HLF","SLC25A36"
 ),group.by = "seurat_clusters")
 
+
+
+##### Figure Sxx - C4 ----
+
+
+tmp.c4 <- results.out |>
+  dplyr::filter(!is.na(.data$C4.2022)) |> 
+  dplyr::filter(.data$C4.2022 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+tmp.npc1 <- results.out |> 
+  dplyr::filter(!is.na(.data$neftel.meta.modules.NPC1)) |> 
+  dplyr::filter(.data$neftel.meta.modules.NPC1 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+tmp.npc2 <- results.out |> 
+  dplyr::filter(!is.na(.data$neftel.meta.modules.NPC2)) |> 
+  dplyr::filter(.data$neftel.meta.modules.NPC2 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+tmp.npc1.2 <- intersect(tmp.npc1, tmp.npc2)
+tmp.npc1 <- setdiff(tmp.npc1, tmp.npc1.2)
+tmp.npc2 <- setdiff(tmp.npc2, tmp.npc1.2)
+
+tmp.c4.npc2 <- intersect(tmp.c4, tmp.npc2)
+tmp.c4  <- setdiff(tmp.c4, tmp.c4.npc2)
+tmp.npc2 <- setdiff(tmp.npc2, tmp.c4.npc2)
+
+
+sid_print <- paste0("Bolleboom & Gao dataset - ", sid)
+
+tmp <- list('C4'=tmp.c4,
+            'NPC1'=tmp.npc1,
+            'NPC1+2'=tmp.npc1.2,
+            'NPC2'=tmp.npc2,
+            'NPC2 + C4' = tmp.c4.npc2)
+
+
+DotPlot(object = object_1, features = tmp, group.by = "seurat_clusters",
+        cols = c("lightgrey", "purple")) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
+  labs(x = paste0("Features [C4/NPC] in: ",sid_print))
+
+
+
+
+
+object_1 <- RunPCA(object_1, features = tmp.c4, reduction.name = 'pca.c4', reduction.key = 'C4',rev.pca=T)
+object_1 <- RunPCA(object_1, features = tmp.npc, reduction.name = 'pca.npc', reduction.key = 'NPC')
+
+DotPlot(object = object_1, features =c('C4_1','NPC_1'), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(x = paste0("Features [C4/NPC] in: ",sid_print, " (Diaz dataset)"))
+
+
+
+
 #### 5. Oligodendrocytes + OPC (+) ----
 
 
@@ -1195,6 +1255,7 @@ DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = 1.6, group.by = "s
 # age: 39
 # gender: Male
 # chr3p-, chr7+, chr11q+, chr12-, chr14p+
+# pretty noisy sample
 
 
 rm(sid, object_1)
@@ -1271,7 +1332,7 @@ ElbowPlot(object_1, ndims = 45)
 
 d <- 15
 object_1 <- FindNeighbors(object_1, dims = 1:d)
-object_1 <- FindClusters(object_1, resolution = 1, algorithm=1)
+object_1 <- FindClusters(object_1, resolution = 0.5, algorithm=1)
 head(Idents(object_1), 20)
 
 ### UMAP clustering ----
@@ -1517,16 +1578,26 @@ sid_print <- sid |>
 
 
 DotPlot(object = object_1, features =list('C4'=tmp.c4
-                                          #, 'NPC'=tmp.npc, 'C4+NPC'=tmp.c4.npc
+                                          , 'NPC'=tmp.npc, 'C4+NPC'=tmp.c4.npc
                                           ), 
         group.by = "seurat_clusters",
-        scale.max=80,
+        scale.max=75,
         col.min = -1,
         col.max = 1.5
 ) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
   labs(x = paste0("Features [C4/NPC] in: ",sid_print, " (Diaz dataset)"))
 
+
+
+
+# object_1 <- RunPCA(object_1, features = tmp.c4, reduction.name = 'pca.c4', reduction.key = 'C4')
+# object_1 <- RunPCA(object_1, features = tmp.npc, reduction.name = 'pca.npc', reduction.key = 'NPC',rev.pca=T)
+# 
+# DotPlot(object = object_1, features =c('C4_1','NPC_1'), group.by = "seurat_clusters") +
+#   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+#   labs(x = paste0("Features [C4/NPC] in: ",sid_print, " (Diaz dataset)"))
+# 
 
 
 
@@ -1968,6 +2039,63 @@ DotPlot(object = object_1, features = c("RBFOX3",
                                         "CNR1","SYT1","SYNPR","GABRA1","RELN,","VIP",
                                         "CCT2","RUFY2","UBN2","ATP6V1H","HSPA4L","NASP","GNAO1","RAB6B","HLF","SLC25A36"
 ),group.by = "seurat_clusters")
+
+
+
+##### Figure Sxx - C4 ----
+
+
+tmp.c4 <- results.out |>
+  dplyr::filter(!is.na(.data$C4.2022)) |> 
+  dplyr::filter(.data$C4.2022 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+tmp.npc1 <- results.out |> 
+  dplyr::filter(!is.na(.data$neftel.meta.modules.NPC1)) |> 
+  dplyr::filter(.data$neftel.meta.modules.NPC1 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+tmp.npc2 <- results.out |> 
+  dplyr::filter(!is.na(.data$neftel.meta.modules.NPC2)) |> 
+  dplyr::filter(.data$neftel.meta.modules.NPC2 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+tmp.npc1.2 <- intersect(tmp.npc1, tmp.npc2)
+tmp.npc1 <- setdiff(tmp.npc1, tmp.npc1.2)
+tmp.npc2 <- setdiff(tmp.npc2, tmp.npc1.2)
+
+tmp.c4.npc2 <- intersect(tmp.c4, tmp.npc2)
+tmp.c4  <- setdiff(tmp.c4, tmp.c4.npc2)
+tmp.npc2 <- setdiff(tmp.npc2, tmp.c4.npc2)
+
+
+
+tmp <- list('C4'=tmp.c4,
+            'NPC1'=tmp.npc1,
+            'NPC1+2'=tmp.npc1.2,
+            'NPC2'=tmp.npc2,
+            'NPC2 + C4' = tmp.c4.npc2)
+
+
+DotPlot(object = object_1, features = tmp, group.by = "seurat_clusters",
+        cols = c("lightgrey", "purple")) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
+  labs(x = paste0("Features [C4/NPC] in: ",sid))
+
+
+
+object_1 <- RunPCA(object_1, features = tmp.c4, reduction.name = 'pca.c4', reduction.key = 'C4',rev.pca=F)
+object_1 <- RunPCA(object_1, features = tmp.npc, reduction.name = 'pca.npc', reduction.key = 'NPC')
+
+DotPlot(object = object_1, features =c('C4_1','NPC_1'), group.by = "seurat_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(x = paste0("Features [C4/NPC] in: ",sid_print, " (Diaz dataset)"))
+
+
+
 
 #### 5. Oligodendrocytes + OPC (?) ----
 

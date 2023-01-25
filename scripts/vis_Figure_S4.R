@@ -13,7 +13,7 @@ plt <- results.out |>
   dplyr::mutate(mark.chr7 = chr == "chr7") |>
   dplyr::mutate(mark.chr10 = chr == "chr10") |>
   dplyr::mutate(show.label.chr7 = grepl("EGFR", hugo_symbol)) |>
-  dplyr::mutate(show.label.chr10 = grepl("PTEN|MGMT", hugo_symbol)) # TET1 really interesting
+  dplyr::mutate(show.label.chr10 = grepl("^(PTEN|MGMT)$", hugo_symbol)) # TET1 really interesting
 
 plt |>
   dplyr::filter(mark.chr7 & !is.na(estimate.gsam.cor.tpc)) |>
@@ -95,8 +95,8 @@ ggplot(plt.expanded, aes(
   geom_point(data = subset(plt.expanded, status %in% c("chr7", "chr10")), size = 2.5, col = "black") +
   geom_point(data = subset(plt.expanded, grepl("label", status)), size = 2.75, fill = "red", col = "black") +
   geom_text(data = stat.label, size = 2.5, show.legend = FALSE) +
-  ggrepel::geom_text_repel(data = subset(plt.expanded, status == "chr7 label"), size = 2.5, nudge_x = -3.1, direction = "y", hjust = "right", segment.size = 0.35, show.legend = FALSE) +
-  ggrepel::geom_text_repel(data = subset(plt.expanded, status == "chr10 label"), size = 2.5, nudge_x = 3.1, direction = "y", hjust = "left", segment.size = 0.35, show.legend = FALSE) +
+  ggrepel::geom_text_repel(data = subset(plt.expanded, status == "chr7 label"), size = 2.5, nudge_x = -0.7, direction = "y", hjust = "right", segment.size = 0.35, show.legend = FALSE) +
+  ggrepel::geom_text_repel(data = subset(plt.expanded, status == "chr10 label"), size = 2.5, nudge_x = 0.7, direction = "y", hjust = "left", segment.size = 0.35, show.legend = FALSE) +
   scale_shape_manual(values = c("TRUE" = 23, "FALSE" = 21)) +
   scale_fill_manual(values = c("chr7" = "#6ba6e5AA", "chr10" = "#eab509AA", "other" = "white", "chr10 label" = "red", "chr7 label" = "red"), guide = "none") +
   scale_color_manual(values = c("chr7" = "#6ba6e5AA", "chr10" = "#eab509AA", "other" = "white", "chr10 label" = "red", "chr7 label" = "red"), guide = "none") +
@@ -123,7 +123,7 @@ ggplot(plt.expanded, aes(
   )
 
 
-ggsave("output/figures/2022_Figure_S4A_S4B__geiser_plot_chr7_chr10.pdf", width=8.3 / 2,height=8.3/5, scale=2.25)
+ggsave("output/figures/2022_Figure_S4A_S4B__geiser_plot_chr7_chr10.pdf", width=8.3 / 2 * (2/3),height=8.3/5, scale=2.25)
 
 
 
@@ -350,7 +350,7 @@ ggplot(plt.expanded, aes(x = log2FoldChange, y = cor.tpc, shape=limited,
     #panel.grid.minor.y = element_blank(),
     
     panel.border = element_rect(colour = "black", fill=NA, size=1.25)
-    ) +
+  ) +
   labs(x="log2FC primary vs. recurrent (purity corrected)",
        y="t-stat correlation tumor purity",
        caption = "G-SAM: n=287  -  GLASS: n=216  samples")
@@ -358,5 +358,273 @@ ggplot(plt.expanded, aes(x = log2FoldChange, y = cor.tpc, shape=limited,
 
 ggsave("output/figures/2022_Figure_S4D_S4E_S4F_S4G_S4H_S4I__geiser_x_hallmark_genes.pdf",  width=8.3 / 2,height=8.3/3, scale=2)
 
+
+
+
+
+## sandbox for ligands ----
+
+
+plt <- results.out |> 
+  dplyr::mutate(direction.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res > 0 , "up", "down") ) |> 
+  dplyr::mutate(`direction.glass-2022.tpc.res` = ifelse(`log2FoldChange.glass-2022.tpc.res` > 0 , "up", "down") ) |> 
+  dplyr::mutate(significant = 
+                  padj.gsam.tpc.res < 0.01 &
+                  abs(log2FoldChange.gsam.tpc.res) > 0.5 & 
+                  abs(`log2FoldChange.glass-2022.tpc.res`) > 0.5 & 
+                  `direction.gsam.tpc.res` == `direction.glass-2022.tpc.res` 
+  ) %>%
+  dplyr::mutate(show.label.gains = hugo_symbol %in% c(
+    "EGFR","SOCS2","EREG","EGF","AREG","BTC","HBEGF","TGFA"
+  )) %>%
+  dplyr::mutate(show.label.other = hugo_symbol %in% c( 
+    "EGFR","SOCS2","EREG","EGF","AREG","BTC","HBEGF","TGFA"
+  )) %>%
+  dplyr::mutate(show.label.losses = hugo_symbol %in% c(
+    "EGFR","SOCS2","EREG","EGF","AREG","BTC","HBEGF","TGFA"
+  ))
+
+
+plt.expanded <- rbind(
+  plt %>% 
+    dplyr::rename(cor.tpc = statistic.gsam.cor.tpc) %>%
+    dplyr::rename(log2FoldChange = log2FoldChange.gsam.tpc.res) %>%
+    dplyr::rename(show.label = show.label.gains) %>% 
+    dplyr::mutate(marker.genes = "Commonly gained") %>%
+    dplyr::mutate(dataset = "G-SAM") %>%
+    dplyr::select(hugo_symbol, cor.tpc, log2FoldChange, show.label, dataset, significant, marker.genes)
+  ,
+  plt %>% 
+    dplyr::rename(cor.tpc = statistic.gsam.cor.tpc) %>%
+    dplyr::rename(log2FoldChange = log2FoldChange.gsam.tpc.res) %>%
+    dplyr::rename(show.label = show.label.other) %>% 
+    dplyr::mutate(marker.genes = "Other") %>%
+    dplyr::mutate(dataset = "G-SAM") %>%
+    dplyr::select(hugo_symbol, cor.tpc, log2FoldChange, show.label, dataset, significant, marker.genes)
+  ,
+  plt %>% 
+    dplyr::rename(cor.tpc = statistic.gsam.cor.tpc) %>%
+    dplyr::rename(log2FoldChange = log2FoldChange.gsam.tpc.res) %>%
+    dplyr::rename(show.label = show.label.losses) %>% 
+    dplyr::mutate(marker.genes = "Commonly lost") %>%
+    dplyr::mutate(dataset = "G-SAM") %>%
+    dplyr::select(hugo_symbol, cor.tpc, log2FoldChange, show.label, dataset, significant, marker.genes)
+  ,
+  plt %>% 
+    dplyr::rename(cor.tpc = `statistic.t.glass-2022.cor.tpc`) %>%
+    dplyr::rename(log2FoldChange = `log2FoldChange.glass-2022.tpc.res`) %>%
+    dplyr::rename(show.label = show.label.gains) %>% 
+    dplyr::mutate(marker.genes = "Commonly gained") %>%
+    dplyr::mutate(dataset = "GLASS") %>%
+    dplyr::select(hugo_symbol, cor.tpc, log2FoldChange, show.label, dataset, significant, marker.genes)
+  ,
+  plt %>% 
+    dplyr::rename(cor.tpc = `statistic.t.glass-2022.cor.tpc`) %>%
+    dplyr::rename(log2FoldChange = `log2FoldChange.glass-2022.tpc.res`) %>%
+    dplyr::rename(show.label = show.label.other) %>% 
+    dplyr::mutate(marker.genes = "Other") %>%
+    dplyr::mutate(dataset = "GLASS") %>%
+    dplyr::select(hugo_symbol, cor.tpc, log2FoldChange, show.label, dataset, significant, marker.genes)
+  ,
+  plt %>% 
+    dplyr::rename(cor.tpc = `statistic.t.glass-2022.cor.tpc`) %>%
+    dplyr::rename(log2FoldChange = `log2FoldChange.glass-2022.tpc.res`) %>%
+    dplyr::rename(show.label = show.label.losses) %>% 
+    dplyr::mutate(marker.genes = "Commonly lost") %>%
+    dplyr::mutate(dataset = "GLASS") %>%
+    dplyr::select(hugo_symbol, cor.tpc, log2FoldChange, show.label, dataset, significant, marker.genes)
+) %>%
+  dplyr::mutate(status = case_when(show.label == F & significant == F ~ "other",
+                                   show.label == F & significant == T ~ "significant",
+                                   show.label == T & significant == F ~ "show label",
+                                   show.label == T & significant == T ~ "label & show significant")) %>%
+  dplyr::filter(!is.na(cor.tpc) & !is.na(log2FoldChange)) %>%
+  dplyr::mutate(marker.genes = factor(marker.genes, levels = c("Commonly gained", "Other", "Commonly lost"))) %>%
+  dplyr::mutate(limited = abs(log2FoldChange) > 2.5) %>%
+  dplyr::mutate(log2FoldChange = ifelse(limited & log2FoldChange < 0, -2.5, log2FoldChange)) %>%
+  dplyr::mutate(log2FoldChange = ifelse(limited & log2FoldChange > 0, 2.5, log2FoldChange)) %>% 
+  dplyr::mutate(limited = as.character(limited))
+
+plt.expanded <- plt.expanded |> 
+  dplyr::filter(marker.genes == "Other") |> 
+  dplyr::filter(dataset == "G-SAM")
+
+
+ggplot(plt.expanded, aes(x = log2FoldChange, y = cor.tpc, shape=limited,
+                         fill = status, col = status, label=hugo_symbol)) +
+  #facet_grid(cols = vars(marker.genes), rows = vars(dataset), scales = "free") +
+  geom_point(data = subset(plt.expanded, status == "other"), size=1.8, col="#00000044") +
+  geom_point(data = subset(plt.expanded, status == "significant"), size=2, col="black") +
+  geom_vline(xintercept = c(-0.5,0.5), lty=1, lwd=2, col="#FFFFFF88") +
+  geom_vline(xintercept = c(-0.5,0.5), lty=2, col="red") +
+  ggrepel::geom_text_repel(data=subset(plt.expanded, grepl("label",status) & log2FoldChange > 0), col="blue", size=2.5 ,nudge_x = 3.1, direction = "y", hjust = "left", segment.size=0.35, show.legend  = FALSE) + 
+  ggrepel::geom_text_repel(data=subset(plt.expanded, grepl("label",status) & log2FoldChange < 0), col="blue", size=2.5 , nudge_x = -3.1, direction = "y", hjust = "right", segment.size=0.35, show.legend  = FALSE) + 
+  geom_point(data = subset(plt.expanded, status == "show label"), size=2.75, col="black") +
+  geom_point(data = subset(plt.expanded, status == "label & show significant"), size=2.75, col="black") +
+  scale_shape_manual(values = c('TRUE' = 23, 'FALSE' = 21)) +
+  scale_fill_manual(values = c("other" = "white", "significant" = "#eab509DD", "show label" = "#6ba6e5DD", "label & show significant" = "red")) + 
+  scale_color_manual(values = c("other" = "white", "significant" = "#eab509DD", "show label" = "#6ba6e5DD", "label & show significant" = "red"),guide="none") + 
+  theme_bw() +
+  xlim(-3, 3) +
+  #scale_x_continuous(breaks = c(-3,-2,-1,0,1,2,3), limits=c(-3,3)) +
+  #scale_y_continuous(breaks = c(10,7.5,5,2.5,0,-2.5,-5,-7.5,-10)) +
+  theme(
+    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
+    #strip.background = element_rect(colour="white",fill="white"),
+    axis.title = element_text(face = "bold",size = rel(1)),
+    #axis.text.x = element_blank(),
+    legend.position = 'bottom',
+    
+    #panel.grid.major.x = element_line(colour = 'grey20', size=0.5),
+    #panel.grid.major.y = element_line(colour = 'grey20', size=0.5),
+    
+    #panel.grid.minor.x = element_blank(),
+    #panel.grid.minor.y = element_blank(),
+    
+    panel.border = element_rect(colour = "black", fill=NA, size=1.25)
+  ) +
+  labs(x="log2FC primary vs. recurrent (purity corrected)",
+       y="t-stat correlation tumor purity",
+       caption = "G-SAM: n=287")
+
+ggsave("/tmp/EGFR_ligands_G-SAM.pdf")
+
+
+## sandbox for NPC1 ----
+
+tmp.npc1 <- results.out |> 
+  dplyr::filter(!is.na(.data$neftel.meta.modules.NPC1)) |> 
+  dplyr::filter(.data$neftel.meta.modules.NPC1 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+tmp.npc2 <- results.out |> 
+  dplyr::filter(!is.na(.data$neftel.meta.modules.NPC2)) |> 
+  dplyr::filter(.data$neftel.meta.modules.NPC2 == T) |> 
+  dplyr::filter(!is.na(hugo_symbol)) |> 
+  dplyr::pull(hugo_symbol) |> 
+  unique()
+
+plt <- results.out |> 
+  dplyr::mutate(direction.gsam.tpc.res = ifelse(log2FoldChange.gsam.tpc.res > 0 , "up", "down") ) |> 
+  dplyr::mutate(`direction.glass-2022.tpc.res` = ifelse(`log2FoldChange.glass-2022.tpc.res` > 0 , "up", "down") ) |> 
+  dplyr::mutate(significant = 
+                  padj.gsam.tpc.res < 0.01 &
+                  abs(log2FoldChange.gsam.tpc.res) > 0.5 & 
+                  abs(`log2FoldChange.glass-2022.tpc.res`) > 0.5 & 
+                  `direction.gsam.tpc.res` == `direction.glass-2022.tpc.res` 
+  ) %>%
+  dplyr::mutate(show.label.gains = hugo_symbol %in% c(
+    "EGFR"
+  )) %>%
+  dplyr::mutate(show.label.other = hugo_symbol %in% c( 
+    tmp.npc1, tmp.npc2
+  )) %>%
+  dplyr::mutate(show.label.losses = hugo_symbol %in% c(
+    "EGFR","SOCS2","EREG","EGF","AREG","BTC","HBEGF","TGFA"
+  ))
+
+
+plt.expanded <- rbind(
+  plt %>% 
+    dplyr::rename(cor.tpc = statistic.gsam.cor.tpc) %>%
+    dplyr::rename(log2FoldChange = log2FoldChange.gsam.tpc.res) %>%
+    dplyr::rename(show.label = show.label.gains) %>% 
+    dplyr::mutate(marker.genes = "Commonly gained") %>%
+    dplyr::mutate(dataset = "G-SAM") %>%
+    dplyr::select(hugo_symbol, cor.tpc, log2FoldChange, show.label, dataset, significant, marker.genes)
+  ,
+  plt %>% 
+    dplyr::rename(cor.tpc = statistic.gsam.cor.tpc) %>%
+    dplyr::rename(log2FoldChange = log2FoldChange.gsam.tpc.res) %>%
+    dplyr::rename(show.label = show.label.other) %>% 
+    dplyr::mutate(marker.genes = "Other") %>%
+    dplyr::mutate(dataset = "G-SAM") %>%
+    dplyr::select(hugo_symbol, cor.tpc, log2FoldChange, show.label, dataset, significant, marker.genes)
+  ,
+  plt %>% 
+    dplyr::rename(cor.tpc = statistic.gsam.cor.tpc) %>%
+    dplyr::rename(log2FoldChange = log2FoldChange.gsam.tpc.res) %>%
+    dplyr::rename(show.label = show.label.losses) %>% 
+    dplyr::mutate(marker.genes = "Commonly lost") %>%
+    dplyr::mutate(dataset = "G-SAM") %>%
+    dplyr::select(hugo_symbol, cor.tpc, log2FoldChange, show.label, dataset, significant, marker.genes)
+  ,
+  plt %>% 
+    dplyr::rename(cor.tpc = `statistic.t.glass-2022.cor.tpc`) %>%
+    dplyr::rename(log2FoldChange = `log2FoldChange.glass-2022.tpc.res`) %>%
+    dplyr::rename(show.label = show.label.gains) %>% 
+    dplyr::mutate(marker.genes = "Commonly gained") %>%
+    dplyr::mutate(dataset = "GLASS") %>%
+    dplyr::select(hugo_symbol, cor.tpc, log2FoldChange, show.label, dataset, significant, marker.genes)
+  ,
+  plt %>% 
+    dplyr::rename(cor.tpc = `statistic.t.glass-2022.cor.tpc`) %>%
+    dplyr::rename(log2FoldChange = `log2FoldChange.glass-2022.tpc.res`) %>%
+    dplyr::rename(show.label = show.label.other) %>% 
+    dplyr::mutate(marker.genes = "Other") %>%
+    dplyr::mutate(dataset = "GLASS") %>%
+    dplyr::select(hugo_symbol, cor.tpc, log2FoldChange, show.label, dataset, significant, marker.genes)
+  ,
+  plt %>% 
+    dplyr::rename(cor.tpc = `statistic.t.glass-2022.cor.tpc`) %>%
+    dplyr::rename(log2FoldChange = `log2FoldChange.glass-2022.tpc.res`) %>%
+    dplyr::rename(show.label = show.label.losses) %>% 
+    dplyr::mutate(marker.genes = "Commonly lost") %>%
+    dplyr::mutate(dataset = "GLASS") %>%
+    dplyr::select(hugo_symbol, cor.tpc, log2FoldChange, show.label, dataset, significant, marker.genes)
+) %>%
+  dplyr::mutate(status = case_when(show.label == F & significant == F ~ "other",
+                                   show.label == F & significant == T ~ "significant",
+                                   show.label == T & significant == F ~ "show label",
+                                   show.label == T & significant == T ~ "label & show significant")) %>%
+  dplyr::filter(!is.na(cor.tpc) & !is.na(log2FoldChange)) %>%
+  dplyr::mutate(marker.genes = factor(marker.genes, levels = c("Commonly gained", "Other", "Commonly lost"))) %>%
+  dplyr::mutate(limited = abs(log2FoldChange) > 2.5) %>%
+  dplyr::mutate(log2FoldChange = ifelse(limited & log2FoldChange < 0, -2.5, log2FoldChange)) %>%
+  dplyr::mutate(log2FoldChange = ifelse(limited & log2FoldChange > 0, 2.5, log2FoldChange)) %>% 
+  dplyr::mutate(limited = as.character(limited))
+
+plt.expanded <- plt.expanded |> 
+  dplyr::filter(marker.genes == "Other") |> 
+  dplyr::filter(dataset == "G-SAM")
+
+
+ggplot(plt.expanded, aes(x = log2FoldChange, y = cor.tpc, shape=limited,
+                         fill = status, col = status, label=hugo_symbol)) +
+  #facet_grid(cols = vars(marker.genes), rows = vars(dataset), scales = "free") +
+  geom_point(data = subset(plt.expanded, status == "other"), size=1.8, col="#00000044") +
+  geom_point(data = subset(plt.expanded, status == "significant"), size=2, col="black") +
+  geom_vline(xintercept = c(-0.5,0.5), lty=1, lwd=2, col="#FFFFFF88") +
+  geom_vline(xintercept = c(-0.5,0.5), lty=2, col="red") +
+  ggrepel::geom_text_repel(data=subset(plt.expanded, grepl("label",status) & log2FoldChange > 0), col="blue", size=2.5 ,nudge_x = 3.1, direction = "y", hjust = "left", segment.size=0.35, show.legend  = FALSE) + 
+  ggrepel::geom_text_repel(data=subset(plt.expanded, grepl("label",status) & log2FoldChange < 0), col="blue", size=2.5 , nudge_x = -3.1, direction = "y", hjust = "right", segment.size=0.35, show.legend  = FALSE) + 
+  geom_point(data = subset(plt.expanded, status == "show label"), size=2.75, col="black") +
+  geom_point(data = subset(plt.expanded, status == "label & show significant"), size=2.75, col="black") +
+  scale_shape_manual(values = c('TRUE' = 23, 'FALSE' = 21)) +
+  scale_fill_manual(values = c("other" = "white", "significant" = "#eab509DD", "show label" = "#6ba6e5DD", "label & show significant" = "red")) + 
+  scale_color_manual(values = c("other" = "white", "significant" = "#eab509DD", "show label" = "#6ba6e5DD", "label & show significant" = "red"),guide="none") + 
+  theme_bw() +
+  xlim(-3, 3) +
+  #scale_x_continuous(breaks = c(-3,-2,-1,0,1,2,3), limits=c(-3,3)) +
+  #scale_y_continuous(breaks = c(10,7.5,5,2.5,0,-2.5,-5,-7.5,-10)) +
+  theme(
+    # text = element_text(family = 'Arial'), seems to require a postscript equivalent
+    #strip.background = element_rect(colour="white",fill="white"),
+    axis.title = element_text(face = "bold",size = rel(1)),
+    #axis.text.x = element_blank(),
+    legend.position = 'bottom',
+    
+    #panel.grid.major.x = element_line(colour = 'grey20', size=0.5),
+    #panel.grid.major.y = element_line(colour = 'grey20', size=0.5),
+    
+    #panel.grid.minor.x = element_blank(),
+    #panel.grid.minor.y = element_blank(),
+    
+    panel.border = element_rect(colour = "black", fill=NA, size=1.25)
+  ) +
+  labs(x="log2FC primary vs. recurrent (purity corrected)",
+       y="t-stat correlation tumor purity",
+       caption = "G-SAM: n=287")
 
 
