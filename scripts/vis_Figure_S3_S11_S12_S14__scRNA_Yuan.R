@@ -431,7 +431,7 @@ tmp.c0 <- results.out |>
   unique()
 
 
-sid_print <- sid |>
+sid_print <- gsub("GSM[0-9A-Z]+_","_",sid) |>
   stringr::str_replace(".filtered_gene_matrices", "") |>
   stringr::str_replace("_", ": ")
 
@@ -704,7 +704,7 @@ FeaturePlot(object = object_1, features = "TMEM144")
 
 
 
-##### F] Figure S8F - C3/OPC ----
+##### C3/OPC ----
 
 
 tmp.c3 <- results.out |>
@@ -724,18 +724,20 @@ tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
 tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
 
 
-sid_print <- sid |>
+sid_print <- gsub("GSM[0-9A-Z]+_","_",sid) |>
   stringr::str_replace(".filtered_gene_matrices", "") |>
   stringr::str_replace("_", ": ")
 
 
-DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC" = tmp.opc, "C3+OPC" = tmp.c3.opc), group.by = "seurat_clusters") +
+DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc
+                                           #, "C3+OPC" = tmp.c3.opc
+                                           ), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
   labs(x = paste0("Features [C3/OPC] in: ", sid_print, " (Yuan dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S8F.pdf"), width = 7.5 * 1.8, height = 3.75, scale = 1.2)
-rm(tmp.c3, tmp.opc, tmp.c3.opc, sid_print)
+# ggsave(paste0("output/figures/2022_Figure_",sid,".pdf"), width=7.5 * 1.8 * (612 / 744.4529) * (392.0837 / 412.4028 ), height=3.75 * 0.93, scale=1.2)
+# rm(tmp.c3, tmp.opc, tmp.c3.opc, sid_print)
 
 
 
@@ -789,7 +791,7 @@ tmp.c0 <- results.out |>
   unique()
 
 
-sid_print <- sid |>
+sid_print <- gsub("GSM[0-9A-Z]+_","_",sid) |>
   stringr::str_replace(".filtered_gene_matrices", "") |>
   stringr::str_replace("_", ": ")
 
@@ -815,7 +817,7 @@ tmp.c1 <- results.out |>
   sort()
 
 
-sid_print <- sid |> 
+sid_print <- gsub("GSM[0-9A-Z]+_","_",sid) |> 
   stringr::str_replace(".filtered_gene_matrices","") |> 
   stringr::str_replace("_",": ")
 
@@ -857,7 +859,7 @@ tmp.endo <- setdiff(tmp.endo, c(tmp.peri, tmp.c2))
 tmp.peri <- setdiff(tmp.peri, c(tmp.c2, tmp.endo))
 
 
-sid_print <- sid |>
+sid_print <- gsub("GSM[0-9A-Z]+_","_",sid) |>
   stringr::str_replace(".filtered_gene_matrices", "") |>
   stringr::str_replace("_", ": ")
 
@@ -869,7 +871,7 @@ DotPlot(object = object_1, features = list('C2 (Endothelial)'=tmp.c2,
   labs(x = paste0("Features [C2 & top25 McKenzie endothelial markers] in: ",sid_print, " (Yuan dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S11E.pdf"), width = 7.5 * 1.8, height = 3.75, scale = 1.2)
+ggsave(paste0("output/figures/2022_Figure_S11E.pdf"), width=7.5 * 1.8 * (612 / 744.4529) * (392.0837 / 412.4028 ), height=3.75 * 0.93, scale=1.2)
 rm(tmp.c2, tmp.peri, tmp.endo, sid_print)
 
 
@@ -1204,7 +1206,7 @@ tmp.c0 <- results.out |>
   unique()
 
 
-sid_print <- sid |> 
+sid_print <- gsub("GSM[0-9A-Z]+_","_",sid) |> 
   stringr::str_replace(".filtered_gene_matrices","") |> 
   stringr::str_replace("_",": ")
 
@@ -1231,7 +1233,7 @@ tmp.c1 <- results.out |>
   sort()
 
 
-sid_print <- sid |>
+sid_print <- gsub("GSM[0-9A-Z]+_","_",sid) |>
   stringr::str_replace(".filtered_gene_matrices", "") |>
   stringr::str_replace("_", ": ")
 
@@ -1273,7 +1275,7 @@ tmp.endo <- setdiff(tmp.endo, c(tmp.peri, tmp.c2))
 tmp.peri <- setdiff(tmp.peri, c(tmp.c2, tmp.endo))
 
 
-sid_print <- sid |>
+sid_print <- gsub("GSM[0-9A-Z]+_","_",sid) |>
   stringr::str_replace(".filtered_gene_matrices", "") |>
   stringr::str_replace("_", ": ")
 
@@ -1285,7 +1287,7 @@ DotPlot(object = object_1, features = list('C2 (Endothelial)'=tmp.c2,
   labs(x = paste0("Features [C2 & top25 McKenzie endothelial markers] in: ",sid_print, " (Yuan dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S11D.pdf"), width = 7.5 * 1.8, height = 3.75, scale = 1.2)
+ggsave(paste0("output/figures/2022_Figure_S11D.pdf"), width=7.5 * 1.8 * (612 / 744.4529) * (392.0837 / 412.4028 ), height=3.75 * 0.93, scale=1.2)
 rm(tmp.c2, tmp.peri, tmp.endo, sid_print)
 
 
@@ -1794,7 +1796,7 @@ tmp.c0 <- results.out |>
   unique()
 
 
-sid_print <- sid |>
+sid_print <- gsub("GSM[0-9A-Z]+_","_",sid) |>
   stringr::str_replace(".filtered_gene_matrices", "") |>
   stringr::str_replace("_", ": ")
 
@@ -1821,7 +1823,7 @@ tmp.c1 <- results.out |>
   sort()
 
 
-sid_print <- sid |> 
+sid_print <- gsub("GSM[0-9A-Z]+_","_",sid) |> 
   stringr::str_replace(".filtered_gene_matrices","") |> 
   stringr::str_replace("_",": ")
 
@@ -1863,7 +1865,7 @@ tmp.endo <- setdiff(tmp.endo, c(tmp.peri,tmp.c2))
 tmp.peri <- setdiff(tmp.peri, c(tmp.c2, tmp.endo))
 
 
-sid_print <- sid |> 
+sid_print <- gsub("GSM[0-9A-Z]+_","_",sid) |> 
   stringr::str_replace(".filtered_gene_matrices","") |> 
   stringr::str_replace("_",": ")
 
@@ -2193,7 +2195,7 @@ FeaturePlot(object = object_1, features = "TMEM125")
 
 
 
-##### F] Figure S8G - C3/OPC ----
+##### FF] Figure S3-p33 - C3/OPC ----
 
 
 tmp.c3 <- results.out |>
@@ -2213,17 +2215,19 @@ tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
 tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
 
 
-sid_print <- sid |>
+sid_print <- gsub("GSM[0-9A-Z]+_","_",sid) |>
   stringr::str_replace(".filtered_gene_matrices", "") |>
   stringr::str_replace("_", ": ")
 
 
-DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC" = tmp.opc, "C3+OPC" = tmp.c3.opc), group.by = "seurat_clusters") +
+DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc
+                                           #, "C3+OPC" = tmp.c3.opc
+                                           ), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
   labs(x = paste0("Features [C3/OPC] in: ", sid_print, " (Yuan dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S8G.pdf"), width = 7.5 * 1.8, height = 3.75, scale = 1.2)
+ggsave(paste0("output/figures/2022_Figure_S3-p33_",sid,".pdf"), width=7.5 * 1.8 * (612 / 744.4529) * (392.0837 / 412.4028 ), height=3.75 * 0.93, scale=1.2)
 rm(tmp.c3, tmp.opc, tmp.c3.opc, sid_print)
 
 
@@ -2257,7 +2261,7 @@ tmp.c0 <- results.out |>
   unique()
 
 
-sid_print <- sid |>
+sid_print <- gsub("GSM[0-9A-Z]+_","_",sid) |>
   stringr::str_replace(".filtered_gene_matrices", "") |>
   stringr::str_replace("_", ": ")
 
@@ -2285,7 +2289,7 @@ tmp.c1 <- results.out |>
   sort()
 
 
-sid_print <- sid |> 
+sid_print <- gsub("GSM[0-9A-Z]+_","_",sid) |> 
   stringr::str_replace(".filtered_gene_matrices","") |> 
   stringr::str_replace("_",": ")
 
@@ -2328,7 +2332,7 @@ tmp.endo <- setdiff(tmp.endo, c(tmp.peri,tmp.c2))
 tmp.peri <- setdiff(tmp.peri, c(tmp.c2, tmp.endo))
 
 
-sid_print <- sid |> 
+sid_print <- gsub("GSM[0-9A-Z]+_","_",sid) |> 
   stringr::str_replace(".filtered_gene_matrices","") |> 
   stringr::str_replace("_",": ")
 
