@@ -1068,7 +1068,7 @@ DotPlot(object = object_1, features = c("MOG","PLP1","TMEM144"),group.by = "seur
 
 
 
-##### F] Figure S8A - C3/OPC ----
+##### FF] Figure S3-p9 - C3/OPC ----
 
 
 tmp.c3 <- results.out |>
@@ -1093,13 +1093,16 @@ sid_print <- sid |>
   stringr::str_replace("_2of2", " (1 & 2 of 2)")
 
 
-DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC" = tmp.opc, "C3+OPC" = tmp.c3.opc), group.by = "seurat_clusters") +
+DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc
+                                           #, "C3+OPC" = tmp.c3.opc
+                                           ), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
   labs(x = paste0("Features [C3/OPC] in: ", sid_print, " (Couturier dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S8A.pdf"), width = 7.5 * 1.8, height = 3.75, scale = 1.2)
+ggsave(paste0("output/figures/2022_Figure_S3-p9_",sid,".pdf"), width=7.5 * 1.8 * (612 / 744.4529) * (392.0837 / 412.4028 ), height=3.75 * 0.93, scale=1.2)
 rm(tmp.c3, tmp.opc, tmp.c3.opc, sid_print)
+
 
 
 
@@ -2040,7 +2043,7 @@ FeaturePlot(object = object_1, features = "TMEM144")
 
 
 
-##### F] Figure S8B - C3/OPC ----
+##### FF] Figure S3-12 - C3/OPC ----
 
 
 tmp.c3 <- results.out |>
@@ -2065,12 +2068,15 @@ sid_print <- sid |>
   stringr::str_replace("_2of2", " (1 & 2 of 2)")
 
 
-DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC" = tmp.opc, "C3+OPC" = tmp.c3.opc), group.by = "seurat_clusters") +
+DotPlot(object = object_1, features = list("C3" = tmp.c3, 
+                                           "OPC-like" = tmp.opc
+                                           #, "C3+OPC" = tmp.c3.opc
+                                           ), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
   labs(x = paste0("Features [C3/OPC] in: ", sid_print, " (Couturier dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S8B.pdf"), width = 7.5 * 1.8, height = 3.75, scale = 1.2)
+ggsave(paste0("output/figures/2022_Figure_S3-12_",sid,".pdf"), width=7.5 * 1.8 * (612 / 744.4529) * (392.0837 / 412.4028 ), height=3.75 * 0.93, scale=1.2)
 rm(tmp.c3, tmp.opc, tmp.c3.opc, sid_print)
 
 
@@ -2562,7 +2568,7 @@ ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C2_OPC.png"),width=7.5*1.8
 
 
 
-##### F] Figure S8C - C3/OPC ----
+##### C3/OPC ----
 
 
 tmp.c3 <- results.out |>
@@ -2587,13 +2593,13 @@ sid_print <- sid |>
   stringr::str_replace("_2of2", " (1 & 2 of 2)")
 
 
-DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC" = tmp.opc, "C3+OPC" = tmp.c3.opc), group.by = "seurat_clusters") +
+DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc, "C3+OPC" = tmp.c3.opc), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
   labs(x = paste0("Features [C3/OPC] in: ", sid_print, " (Couturier dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S8C.pdf"), width = 7.5 * 1.8, height = 3.75, scale = 1.2)
-rm(tmp.c3, tmp.opc, tmp.c3.opc, sid_print)
+#ggsave(paste0("output/figures/2022_Figure_.pdf"), width = 7.5 * 1.8, height = 3.75, scale = 1.2)
+#rm(tmp.c3, tmp.opc, tmp.c3.opc, sid_print)
 
 
 
@@ -3395,7 +3401,7 @@ FeaturePlot(object = object_1, features = "PLP1")
 
 
 
-##### F] Figure S8D - C3/OPC ----
+##### FF] Figure S3-p15 - C3/OPC ----
 
 
 tmp.c3 <- results.out |>
@@ -3419,12 +3425,14 @@ sid_print <- sid |>
   stringr::str_replace(".filtered_gene_matrices", "")
 
 
-DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC" = tmp.opc, "C3+OPC" = tmp.c3.opc), group.by = "seurat_clusters") +
+DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc
+                                           #, "C3+OPC" = tmp.c3.opc
+                                           ), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
   labs(x = paste0("Features [C3/OPC] in: ", sid_print, " (Couturier dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S8D.pdf"), width = 7.5 * 1.8, height = 3.75, scale = 1.2)
+ggsave(paste0("output/figures/2022_Figure_S3-p15_",sid,".pdf"), width=7.5 * 1.8 * (612 / 744.4529) * (392.0837 / 412.4028 ), height=3.75 * 0.93, scale=1.2)
 rm(tmp.c3, tmp.opc, tmp.c3.opc, sid_print)
 
 
@@ -3793,7 +3801,7 @@ FeaturePlot(object = object_1, features = "PLP1")
 
 
 
-##### F] Figure S8E - C3/OPC ----
+##### FF] Figure S3-p18 - C3/OPC ----
 
 
 tmp.c3 <- results.out |>
@@ -3818,12 +3826,14 @@ sid_print <- sid |>
   stringr::str_replace("_2of2", " (1 & 2 of 2)")
 
 
-DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC" = tmp.opc, "C3+OPC" = tmp.c3.opc), group.by = "seurat_clusters") +
+DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc
+                                           #, "C3+OPC" = tmp.c3.opc
+                                           ), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
   labs(x = paste0("Features [C3/OPC] in: ", sid_print, " (Couturier dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S8E.pdf"), width = 7.5 * 1.8, height = 3.75, scale = 1.2)
+ggsave(paste0("output/figures/2022_Figure_S3-p18_",sid,".pdf"), width=7.5 * 1.8 * (612 / 744.4529) * (392.0837 / 412.4028 ), height=3.75 * 0.93, scale=1.2)
 rm(tmp.c3, tmp.opc, tmp.c3.opc, sid_print)
 
 
