@@ -9,18 +9,18 @@ if(!exists('results.out')) {
 
 # CX - OPC ----
 
-ctx_G_CPT0206880004 = c("AC124254.1", "GALR1", "COL9A1", "SMOC1", "CA10", "AL450345.2", "PCDH15", "PDGFRA", "PLPP4", "BX284613.2", "MEGF11", "CHST9", "FERMT1", "TNR", "AC023282.1", "ITGA8", "ADARB2", "SCN9A", "AFAP1L2", "CRISPLD2", "XYLT1", "HIF3A", "AL512308.1", "MYRFL", "LINC02283")
+ctx_G_CPT0206770004 = c("AC124254.1", "GALR1", "COL9A1", "SMOC1", "CA10", "AL450345.2", "PCDH15", "PDGFRA", "PLPP4", "BX284613.2", "MEGF11", "CHST9", "FERMT1", "TNR", "AC023282.1", "ITGA8", "ADARB2", "SCN9A", "AFAP1L2", "CRISPLD2", "XYLT1", "HIF3A", "AL512308.1", "MYRFL", "LINC02283")
 ctx_K_CPT0125220004 = c("COL9A1", "PDGFRA", "GPR17", "ALDH1A3", "SMOC1", "PRKG2", "CA10", "PCDH15", "COL11A1", "CACNG5", "LINC02283", "AL512308.1", "TTLL6", "LUZP2", "LINC02223", "AC022034.3", "AC020584.1", "NOS1", "ADARB2", "NEU4", "SCN9A", "AC062021.1", "KCNJ16", "ATP2C2", "ADAMTS17")
-all <- c(ctx_G_CPT0206880004, ctx_K_CPT0125220004)
+all <- c(ctx_G_CPT0206770004, ctx_K_CPT0125220004)
 dup <- all[duplicated(all)]
 
 cell_type_opc <- list(
   'shared' = all[duplicated(all)],
-  'G_CPT0206880004' = ctx_G_CPT0206880004[ctx_G_CPT0206880004 %in% dup == F][1:15],
+  'G_CPT0206770004' = ctx_G_CPT0206770004[ctx_G_CPT0206770004 %in% dup == F][1:15],
   'K_CPT0125220004' = ctx_K_CPT0125220004[ctx_K_CPT0125220004 %in% dup == F][1:15]
 )
 
-rm(ctx_G_CPT0206880004, ctx_K_CPT0125220004, all, dup)
+rm(ctx_G_CPT0206770004, ctx_K_CPT0125220004, all, dup)
 
 
 
@@ -76,7 +76,7 @@ reorder_levels <- function(seurat_obj, cell_type_ordered) {
 
 
 
-# Bolleboom-GAO  H243-GBM ----
+# Bolleboom & GAO  H243-GBM ----
 # chr7 gain, chr10 loss, chr9.q loss, chr13.p loss (InferCNV)
 sid <- 'H243_GBM'
 object_1 <- readRDS(file="tmp/seurat_bolleboom.2.Rds")
