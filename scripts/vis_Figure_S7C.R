@@ -35,7 +35,7 @@ stopifnot(files.PDGFRB$regionname %in% files.CD31$regionname)
 
 
 
-# F] Figure S16A - PDGRB x CD31 per tile cor ----
+# FF] Figure S7C - PDGFRB x CD31 per tile cor ----
 
 plt <- files.CD31 |> 
   dplyr::left_join(files.PDGFRB, by=c('regionname'='regionname'), suffix=c('','')) |> 
@@ -114,7 +114,7 @@ ggplot(df, aes(x=sid, y=R, group=sid)) +
     panel.border = element_rect(colour = "black", fill=NA, size=1.25)
   )
 
-ggsave("output/figures/2022_Figure_S16A.pdf", width=8.3 / 4,height=8.3/4, scale=2)
+ggsave("output/figures/2022_Figure_S7C.pdf", width=8.3 / 4,height=8.3/4, scale=2)
 
 
 
