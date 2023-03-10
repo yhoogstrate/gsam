@@ -381,7 +381,7 @@ FeaturePlot(object = object_1, features = "ITGA1") # endo + peri?
 
 
 #### C0-2022 ----
-##### F] Figure S12G - C0 ----
+##### FF] Figure S6B-p07 - C0 ----
 
 
 tmp.c0 <- results.out |>
@@ -403,7 +403,7 @@ DotPlot(object = object_1, features = list("C0" = tmp.c0), group.by = "seurat_cl
   labs(x = paste0("Features [C0] in: ", sid_print, " (Diaz dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S12G.pdf"), width = 6.5, height = 4, scale = 1.2)
+ggsave(paste0("output/figures/2022_Figure_S6B-p07.pdf"), width = 6.5, height = 4, scale = 1.2)
 rm(tmp.c0, sid_print)
 
 
@@ -1135,7 +1135,7 @@ FeaturePlot(object = object_1, features = "CD248",order=T)
 
 
 #### C0-2022 ----
-##### F] Figure S12H - C0 ----
+##### FF] Figure S6B-p08 - C0 ----
 
 
 tmp.c0 <- results.out |>
@@ -1157,7 +1157,7 @@ DotPlot(object = object_1, features = list("C0" = tmp.c0), group.by = "seurat_cl
   labs(x = paste0("Features [C0] in: ", sid_print, " (Diaz dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S12H.pdf"), width = 6.5, height = 4, scale = 1.2)
+ggsave(paste0("output/figures/2022_Figure_S6B-p08.pdf"), width = 6.5, height = 4, scale = 1.2)
 rm(tmp.c0, sid_print)
 
 
@@ -1692,7 +1692,7 @@ FeaturePlot(object = object_1, features = c("CFH"))
 
 
 #### C0-2022 ----
-##### F] Figure S12I - C0 ----
+##### C0 ----
 
 
 tmp.c0 <- results.out |>
@@ -1714,8 +1714,8 @@ DotPlot(object = object_1, features = list("C0" = tmp.c0), group.by = "seurat_cl
   labs(x = paste0("Features [C0] in: ", sid_print, " (Diaz dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S12I.pdf"), width = 6.5, height = 4, scale = 1.2)
-rm(tmp.c0, sid_print)
+#ggsave(paste0("output/figures/2022_Figure_.pdf"), width = 6.5, height = 4, scale = 1.2)
+#rm(tmp.c0, sid_print)
 
 
 
@@ -2947,7 +2947,7 @@ FeaturePlot(object = object_1, features = "CD248")
 
 
 #### C0-2022 ----
-##### F] Figure S12E - C0 ----
+##### FF] Figure S6B-p05- C0 ----
 
 
 tmp.c0 <- results.out |>
@@ -2969,7 +2969,7 @@ DotPlot(object = object_1, features = list("C0" = tmp.c0), group.by = "seurat_cl
   labs(x = paste0("Features [C0] in: ", sid_print, " (Diaz dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S12E.pdf"), width = 6.5, height = 4, scale = 1.2)
+ggsave(paste0("output/figures/2022_Figure_S6B-p05.pdf"), width = 6.5, height = 4, scale = 1.2)
 rm(tmp.c0, sid_print)
 
 
@@ -3340,7 +3340,7 @@ FeaturePlot(object = object_1, features = "CD248")
 
 
 #### C0-2022 ----
-##### F] Figure S12F - C0 ----
+##### FF] Figure S6B-p06 - C0 ----
 
 
 tmp.c0 <- results.out |>
@@ -3362,7 +3362,7 @@ DotPlot(object = object_1, features = list("C0" = tmp.c0), group.by = "seurat_cl
   labs(x = paste0("Features [C0] in: ", sid_print, " (Diaz dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S12F.pdf"), width = 6.5, height = 4, scale = 1.2)
+ggsave(paste0("output/figures/2022_Figure_S6B-p06.pdf"), width = 6.5, height = 4, scale = 1.2)
 rm(tmp.c0, sid_print)
 
 

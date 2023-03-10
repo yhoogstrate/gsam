@@ -636,7 +636,7 @@ ggsave("output/figures/2022_Figure_M5B_labels.svg", width=10, height=7)
 
 
 
-##### F] Figure S12J - C0 ----
+##### C0 ----
 
 
 tmp.c0 <- results.out |>
@@ -655,8 +655,8 @@ DotPlot(object = object_1, features = list("C0" = tmp.c0), group.by = "seurat_cl
   labs(x = paste0("Features [C0] in: ", sid_print))
 
 
-ggsave(paste0("output/figures/2022_Figure_S12J.pdf"), width = 6.5, height = 4, scale = 1.2)
-rm(tmp.c0, sid_print)
+# ggsave(paste0("output/figures/2022_Figure_.pdf"), width = 6.5, height = 4, scale = 1.2)
+# rm(tmp.c0, sid_print)
 
 
 

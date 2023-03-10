@@ -1150,7 +1150,7 @@ ggsave("output/figures/2022_Figure_S14L.pdf", width = 6.5, height = 4, scale = 1
 
 
 #### C0-2022 ----
-##### F] Figure S12A - C0 ----
+##### FF] Figure S6B-p01 - C0 ----
 
 
 tmp.c0 <- results.out |>
@@ -1171,7 +1171,7 @@ DotPlot(object = object_1, features = list("C0" = tmp.c0), group.by = "seurat_cl
   labs(x = paste0("Features [C0] in: ", sid_print, " (Couturier dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S12A.pdf"), width = 6.5, height = 4, scale = 1.2)
+ggsave(paste0("output/figures/2022_Figure_S6B-p01.pdf"), width = 6.5, height = 4, scale = 1.2)
 rm(tmp.c0, sid_print)
 
 
@@ -2099,7 +2099,7 @@ FeaturePlot(object = object_1, features = "CD248",pt.size=0.04)
 
 
 #### C0-2022 ----
-##### F] Figure S12B - C0 ----
+##### FF] Figure S6B-p02 - C0 ----
 
 
 tmp.c0 <- results.out |>
@@ -2120,7 +2120,7 @@ DotPlot(object = object_1, features = list("C0" = tmp.c0), group.by = "seurat_cl
   labs(x = paste0("Features [C0] in: ", sid_print, " (Couturier dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S12B.pdf"), width = 6.5, height = 4, scale = 1.2)
+ggsave(paste0("output/figures/2022_Figure_S6B-p02.pdf"), width = 6.5, height = 4, scale = 1.2)
 rm(tmp.c0, sid_print)
 
 
@@ -2622,7 +2622,7 @@ FeaturePlot(object = object_1, features = "CD248")
 
 
 #### C0-2022 ----
-##### F] Figure S12C - C0 ----
+##### FF] Figure S6B-p03 - C0 ----
 
 
 tmp.c0 <- results.out |>
@@ -2643,7 +2643,7 @@ DotPlot(object = object_1, features = list("C0" = tmp.c0), group.by = "seurat_cl
   labs(x = paste0("Features [C0] in: ", sid_print, " (Couturier dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S12C.pdf"), width = 6.5, height = 4, scale = 1.2)
+ggsave(paste0("output/figures/2022_Figure_S6B-p03.pdf"), width = 6.5, height = 4, scale = 1.2)
 rm(tmp.c0, sid_print)
 
 
@@ -3857,7 +3857,7 @@ FeaturePlot(object = object_1, features = "CD248")
 
 
 #### C0-2022 ----
-##### F] Figure S12D - C0 ----
+##### FF] Figure S6B-p04 - C0 ----
 
 
 tmp.c0 <- results.out |>
@@ -3878,7 +3878,7 @@ DotPlot(object = object_1, features = list("C0" = tmp.c0), group.by = "seurat_cl
   labs(x = paste0("Features [C0] in: ", sid_print, " (Couturier dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S12D.pdf"), width = 6.5, height = 4, scale = 1.2)
+ggsave(paste0("output/figures/2022_Figure_S6B-p04.pdf"), width = 6.5, height = 4, scale = 1.2)
 rm(tmp.c0, sid_print)
 
 
