@@ -1129,7 +1129,7 @@ FeaturePlot(object = object_1, features = c("CFH"))
 
 
 
-##### F] Figure S14L - Pericytes ----
+##### FF] Figure S6D-p02 - Pericytes ----
 
 sid_print <- sid |>
   stringr::str_replace(".filtered_gene_matrices", "") |>
@@ -1139,12 +1139,12 @@ sid_print <- sid |>
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters") +
   guides(col = guide_legend(ncol = 1, override.aes = list(size = 3))) +
   labs(subtitle = sid)
-ggsave("output/figures/2022_Figure_S14L_labels.pdf", width = 6.5, height = 4, scale = 1.2) # to export cluster names
+ggsave("output/figures/2022_Figure_S6D-p02_labels.pdf", width = 6.5, height = 4, scale = 1.2) # to export cluster names
 
 
 FeaturePlot(object = object_1, features = c("COL1A1", "COL1A2", "PDGFRB", "PECAM1"), min.cutoff = 1, order = T, pt.size = 0.15) +
   labs(caption = sid)
-ggsave("output/figures/2022_Figure_S14L.pdf", width = 6.5, height = 4, scale = 1.2)
+ggsave("output/figures/2022_Figure_S6D-p02.pdf", width = 6.5, height = 4, scale = 1.2)
 
 
 

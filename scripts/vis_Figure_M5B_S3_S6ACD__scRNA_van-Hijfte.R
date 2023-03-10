@@ -607,16 +607,16 @@ FeaturePlot(object = object_1, features = c("HEYL"))
 FeaturePlot(object = object_1, features = c("CFH"))
 
 
-##### F] Figure S14K ----
+##### FF] Figure S6D-p01 ----
 
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters") +
   guides(col = guide_legend(ncol = 1, override.aes = list(size = 3))) +
   labs(subtitle = sid)
-ggsave("output/figures/22022_Figure_S14K_labels.pdf", width = 6.5, height = 4, scale = 1.2) # to export cluster names
+ggsave("output/figures/22022_Figure_S6D-p01_labels.pdf", width = 6.5, height = 4, scale = 1.2) # to export cluster names
 
 
 FeaturePlot(object = object_1, features = c("COL1A1", "COL1A2", "PDGFRB", "PECAM1"), min.cutoff = 1, order = T, pt.size = 0.15)
-ggsave("output/figures/2022_Figure_S14K.pdf", width = 6.5, height = 4, scale = 1.2)
+ggsave("output/figures/2022_Figure_S6D-p01.pdf", width = 6.5, height = 4, scale = 1.2)
 
 
 
