@@ -305,7 +305,7 @@ ggsave("output/figures/2022_Figure_M4C.pdf", width=8.3 / 2,height=8.3/5, scale=2
 
 # 2: separate low high tumor regions ----
 
-## F] Figure S10B - cut-off tumor low/high ----
+## FF] Figure S5C - cut-off tumor low/high ----
 
 plt <- data.per.tile |>
   dplyr::filter(!is.na(n.cells)) |>
@@ -383,12 +383,12 @@ p1 + p2
 
 
 
-ggsave("output/figures/2022_Figure_S10B.pdf", width = 8.3 / 2, height = 8.3 / 4, scale = 2)
+ggsave("output/figures/2022_Figure_S5C.pdf", width = 8.3 / 2, height = 8.3 / 4, scale = 2)
 
 
 
 
-## F] Figure S10C - high vs. low ~ diff neurons ----
+## FF] Figure S5E - high vs. low ~ diff neurons ----
 
 
 plt <- data.per.tile |>
@@ -487,7 +487,7 @@ ggplot(
   )
 
 
-ggsave("output/figures/2022_Figure_S10C.pdf", width=8.3 / 2,height=8.3/4, scale=2)
+ggsave("output/figures/2022_Figure_S5E.pdf", width=8.3 / 2,height=8.3/4, scale=2)
 
 
 
