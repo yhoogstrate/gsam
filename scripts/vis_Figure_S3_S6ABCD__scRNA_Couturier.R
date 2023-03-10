@@ -2154,7 +2154,7 @@ rm(tmp.c1, sid_print)
 
 
 #### C2-2022 (Endo) (down) ----
-##### FF] S6A-p02 - C2 ----
+##### FF] Figure S6A-p02 - C2 ----
 
 
 tmp.c2 <- results.out |>

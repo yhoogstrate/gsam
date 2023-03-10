@@ -999,7 +999,7 @@ DotPlot(object = object_1, features = c("RBFOX3",
 
 
 
-##### Figure Sxx - C4 ----
+##### C4 ----
 
 
 tmp.c4 <- results.out |>
@@ -2047,7 +2047,7 @@ DotPlot(object = object_1, features = c("RBFOX3",
 
 
 
-##### Figure Sxx - C4 ----
+##### C4 ----
 
 
 tmp.c4 <- results.out |>

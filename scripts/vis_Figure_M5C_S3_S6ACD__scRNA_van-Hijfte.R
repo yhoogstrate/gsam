@@ -622,17 +622,17 @@ ggsave("output/figures/2022_Figure_S6D-p01.pdf", width = 6.5, height = 4, scale 
 
 
 #### C0-2022 ----
-##### F] Figure M5B ----
+##### FF] Figure M5C ----
 
 
 
 # do not show doublets
 Idents(object_1) <- "cell_type"
 FeaturePlot(object = object_1[,object_1$seurat_clusters != "22. TAM|OD"], features =  "COL1A2",order=T ,label=T,pt.size = .6)
-ggsave("output/figures/2022_Figure_M5B.svg", width=10, height=9)
+ggsave("output/figures/2022_Figure_M5C.svg", width=10, height=9)
 
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "seurat_clusters") + NoLegend()
-ggsave("output/figures/2022_Figure_M5B_labels.svg", width=10, height=7)
+ggsave("output/figures/2022_Figure_M5C_labels.svg", width=10, height=7)
 
 
 
