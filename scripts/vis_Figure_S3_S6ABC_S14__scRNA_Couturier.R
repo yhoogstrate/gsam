@@ -1177,7 +1177,7 @@ rm(tmp.c0, sid_print)
 
 
 #### C1-2022 (up) ----
-##### F] Figure S14A - C1 ----
+##### FF] Figure S6C-p01 - C1 ----
 
 
 tmp.c1 <- results.out |>
@@ -1199,7 +1199,7 @@ DotPlot(object = object_1, features = list("C1" = tmp.c1, "Peri" = c("RGS5", "PD
   labs(x = paste0("Features [C1] in: ", sid_print, " (Couturier dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S14A.pdf"), width = 6.5, height = 4, scale = 1.2)
+ggsave(paste0("output/figures/2022_Figure_S6C-p01.pdf"), width = 6.5, height = 4, scale = 1.2)
 rm(tmp.c1, sid_print)
 
 
@@ -2126,7 +2126,7 @@ rm(tmp.c0, sid_print)
 
 
 #### C1-2022 (up) ----
-##### F] Figure S14D - C1 ----
+##### FF] Figure S6C-p04 - C1 ----
 
 
 tmp.c1 <- results.out |>
@@ -2148,7 +2148,7 @@ DotPlot(object = object_1, features = list("C1" = tmp.c1, "Peri" = c("RGS5", "PD
   labs(x = paste0("Features [C1] in: ", sid_print, " (Couturier dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S14D.pdf"), width = 6.5, height = 4, scale = 1.2)
+ggsave(paste0("output/figures/2022_Figure_S6C-p04.pdf"), width = 6.5, height = 4, scale = 1.2)
 rm(tmp.c1, sid_print)
 
 
@@ -2649,7 +2649,7 @@ rm(tmp.c0, sid_print)
 
 
 #### C1-2022 (up) ----
-##### F] Figure S14B - C1 ----
+##### FF] Figure S6C-p02 - C1 ----
 
 
 tmp.c1 <- results.out |>
@@ -2671,7 +2671,7 @@ DotPlot(object = object_1, features = list("C1" = tmp.c1, "Peri" = c("RGS5", "PD
   labs(x = paste0("Features [C1] in: ", sid_print, " (Couturier dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S14B.pdf"), width = 6.5, height = 4, scale = 1.2)
+ggsave(paste0("output/figures/2022_Figure_S6C-p02.pdf"), width = 6.5, height = 4, scale = 1.2)
 rm(tmp.c1, sid_print)
 
 
@@ -3884,7 +3884,7 @@ rm(tmp.c0, sid_print)
 
 
 #### C1-2022 (up) ----
-##### F] Figure S14C - C1 ----
+##### FF] Figure S6C-p03 - C1 ----
 
 
 tmp.c1 <- results.out |>
@@ -3906,7 +3906,7 @@ DotPlot(object = object_1, features = list("C1" = tmp.c1, "Peri" = c("RGS5", "PD
   labs(x = paste0("Features [C1] in: ", sid_print, " (Couturier dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S14C.pdf"), width = 6.5, height = 4, scale = 1.2)
+ggsave(paste0("output/figures/2022_Figure_S6C-p03.pdf"), width = 6.5, height = 4, scale = 1.2)
 rm(tmp.c1, sid_print)
 
 

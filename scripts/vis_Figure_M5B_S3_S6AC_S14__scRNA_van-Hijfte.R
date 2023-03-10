@@ -607,7 +607,7 @@ FeaturePlot(object = object_1, features = c("HEYL"))
 FeaturePlot(object = object_1, features = c("CFH"))
 
 
-#### F] Figure S14K ---
+##### F] Figure S14K ----
 
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters") +
   guides(col = guide_legend(ncol = 1, override.aes = list(size = 3))) +
@@ -661,7 +661,7 @@ DotPlot(object = object_1, features = list("C0" = tmp.c0), group.by = "seurat_cl
 
 
 #### C1-2022 (up) ----
-##### F] Figure S14F - C1 ----
+##### FF] Figure S6C-p06 - C1 ----
 
 
 tmp.c1 <- results.out |>
@@ -682,7 +682,7 @@ DotPlot(object = object_1, features =list('C1'=tmp.c1, 'Peri'=c("RGS5", "PDGFRB"
 
 
 
-ggsave(paste0("output/figures/2022_Figure_S14F.pdf"),width=6.5, height=4, scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S6C-p06.pdf"),width=6.5, height=4, scale=1.2)
 rm(tmp.c1, sid_print)
 
 

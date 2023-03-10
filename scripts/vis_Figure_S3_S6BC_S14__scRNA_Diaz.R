@@ -2975,7 +2975,7 @@ rm(tmp.c0, sid_print)
 
 
 #### C1-2022 (up) ----
-##### F] Figure S14E - C1 ----
+##### FF] Figure S6C-p05 - C1 ----
 
 
 tmp.c1 <- results.out |>
@@ -2998,7 +2998,7 @@ DotPlot(object = object_1, features = list("C1" = tmp.c1, "Peri" = c("RGS5", "PD
   labs(x = paste0("Features [C1] in: ", sid_print, " (Diaz dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S14E.pdf"), width = 6.5, height = 4, scale = 1.2)
+ggsave(paste0("output/figures/2022_Figure_S6C-p05.pdf"), width = 6.5, height = 4, scale = 1.2)
 rm(tmp.c1, sid_print)
 
 

@@ -806,7 +806,7 @@ DotPlot(object = object_1, features = list("C0" = tmp.c0), group.by = "seurat_cl
 
 
 #### C1-2022 (up) ----
-##### F] Figure S14H - C1 ----
+##### FF] Figure S6C-p08 - C1 ----
 
 tmp.c1 <- results.out |>
   dplyr::filter(!is.na(.data$C1.2022)) |> 
@@ -827,7 +827,7 @@ DotPlot(object = object_1, features =list('C1'=tmp.c1, 'Peri'=c("RGS5", "PDGFRB"
   labs(x = paste0("Features [C1] in: ",sid_print, " (Yuan dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S14H.pdf"),width=6.5, height=4, scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S6C-p08.pdf"),width=6.5, height=4, scale=1.2)
 rm(tmp.c1, sid_print)
 
 
@@ -1222,7 +1222,7 @@ DotPlot(object = object_1, features =list('C0'=tmp.c0), group.by = "seurat_clust
 
 
 #### C1-2022 (up) ----
-##### F] Figure S14G - C1 ----
+##### FF] Figure S6C-p07 - C1 ----
 
 tmp.c1 <- results.out |>
   dplyr::filter(!is.na(.data$C1.2022)) |>
@@ -1243,7 +1243,7 @@ DotPlot(object = object_1, features = list("C1" = tmp.c1, "Peri" = c("RGS5", "PD
   labs(x = paste0("Features [C1] in: ", sid_print, " (Yuan dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S14G.pdf"), width = 6.5, height = 4, scale = 1.2)
+ggsave(paste0("output/figures/2022_Figure_S6C-p07.pdf"), width = 6.5, height = 4, scale = 1.2)
 rm(tmp.c1, sid_print)
 
 
@@ -1812,7 +1812,7 @@ rm(tmp.c0, sid_print)
 
 
 #### C1-2022 (up) ----
-##### F] Figure S14J - C1 ----
+##### FF] Figure S6C-p10 - C1 ----
 
 tmp.c1 <- results.out |>
   dplyr::filter(!is.na(.data$C1.2022)) |> 
@@ -1833,7 +1833,7 @@ DotPlot(object = object_1, features =list('C1'=tmp.c1, 'Peri'=c("RGS5", "PDGFRB"
   labs(x = paste0("Features [C1] in: ",sid_print, " (Yuan dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S14J.pdf"),width=6.5, height=4, scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S6C-p10.pdf"),width=6.5, height=4, scale=1.2)
 rm(tmp.c1, sid_print)
 
 
@@ -2277,7 +2277,7 @@ rm(tmp.c0, sid_print)
 
 
 #### C1-2022 (up) ----
-##### F] Figure S14I - C1 ----
+##### FF] Figure S6C-p09 - C1 ----
 
 
 tmp.c1 <- results.out |>
@@ -2299,7 +2299,7 @@ DotPlot(object = object_1, features =list('C1'=tmp.c1, 'Peri'=c("RGS5", "PDGFRB"
   labs(x = paste0("Features [C1] in: ",sid_print, " (Yuan dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S14I.pdf"),width=6.5, height=4, scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S6C-p09.pdf"),width=6.5, height=4, scale=1.2)
 rm(tmp.c1, sid_print)
 
 
