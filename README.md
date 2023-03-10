@@ -36,7 +36,7 @@ ___
 
 # G-SAM RNA pipe-line and analysis code #
 
-Dr. Youri Hoogstrate, 2019 - 2022
+Dr. Youri Hoogstrate, 2019 - 2023
 
 ---
 
@@ -45,12 +45,14 @@ Dr. Youri Hoogstrate, 2019 - 2022
 Please cite this paper ([10.1016/j.ccell.2023.02.019](https://doi.org/10.1016/j.ccell.2023.02.019)) when using *recursiveCorPlot* for your
 publications:
 
+
 ```
-Youri Hoogstrate, Kaspar Draaisma, Santoesha A. Ghisai, Levi van Hijfte, Nastaran Barin, Iris de Heer, Wouter Coppieters,
-Thierry P.P. van den Bosch, Anne Bolleboom, Zhenyu Gao, Arnaud J.P.E. Vincent, Latifa Karim, Manon Deckers,
-Martin J.B. Taphoorn, Melissa Kerkhof, Astrid Weyerbrock, Marc Sanson, Ann Hoeben, Slávka Lukacova, Giuseppe Lombardi,
- Sieger Leenstra, Monique Hanse, Ruth E.M. Fleischeuer, Colin Watts, Nicos Angelopoulos, Thierry Gorlia, Vassilis Golfinopoulos,
-Vincent Bours, Martin J. van den Bent, Pierre A. Robe, Pim J. French,
+Youri Hoogstrate, Kaspar Draaisma, Santoesha A. Ghisai, Levi van Hijfte, Nastaran Barin, Iris de Heer,
+Wouter Coppieters, Thierry P.P. van den Bosch, Anne Bolleboom, Zhenyu Gao, Arnaud J.P.E. Vincent,
+Latifa Karim, Manon Deckers, Martin J.B. Taphoorn, Melissa Kerkhof, Astrid Weyerbrock, Marc Sanson,
+Ann Hoeben, Slávka Lukacova, Giuseppe Lombardi,  Sieger Leenstra, Monique Hanse,
+Ruth E.M. Fleischeuer, Colin Watts, Nicos Angelopoulos, Thierry Gorlia, Vassilis Golfinopoulos,
+Vincent Bours, Martin J. van den Bent, Pierre A. Robe, Pim J. French
 
 Transcriptome analysis reveals tumor microenvironment changes in glioblastoma,
 
@@ -65,11 +67,13 @@ Directory structure:
 # main R data analyses:
 
 ./scripts/load_*.R     [loading of data]
-                        - data is typically structured in 3 levels:
+                        - data is typically structured at 3 levels:
                           * per gene
                           * per patient
                           * per resection/sample
-./scripts/analysis_*.R [analysis of data, typically exporting cached results to ./cache]
+
+./scripts/analysis_*.R [analysis of data, typically exporting results to ./cache]
+
 ./scripts/vis_*.R      [visualisation of data]
 
 
