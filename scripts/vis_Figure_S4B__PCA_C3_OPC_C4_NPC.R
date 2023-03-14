@@ -15,7 +15,7 @@ options(warnPartialMatchDollar = TRUE) # https://stackoverflow.com/questions/328
 source('scripts/load_results.out.R')
 
 
-## F] Figure S9A - NE / NPC ----
+## FF] Figure S4B-p01 - NE / NPC ----
 # a. eerst losse PCA bepaling, dan correlatie daar tussen?
 
 
@@ -80,11 +80,11 @@ factoextra::fviz_pca_var(res.pca, col.var = labels$col, repel = TRUE,geom=c('arr
   labs(caption = paste0("G-SAM: n=", ncol(plt), " samples"))
 
 
-ggsave("output/figures/2022_Figure_S9A.pdf", width = 8.3 / 4, height = 8.3 / 4, scale = 2)
+ggsave("output/figures/2022_Figure_S4B-p01.pdf", width = 8.3 / 4, height = 8.3 / 4, scale = 2)
 
 
 
-## F] Figure S9B - OD / OPC ----
+## FF] Figure S4B-p02 - OD / OPC ----
 
 
 labels <- results.out |>
@@ -141,7 +141,7 @@ factoextra::fviz_pca_var(res.pca, col.var = labels$col, repel = T,geom=c('arrow'
   labs(caption = paste0("G-SAM: n=", ncol(plt), " samples"))
 
 
-ggsave("output/figures/2022_Figure_S9B.pdf", width = 8.3 / 4, height = 8.3 / 4, scale = 2)
+ggsave("output/figures/2022_Figure_S4B-p02.pdf", width = 8.3 / 4, height = 8.3 / 4, scale = 2)
 
 
 

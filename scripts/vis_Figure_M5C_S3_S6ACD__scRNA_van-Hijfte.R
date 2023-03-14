@@ -24,7 +24,12 @@ NPC2 <- c("STMN2","CD24","RND3","HMP19","TUBB3","MIAT","DCX","NSG1","ELAVL4","ML
 
 # scRNA HGG levi Glimmunology ----
 
+# shouldebe appropriate umap and clustering
+#saveRDS(object_1, file="tmp/object_1_van_Hijfte_Sample-Y.Rds")
+
 ## A :: Sample_Y ----
+sid <- 'van_Hijfte_Sample_Y'
+object_1 <- readRDS(file="tmp/object_1_van_Hijfte_Sample-Y.Rds")
 
 rm(sid, object_1)
 gc()
@@ -124,9 +129,9 @@ object_1$class <- ifelse(object_1$seurat_clusters %in% c(16), "EN", object_1$cla
 object_1$class <- ifelse(object_1$seurat_clusters %in% c(15), "PE", object_1$class)
 object_1$class <- ifelse(object_1$seurat_clusters %in% c(0, 1, 2, 3, 9, 8, 11), "T", object_1$class)
 object_1$class <- ifelse(object_1$seurat_clusters %in% c(7), "T", object_1$class) # dividing
-object_1$class <- ifelse(object_1$seurat_clusters %in% c(17), "T ?", object_1$class) #  Outlier?
+object_1$class <- ifelse(object_1$seurat_clusters %in% c(17), "T", object_1$class) #  Outlier?
 object_1$class <- ifelse(object_1$seurat_clusters %in% c(20), "AC", object_1$class)
-object_1$class <- ifelse(object_1$seurat_clusters %in% c(18), "T ?", object_1$class) # Apoptotic?
+object_1$class <- ifelse(object_1$seurat_clusters %in% c(18), "T", object_1$class) # Apoptotic?
 object_1$class <- ifelse(object_1$seurat_clusters %in% c(22), "TAM|OD", object_1$class)
 object_1$class <- ifelse(object_1@reductions$umap@cell.embeddings[, 1] >= 10 &
   object_1@reductions$umap@cell.embeddings[, 1] <= 11 &
@@ -141,7 +146,7 @@ levels(object_1$seurat_clusters)
 
 object_1$seurat_clusters <- factor(object_1$seurat_clusters, levels = c(
   "0. T", "1. T", "2. T", "3. T", "7. T", "8. T", "9. T", "11. T",
-  "17. T ?", "18. T ?",
+  "17. T", "18. T",
   "20. AC",
   "21. NE",
   "4. OD", "6. OD", "12. OD", "19. OD",
@@ -154,15 +159,32 @@ object_1$seurat_clusters <- factor(object_1$seurat_clusters, levels = c(
 
 
 
-#### F] Figure S7C - UMAP ----
+#### FF] Figure S3-p03 - UMAP ----
 
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "seurat_clusters") +
   labs(subtitle = sid) +
   guides(col = guide_legend(ncol = 1, override.aes = list(size = 3)))
 
+# don't plot doublets
+object_1$cell_type <- gsub("^[0-9]+\\. ","",object_1$seurat_clusters)
+DimPlot(object_1[,object_1$seurat_clusters != "22. TAM|OD"], reduction = "umap", label = TRUE, pt.size = .8, group.by = "cell_type") +
+  labs(subtitle = sid) +
+  guides(col = guide_legend(ncol = 1, override.aes = list(size = 3)))  +
+  scale_color_manual(values=c('T'='#F8766D', # neat reddish
+                              'NE' = '#00B6EB', # neat blue
+                              'OD'='#53B400', # neat green
+                              'OPC'='gray65',
+                              'EN'='gray65',
+                              'TAM'='gray65',
+                              'PE'='gray65',
+                              'AC'='gray65',
+                              'EN'='gray65'))
 
 
-ggsave(paste0("output/figures/2022_Figure_S7C_", sid, "_UMAP.pdf"), width = 10, height = 8)
+
+ggsave(paste0("output/figures/2022_Figure_S3-p03_", sid, "_UMAP_ct.pdf"), 
+       width = 3.75 * 0.93 * (87/62) * 1.2 * 1.2,
+       height = 3.75 * 0.93 * (87/62),scale=1.2)
 #ggsave(paste0("output/figures/scRNA/Glimmunology/", sid, "_UMAP.png"), width = 12, height = 10)
 
 #od.markers <- FindMarkers(object_1, ident.1 = c(4,6,12,19,22))
@@ -180,6 +202,73 @@ ggsave(paste0("output/figures/2022_Figure_S7C_", sid, "_UMAP.pdf"), width = 10, 
 
 tmp.15 <- FindMarkers(object_1, ident.1 = 15) # PE
 View(tmp.15)
+
+
+
+#### 0. Infer CNV ----
+
+
+object_1$annotated_clusters <- object_1$seurat_clusters
+object_1$cell_type <- gsub("^[0-9]+\\. ","",object_1$annotated_clusters)
+
+
+rm(infercnv_obj)
+
+path1 <- paste0("cache/infercnv_",sid,"_out_pdf")
+path2 <- paste0("cache/infercnv_",sid,"_processed.Rds")
+path3 <- paste0("cache/infercnv_",sid,".Rds")
+
+if(!file.exists(path1)) {
+  if(!file.exists(path2)) {
+    if(!file.exists(path3)) {
+      rcm <- object_1@assays$RNA@counts
+      af <- data.frame(
+        V1 = colnames(rcm)) |>
+        dplyr::left_join(data.frame(V2 = object_1$annotated_clusters) |>
+                           tibble::rownames_to_column("V1"), by=c('V1'='V1')) |> 
+        tibble::column_to_rownames('V1') |> 
+        dplyr::mutate(V2 = as.character(V2)) 
+      stopifnot(colnames(rcm) == rownames(af))
+      
+      refgroups = data.frame(annotated_clusters = as.character(object_1$annotated_clusters),
+                             cell_type = as.character(object_1$cell_type)) |> 
+        dplyr::filter(cell_type %in% c("TAM","NE","TC","BC", "PE","EN","OD", "OPC")) |> 
+        dplyr::pull(annotated_clusters) |> 
+        unique()
+      
+      infercnv_obj = infercnv::CreateInfercnvObject(
+        raw_counts_matrix= round(rcm),
+        annotations_file = af ,
+        gene_order_file=gene.order |> dplyr::filter(!duplicated(gene)) |> tibble::column_to_rownames('gene'),
+        ref_group_names=refgroups # group names for only the non-malignants
+      )
+      
+      saveRDS(infercnv_obj, file=path3)
+      rm(rcm, af, infercnv_obj)
+      gc()
+      
+    } else {
+      print(paste0("File: ", path3, " already present - skipping re-generation"))
+    }
+    
+    infercnv_obj <- readRDS(file=path3)
+    infercnv_obj <- infercnv::run(infercnv_obj,
+                                  cutoff=0.1,
+                                  out_dir = path1,
+                                  cluster_by_groups=TRUE,
+                                  denoise=T,
+                                  HMM=T,
+                                  output_format="pdf")
+    saveRDS(infercnv_obj, file=path2)
+    rm(infercnv_obj)
+    gc()
+  }
+}
+
+
+system(paste0("rm ",path1,"/*.txt"))
+system(paste0("rm ",path1,"/*.dat"))
+system(paste0("rm ",path1,"/*_obj"))
 
 
 
@@ -263,6 +352,19 @@ FeaturePlot(object = object_1, features = "NODAL")
 
 #### 2. Astrocyte (+) ----
 
+FeaturePlot(object = object_1, features = "GJA1")
+FeaturePlot(object = object_1, features = "SLC14A1")
+FeaturePlot(object = object_1, features = "AQP4") # ook lichtelijk in tumor
+FeaturePlot(object = object_1, features = "KCNN3") # ook lichtelijk in tumor
+FeaturePlot(object = object_1, features = "FAM107A")
+
+
+FeaturePlot(object = object_1, features = "TIMP3")
+FeaturePlot(object = object_1, features = "NTRK2") # vrij veel gliale cellen
+FeaturePlot(object = object_1, features = "MT1E")
+FeaturePlot(object = object_1, features = "ADCYAP1R1")
+FeaturePlot(object = object_1, features = "MGST1")
+
 FeaturePlot(object = object_1, features = "STMN2") # Tumor
 FeaturePlot(object = object_1, features = "ETNPPL") # Tumor
 
@@ -344,7 +446,7 @@ FeaturePlot(object = object_1, features = "ANPEP") # DCN
 
 
 
-##### F] Figure S7A - C4 ----
+##### FF] Figure S3-p02 - C4 ----
 
 
 tmp.c4 <- results.out |>
@@ -374,32 +476,38 @@ tmp.c4  <- setdiff(tmp.c4, tmp.c4.npc2)
 tmp.npc2 <- setdiff(tmp.npc2, tmp.c4.npc2)
 
 
-sid_print <- 'Samply Y (van Hijfte dataset - single nucleus RNA-seq)'
+sid_print <- 'Sample-Y (van Hijfte dataset - snRNA-seq)'
 
 
 
 tmp <- list('C4'=tmp.c4,
             'NPC1'=tmp.npc1,
             'NPC1+2'=tmp.npc1.2,
-            'NPC2'=tmp.npc2,
-            'NPC2 + C4' = tmp.c4.npc2)
+            'NPC2'=tmp.npc2
+            #'NPC2 + C4' = tmp.c4.npc2
+            )
 
 
-DotPlot(object = object_1, features = tmp, group.by = "seurat_clusters",
+# do not show doublets
+DotPlot(object = object_1[,object_1$seurat_clusters != "22. TAM|OD"], features = tmp, group.by = "seurat_clusters",
         cols = c("lightgrey", "purple")) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
-  labs(x = paste0("Features [C4/NPC] in: ",sid_print))
+  labs(x = paste0("Features [C4/NPC] in: ",sid_print)) +
+  guides(y = "none", y.sec = guide_axis())
 
 
 
-ggsave(paste0("output/figures/2022_Figure_S7A.pdf"),width=7.5*3, height=4,scale=1.2)
+#ggsave(paste0("output/figures/2022_Figure_S7A.pdf"),width=7.5*3, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S7A.pdf"),
+       width=7.5 * 1.8 * (612 / 744.4529) * (392.0837 / 412.4028) * 1.14,
+       height=3.75 * 0.93 * (87/62), scale=1.2)
 rm(tmp.c4, tmp.c4.npc2, tmp.npc1, tmp.npc1.2, tmp.npc2, sid_print)
 
 
 
 
 
-#### 5. Oligodendrocytes ----
+#### 5A. Oligodendrocytes ----
 
 
 FeaturePlot(object = object_1, features = "MOG")
@@ -433,7 +541,7 @@ FeaturePlot(object = object_1, features = "OLIG2") # OD?
 
 
 
-##### F] Figure S7B - C3 ----
+##### FF] Figure S3-p01 - C3 ----
 
 
 tmp.c3 <- results.out |>
@@ -453,18 +561,30 @@ tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
 tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
 
 
-sid_print <- 'Samply Y (van Hijfte dataset - single nucleus RNA-seq)'
+sid_print <- 'Sample-Y (van Hijfte dataset - snRNA-seq)'
 
 
-DotPlot(object = object_1, features =list('C3'=tmp.c3, 'OPC'=tmp.opc, 'C3+OPC'=tmp.c3.opc), group.by = "seurat_clusters") +
+# do not shouw doublets
+DotPlot(object = object_1[,object_1$seurat_clusters != "22. TAM|OD"], features =list('C3'=tmp.c3, 'OPC-like'=tmp.opc
+                                                                                     #, 'C3+OPC'=tmp.c3.opc
+                                                                                     ), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
   labs(x = paste0("Features [C3/OPC] in: ", sid_print))
 
-
-ggsave(paste0("output/figures/2022_Figure_S7B.pdf"),width=7.5*2, height=4,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S3-p01.pdf"),
+       width=7.5 * 1.8 * (612 / 744.4529) * (392.0837 / 412.4028) * 1.14,
+       height=3.75 * 0.93 * (87/62), scale=1.2)
 rm(tmp.c3, tmp.opc, tmp.c3.opc, sid_print)
 
 
+
+
+#### 5B. OPC ----
+
+
+DotPlot(object_1, features = cell_type_opc , group.by = "annotated_clusters") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=9)) +
+  labs(x = paste0("Features [CTX] in: ", gsub("^.+_","",sid), " (CPTAC-3 dataset)"))
 
 
 #### 6A. Endothelial (+) ----
@@ -487,34 +607,36 @@ FeaturePlot(object = object_1, features = c("HEYL"))
 FeaturePlot(object = object_1, features = c("CFH"))
 
 
-#### F] Figure S14K ---
+##### FF] Figure S6D-p01 ----
 
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters") +
   guides(col = guide_legend(ncol = 1, override.aes = list(size = 3))) +
   labs(subtitle = sid)
-ggsave("output/figures/22022_Figure_S14K_labels.pdf", width = 6.5, height = 4, scale = 1.2) # to export cluster names
+ggsave("output/figures/22022_Figure_S6D-p01_labels.pdf", width = 6.5, height = 4, scale = 1.2) # to export cluster names
 
 
 FeaturePlot(object = object_1, features = c("COL1A1", "COL1A2", "PDGFRB", "PECAM1"), min.cutoff = 1, order = T, pt.size = 0.15)
-ggsave("output/figures/2022_Figure_S14K.pdf", width = 6.5, height = 4, scale = 1.2)
+ggsave("output/figures/2022_Figure_S6D-p01.pdf", width = 6.5, height = 4, scale = 1.2)
 
 
 
 
 #### C0-2022 ----
-##### F] Figure M5B ----
+##### FF] Figure M5C ----
 
-# two layer approach - post-edit in inkscape / AI to get cluster DimPlot-labels in FeaturePlot
 
-FeaturePlot(object = object_1, features =  "COL1A2" )
-ggsave("output/figures/2022_Figure_M5B.svg", width=10, height=7)
+
+# do not show doublets
+Idents(object_1) <- "cell_type"
+FeaturePlot(object = object_1[,object_1$seurat_clusters != "22. TAM|OD"], features =  "COL1A2",order=T ,label=T,pt.size = .6)
+ggsave("output/figures/2022_Figure_M5C.svg", width=10, height=9)
 
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "seurat_clusters") + NoLegend()
-ggsave("output/figures/2022_Figure_M5B_labels.svg", width=10, height=7)
+ggsave("output/figures/2022_Figure_M5C_labels.svg", width=10, height=7)
 
 
 
-##### F] Figure S12J - C0 ----
+##### C0 ----
 
 
 tmp.c0 <- results.out |>
@@ -525,7 +647,7 @@ tmp.c0 <- results.out |>
   unique()
 
 
-sid_print <- "Samply Y (van Hijfte dataset - single nucleus RNA-seq)"
+sid_print <- "Sample-Y (van Hijfte dataset - single nucleus RNA-seq)"
 
 
 DotPlot(object = object_1, features = list("C0" = tmp.c0), group.by = "seurat_clusters") +
@@ -533,13 +655,13 @@ DotPlot(object = object_1, features = list("C0" = tmp.c0), group.by = "seurat_cl
   labs(x = paste0("Features [C0] in: ", sid_print))
 
 
-ggsave(paste0("output/figures/2022_Figure_S12J.pdf"), width = 6.5, height = 4, scale = 1.2)
-rm(tmp.c0, sid_print)
+# ggsave(paste0("output/figures/2022_Figure_.pdf"), width = 6.5, height = 4, scale = 1.2)
+# rm(tmp.c0, sid_print)
 
 
 
 #### C1-2022 (up) ----
-##### F] Figure S14F - C1 ----
+##### FF] Figure S6C-p06 - C1 ----
 
 
 tmp.c1 <- results.out |>
@@ -551,7 +673,7 @@ tmp.c1 <- results.out |>
   sort()
 
 
-sid_print <- 'Samply Y (van Hijfte dataset - single nucleus RNA-seq)'
+sid_print <- 'Sample-Y (van Hijfte dataset - single nucleus RNA-seq)'
 
 
 DotPlot(object = object_1, features =list('C1'=tmp.c1, 'Peri'=c("RGS5", "PDGFRB", "CD248")), group.by = "seurat_clusters") +
@@ -560,14 +682,14 @@ DotPlot(object = object_1, features =list('C1'=tmp.c1, 'Peri'=c("RGS5", "PDGFRB"
 
 
 
-ggsave(paste0("output/figures/2022_Figure_S14F.pdf"),width=6.5, height=4, scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S6C-p06.pdf"),width=6.5, height=4, scale=1.2)
 rm(tmp.c1, sid_print)
 
 
 
 
 #### C2-2022 (Endo) (down) ----
-##### F] Figure S11C - C2 ----
+##### FF] Figure S6A-p03 - C2 ----
 
 
 tmp.c2 <- results.out |>
@@ -593,7 +715,7 @@ tmp.endo <- setdiff(tmp.endo, c(tmp.peri, tmp.c2))
 tmp.peri <- setdiff(tmp.peri, c(tmp.c2, tmp.endo))
 
 
-sid_print <- "Samply Y (van Hijfte dataset - single nucleus RNA-seq)"
+sid_print <- "Sample-Y (van Hijfte dataset - single nucleus RNA-seq)"
 
 
 DotPlot(object = object_1, features = list('C2 (Endothelial)'=tmp.c2,
@@ -603,7 +725,7 @@ DotPlot(object = object_1, features = list('C2 (Endothelial)'=tmp.c2,
   labs(x = paste0("Features [C2 & top25 McKenzie endothelial markers] in: ",sid_print))
 
 
-ggsave(paste0("output/figures/2022_Figure_S11C.pdf"), width = 7.5 * 1.8, height = 3.75, scale = 1.2)
+ggsave(paste0("output/figures/2022_Figure_S6A-p03.pdf"), width = 7.5 * 1.8, height = 3.75, scale = 1.2)
 rm(tmp.c2, tmp.peri, tmp.endo, sid_print)
 
 

@@ -50,7 +50,7 @@ n.paired.v3 <- length(filter)
 
 
 
-## F] Figure S6C, S6D - arrow plot ----
+## FF] Figure S2E-p01 - arrow plot ----
 
 
 plt <- plt.single |>
@@ -109,11 +109,11 @@ ggplot(plt, aes(x = vIII.percentage, y = tumour.percentage.dna, group = pid)) +
   )
 
 
-ggsave("output/figures/2022_Figure_S6C_S6D.pdf", width = 8.3 / 2, height = 8.3 / 3.4, scale = 2)
+ggsave("output/figures/2022_Figure_S2E-p01.pdf", width = 8.3 / 2, height = 8.3 / 3.4, scale = 2)
 
 
 
-## F] Figure S6A, S6B  - vertical plot ----
+## FF] Figure S2E-p02  - vertical plot ----
 
 
 delta.v3.percentage <-
@@ -185,6 +185,6 @@ ggplot(plt, aes(x = reorder(pid, order), y = percentage)) +
   )
 
 
-ggsave("output/figures/2022_Figure_S6A_S6B.pdf", width = 8.3 / 2, height = 8.3 / 3.3, scale = 2)
+ggsave("output/figures/2022_Figure_S2E-p02.pdf", width = 8.3 / 2, height = 8.3 / 3.3, scale = 2)
 
 

@@ -1068,7 +1068,7 @@ DotPlot(object = object_1, features = c("MOG","PLP1","TMEM144"),group.by = "seur
 
 
 
-##### F] Figure S8A - C3/OPC ----
+##### FF] Figure S3-p9 - C3/OPC ----
 
 
 tmp.c3 <- results.out |>
@@ -1093,13 +1093,16 @@ sid_print <- sid |>
   stringr::str_replace("_2of2", " (1 & 2 of 2)")
 
 
-DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC" = tmp.opc, "C3+OPC" = tmp.c3.opc), group.by = "seurat_clusters") +
+DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc
+                                           #, "C3+OPC" = tmp.c3.opc
+                                           ), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
   labs(x = paste0("Features [C3/OPC] in: ", sid_print, " (Couturier dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S8A.pdf"), width = 7.5 * 1.8, height = 3.75, scale = 1.2)
+ggsave(paste0("output/figures/2022_Figure_S3-p9_",sid,".pdf"), width=7.5 * 1.8 * (612 / 744.4529) * (392.0837 / 412.4028 ), height=3.75 * 0.93, scale=1.2)
 rm(tmp.c3, tmp.opc, tmp.c3.opc, sid_print)
+
 
 
 
@@ -1126,7 +1129,7 @@ FeaturePlot(object = object_1, features = c("CFH"))
 
 
 
-##### F] Figure S14L - Pericytes ----
+##### FF] Figure S6D-p02 - Pericytes ----
 
 sid_print <- sid |>
   stringr::str_replace(".filtered_gene_matrices", "") |>
@@ -1136,18 +1139,18 @@ sid_print <- sid |>
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters") +
   guides(col = guide_legend(ncol = 1, override.aes = list(size = 3))) +
   labs(subtitle = sid)
-ggsave("output/figures/2022_Figure_S14L_labels.pdf", width = 6.5, height = 4, scale = 1.2) # to export cluster names
+ggsave("output/figures/2022_Figure_S6D-p02_labels.pdf", width = 6.5, height = 4, scale = 1.2) # to export cluster names
 
 
 FeaturePlot(object = object_1, features = c("COL1A1", "COL1A2", "PDGFRB", "PECAM1"), min.cutoff = 1, order = T, pt.size = 0.15) +
   labs(caption = sid)
-ggsave("output/figures/2022_Figure_S14L.pdf", width = 6.5, height = 4, scale = 1.2)
+ggsave("output/figures/2022_Figure_S6D-p02.pdf", width = 6.5, height = 4, scale = 1.2)
 
 
 
 
 #### C0-2022 ----
-##### F] Figure S12A - C0 ----
+##### FF] Figure S6B-p01 - C0 ----
 
 
 tmp.c0 <- results.out |>
@@ -1168,13 +1171,13 @@ DotPlot(object = object_1, features = list("C0" = tmp.c0), group.by = "seurat_cl
   labs(x = paste0("Features [C0] in: ", sid_print, " (Couturier dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S12A.pdf"), width = 6.5, height = 4, scale = 1.2)
+ggsave(paste0("output/figures/2022_Figure_S6B-p01.pdf"), width = 6.5, height = 4, scale = 1.2)
 rm(tmp.c0, sid_print)
 
 
 
 #### C1-2022 (up) ----
-##### F] Figure S14A - C1 ----
+##### FF] Figure S6C-p01 - C1 ----
 
 
 tmp.c1 <- results.out |>
@@ -1196,7 +1199,7 @@ DotPlot(object = object_1, features = list("C1" = tmp.c1, "Peri" = c("RGS5", "PD
   labs(x = paste0("Features [C1] in: ", sid_print, " (Couturier dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S14A.pdf"), width = 6.5, height = 4, scale = 1.2)
+ggsave(paste0("output/figures/2022_Figure_S6C-p01.pdf"), width = 6.5, height = 4, scale = 1.2)
 rm(tmp.c1, sid_print)
 
 
@@ -2040,7 +2043,7 @@ FeaturePlot(object = object_1, features = "TMEM144")
 
 
 
-##### F] Figure S8B - C3/OPC ----
+##### FF] Figure S3-12 - C3/OPC ----
 
 
 tmp.c3 <- results.out |>
@@ -2065,12 +2068,15 @@ sid_print <- sid |>
   stringr::str_replace("_2of2", " (1 & 2 of 2)")
 
 
-DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC" = tmp.opc, "C3+OPC" = tmp.c3.opc), group.by = "seurat_clusters") +
+DotPlot(object = object_1, features = list("C3" = tmp.c3, 
+                                           "OPC-like" = tmp.opc
+                                           #, "C3+OPC" = tmp.c3.opc
+                                           ), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
   labs(x = paste0("Features [C3/OPC] in: ", sid_print, " (Couturier dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S8B.pdf"), width = 7.5 * 1.8, height = 3.75, scale = 1.2)
+ggsave(paste0("output/figures/2022_Figure_S3-12_",sid,".pdf"), width=7.5 * 1.8 * (612 / 744.4529) * (392.0837 / 412.4028 ), height=3.75 * 0.93, scale=1.2)
 rm(tmp.c3, tmp.opc, tmp.c3.opc, sid_print)
 
 
@@ -2093,7 +2099,7 @@ FeaturePlot(object = object_1, features = "CD248",pt.size=0.04)
 
 
 #### C0-2022 ----
-##### F] Figure S12B - C0 ----
+##### FF] Figure S6B-p02 - C0 ----
 
 
 tmp.c0 <- results.out |>
@@ -2114,13 +2120,13 @@ DotPlot(object = object_1, features = list("C0" = tmp.c0), group.by = "seurat_cl
   labs(x = paste0("Features [C0] in: ", sid_print, " (Couturier dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S12B.pdf"), width = 6.5, height = 4, scale = 1.2)
+ggsave(paste0("output/figures/2022_Figure_S6B-p02.pdf"), width = 6.5, height = 4, scale = 1.2)
 rm(tmp.c0, sid_print)
 
 
 
 #### C1-2022 (up) ----
-##### F] Figure S14D - C1 ----
+##### FF] Figure S6C-p04 - C1 ----
 
 
 tmp.c1 <- results.out |>
@@ -2142,13 +2148,13 @@ DotPlot(object = object_1, features = list("C1" = tmp.c1, "Peri" = c("RGS5", "PD
   labs(x = paste0("Features [C1] in: ", sid_print, " (Couturier dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S14D.pdf"), width = 6.5, height = 4, scale = 1.2)
+ggsave(paste0("output/figures/2022_Figure_S6C-p04.pdf"), width = 6.5, height = 4, scale = 1.2)
 rm(tmp.c1, sid_print)
 
 
 
 #### C2-2022 (Endo) (down) ----
-##### F] Figure S11B - C2 ----
+##### FF] Figure S6A-p02 - C2 ----
 
 
 tmp.c2 <- results.out |>
@@ -2186,7 +2192,7 @@ DotPlot(object = object_1, features = list('C2 (Endothelial)'=tmp.c2,
   labs(x = paste0("Features [C2 & top25 McKenzie endothelial markers] in: ",sid_print, " (Couturier dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S11B.pdf"), width = 7.5 * 1.8, height = 3.75, scale = 1.2)
+ggsave(paste0("output/figures/2022_Figure_S6A-p02.pdf"), width = 7.5 * 1.8, height = 3.75, scale = 1.2)
 rm(tmp.c2, tmp.peri, tmp.endo, sid_print)
 
 
@@ -2562,7 +2568,7 @@ ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C2_OPC.png"),width=7.5*1.8
 
 
 
-##### F] Figure S8C - C3/OPC ----
+##### C3/OPC ----
 
 
 tmp.c3 <- results.out |>
@@ -2587,13 +2593,13 @@ sid_print <- sid |>
   stringr::str_replace("_2of2", " (1 & 2 of 2)")
 
 
-DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC" = tmp.opc, "C3+OPC" = tmp.c3.opc), group.by = "seurat_clusters") +
+DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc, "C3+OPC" = tmp.c3.opc), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
   labs(x = paste0("Features [C3/OPC] in: ", sid_print, " (Couturier dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S8C.pdf"), width = 7.5 * 1.8, height = 3.75, scale = 1.2)
-rm(tmp.c3, tmp.opc, tmp.c3.opc, sid_print)
+#ggsave(paste0("output/figures/2022_Figure_.pdf"), width = 7.5 * 1.8, height = 3.75, scale = 1.2)
+#rm(tmp.c3, tmp.opc, tmp.c3.opc, sid_print)
 
 
 
@@ -2616,7 +2622,7 @@ FeaturePlot(object = object_1, features = "CD248")
 
 
 #### C0-2022 ----
-##### F] Figure S12C - C0 ----
+##### FF] Figure S6B-p03 - C0 ----
 
 
 tmp.c0 <- results.out |>
@@ -2637,13 +2643,13 @@ DotPlot(object = object_1, features = list("C0" = tmp.c0), group.by = "seurat_cl
   labs(x = paste0("Features [C0] in: ", sid_print, " (Couturier dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S12C.pdf"), width = 6.5, height = 4, scale = 1.2)
+ggsave(paste0("output/figures/2022_Figure_S6B-p03.pdf"), width = 6.5, height = 4, scale = 1.2)
 rm(tmp.c0, sid_print)
 
 
 
 #### C1-2022 (up) ----
-##### F] Figure S14B - C1 ----
+##### FF] Figure S6C-p02 - C1 ----
 
 
 tmp.c1 <- results.out |>
@@ -2665,7 +2671,7 @@ DotPlot(object = object_1, features = list("C1" = tmp.c1, "Peri" = c("RGS5", "PD
   labs(x = paste0("Features [C1] in: ", sid_print, " (Couturier dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S14B.pdf"), width = 6.5, height = 4, scale = 1.2)
+ggsave(paste0("output/figures/2022_Figure_S6C-p02.pdf"), width = 6.5, height = 4, scale = 1.2)
 rm(tmp.c1, sid_print)
 
 
@@ -3395,7 +3401,7 @@ FeaturePlot(object = object_1, features = "PLP1")
 
 
 
-##### F] Figure S8D - C3/OPC ----
+##### FF] Figure S3-p15 - C3/OPC ----
 
 
 tmp.c3 <- results.out |>
@@ -3419,12 +3425,14 @@ sid_print <- sid |>
   stringr::str_replace(".filtered_gene_matrices", "")
 
 
-DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC" = tmp.opc, "C3+OPC" = tmp.c3.opc), group.by = "seurat_clusters") +
+DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc
+                                           #, "C3+OPC" = tmp.c3.opc
+                                           ), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
   labs(x = paste0("Features [C3/OPC] in: ", sid_print, " (Couturier dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S8D.pdf"), width = 7.5 * 1.8, height = 3.75, scale = 1.2)
+ggsave(paste0("output/figures/2022_Figure_S3-p15_",sid,".pdf"), width=7.5 * 1.8 * (612 / 744.4529) * (392.0837 / 412.4028 ), height=3.75 * 0.93, scale=1.2)
 rm(tmp.c3, tmp.opc, tmp.c3.opc, sid_print)
 
 
@@ -3793,7 +3801,7 @@ FeaturePlot(object = object_1, features = "PLP1")
 
 
 
-##### F] Figure S8E - C3/OPC ----
+##### FF] Figure S3-p18 - C3/OPC ----
 
 
 tmp.c3 <- results.out |>
@@ -3818,12 +3826,14 @@ sid_print <- sid |>
   stringr::str_replace("_2of2", " (1 & 2 of 2)")
 
 
-DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC" = tmp.opc, "C3+OPC" = tmp.c3.opc), group.by = "seurat_clusters") +
+DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc
+                                           #, "C3+OPC" = tmp.c3.opc
+                                           ), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
   labs(x = paste0("Features [C3/OPC] in: ", sid_print, " (Couturier dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S8E.pdf"), width = 7.5 * 1.8, height = 3.75, scale = 1.2)
+ggsave(paste0("output/figures/2022_Figure_S3-p18_",sid,".pdf"), width=7.5 * 1.8 * (612 / 744.4529) * (392.0837 / 412.4028 ), height=3.75 * 0.93, scale=1.2)
 rm(tmp.c3, tmp.opc, tmp.c3.opc, sid_print)
 
 
@@ -3847,7 +3857,7 @@ FeaturePlot(object = object_1, features = "CD248")
 
 
 #### C0-2022 ----
-##### F] Figure S12D - C0 ----
+##### FF] Figure S6B-p04 - C0 ----
 
 
 tmp.c0 <- results.out |>
@@ -3868,13 +3878,13 @@ DotPlot(object = object_1, features = list("C0" = tmp.c0), group.by = "seurat_cl
   labs(x = paste0("Features [C0] in: ", sid_print, " (Couturier dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S12D.pdf"), width = 6.5, height = 4, scale = 1.2)
+ggsave(paste0("output/figures/2022_Figure_S6B-p04.pdf"), width = 6.5, height = 4, scale = 1.2)
 rm(tmp.c0, sid_print)
 
 
 
 #### C1-2022 (up) ----
-##### F] Figure S14C - C1 ----
+##### FF] Figure S6C-p03 - C1 ----
 
 
 tmp.c1 <- results.out |>
@@ -3896,13 +3906,13 @@ DotPlot(object = object_1, features = list("C1" = tmp.c1, "Peri" = c("RGS5", "PD
   labs(x = paste0("Features [C1] in: ", sid_print, " (Couturier dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S14C.pdf"), width = 6.5, height = 4, scale = 1.2)
+ggsave(paste0("output/figures/2022_Figure_S6C-p03.pdf"), width = 6.5, height = 4, scale = 1.2)
 rm(tmp.c1, sid_print)
 
 
 
 #### C2-2022 (Endo) (down) ----
-##### F] Figure S11A - C2 ----
+##### FF] Figure S6A-p01 - C2 ----
 
 
 tmp.c2 <- results.out |>
@@ -3940,7 +3950,7 @@ DotPlot(object = object_1, features = list('C2 (Endothelial)'=tmp.c2,
   labs(x = paste0("Features [C2 & top25 McKenzie endothelial markers] in: ",sid_print, " (Couturier dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S11A.pdf"), width = 7.5 * 1.8, height = 3.75, scale = 1.2)
+ggsave(paste0("output/figures/2022_Figure_S6A-p01.pdf"), width = 7.5 * 1.8, height = 3.75, scale = 1.2)
 rm(tmp.c2, tmp.peri, tmp.endo, sid_print)
 
 

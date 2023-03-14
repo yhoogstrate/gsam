@@ -44,7 +44,7 @@ results.out <- results.out |>
 
 rm(tmp)
 
-## w/ correctioon ----
+## w/ correction ----
 
 tmp <- readRDS("tmp/analysis_DGE_GLASS-2022.tpc.Rds") 
 

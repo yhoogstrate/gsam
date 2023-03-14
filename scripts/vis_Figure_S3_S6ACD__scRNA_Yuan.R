@@ -420,7 +420,7 @@ FeaturePlot(object = object_1, features = "TRBC2")
 
 
 #### C0-2022 ----
-##### F] Figure S12K - C0 ----
+##### C0 ----
 
 
 tmp.c0 <- results.out |>
@@ -431,7 +431,7 @@ tmp.c0 <- results.out |>
   unique()
 
 
-sid_print <- sid |>
+sid_print <- gsub("GSM[0-9A-Z]+_","_",sid) |>
   stringr::str_replace(".filtered_gene_matrices", "") |>
   stringr::str_replace("_", ": ")
 
@@ -441,8 +441,8 @@ DotPlot(object = object_1, features = list("C0" = tmp.c0), group.by = "seurat_cl
   labs(x = paste0("Features [C0] in: ", sid_print, " (Yuan dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S12K.pdf"), width = 6.5, height = 4, scale = 1.2)
-rm(tmp.c0, sid_print)
+# ggsave(paste0("output/figures/2022_Figure_.pdf"), width = 6.5, height = 4, scale = 1.2)
+# rm(tmp.c0, sid_print)
 
 
 
@@ -704,7 +704,7 @@ FeaturePlot(object = object_1, features = "TMEM144")
 
 
 
-##### F] Figure S8F - C3/OPC ----
+##### C3/OPC ----
 
 
 tmp.c3 <- results.out |>
@@ -724,18 +724,20 @@ tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
 tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
 
 
-sid_print <- sid |>
+sid_print <- gsub("GSM[0-9A-Z]+_","_",sid) |>
   stringr::str_replace(".filtered_gene_matrices", "") |>
   stringr::str_replace("_", ": ")
 
 
-DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC" = tmp.opc, "C3+OPC" = tmp.c3.opc), group.by = "seurat_clusters") +
+DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc
+                                           #, "C3+OPC" = tmp.c3.opc
+                                           ), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
   labs(x = paste0("Features [C3/OPC] in: ", sid_print, " (Yuan dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S8F.pdf"), width = 7.5 * 1.8, height = 3.75, scale = 1.2)
-rm(tmp.c3, tmp.opc, tmp.c3.opc, sid_print)
+# ggsave(paste0("output/figures/2022_Figure_",sid,".pdf"), width=7.5 * 1.8 * (612 / 744.4529) * (392.0837 / 412.4028 ), height=3.75 * 0.93, scale=1.2)
+# rm(tmp.c3, tmp.opc, tmp.c3.opc, sid_print)
 
 
 
@@ -778,7 +780,7 @@ FeaturePlot(object = object_1, features = "TRBC2")
 
 
 #### C0-2022 ----
-##### F] Figure S12L - C0 ----
+##### C0 ----
 
 
 tmp.c0 <- results.out |>
@@ -789,7 +791,7 @@ tmp.c0 <- results.out |>
   unique()
 
 
-sid_print <- sid |>
+sid_print <- gsub("GSM[0-9A-Z]+_","_",sid) |>
   stringr::str_replace(".filtered_gene_matrices", "") |>
   stringr::str_replace("_", ": ")
 
@@ -799,12 +801,12 @@ DotPlot(object = object_1, features = list("C0" = tmp.c0), group.by = "seurat_cl
   labs(x = paste0("Features [C0] in: ", sid_print, " (Yuan dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S12L.pdf"), width = 6.5, height = 4, scale = 1.2)
-rm(tmp.c0, sid_print)
+# ggsave(paste0("output/figures/2022_Figure_.pdf"), width = 6.5, height = 4, scale = 1.2)
+# rm(tmp.c0, sid_print)
 
 
 #### C1-2022 (up) ----
-##### F] Figure S14H - C1 ----
+##### FF] Figure S6C-p08 - C1 ----
 
 tmp.c1 <- results.out |>
   dplyr::filter(!is.na(.data$C1.2022)) |> 
@@ -815,7 +817,7 @@ tmp.c1 <- results.out |>
   sort()
 
 
-sid_print <- sid |> 
+sid_print <- gsub("GSM[0-9A-Z]+_","_",sid) |> 
   stringr::str_replace(".filtered_gene_matrices","") |> 
   stringr::str_replace("_",": ")
 
@@ -825,13 +827,13 @@ DotPlot(object = object_1, features =list('C1'=tmp.c1, 'Peri'=c("RGS5", "PDGFRB"
   labs(x = paste0("Features [C1] in: ",sid_print, " (Yuan dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S14H.pdf"),width=6.5, height=4, scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S6C-p08.pdf"),width=6.5, height=4, scale=1.2)
 rm(tmp.c1, sid_print)
 
 
 
 #### C2-2022 (Endo) (down) ----
-##### F] Figure S11E - C2 ----
+##### FF] Figure S6A-p05 - C2 ----
 
 
 tmp.c2 <- results.out |>
@@ -857,7 +859,7 @@ tmp.endo <- setdiff(tmp.endo, c(tmp.peri, tmp.c2))
 tmp.peri <- setdiff(tmp.peri, c(tmp.c2, tmp.endo))
 
 
-sid_print <- sid |>
+sid_print <- gsub("GSM[0-9A-Z]+_","_",sid) |>
   stringr::str_replace(".filtered_gene_matrices", "") |>
   stringr::str_replace("_", ": ")
 
@@ -869,7 +871,7 @@ DotPlot(object = object_1, features = list('C2 (Endothelial)'=tmp.c2,
   labs(x = paste0("Features [C2 & top25 McKenzie endothelial markers] in: ",sid_print, " (Yuan dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S11E.pdf"), width = 7.5 * 1.8, height = 3.75, scale = 1.2)
+ggsave(paste0("output/figures/2022_Figure_S6A-p05.pdf"), width=7.5 * 1.8 * (612 / 744.4529) * (392.0837 / 412.4028 ), height=3.75 * 0.93, scale=1.2)
 rm(tmp.c2, tmp.peri, tmp.endo, sid_print)
 
 
@@ -1151,16 +1153,16 @@ FeaturePlot(object = object_1, features = "CD248")
 
 
 
-##### F] Figure S14M - Pericytes ----
+##### FF] Figure S6D-p03 - Pericytes ----
 
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .6, group.by = "seurat_clusters") +
   guides(col=guide_legend(ncol=1, override.aes = list(size = 3))) +
   labs(subtitle=sid)
-ggsave("output/figures/2022_Figure_S14M_labels.pdf",width=6.5, height=4,scale=1.2) # to export cluster names
+ggsave("output/figures/2022_Figure_S6D-p03_labels.pdf",width=6.5, height=4,scale=1.2) # to export cluster names
 
 
 FeaturePlot(object = object_1, features = c("COL1A1", "COL1A2","PDGFRB", "PECAM1"),order=T,pt.size=0.15)
-ggsave("output/figures/2022_Figure_S14M.pdf",width=6.5, height=4,scale=1.2)
+ggsave("output/figures/2022_Figure_S6D-p03.pdf",width=6.5, height=4,scale=1.2)
 
 
 
@@ -1193,7 +1195,7 @@ FeaturePlot(object = object_1, features = c("EGFR", "FGFR3"))
 
 
 #### C0-2022 ----
-##### F] Figure S12M - C0 ----
+##### C0 ----
 
 
 tmp.c0 <- results.out |>
@@ -1204,7 +1206,7 @@ tmp.c0 <- results.out |>
   unique()
 
 
-sid_print <- sid |> 
+sid_print <- gsub("GSM[0-9A-Z]+_","_",sid) |> 
   stringr::str_replace(".filtered_gene_matrices","") |> 
   stringr::str_replace("_",": ")
 
@@ -1214,13 +1216,13 @@ DotPlot(object = object_1, features =list('C0'=tmp.c0), group.by = "seurat_clust
   labs(x = paste0("Features [C0] in: ",sid_print, " (Yuan dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S12M.pdf"),width=6.5, height=4,scale=1.2)
-rm(tmp.c0, sid_print)
+# ggsave(paste0("output/figures/2022_Figure_pdf"),width=6.5, height=4,scale=1.2)
+# rm(tmp.c0, sid_print)
 
 
 
 #### C1-2022 (up) ----
-##### F] Figure S14G - C1 ----
+##### FF] Figure S6C-p07 - C1 ----
 
 tmp.c1 <- results.out |>
   dplyr::filter(!is.na(.data$C1.2022)) |>
@@ -1231,7 +1233,7 @@ tmp.c1 <- results.out |>
   sort()
 
 
-sid_print <- sid |>
+sid_print <- gsub("GSM[0-9A-Z]+_","_",sid) |>
   stringr::str_replace(".filtered_gene_matrices", "") |>
   stringr::str_replace("_", ": ")
 
@@ -1241,13 +1243,13 @@ DotPlot(object = object_1, features = list("C1" = tmp.c1, "Peri" = c("RGS5", "PD
   labs(x = paste0("Features [C1] in: ", sid_print, " (Yuan dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S14G.pdf"), width = 6.5, height = 4, scale = 1.2)
+ggsave(paste0("output/figures/2022_Figure_S6C-p07.pdf"), width = 6.5, height = 4, scale = 1.2)
 rm(tmp.c1, sid_print)
 
 
 
 #### C2-2022 (Endo) (down) ----
-##### F] Figure S11D - C2 ----
+##### FF] Figure S6A-p04 ----
 
 
 tmp.c2 <- results.out |>
@@ -1273,7 +1275,7 @@ tmp.endo <- setdiff(tmp.endo, c(tmp.peri, tmp.c2))
 tmp.peri <- setdiff(tmp.peri, c(tmp.c2, tmp.endo))
 
 
-sid_print <- sid |>
+sid_print <- gsub("GSM[0-9A-Z]+_","_",sid) |>
   stringr::str_replace(".filtered_gene_matrices", "") |>
   stringr::str_replace("_", ": ")
 
@@ -1285,7 +1287,7 @@ DotPlot(object = object_1, features = list('C2 (Endothelial)'=tmp.c2,
   labs(x = paste0("Features [C2 & top25 McKenzie endothelial markers] in: ",sid_print, " (Yuan dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S11D.pdf"), width = 7.5 * 1.8, height = 3.75, scale = 1.2)
+ggsave(paste0("output/figures/2022_Figure_S6A-p04.pdf"), width=7.5 * 1.8 * (612 / 744.4529) * (392.0837 / 412.4028 ), height=3.75 * 0.93, scale=1.2)
 rm(tmp.c2, tmp.peri, tmp.endo, sid_print)
 
 
@@ -1783,7 +1785,7 @@ FeaturePlot(object = object_1, features = "NDRG1")
 
 
 #### C0-2022 ----
-##### F] Figure S12N - C0 ----
+##### C0 ----
 
 
 tmp.c0 <- results.out |>
@@ -1794,7 +1796,7 @@ tmp.c0 <- results.out |>
   unique()
 
 
-sid_print <- sid |>
+sid_print <- gsub("GSM[0-9A-Z]+_","_",sid) |>
   stringr::str_replace(".filtered_gene_matrices", "") |>
   stringr::str_replace("_", ": ")
 
@@ -1804,13 +1806,13 @@ DotPlot(object = object_1, features = list("C0" = tmp.c0), group.by = "seurat_cl
   labs(x = paste0("Features [C0] in: ", sid_print, " (Yuan dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S12N.pdf"), width = 6.5, height = 4, scale = 1.2)
+ggsave(paste0("output/figures/2022_Figure_.pdf"), width = 6.5, height = 4, scale = 1.2)
 rm(tmp.c0, sid_print)
 
 
 
 #### C1-2022 (up) ----
-##### F] Figure S14J - C1 ----
+##### FF] Figure S6C-p10 - C1 ----
 
 tmp.c1 <- results.out |>
   dplyr::filter(!is.na(.data$C1.2022)) |> 
@@ -1821,7 +1823,7 @@ tmp.c1 <- results.out |>
   sort()
 
 
-sid_print <- sid |> 
+sid_print <- gsub("GSM[0-9A-Z]+_","_",sid) |> 
   stringr::str_replace(".filtered_gene_matrices","") |> 
   stringr::str_replace("_",": ")
 
@@ -1831,13 +1833,13 @@ DotPlot(object = object_1, features =list('C1'=tmp.c1, 'Peri'=c("RGS5", "PDGFRB"
   labs(x = paste0("Features [C1] in: ",sid_print, " (Yuan dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S14J.pdf"),width=6.5, height=4, scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S6C-p10.pdf"),width=6.5, height=4, scale=1.2)
 rm(tmp.c1, sid_print)
 
 
 
 #### C2-2022 (Endo) (down) ----
-##### F] Figure S11G - C2 ----
+##### FF] Figure S6A-p07 - C2 ----
 
 
 tmp.c2 <- results.out |>
@@ -1863,7 +1865,7 @@ tmp.endo <- setdiff(tmp.endo, c(tmp.peri,tmp.c2))
 tmp.peri <- setdiff(tmp.peri, c(tmp.c2, tmp.endo))
 
 
-sid_print <- sid |> 
+sid_print <- gsub("GSM[0-9A-Z]+_","_",sid) |> 
   stringr::str_replace(".filtered_gene_matrices","") |> 
   stringr::str_replace("_",": ")
 
@@ -1875,7 +1877,7 @@ DotPlot(object = object_1, features = list('C2 (Endothelial)'=tmp.c2,
   labs(x = paste0("Features [C2 & top25 McKenzie endothelial markers] in: ",sid_print, " (Yuan dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S11G.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S6A-p07.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
 rm(tmp.c2, tmp.peri, tmp.endo, sid_print)
 
 
@@ -2193,7 +2195,7 @@ FeaturePlot(object = object_1, features = "TMEM125")
 
 
 
-##### F] Figure S8G - C3/OPC ----
+##### FF] Figure S3-p33 - C3/OPC ----
 
 
 tmp.c3 <- results.out |>
@@ -2213,17 +2215,19 @@ tmp.c3 <- setdiff(tmp.c3, tmp.c3.opc)
 tmp.opc <- setdiff(tmp.opc, tmp.c3.opc)
 
 
-sid_print <- sid |>
+sid_print <- gsub("GSM[0-9A-Z]+_","_",sid) |>
   stringr::str_replace(".filtered_gene_matrices", "") |>
   stringr::str_replace("_", ": ")
 
 
-DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC" = tmp.opc, "C3+OPC" = tmp.c3.opc), group.by = "seurat_clusters") +
+DotPlot(object = object_1, features = list("C3" = tmp.c3, "OPC-like" = tmp.opc
+                                           #, "C3+OPC" = tmp.c3.opc
+                                           ), group.by = "seurat_clusters") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1, size = 5)) +
   labs(x = paste0("Features [C3/OPC] in: ", sid_print, " (Yuan dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S8G.pdf"), width = 7.5 * 1.8, height = 3.75, scale = 1.2)
+ggsave(paste0("output/figures/2022_Figure_S3-p33_",sid,".pdf"), width=7.5 * 1.8 * (612 / 744.4529) * (392.0837 / 412.4028 ), height=3.75 * 0.93, scale=1.2)
 rm(tmp.c3, tmp.opc, tmp.c3.opc, sid_print)
 
 
@@ -2246,7 +2250,7 @@ FeaturePlot(object = object_1, features = "CD248")
 
 
 #### C0-2022 ----
-##### F] Figure S12O - C0 ----
+##### C0 ----
 
 
 tmp.c0 <- results.out |>
@@ -2257,7 +2261,7 @@ tmp.c0 <- results.out |>
   unique()
 
 
-sid_print <- sid |>
+sid_print <- gsub("GSM[0-9A-Z]+_","_",sid) |>
   stringr::str_replace(".filtered_gene_matrices", "") |>
   stringr::str_replace("_", ": ")
 
@@ -2267,13 +2271,13 @@ DotPlot(object = object_1, features = list("C0" = tmp.c0), group.by = "seurat_cl
   labs(x = paste0("Features [C0] in: ", sid_print, " (Yuan dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S12O.pdf"), width = 6.5, height = 4, scale = 1.2)
+ggsave(paste0("output/figures/2022_Figure_.pdf"), width = 6.5, height = 4, scale = 1.2)
 rm(tmp.c0, sid_print)
 
 
 
 #### C1-2022 (up) ----
-##### F] Figure S14I - C1 ----
+##### FF] Figure S6C-p09 - C1 ----
 
 
 tmp.c1 <- results.out |>
@@ -2285,7 +2289,7 @@ tmp.c1 <- results.out |>
   sort()
 
 
-sid_print <- sid |> 
+sid_print <- gsub("GSM[0-9A-Z]+_","_",sid) |> 
   stringr::str_replace(".filtered_gene_matrices","") |> 
   stringr::str_replace("_",": ")
 
@@ -2295,14 +2299,14 @@ DotPlot(object = object_1, features =list('C1'=tmp.c1, 'Peri'=c("RGS5", "PDGFRB"
   labs(x = paste0("Features [C1] in: ",sid_print, " (Yuan dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S14I.pdf"),width=6.5, height=4, scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S6C-p09.pdf"),width=6.5, height=4, scale=1.2)
 rm(tmp.c1, sid_print)
 
 
 
 
 #### C2-2022 (Endo) (down) ----
-##### F] Figure S11F - C2 ----
+##### FF] Figure S6A-p06 - C2 ----
 
 
 tmp.c2 <- results.out |>
@@ -2328,7 +2332,7 @@ tmp.endo <- setdiff(tmp.endo, c(tmp.peri,tmp.c2))
 tmp.peri <- setdiff(tmp.peri, c(tmp.c2, tmp.endo))
 
 
-sid_print <- sid |> 
+sid_print <- gsub("GSM[0-9A-Z]+_","_",sid) |> 
   stringr::str_replace(".filtered_gene_matrices","") |> 
   stringr::str_replace("_",": ")
 
@@ -2340,7 +2344,7 @@ DotPlot(object = object_1, features = list('C2 (Endothelial)'=tmp.c2,
   labs(x = paste0("Features [C2 & top25 McKenzie endothelial markers] in: ",sid_print, " (Yuan dataset)"))
 
 
-ggsave(paste0("output/figures/2022_Figure_S11F.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
+ggsave(paste0("output/figures/2022_Figure_S6A-p06.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
 rm(tmp.c2, tmp.peri, tmp.endo, sid_print)
 
 
