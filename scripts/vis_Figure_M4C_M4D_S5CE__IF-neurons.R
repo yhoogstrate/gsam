@@ -5,13 +5,17 @@
 
 source('scripts/R/palette.R')
 
+library(ggplot2)
+library(dplyr)
+
+
 
 # load data ----
 
-raw.per.cell       = as.data.frame(Reduce(rbind, readRDS("data/gsam/IF/Experiments revisions/GFAP_NeuN/data_analysis/data_correct_order.RDS")))
-data.per.tile      = readRDS("data/gsam/IF/Experiments revisions/GFAP_NeuN/data_analysis/data_correct_order_ann.RDS")
-thresholds         = readxl::read_xlsx(path = "data/gsam/IF/Experiments revisions/GFAP_NeuN/data_analysis/sample_annotation_NeuN.xlsx")
-data.per.resection = readRDS("data/gsam/IF/Experiments revisions/GFAP_NeuN/data_analysis/gsam-signatures.Rds") |> 
+raw.per.cell       = as.data.frame(Reduce(rbind, readRDS("data/gsam/Stainings/IF (old)/Experiments revisions/GFAP_NeuN/data_analysis/data_correct_order.RDS")))
+data.per.tile      = readRDS("data/gsam/Stainings/IF (old)/Experiments revisions/GFAP_NeuN/data_analysis/data_correct_order_ann.RDS")
+thresholds         = readxl::read_xlsx(path = "data/gsam/Stainings/IF (old)/Experiments revisions/GFAP_NeuN/data_analysis/sample_annotation_NeuN.xlsx")
+data.per.resection = readRDS("data/gsam/Stainings/IF (old)/Experiments revisions/GFAP_NeuN/data_analysis/gsam-signatures.Rds") |> 
   tidyr::drop_na(rna.signature.C4.neuron.2022) |>
   dplyr::mutate(sid = substr(sid, 1,4))
 
@@ -22,7 +26,7 @@ data.per.resection = readRDS("data/gsam/IF/Experiments revisions/GFAP_NeuN/data_
 
 #check distribution individual ROIs
 raw.per.cell |>
-  filter(Image == "batch 1 Levi GFAP Neun.czi - Scene #1") |>
+  dplyr::filter(Image == "batch 1 Levi GFAP Neun.czi - Scene #1") |>
   ggplot(aes(as.numeric(Centroid.X.Âµm), as.numeric(Centroid.Y.Âµm))) +
   geom_point(cex=0.1) +
   coord_equal()
@@ -78,38 +82,38 @@ data.per.tile <- data.per.tile |>
 
 
 tmp3 = tmp |>
-  group_by(Name) |>
-  summarize(xran = range(Centroid.X.µm)[2] - range(Centroid.X.µm)[1],
+  dplyr::group_by(Name) |>
+  dplyr::summarize(xran = range(Centroid.X.µm)[2] - range(Centroid.X.µm)[1],
             yran = range(Centroid.Y.µm)[2] - range(Centroid.Y.µm)[1]) |>
-  filter(xran < 200, yran <200) |>
-  pull(Name)
+  dplyr::filter(xran < 200, yran <200) |>
+  dplyr::pull(Name)
 
 
 tmp4 = data.per.tile |>
-  filter(Perimeter.Âµm < 801 & Perimeter.Âµm > 799) |>
-  pull(Name)
+  dplyr::filter(Perimeter.Âµm < 801 & Perimeter.Âµm > 799) |>
+  dplyr::pull(Name)
 
 
 tmp = tmp |>
-  filter(Name %in% tmp3) |>
-  filter(Name %in% tmp4) |>
-  select(Image, Image.filename, Name, Tile, Tile.QuPath.Name, NeuN_nucleus, GFAP_cell, `Centroid.X.µm` , `Centroid.Y.µm` )
+  dplyr::filter(Name %in% tmp3) |>
+  dplyr::filter(Name %in% tmp4) |>
+  dplyr::select(Image, Image.filename, Name, Tile, Tile.QuPath.Name, NeuN_nucleus, GFAP_cell, `Centroid.X.µm` , `Centroid.Y.µm` )
 
 thr = thresholds |>
-  mutate(batch = paste0("b", batch),
+  dplyr::mutate(batch = paste0("b", batch),
          scene = paste0("s", scene),
          Image = paste(batch, scene, sep = "_"),
          resection = substr(sample_correct, 4,4)) |>
-  select(Image, sample_correct, resection, Neun_Threshold, GFAP_Threshold) |>
-  rename(sample = sample_correct)
+  dplyr::select(Image, sample_correct, resection, Neun_Threshold, GFAP_Threshold) |>
+  dplyr::rename(sample = sample_correct)
 
 data.per.cell = tmp |>
-  left_join(thr, by = "Image") |>
-  mutate(type = case_when(NeuN_nucleus >= Neun_Threshold & GFAP_cell >= GFAP_Threshold ~ "Neuron",
+  dplyr::left_join(thr, by = "Image") |>
+  dplyr::mutate(type = dplyr::case_when(NeuN_nucleus >= Neun_Threshold & GFAP_cell >= GFAP_Threshold ~ "Neuron",
                           NeuN_nucleus >= Neun_Threshold & GFAP_cell <= GFAP_Threshold ~ "Neuron",
                           NeuN_nucleus <= Neun_Threshold & GFAP_cell >= GFAP_Threshold ~ "Tumor",
                           NeuN_nucleus <= Neun_Threshold & GFAP_cell <= GFAP_Threshold ~ "Neg")) |>
-  select(!c(Neun_Threshold, GFAP_Threshold))
+  dplyr::select(!c(Neun_Threshold, GFAP_Threshold))
 
 
 
@@ -134,7 +138,7 @@ tmp <- data.per.cell |>
     "control8" = "control-D",
     "control9" = "control-E",
   )) |>
-  dplyr::mutate(resection = case_when(
+  dplyr::mutate(resection = dplyr::case_when(
     resection == "1" ~ "primary",
     resection == "2" ~ "recurrence",
     resection == "t" ~ "control"
@@ -145,7 +149,7 @@ tmp <- data.per.cell |>
   dplyr::mutate(n.cells = n.neuron + n.negative + n.tumor) |>
   dplyr::mutate(frac.neurons = n.neuron / n.cells * 100) |>
   dplyr::mutate(log.ratio.neurons = log2((n.neuron + 1) / (n.tumor + n.negative + 1))) |>
-  dplyr::mutate(tumor.low.high = case_when(
+  dplyr::mutate(tumor.low.high = dplyr::case_when(
     resection == "control" ~ "tumor low",
     n.cells > 125 ~ "tumor high",
     n.cells <= 125 ~ "tumor low"
@@ -197,7 +201,7 @@ data.per.tile <- data.per.tile |>
 
 
 # 1: fraction neurons increases ----
-## F] Figure M4C ----
+## F] Figure M4D ----
 
 
 plt <- data.per.tile |> 
@@ -226,34 +230,11 @@ median.lines <- plt |>
   dplyr::mutate(proportion.tumor.low.tiles = n.tumor.low / (n.tumor.low + n.tumor.high))
 
 
-# stats, for paired statistics
+
+# stats should be paired
 stats <- median.lines |>
   tidyr::pivot_wider(id_cols = pid, names_from = resection, values_from = c(log.ratio.neurons, frac.neurons))
 
-
-# regression stuff, requires resection to be numeric
-tmp <- median.lines |> 
-  dplyr::mutate(resection = ifelse(resection == "recurrence",1,0))
-
-# parametric regression - significance of resection is lost once fraction of tumor low regions is included
-fit <- lm(log.ratio.neurons ~ resection, data=tmp)
-summary(fit)
-fit <- rfit(log.ratio.neurons ~ proportion.tumor.low.tiles + resection, data=tmp)
-summary(fit)
-
-
-
-## guess these are important:
-# non parametric regression - significance of resection is lost once fraction of tumor low regions is included
-fit <- rfit(frac.neurons ~ resection, data=tmp)
-summary(fit)
-fit <- rfit(frac.neurons ~ proportion.tumor.low.tiles + resection, data=tmp)
-summary(fit)
-
-
-
-
-# test should be paired
 wilcox.test(stats$frac.neurons_primary, stats$frac.neurons_recurrence, paired=T)
 p = wilcox.test(stats$frac.neurons_primary, stats$frac.neurons_recurrence, paired=T)$p.value
 
@@ -268,8 +249,6 @@ n.controls <- plt |>
   dplyr::pull(sid) |> 
   unique() |>
   length()
-
-
 
 
 
@@ -299,6 +278,9 @@ ggplot(plt, aes(x = sid, y = frac.neurons, col = resection, group = pid)) +
 
 
 ggsave("output/figures/2022_Figure_M4C.pdf", width=8.3 / 2,height=8.3/5, scale=2)
+
+
+saveRDS(data.per.tile, file="/tmp/data.per.tile.Rds") # export for sharing
 
 
 
@@ -492,7 +474,7 @@ ggsave("output/figures/2022_Figure_S5E.pdf", width=8.3 / 2,height=8.3/4, scale=2
 
 
 # 3: per sample tile plots ----
-## F] Figure M4D -- aggregate counts/tile ann ----
+## F] Figure M4C -- aggregate counts/tile ann ----
 
 
 ssids <- data.per.tile |> 
@@ -569,7 +551,7 @@ for(ssid in ssids) {
     scale_fill_manual(values=c('proportion neurons (interval)'=alpha("darkgreen",0.5)
     ))
   
-  ggsave(paste0("output/figures/2022_Figure_M4D__",unique(plt.per.tile$sid),".pdf"), width=8.3 / 2,height=(8.3/ 2) * 1.25, scale=3)
+  ggsave(paste0("output/figures/2022_Figure_M4C__",unique(plt.per.tile$sid),".pdf"), width=8.3 / 2,height=(8.3/ 2) * 1.25, scale=3)
 }
 
 

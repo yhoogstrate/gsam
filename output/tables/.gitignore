@@ -3,3 +3,5 @@
 *.summary
 *.old
 *.xlsx
+*.csv
+*.zip
