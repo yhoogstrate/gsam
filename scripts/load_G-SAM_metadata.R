@@ -4,7 +4,7 @@
 
 
 #library(tidyverse)
-library(readxl)
+#library(readxl)
 
 
 # patient metadata ----
@@ -97,15 +97,15 @@ gsam.cnv.metadata <- read.delim("data/gsam/DNA/sample codes sanger gsam.txt",str
     TRUE ~ '2'
   ))    |>
   dplyr::group_by(pid) |>
-  dplyr::mutate(pat.with.IDH = max(tmp), data = dplyr::cur_data() )  |>
+  dplyr::mutate(pat.with.IDH = max(tmp))  |>
   dplyr::ungroup() |>
   dplyr::mutate(tmp = NULL, data=NULL) |>
   as.data.frame() |>
   dplyr::mutate(pat.with.IDH = ifelse(pat.with.IDH == 0, NA , pat.with.IDH)) |>
   dplyr::mutate(pat.with.IDH = ifelse(pat.with.IDH == 1, F , pat.with.IDH)) |>
   dplyr::mutate(pat.with.IDH = ifelse(pat.with.IDH == 2, T , pat.with.IDH))  |>
-  dplyr::mutate(resection = gsub("^...(.).*$","R\\1", donor_ID) ) |>
-  dplyr::mutate(resection = ifelse(resection == "RN", NA ,resection) )
+  dplyr::mutate(resection = gsub("^...(.).*$","R\\1", donor_ID)) |>
+  dplyr::mutate(resection = ifelse(resection == "RN", NA ,resection))
 
 
 
@@ -115,43 +115,51 @@ gsam.cnv.metadata <- read.delim("data/gsam/DNA/sample codes sanger gsam.txt",str
 ## STAR alignment statistics + patient / sample identifiers ----
 
 
-gsam.rna.metadata <- read.delim("data/gsam/output/tables/gsam_featureCounts_readcounts_new.txt.summary",stringsAsFactors = F,comment="#",row.names=1) %>%
-  `colnames<-`(gsub("^.+RNA.alignments\\.(.+)\\.Aligned.sortedByCoord.+$","\\1",colnames(.),fixed=F)) %>%
-  dplyr::filter(rowSums(.) > 0) %>%
-  t() %>%
-  `colnames<-`(paste0("STAR.",colnames(.))) %>%
-  data.frame(stringsAsFactors = F) %>%
-  tibble::rownames_to_column("sample") %>%
-  dplyr::mutate(STAR.sum = (STAR.Assigned + STAR.Unassigned_Chimera + STAR.Unassigned_Duplicate + STAR.Unassigned_MultiMapping + STAR.Unassigned_NoFeatures + STAR.Unassigned_Ambiguity)) %>%
-  dplyr::mutate(pct.duplicate.STAR = STAR.Unassigned_Duplicate / STAR.sum * 100) %>%
-  dplyr::mutate(pct.multimap.STAR = STAR.Unassigned_MultiMapping / STAR.sum * 100) %>%
-  dplyr::mutate(pct.nofeature.STAR = STAR.Unassigned_NoFeatures / STAR.sum * 100) %>%
-  dplyr::mutate(duplicate.fold.STAR = 1 / (1 - (pct.duplicate.STAR / 100)) ) %>%  # 75% duplicate means 4 fold duplication
-  dplyr::mutate(sid =  gsub(".","-", sample,fixed=T) ) %>%
-  dplyr::mutate(pid = as.factor( gsub("^(...).*$","\\1", sid) )) %>%
-  dplyr::mutate(resection = as.factor(gsub("^...(.).*$","r\\1", sid) )) %>%
-  dplyr::mutate(new.batch = grepl("new", sid)) %>%
-  dplyr::mutate(name.strip = ifelse(new.batch == T , gsub("-new", "", sid, fixed=T),"")) %>%
-  dplyr::mutate(old.batch = gsub("-replicate","",sid) %in% name.strip) %>%
-  dplyr::mutate(name.strip = NULL) %>%
-  dplyr::mutate(batch = dplyr::case_when ((old.batch == T & new.batch == F) ~ "old" , (old.batch == F & new.batch == T) ~ "new" , (old.batch == F & new.batch == F) ~ "single" )) %>%
-  dplyr::mutate(batch = as.factor(batch)) %>%
-  dplyr::arrange(sample) %>%
-  dplyr::left_join( # add chromosomal distribution of rRNA containing alternate loci
+gsam.rna.metadata  <- read.delim("data/gsam/output/tables/gsam_featureCounts_readcounts_new.txt.summary",
+                stringsAsFactors = F,
+                comment="#",
+                row.names=1) |>
+  dplyr::rename_with(~ gsub("^.+RNA.alignments\\.(.+)\\.Aligned.sortedByCoord.+$","\\1", .x, fixed=F)) |>
+  #(\(x) dplyr::filter(x, rowSums(x) > 0))() |>
+  dplyr::filter(rowSums(dplyr::pick(dplyr::everything())) > 0) |>
+  t() |>
+  data.frame(stringsAsFactors = F) |>
+  dplyr::rename_with(~ paste0("STAR.", .x)) |>
+  tibble::rownames_to_column("sample") |>
+  dplyr::mutate(STAR.sum = (STAR.Assigned + STAR.Unassigned_Chimera + STAR.Unassigned_Duplicate + STAR.Unassigned_MultiMapping + STAR.Unassigned_NoFeatures + STAR.Unassigned_Ambiguity)) |>
+  dplyr::mutate(pct.duplicate.STAR = STAR.Unassigned_Duplicate / STAR.sum * 100) |>
+  dplyr::mutate(pct.multimap.STAR = STAR.Unassigned_MultiMapping / STAR.sum * 100) |>
+  dplyr::mutate(pct.nofeature.STAR = STAR.Unassigned_NoFeatures / STAR.sum * 100) |>
+  dplyr::mutate(duplicate.fold.STAR = 1 / (1 - (pct.duplicate.STAR / 100)) ) |>
+  dplyr::mutate(sid =  gsub(".","-", sample,fixed=T) ) |>
+  dplyr::mutate(pid = as.factor( gsub("^(...).*$","\\1", sid) )) |>
+  dplyr::mutate(resection = as.factor(gsub("^...(.).*$","r\\1", sid) )) |>
+  dplyr::mutate(new.batch = grepl("new", sid)) |>
+  dplyr::mutate(name.strip = ifelse(new.batch == T , gsub("-new", "", sid, fixed=T),"")) |>
+  dplyr::mutate(old.batch = gsub("-replicate","",sid) %in% name.strip) |>
+  dplyr::mutate(name.strip = NULL) |>
+  dplyr::mutate(batch = dplyr::case_when ((old.batch == T & new.batch == F) ~ "old" , (old.batch == F & new.batch == T) ~ "new" , (old.batch == F & new.batch == F) ~ "single" )) |>
+  dplyr::mutate(batch = as.factor(batch)) |>
+  dplyr::arrange(sample) |>
+  dplyr::left_join(
     (
-      read.delim("data/gsam/output/tables/qc/idxstats/samtools.indexstats.matrix.txt",stringsAsFactors=F,row.names=1) %>%
-        `colnames<-`(gsub(".samtools.idxstats.txt","",colnames(.),fixed=T)) %>%
-        t() %>%
-        data.frame(stringsAsFactors = F ) %>%
-        tibble::rownames_to_column("sample") %>%
-        dplyr::filter(sample != "ref.len") %>%
-        dplyr::mutate(X. = NULL) %>%
-        dplyr::mutate(idxstats.sum = rowSums( dplyr::select(. , c(-sample) ) )) %>%
+      read.delim("data/gsam/output/tables/qc/idxstats/samtools.indexstats.matrix.txt",stringsAsFactors=F,row.names=1) |>
+        dplyr::rename_with(~ gsub(".samtools.idxstats.txt","", .x, fixed=T)) |>
+        t() |>
+        data.frame(stringsAsFactors = F ) |>
+        tibble::rownames_to_column("sample") |>
+        dplyr::filter(sample != "ref.len") |>
+        dplyr::mutate(X. = NULL) |>
+        (\(x) dplyr::mutate(x, idxstats.sum = rowSums( dplyr::select(x , c(-sample) ) )))() |>
         dplyr::mutate(pct.rRNA.by.chrUn.gl000220 = chrUn_gl000220 / idxstats.sum )
-    ), by=c('sample' = 'sample')) %>% 
-  dplyr::mutate(resection_pair=ifelse(grepl(1,sample) == T,"matching_r1","matching_r2")) %>%
-  dplyr::mutate(resection_pair=replace(resection_pair,which(batch=="old"|sample%in%c("CAO1.replicate","GAS2.replicate","FAB2","FAH2","EBP1","KAE1.new","KAE1")),NA)) %>%
+    ), by=c('sample' = 'sample')) |> 
+  dplyr::mutate(resection_pair=ifelse(grepl(1,sample) == T,"matching_r1","matching_r2")) |>
+  dplyr::mutate(resection_pair=replace(resection_pair,which(batch=="old"|sample%in%c("CAO1.replicate","GAS2.replicate","FAB2","FAH2","EBP1","KAE1.new","KAE1")),NA)) |>
   dplyr::mutate(sample = NULL)
+
+
+
+
 
 
 
@@ -183,7 +191,7 @@ tmp$vIII.percentage <- NA
 tmp$vIII.percentage[sel] <- tmp$vIII.reads.v3[sel] / (tmp$wt.reads.v3[sel] + tmp$vIII.reads.v3[sel]) * 100
 
 #gsam.rna.metadata <- merge(gsam.rna.metadata, tmp , by.x = "sid", by.y = "sample")
-gsam.rna.metadata <- gsam.rna.metadata %>%
+gsam.rna.metadata <- gsam.rna.metadata |> 
   dplyr::left_join(tmp, by=c('sid' = 'sample'))
 
 
@@ -269,7 +277,7 @@ tmp$Group.1 <- gsub("repl$","replicate",tmp$Group.1)
 
 # old line, probably failed:
 #gsam.rna.metadata <- merge(gsam.rna.metadata, tmp, by.x="sid", by.y = "Group.1")
-gsam.rna.metadata <- gsam.rna.metadata %>%
+gsam.rna.metadata <- gsam.rna.metadata |> 
   dplyr::left_join(tmp, by=c('sid'='Group.1'))
 
 rm(tmp)
@@ -280,7 +288,7 @@ rm(tmp)
 
 # N sheets: 6
 tmp <- 'data/gsam/documents/PFrench_Summary-sheet_input-DV-qPCR.xlsx'
-tmp <- read_excel(tmp,sheet=1)
+tmp <- readxl::read_excel(tmp,sheet=1)
 tmp <- tmp[!is.na(tmp$seqID),]
 tmp$seqID <- gsub("_","-",tmp$seqID,fixed=T)
 tmp$`#` <- NULL
@@ -301,10 +309,10 @@ rm(tmp)
 
 
 tmp <- 'data/gsam/documents/PFrench_Summary-sheet_input-DV-qPCR.xlsx'
-tmp.1 <- read_excel(tmp,sheet=3)
-tmp.2 <- read_excel(tmp,sheet=4)
-tmp.3 <- read_excel(tmp,sheet=5)
-tmp.4 <- read_excel(tmp,sheet=6)
+tmp.1 <- readxl::read_excel(tmp,sheet=3)
+tmp.2 <- readxl::read_excel(tmp,sheet=4)
+tmp.3 <- readxl::read_excel(tmp,sheet=5)
+tmp.4 <- readxl::read_excel(tmp,sheet=6)
 
 tmp.1$`#` <- NULL
 tmp.2$`#` <- NULL
@@ -341,7 +349,7 @@ colnames(tmp) <- paste0('giga.', colnames(tmp))
 colnames(tmp) <- gsub("[\r\n ]+",".",colnames(tmp)) # avoid white spaces
 
 print(dim(gsam.rna.metadata))
-gsam.rna.metadata <- merge(gsam.rna.metadata, tmp, by.x = 'sid', by.y= 'giga.seqID',all=TRUE)
+gsam.rna.metadata <- merge(gsam.rna.metadata, tmp, by.x = 'sid', by.y= 'giga.seqID', all=TRUE)
 print(dim(gsam.rna.metadata))
 
 rm(tmp)
@@ -391,7 +399,7 @@ stopifnot(nrow(tmp) == 399)
 stopifnot(sum(is.na(tmp$extent)) == 6)
 
 
-gsam.rna.metadata <- gsam.rna.metadata %>%
+gsam.rna.metadata <- gsam.rna.metadata |> 
   dplyr::left_join(tmp, by = c("sid" = "sid"), suffix = c("", ""))
 rm(tmp)
 
@@ -401,22 +409,20 @@ rm(tmp)
 
 
 tmp <- gsam.rna.metadata |>
-  dplyr::select(.data$sid, .data$pid, .data$resection) |>
+  dplyr::select(sid, pid, resection) |>
   dplyr::left_join(
     gsam.patient.metadata |>
-      dplyr::select(.data$studyID, .data$mgmtPrimary, .data$mgmtRecurrent),
+      dplyr::select(studyID, mgmtPrimary, mgmtRecurrent),
     by = c("pid" = "studyID")
   ) |>
-  dplyr::mutate(MGMT = ifelse(.data$resection == "r1", .data$mgmtPrimary, .data$mgmtRecurrent)) |>
-  dplyr::mutate(pid = NULL) |>
-  dplyr::mutate(resection = NULL) |>
-  dplyr::mutate(mgmtPrimary = NULL) |>
-  dplyr::mutate(mgmtRecurrent = NULL) |>
-  dplyr::filter(!is.na(.data$MGMT))
+  dplyr::mutate(MGMT = ifelse(resection == "r1", mgmtPrimary, mgmtRecurrent)) |>
+  dplyr::select(-pid, -resection, -mgmtPrimary, -mgmtRecurrent) |>
+  dplyr::filter(!is.na(MGMT))
+
 
 stopifnot(nrow(tmp) == 248)
 
-gsam.rna.metadata <- gsam.rna.metadata %>%
+gsam.rna.metadata <- gsam.rna.metadata |> 
   dplyr::left_join(tmp, by = c("sid" = "sid"), suffix = c("", ""))
 rm(tmp)
 
@@ -540,9 +546,9 @@ rm(tmp.call, tmp)
 
 
 tmp <- read.table("data/gsam/output/tables/gsam_nmf_lda_data.txt") |>
-  dplyr::mutate(sid = gsub("^GSAM-", "", .data$sid)) |>
-  dplyr::rename(NMF.123456.PCA.SVM.class_2021 = .data$NMF.123456.PCA.SVM.class) |>
-  dplyr::select(.data$sid, .data$`NMF.123456.PCA.SVM.class_2021`)
+  dplyr::mutate(sid = gsub("^GSAM-", "", sid)) |>
+  dplyr::rename(NMF.123456.PCA.SVM.class_2021 = NMF.123456.PCA.SVM.class) |>
+  dplyr::select(sid, `NMF.123456.PCA.SVM.class_2021`)
 
 gsam.rna.metadata <- gsam.rna.metadata |>
   dplyr::left_join(tmp, by = c("sid" = "sid"), suffix = c("", ""))
@@ -561,28 +567,29 @@ rm(tmp)
 ## Add IDH status to RNA samples ----
 
 
-gsam.rna.metadata <- gsam.rna.metadata %>%
-  dplyr::mutate(tmp = gsub('-new','', sid, fixed=T) ) %>%
-  dplyr::mutate(tmp = gsub('-replicate','', tmp, fixed=T) ) %>%
+gsam.rna.metadata <- gsam.rna.metadata |> 
+  dplyr::mutate(tmp = gsub('-new','', sid, fixed=T) ) |> 
+  dplyr::mutate(tmp = gsub('-replicate','', tmp, fixed=T) ) |> 
   dplyr::left_join(
     
-    gsam.cnv.metadata %>%
-      dplyr::select(c('donor_ID' , 'PD_ID', 'pat.with.IDH')) %>%
-      dplyr::rename(sid = donor_ID) %>%
-      dplyr::filter(!is.na(pat.with.IDH)) %>%
-      dplyr::mutate(pat.with.IDH = ifelse(is.na(pat.with.IDH), 0, pat.with.IDH)) %>% # collapse those with replicates
-      dplyr::mutate(pat.with.IDH = ifelse(pat.with.IDH == F, 1, pat.with.IDH)) %>%
-      dplyr::mutate(pat.with.IDH = ifelse(pat.with.IDH == T, 2, pat.with.IDH)) %>%
-      dplyr::group_by(sid) %>%
-      dplyr::summarise(pat.with.IDH = max(pat.with.IDH), .groups = 'drop') %>%
-      as.data.frame() %>%
-      dplyr::mutate(pat.with.IDH = ifelse(pat.with.IDH  == 0, NA, pat.with.IDH)) %>%
-      dplyr::mutate(pat.with.IDH = ifelse(pat.with.IDH  == 1, F, pat.with.IDH)) %>%
+    gsam.cnv.metadata |> 
+      dplyr::select(c('donor_ID' , 'PD_ID', 'pat.with.IDH')) |> 
+      dplyr::rename(sid = donor_ID) |> 
+      dplyr::filter(!is.na(pat.with.IDH)) |> 
+      dplyr::mutate(pat.with.IDH = ifelse(is.na(pat.with.IDH), 0, pat.with.IDH)) |>  # collapse those with replicates
+      dplyr::mutate(pat.with.IDH = ifelse(pat.with.IDH == F, 1, pat.with.IDH)) |> 
+      dplyr::mutate(pat.with.IDH = ifelse(pat.with.IDH == T, 2, pat.with.IDH)) |> 
+      dplyr::group_by(sid) |> 
+      dplyr::summarise(pat.with.IDH = max(pat.with.IDH), .groups = 'drop') |> 
+      as.data.frame() |> 
+      dplyr::mutate(pat.with.IDH = ifelse(pat.with.IDH  == 0, NA, pat.with.IDH)) |> 
+      dplyr::mutate(pat.with.IDH = ifelse(pat.with.IDH  == 1, F, pat.with.IDH)) |> 
       dplyr::mutate(pat.with.IDH = ifelse(pat.with.IDH  == 2, T, pat.with.IDH))
     
-    , by = c('tmp' = 'sid')) %>%
-  dplyr::mutate(tmp = NULL) %>%
-  dplyr::mutate( pat.with.IDH = as.logical(pat.with.IDH) )
+    , by = c('tmp' = 'sid')) |> 
+  dplyr::mutate(tmp = NULL) |> 
+  dplyr::mutate( pat.with.IDH = as.logical(pat.with.IDH))
+
 
 
 ## Add PCA signatures 2021 ----
@@ -659,6 +666,7 @@ tmp <- read.csv("output/tables/analysis_SubtypeME_GlioVis_output_2022.csv", quot
   dplyr::rename(subtypeme.gliovis.knn_call.2022 = knn_call) |>
   dplyr::rename(subtypeme.gliovis.gsea_call.2022 = gsea_call) |>
   dplyr::rename(subtypeme.gliovis.majority.call.2022 = majority.call)
+
 gsam.rna.metadata <- gsam.rna.metadata |> 
   dplyr::left_join(tmp, by=c('sid'='sid'), suffix=c('','')) 
 
