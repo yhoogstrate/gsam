@@ -3,7 +3,7 @@
 # load libs ----
 
 
-library(tidyverse) # for distinct() function
+#library(tidyverse)
 library(readxl)
 
 
@@ -31,7 +31,7 @@ gsam.patient.metadata <- read.csv('data/gsam/administratie/GSAM_combined_clinica
 ### before recurrence ----
 
 gsam.patient.metadata <- gsam.patient.metadata |> 
-  dplyr::mutate(bevacizumab.before.recurrence = case_when(
+  dplyr::mutate(bevacizumab.before.recurrence = dplyr::case_when(
     studyID %in% c('GAA','GAG','CCB','CBI','CBV','AAX') ~ "Yes",
     studyID %in% c('HAD','HAF') ~ "Trial participant",
     T ~ "No"
@@ -44,7 +44,7 @@ gsam.patient.metadata <- gsam.patient.metadata |>
 
 
 gsam.patient.metadata <- gsam.patient.metadata |> 
-  dplyr::mutate(PTK787.before.recurrence = case_when(
+  dplyr::mutate(PTK787.before.recurrence = dplyr::case_when(
     studyID %in% c('CBR','CBW') ~ "Yes",
     T ~ "No"
   ))
@@ -377,7 +377,7 @@ tmp <- gsam.rna.metadata |>
     by = c("pid" = "studyID")
   ) |>
   dplyr::mutate(extent = ifelse(resection == "r1", extentOfResectionFirstSurgery, extentOfResectionSecondSurgery)) |>
-  dplyr::mutate(extent = case_when(
+  dplyr::mutate(extent = dplyr::case_when(
     is.na(extent) ~ as.character(NA),
     extent == "Biopsy" ~ "Biopsy",
     T ~ "Resection"
