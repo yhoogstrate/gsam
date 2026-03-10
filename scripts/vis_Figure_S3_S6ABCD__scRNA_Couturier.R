@@ -1648,14 +1648,17 @@ rm(sid, object_1)
 gc()
 
 sid <- "BT363_1of2.filtered_gene_matrices"
-object_1 <- Read10X(data.dir = paste0("data/scRNA/EGAS00001004422_Couturier/filtered/",sid,"/"))
+#object_1 <- Read10X(data.dir = paste0("data/scRNA/EGAS00001004422_Couturier/filtered/",sid,"/"))
+object_1 <- Read10X(data.dir = paste0("/home/r361003/projects/gsam/data/scRNA/EGAS00001004422_Couturier/",sid,"/"))
 object_1 <- CreateSeuratObject(counts = object_1, min.cells = 3, min.features = 200, project="Couturier")
 
 sid <- "BT363_2of2.filtered_gene_matrices"
-object_1.tmp <- Read10X(data.dir = paste0("data/scRNA/EGAS00001004422_Couturier/filtered/",sid,"/"))
+#object_1.tmp <- Read10X(data.dir = paste0("data/scRNA/EGAS00001004422_Couturier/filtered/",sid,"/"))
+object_1.tmp <- Read10X(data.dir = paste0("/home/r361003/projects/gsam/data/scRNA/EGAS00001004422_Couturier/",sid,"/"))
 object_1.tmp <- CreateSeuratObject(counts = object_1.tmp, min.cells = 3, min.features = 200, project="Couturier")
 
 object_1.m <- merge(object_1, y=object_1.tmp, add.cell.ids = c("1of2","2of2"), project="Couturier")
+object_1.m <- JoinLayers(object_1.m, overwrite = TRUE)
 
 rm(object_1, object_1.tmp)
 object_1 <- object_1.m
@@ -1782,6 +1785,9 @@ object_1$seurat_clusters <- factor(object_1$seurat_clusters, levels=c(
 
 DimPlot(object_1, reduction = "umap", label = TRUE, pt.size = .8, group.by = "seurat_clusters") +
   labs(subtitle=sid)
+
+saveRDS(object_1, file="/tmp/BT363.Rds")
+
 
 
 
@@ -2204,14 +2210,18 @@ rm(sid, object_1)
 gc()
 
 sid <- "BT364_1of2.filtered_gene_matrices"
-object_1 <- Read10X(data.dir = paste0("data/scRNA/EGAS00001004422_Couturier/filtered/",sid,"/"))
+#object_1 <- Read10X(data.dir = paste0("data/scRNA/EGAS00001004422_Couturier/filtered/",sid,"/"))
+object_1 <- Read10X(data.dir = paste0("/home/r361003/projects/gsam/data/scRNA/EGAS00001004422_Couturier/",sid,"/"))
 object_1 <- CreateSeuratObject(counts = object_1, min.cells = 3, min.features = 200, project="Couturier")
 
 sid <- "BT364_2of2.filtered_gene_matrices"
-object_1.tmp <- Read10X(data.dir = paste0("data/scRNA/EGAS00001004422_Couturier/filtered/",sid,"/"))
+#object_1.tmp <- Read10X(data.dir = paste0("data/scRNA/EGAS00001004422_Couturier/filtered/",sid,"/"))
+object_1.tmp <- Read10X(data.dir = paste0("/home/r361003/projects/gsam/data/scRNA/EGAS00001004422_Couturier/",sid,"/"))
 object_1.tmp <- CreateSeuratObject(counts = object_1.tmp, min.cells = 3, min.features = 200, project="Couturier")
 
 object_1.m <- merge(object_1, y=object_1.tmp, add.cell.ids = c("1of2","2of2"), project="Couturier")
+object_1.m <- JoinLayers(object_1.m, overwrite = TRUE)
+
 
 rm(object_1, object_1.tmp)
 object_1 <- object_1.m
@@ -2294,7 +2304,7 @@ ElbowPlot(object_1, ndims = 45)
 ### cluster the cells
 
 object_1 <- FindNeighbors(object_1, dims = 1:40)
-object_1 <- FindClusters(object_1, resolution = 1, algorithm=1)
+object_1 <- FindClusters(object_1, resolution = 1.75, algorithm=1)
 head(Idents(object_1), 20)
 
 ### UMAP clustering ----
@@ -2562,6 +2572,9 @@ DotPlot(object = object_1, features =list('C2'=oligodendrocyte.genes , 'OPC'=OPC
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1,size=5)) +
   labs(x = paste0("Features [C2/OPC] in: ",sid))
 
+
+
+
 ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C2_OPC.pdf"),width=7.5*1.8, height=3.75,scale=1.2)
 ggsave(paste0("output/figures/scRNA/Couturier/",sid,"_C2_OPC.png"),width=7.5*1.8, height=3.75,scale=1.2)
 
@@ -2614,10 +2627,33 @@ FeaturePlot(object = object_1, features = "ITGA1") # endo + peri?
 
 #### 6B. Pericytes (12) ----
 
+# suspected:
+# "1of2_AAACGGGTCGTCGTTC-1" "2of2_AAACGGGTCGTCGTTC-1"
+# "1of2_AGGCCGTTCTAAGCCA-1" "2of2_AGGCCGTTCTAAGCCA-1"
+# "1of2_CCCATACCACGCGAAA-1" "2of2_CCCATACCACGCGAAA-1"
+
+
 FeaturePlot(object = object_1, features = "RGS5")
 FeaturePlot(object = object_1, features = "PDGFRB")
 FeaturePlot(object = object_1, features = "CD248")
 
+
+DotPlot(object = object_1, features = c("RGS5", "PDGFRB", "CD248", "COL1A1","COL1A2"))
+
+
+DimPlot(subset(object_1, seurat_clusters == 14), reduction = "umap", label = TRUE, pt.size = .4, group.by = "seurat_clusters") +
+  labs(subtitle=sid)
+
+
+
+FeaturePlot(subset(object_1, seurat_clusters == 14), reduction = "umap", features = c("RGS5", "PDGFRB", "CD248", "COL1A1","COL1A2"))
+
+
+DotPlot(object = object_1, features = c("RGS5", "PDGFRB", "CD248", "COL1A1","COL1A2"))
+
+
+
+t <- object_1[,object_1@reductions$umap@cell.embeddings[,2] < 5 & object_1$seurat_clusters == 14]
 
 
 
