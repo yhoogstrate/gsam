@@ -7,6 +7,7 @@ if(!exists("gsam.rna.metadata")) {
   source('scripts/load_G-SAM_metadata.R')
 }
 
+
 if(!exists("gsam.viii.rnaseq")) {
   source('scripts/R/gsam_rnaseq_egfrviii_expression.R')
 }
@@ -16,11 +17,11 @@ if(!exists("gsam.viii.rnaseq")) {
 #expression_matrix_full <- read.delim("data/output/tables/gsam_featureCounts_readcounts_new.txt",stringsAsFactors = F,comment="#")
 #Load gene annotation data
 if(!file.exists('tmp/gencode.31.Rds')) {
-  gencode.31 <- read.delim("data/gsam/ref/star-hg19/gencode.v31lift37.annotation.gtf", comment.char="#",stringsAsFactors = F,header=F) %>%
-    dplyr::filter(V3 == "gene") %>%
-    dplyr::mutate(ENSG = gsub("^.+(ENSG[^;]+);.+$","\\1",V9)) %>%
-    dplyr::mutate(GENE = gsub("^.+gene_name ([^;]+);.+$","\\1",V9)) %>%
-    dplyr::mutate(gene_type = gsub("^.+gene_type ([^;]+);.+$","\\1",V9)) %>%
+  gencode.31 <- read.delim("data/gsam/ref/star-hg19/gencode.v31lift37.annotation.gtf", comment.char="#",stringsAsFactors = F,header=F) |> 
+    dplyr::filter(V3 == "gene") |> 
+    dplyr::mutate(ENSG = gsub("^.+(ENSG[^;]+);.+$","\\1",V9)) |> 
+    dplyr::mutate(GENE = gsub("^.+gene_name ([^;]+);.+$","\\1",V9)) |> 
+    dplyr::mutate(gene_type = gsub("^.+gene_type ([^;]+);.+$","\\1",V9)) |> 
     dplyr::mutate(V9 = NULL)
   
   saveRDS(gencode.31, 'tmp/gencode.31.Rds')
@@ -33,13 +34,15 @@ if(!file.exists('tmp/gencode.31.Rds')) {
 
 # full dataset ----
 
-blacklist <- gsam.rna.metadata %>%
-  dplyr::filter(blacklist.pca == T | pat.with.IDH == T) %>%
-  dplyr::pull('sid') %>%
-  c("CAO1-replicate", "GAS2-replicate","FAB2") %>% # replicates
-  c("KAC2-new") %>% # dna contaminiation
-  c("BAI2") %>% # Has BAI2-new, which likely wasn't in the PCA blacklist
+blacklist <- gsam.rna.metadata |> 
+  dplyr::filter(blacklist.pca == T | pat.with.IDH == T) |> 
+  dplyr::pull('sid') |> 
+  c("CAO1-replicate", "GAS2-replicate","FAB2") |>  # replicates
+  c("KAC2-new") |>  # dna contaminiation
+  c("BAI2") |>  # Has BAI2-new, which likely wasn't in the PCA blacklist
   unique()
+stopifnot(length(blacklist) == 77)
+
 
 
 gsam.rnaseq.expression <- "data/gsam/output/tables/gsam_featureCounts_readcounts_new.txt" %>%
@@ -110,7 +113,7 @@ sel <- gsam.rna.metadata |>
 
 
 gsam.gene.expression.all <- gsam.rnaseq.expression |> 
-  dplyr::select(sel) |> 
+  dplyr::select(all_of(sel)) |> 
   dplyr::filter(rowSums(dplyr::across()) > ncol(dplyr::across()) * 3)
 stopifnot(colnames(gsam.gene.expression.all) == sel)
 
